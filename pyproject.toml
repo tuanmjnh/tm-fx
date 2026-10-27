@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+minversion = "8.0"
+pythonpath = ["python/src"]
+testpaths = ["python/tests"]
+addopts = "-ra"

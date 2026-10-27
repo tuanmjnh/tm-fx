@@ -1,0 +1,15 @@
+# Example experiment manifest. The runner and SQLite store are implemented later.
+experiment_id: demo-ema-cross-001
+strategy_config: configs/strategy.example.yaml
+data_config: configs/data.example.yaml
+data_kind: synthetic
+seed: 42
+symbol: EURUSD
+timeframe: M5
+cost_model:
+  spread_points: null        # must be defined before any backtest is reported
+  slippage_points: null
+  commission_per_lot: null
+outputs:
+  report_dir: reports/demo-ema-cross-001
+notes: "Placeholder example; no experiment has been run."

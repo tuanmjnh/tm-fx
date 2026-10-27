@@ -1,0 +1,15 @@
+# Example only. Contains no credentials or account data.
+# The loader/validator that consumes this file is implemented in Phase 3.
+dataset_id: sample-eurusd-m5
+data_kind: synthetic          # synthetic | mt5_export | csv_import
+symbol: EURUSD
+timeframe: M5
+timezone: UTC
+time_range:
+  start: "2024-01-01T00:00:00Z"
+  end: "2024-01-31T23:59:59Z"
+price_fields: [open, high, low, close]
+optional_fields: [tick_volume, spread]
+raw_path: datasets/raw/sample-eurusd-m5.csv
+processed_path: datasets/processed/sample-eurusd-m5.parquet
+notes: "Placeholder example; synthetic data must never be presented as real market history."

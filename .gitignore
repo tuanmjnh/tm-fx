@@ -1,0 +1,68 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Test / tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Secrets / machine-local configuration
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+credentials*
+
+# MT5 terminal account/session files (must never enter this repo)
+accounts.dat
+servers.dat
+origin.txt
+
+# Compiled MQL5 artifacts
+*.ex4
+*.ex5
+
+# Local datasets (keep directory placeholders and small curated samples only)
+datasets/raw/*
+!datasets/raw/.gitkeep
+datasets/processed/*
+!datasets/processed/.gitkeep
+
+# Local model artifacts
+models/candidates/*
+!models/candidates/.gitkeep
+
+# Local experiments and generated reports
+experiments/*
+!experiments/README.md
+reports/*
+!reports/README.md
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+
+# Logs and tool temp caches
+logs/
+*.log
+matplotlib-*/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

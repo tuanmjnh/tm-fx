@@ -1,0 +1,18 @@
+# Illustrative EMA-crossover configuration. Not a profitability claim.
+# execution_enabled must stay false for the whole MVP.
+strategy_id: ema_cross_baseline
+strategy_version: "0.1.0"
+mode: signal_only
+entry:
+  type: ema_cross
+  fast_period: 12
+  slow_period: 26
+  use_closed_bars_only: true
+exit:
+  type: opposite_signal
+filters:
+  min_bars: 200
+safety:
+  execution_enabled: false
+  allow_order_send: false
+notes: "Placeholder example; the signal engine is implemented in Phase 2."
