@@ -22,6 +22,7 @@ không còn file rời rạc ở thư mục `docs/`.
 | Track B | 6 indicator PinePort + contract headless + EA tín hiệu đa nguồn | Compile 0/0; **contract runtime 6/6 PASS** (547 check) |
 | Track C W1–W7, W9, W10 | Simulation core, runner/grid/DCA, plan-driven EA, preset, toolchain | PASS offline (compile + static + Python) |
 | Track C — `WonderwhalesSimEA` | EA tín hiệu Wonderwhales trên `XAUUSDm`, 3 chế độ stop | Compile 0/0 (repo + Data Folder); **Strategy Tester PASS 3/3 scenario `ww_*`** (2026-10-28, không deal) |
+| Track C — `PATrendRiderXAUv1SimEA` | PA TrendRider XAU v1: H1/M15/M5, BOS/CHoCH, pullback, một vị thế ảo | Compile 0/0; contract **82/82 PASS**; Strategy Tester **2/2 scenario `pa_*`** chạy thật (2026-10-28, không deal); xem [`PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](PA_TrendRider_XAU_V1_Implementation_Vietnamese.md) |
 | Track C W8 | Strategy Tester thủ công | PASS 10/10 scenario runner/grid/DCA; 2 scenario `plan_*` `BLOCKED_PERFORMANCE` |
 
 - **MQL5:** 25 file `.mq5` và 19 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
@@ -40,6 +41,8 @@ docs/
 ├── MASTER_ROADMAP.md          # lộ trình tổng (Phase 0–9, Track B, Track C W1–W12)
 ├── ROADMAP_MT5_EA_AI_LAB.md   # roadmap nguồn ban đầu
 ├── PROMPT_AI_IMPLEMENT_ROADMAP.md
+├── PA_TrendRider_XAU_V1_Specification_Vietnamese.md   # đặc tả chiến lược
+├── PA_TrendRider_XAU_V1_Implementation_Vietnamese.md  # bản triển khai mô phỏng + kết quả test
 ├── guides/
 │   ├── install-and-test.md    # cài Python/MT5, sync source, compile, chạy test/EA
 │   ├── strategy-tester.md     # preset, ma trận scenario, template report
@@ -82,6 +85,7 @@ docs/
 | Cài đặt và chạy thử toàn bộ | [`guides/install-and-test.md`](guides/install-and-test.md) |
 | Chạy Strategy Tester và ghi report | [`guides/strategy-tester.md`](guides/strategy-tester.md) |
 | Hiểu simulation core và các EA mô phỏng | [`reference/simulation.md`](reference/simulation.md) |
+| Hiểu và chạy PA TrendRider XAU v1 | [`PA_TrendRider_XAU_V1_Specification_Vietnamese.md`](PA_TrendRider_XAU_V1_Specification_Vietnamese.md), [`PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](PA_TrendRider_XAU_V1_Implementation_Vietnamese.md) |
 | Hiểu trailing stop / bounded DCA-grid (Python) | [`reference/trailing-stop.md`](reference/trailing-stop.md), [`reference/bounded-basket.md`](reference/bounded-basket.md) |
 | Hiểu indicator PinePort và buffer contract | [`indicators/README.md`](indicators/README.md), [`indicators/parity.md`](indicators/parity.md) |
 | Kiểm tra test, metric và giả định | [`reference/testing.md`](reference/testing.md) |

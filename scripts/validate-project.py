@@ -61,6 +61,7 @@ REQUIRED_FILES = (
     "configs/sim/grid_lab.json",
     "configs/sim/dca_lab.json",
     "configs/sim/pine_plan_lab.json",
+    "configs/sim/pa_trendrider_xau.json",
     "mt5/Include/Sim/SimTypes.mqh",
     "mt5/Include/Sim/SimValidate.mqh",
     "mt5/Include/Sim/SimPortfolio.mqh",
@@ -77,6 +78,20 @@ REQUIRED_FILES = (
     "mt5/Experts/PinePlanSimEA.mq5",
     "mt5/Scripts/SimCoreTests.mq5",
     "mt5/Scripts/SimPlanTests.mq5",
+    "mt5/Include/TrendRider/TRTypes.mqh",
+    "mt5/Include/TrendRider/TRConfig.mqh",
+    "mt5/Include/TrendRider/TRSwing.mqh",
+    "mt5/Include/TrendRider/TRStructure.mqh",
+    "mt5/Include/TrendRider/TRTrend.mqh",
+    "mt5/Include/TrendRider/TRPullback.mqh",
+    "mt5/Include/TrendRider/TRSignal.mqh",
+    "mt5/Include/TrendRider/TRAtr.mqh",
+    "mt5/Include/TrendRider/TRRisk.mqh",
+    "mt5/Include/TrendRider/TRTrailing.mqh",
+    "mt5/Include/TrendRider/TRState.mqh",
+    "mt5/Include/TrendRider/TRMarketData.mqh",
+    "mt5/Experts/PATrendRiderXAUv1SimEA.mq5",
+    "mt5/Scripts/TrendRiderContractTests.mq5",
 )
 
 SIM_EAS = {
@@ -84,6 +99,16 @@ SIM_EAS = {
     "GridLabEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh"),
     "DCALabEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh", "SimDca.mqh"),
     "PinePlanSimEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh", "SimPlan.mqh"),
+    "PATrendRiderXAUv1SimEA.mq5": (
+        "SimPortfolio.mqh",
+        "SimLogger.mqh",
+        "TRConfig.mqh",
+        "TRSignal.mqh",
+        "TRRisk.mqh",
+        "TRTrailing.mqh",
+        "TRState.mqh",
+        "TRMarketData.mqh",
+    ),
 }
 
 SIM_CORE_TESTS_INCLUDES = (

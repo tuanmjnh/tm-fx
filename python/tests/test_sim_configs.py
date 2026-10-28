@@ -25,6 +25,7 @@ PRESETS = (
     ("dca_lab.json", "DCALabEA"),
     ("pine_plan_lab.json", "PinePlanSimEA"),
     ("wonderwhales_xauusdm.json", "WonderwhalesSimEA"),
+    ("pa_trendrider_xau.json", "PATrendRiderXAUv1SimEA"),
 )
 
 

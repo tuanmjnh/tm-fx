@@ -8,20 +8,21 @@ backtest có thể tái lập cho MetaTrader 5.
   parity Python–ONNX đã chạy thật; EA `LabOnnxInference.mq5` compile 0 errors/0 warnings nhưng chưa chạy
   trong terminal. Phase 0/3/4/6/7/9 **DONE**; Phase 5 **READY_FOR_MANUAL_VALIDATION** (MQL5 export đã
   compile nhưng chưa chạy); Phase 1/2 compile 0 errors/0 warnings, chờ chạy Strategy Tester/self-check
-  thủ công. Track C W1–W7, W9, W10 **PASS** (compile + static + toolchain); `SimCoreTests` 123/0 và
-  `SimPlanTests` 39/0 đã **PASS runtime** trong MT5 ngày 2026-10-28; 13/15 scenario Strategy Tester đã
-  **chạy thật** headless trên `XAUUSDm` M15 (3 `ww_*`, `runner_*`, `grid_*`, 4 `dca_*`); 2 scenario
-  `plan_*` là `BLOCKED_PERFORMANCE` (chưa xong 9 tháng trong cửa sổ chạy, xem
-  [`docs/PROGRESS.md`](docs/PROGRESS.md) §41).
+  thủ công. Track C W1–W7, W9, W10 **PASS** (compile + static + toolchain); `SimCoreTests` 125/0,
+  `SimPlanTests` 39/0 và `TrendRiderContractTests` 82/0 đã **PASS runtime** trong MT5 ngày 2026-10-28;
+  15/17 scenario Strategy Tester đã **chạy thật** headless trên `XAUUSDm` (3 `ww_*`, `runner_*`,
+  `grid_*`, 4 `dca_*`, 2 `pa_*`); 2 scenario `plan_*` là `BLOCKED_PERFORMANCE` (chưa xong 9 tháng trong
+  cửa sổ chạy, xem [`docs/PROGRESS.md`](docs/PROGRESS.md) §41–§42).
 - **Phạm vi hiện tại:** signal-only, mô phỏng offline (SL/TP tĩnh, trailing stop, bounded DCA/grid
-  basket, vị thế ảo theo trade plan của PinePort và tín hiệu Wonderwhales trên `XAUUSDm`), metadata thí
-  nghiệm cục bộ, ML baseline, ONNX inference-only và pipeline end-to-end trên dữ liệu synthetic. Không
-  gửi lệnh giao dịch thật, không kết nối tài khoản môi giới, không lưu thông tin đăng nhập.
-- **MT5:** 25 file `.mq5` và 19 file `.mqh` đã compile **0 errors, 0 warnings** bằng
+  basket, vị thế ảo theo trade plan của PinePort, tín hiệu Wonderwhales và PA TrendRider XAU v1 trên
+  `XAUUSDm`), metadata thí nghiệm cục bộ, ML baseline, ONNX inference-only và pipeline end-to-end trên
+  dữ liệu synthetic. Không gửi lệnh giao dịch thật, không kết nối tài khoản môi giới, không lưu thông
+  tin đăng nhập.
+- **MT5:** 27 file `.mq5` và 31 file `.mqh` đã compile **0 errors, 0 warnings** bằng
   `scripts/build-mql5.ps1` (2026-10-28); self-check `SimCoreTests`/`SimPlanTests`, 6/6 contract suite
-  indicator (547 check) và 13/15 scenario Strategy Tester đã chạy thật. Parity runtime, ONNX runtime và
-  2 scenario `plan_*` vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`. Quy trình:
-  [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
+  indicator (547 check), `TrendRiderContractTests` (82 check) và 15/17 scenario Strategy Tester đã chạy
+  thật. Parity runtime, ONNX runtime và 2 scenario `plan_*` vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`. Quy
+  trình: [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
 - **Ranh giới execution:** repo này không hỗ trợ live execution. Quyết định và điều kiện cho một scope
   demo-only riêng nằm ở [`docs/decisions/0002-execution-boundary.md`](docs/decisions/0002-execution-boundary.md).
 - **Tài liệu nguồn:** [`docs/ROADMAP_MT5_EA_AI_LAB.md`](docs/ROADMAP_MT5_EA_AI_LAB.md) và

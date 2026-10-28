@@ -1066,3 +1066,64 @@ và `loss_cap_overshoot = 0`. Report nằm trong `reports/backtests/demo-bounded
 - Không bật execution: `LabSignalEA` là signal-only, 0 trade là đúng; ranh giới này ghi ở
   [`decisions/0002-execution-boundary.md`](../decisions/0002-execution-boundary.md).
 - Log compile nằm ở `reports/mt5/*.compile.log` (gitignored).
+
+## Track C — PATrendRider XAU v1 (simulation-only)
+
+- **Đối tượng:** `PATrendRiderXAUv1SimEA`, `TrendRiderContractTests`, preset
+  `configs/sim/pa_trendrider_xau.json`, include `mt5/Include/TrendRider/*.mqh`.
+- **Nguyên tắc:** EA phân tích nến đóng H1/M15/M5, mở **một vị thế ảo** trong bộ nhớ và ghi CSV; không
+  gửi lệnh, không đọc tài khoản/broker, không lưu credential.
+- **Đặc tả & báo cáo:** [`../PA_TrendRider_XAU_V1_Specification_Vietnamese.md`](../PA_TrendRider_XAU_V1_Specification_Vietnamese.md)
+  và [`../PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](../PA_TrendRider_XAU_V1_Implementation_Vietnamese.md).
+
+### 1. Kiểm tra tĩnh và compile
+
+```powershell
+.\.venv\Scripts\python.exe scripts\validate_trendrider.py
+.\.venv\Scripts\python.exe scripts\validate_sim_configs.py
+powershell -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 -Filter "Experts\PATrendRider*"
+```
+
+### 2. Contract suite (bắt buộc trước khi tin EA)
+
+1. Copy `mt5/Include/TrendRider/*.mqh` vào `MQL5\Include\TrendRider` trong Data Folder.
+2. Tạo wrapper EA tạm từ `mt5/Scripts/TrendRiderContractTests.mq5` (đổi `OnStart` thành `OnTick` một
+   lần, giữ `RunAllTests`), compile 0/0.
+3. Chạy Strategy Tester XAUUSDm M1, 2026.01.05–2026.01.06; đọc tab Journal/Experts.
+4. Kỳ vọng: `TEST|RESULT|ALL_PASS|pass=82 fail=0|suite=trendrider`.
+
+Bằng chứng đã lưu: `reports/build/tester-reports/contract_trendrider/`.
+
+### 3. Chạy EA headless
+
+```powershell
+python reports\build\tester-run\gen_trendrider_sets.py
+& "C:\Program Files\MetaTrader 5 EXNESS\terminal64.exe" `
+  "/config:D:\Applications\tm-fx\reports\build\tester-run\pa_trendrider_baseline.ini"
+```
+
+- File `.set`/`.ini` sinh từ preset + override scenario; `InpResetStateOnInit=true` để mỗi lượt bắt đầu
+  sạch (không đọc state cũ).
+- Agent tester **xóa sandbox `MQL5\Files` ở đầu mỗi lượt chạy**. Copy CSV + state + report ra
+  `reports/build/tester-reports/<scenario>/` ngay sau khi terminal thoát, trước khi chạy scenario kế.
+- Report tester hiển thị **0 deal** là đúng; chỉ CSV mô phỏng có ENTRY/EXIT/SUMMARY.
+
+### 4. Kiểm tra CSV tối thiểu
+
+- 18 cột, đúng một `INIT` và một `SUMMARY`, `config_hash` không đổi.
+- ENTRY/EXIT khớp cặp; BUY có `sl < entry`, SELL có `sl > entry`; `tp = 0`.
+- Mọi dòng `TRAIL` chỉ siết SL (BUY tăng, SELL giảm).
+- Tổng volume mỗi lệnh ≤ `InpMaxVirtualExposure`; không có entry khi state không phải
+  `WAITING_FOR_SETUP`.
+- Không có `OrderSend`/deal trong tester; nếu có, dừng ngay và điều tra.
+
+### 5. Trạng thái runtime đã xác minh (2026-10-28)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Contract suite | **82/82 PASS** |
+| Baseline `pa_trendrider_baseline` | 13 entry/13 exit, 2 thắng/11 thua, net mô phỏng −140.46, DD 1.75% |
+| Cost stress `pa_trendrider_cost_stress` | 4 entry/4 exit, 0 thắng, net mô phỏng −37.28, DD 0.94% |
+| Tester report | 0 deal (đúng thiết kế simulation-only) |
+
+Không suy ra lợi nhuận hay độ sẵn sàng live từ hai lượt chạy ngắn này.

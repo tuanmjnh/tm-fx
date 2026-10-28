@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "ea": "PATrendRiderXAUv1SimEA",
+  "version": "1.00",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "PA TrendRider XAU v1: H1/M15 structure bias, M5 BOS pullback entry, one virtual position, structural stop, breakeven and ATR/structure trailing, daily and drawdown locks.",
+  "strategy": "pa_trendrider_xau_v1",
+  "symbol": "XAUUSDm",
+  "timeframe": "M5",
+  "inputs": {
+    "InpInitialBalance": 10000.0,
+    "InpEnableLog": true,
+    "InpLogFile": "pa_trendrider_log.csv",
+    "InpPersistState": true,
+    "InpStateFile": "pa_trendrider_state.csv",
+    "InpResetStateOnInit": false,
+    "InpDebug": false,
+    "InpEnableTrading": true,
+    "InpMagicNumber": 25001001,
+    "InpTrendTF": 16385,
+    "InpStructureTF": 15,
+    "InpEntryTF": 5,
+    "InpTrendBars": 300,
+    "InpStructureBars": 300,
+    "InpEntryBars": 400,
+    "InpSwingLeft": 2,
+    "InpSwingRight": 2,
+    "InpSpreadBufferMultiplier": 2.0,
+    "InpAtrBreakBufferMultiplier": 0.1,
+    "InpTrendMinDeltaAtr": 0.05,
+    "InpRetestZoneAtr": 0.25,
+    "InpConfirmationBodyAtr": 0.5,
+    "InpConfirmationCloseZone": 0.25,
+    "InpMaxSignalAgeBars": 8,
+    "InpRiskPercent": 0.25,
+    "InpMaxPositions": 1,
+    "InpDailyLossLimitPct": 1.0,
+    "InpMaxDrawdownPct": 8.0,
+    "InpMaxConsecutiveLosses": 3,
+    "InpCooldownMinutes": 30,
+    "InpManualResetDrawdown": false,
+    "InpMaxVirtualExposure": 1.0,
+    "InpBreakEvenAtR": 1.0,
+    "InpTrailingStartR": 1.5,
+    "InpAtrStopBuffer": 0.2,
+    "InpAtrTrailingMultiplier": 1.2,
+    "InpMinSlAtr": 0.5,
+    "InpMaxSlAtr": 4.0,
+    "InpUpdateOnClosedBarOnly": true,
+    "InpAtrPeriod": 14,
+    "InpAtrBaselineBars": 100,
+    "InpAbnormalAtrRatio": 2.5,
+    "InpMaxSpreadPoints": 600.0,
+    "InpMaxSpreadAtrRatio": 0.25,
+    "InpCommissionPerVolume": 0.0,
+    "InpSlippagePoints": 0.0
+  },
+  "enum_map": {
+    "InpTrendTF": {
+      "16385": "PERIOD_H1"
+    },
+    "InpStructureTF": {
+      "15": "PERIOD_M15"
+    },
+    "InpEntryTF": {
+      "5": "PERIOD_M5"
+    }
+  },
+  "assumptions": {
+    "contract_size": 100,
+    "symbol": "XAUUSDm: point 0.001, 3 digits, tick value 0.1 per lot per tick; measured spread about 260 points",
+    "position_model": "one virtual position in memory via CSimPortfolio; no order, position or account API is called",
+    "pnl_currency": "account currency from the tester deposit; CSimPortfolio converts price movement with contract size 100",
+    "lot_sizing": "tick size and tick value instead of OrderCalcProfit, which is forbidden in this repository",
+    "commission": "total cash per fill, charged on open and close; included in the risk budget",
+    "slippage": "adverse points on every fill, including stop fills",
+    "swap": "not modelled in this preset",
+    "take_profit": "none; exits are structural stop, breakeven/trailing stop or confirmed reversal",
+    "state": "risk ledger and position context persisted to MQL5/Files; delete or reset the state file before a clean replay"
+  }
+}

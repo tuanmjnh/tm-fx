@@ -214,6 +214,23 @@ void RunDrawdown(void)
                        snapshot.open_positions,snapshot.exposure,
                        snapshot.average_entry,snapshot.unrealized_pnl,
                        snapshot.equity));
+
+   //--- P23/P24: contract size converts price movement to account money.
+   string size_error="";
+   CSimPortfolio sized;
+   const bool sized_init=sized.InitWithContractSize(10000.0,100.0,size_error);
+   const bool sized_open=sized_init &&
+                         sized.Open(SIM_SIDE_BUY,2000.0,1.0,0.0,error);
+   const double sized_equity=sized.Equity(2001.0);
+   Record("P23",sized_open && Near(sized.ContractSize(),100.0) &&
+          Near(sized_equity,10100.0),
+          StringFormat("init=%d open=%d equity=%.4f",(int)sized_init,
+                       (int)sized_open,sized_equity));
+
+   CSimPortfolio sized_bad;
+   Record("P24",!sized_bad.InitWithContractSize(10000.0,0.0,size_error) &&
+          size_error=="contract_size_must_be_finite_positive",
+          "contract size=0 error="+size_error);
   }
 
 void RunValidation(void)

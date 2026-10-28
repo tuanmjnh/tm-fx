@@ -73,6 +73,33 @@ _COMMON: dict[str, Any] = {
     "InpSlippagePoints": Num(minimum=0.0),
 }
 
+#--- MT5 period constants and their length in seconds. TrendRider accepts any
+#--- ordered triple, so the check compares durations rather than enum names.
+_TF_SECONDS: dict[int, int] = {
+    1: 60,
+    2: 120,
+    3: 180,
+    4: 240,
+    5: 300,
+    6: 360,
+    10: 600,
+    12: 720,
+    15: 900,
+    20: 1200,
+    30: 1800,
+    16385: 3600,
+    16386: 7200,
+    16387: 10800,
+    16388: 14400,
+    16390: 21600,
+    16392: 28800,
+    16394: 43200,
+    16408: 86400,
+    32769: 604800,
+    49153: 2419200,
+}
+_TIMEFRAMES = tuple(_TF_SECONDS)
+
 EA_INPUTS: dict[str, dict[str, Any]] = {
     "RunnerTrailingLabEA": {
         **_COMMON,
@@ -170,6 +197,54 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpExitOnFlip": BOOL,
         "InpCooldownBars": Num(minimum=0.0, integer=True),
         "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
+    },
+    "PATrendRiderXAUv1SimEA": {
+        "InpInitialBalance": Num(minimum=0.0, min_exclusive=True),
+        "InpEnableLog": BOOL,
+        "InpLogFile": STR,
+        "InpPersistState": BOOL,
+        "InpStateFile": STR,
+        "InpResetStateOnInit": BOOL,
+        "InpDebug": BOOL,
+        "InpEnableTrading": BOOL,
+        "InpMagicNumber": Num(minimum=0.0, integer=True),
+        "InpTrendTF": Enum(_TIMEFRAMES),
+        "InpStructureTF": Enum(_TIMEFRAMES),
+        "InpEntryTF": Enum(_TIMEFRAMES),
+        "InpTrendBars": Num(minimum=1.0, integer=True),
+        "InpStructureBars": Num(minimum=1.0, integer=True),
+        "InpEntryBars": Num(minimum=1.0, integer=True),
+        "InpSwingLeft": Num(minimum=1.0, maximum=10.0, integer=True),
+        "InpSwingRight": Num(minimum=1.0, maximum=10.0, integer=True),
+        "InpSpreadBufferMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpAtrBreakBufferMultiplier": Num(minimum=0.0),
+        "InpTrendMinDeltaAtr": Num(minimum=0.0),
+        "InpRetestZoneAtr": Num(minimum=0.0, min_exclusive=True),
+        "InpConfirmationBodyAtr": Num(minimum=0.0, maximum=3.0),
+        "InpConfirmationCloseZone": Num(minimum=0.0, maximum=0.5, min_exclusive=True),
+        "InpMaxSignalAgeBars": Num(minimum=1.0, maximum=500.0, integer=True),
+        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
+        "InpDailyLossLimitPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxConsecutiveLosses": Num(minimum=1.0, integer=True),
+        "InpCooldownMinutes": Num(minimum=0.0, integer=True),
+        "InpManualResetDrawdown": BOOL,
+        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
+        "InpBreakEvenAtR": Num(minimum=0.0, maximum=20.0, min_exclusive=True),
+        "InpTrailingStartR": Num(minimum=0.0, min_exclusive=True),
+        "InpAtrStopBuffer": Num(minimum=0.0),
+        "InpAtrTrailingMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpMinSlAtr": Num(minimum=0.0, min_exclusive=True),
+        "InpMaxSlAtr": Num(minimum=0.0, min_exclusive=True),
+        "InpUpdateOnClosedBarOnly": BOOL,
+        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
+        "InpAtrBaselineBars": Num(minimum=10.0, maximum=5000.0, integer=True),
+        "InpAbnormalAtrRatio": Num(minimum=1.0, min_exclusive=True),
+        "InpMaxSpreadPoints": Num(minimum=0.0),
+        "InpMaxSpreadAtrRatio": Num(minimum=0.0, maximum=1.0),
+        "InpCommissionPerVolume": Num(minimum=0.0),
+        "InpSlippagePoints": Num(minimum=0.0),
     },
 }
 
@@ -279,6 +354,38 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("InpPsarInc: must not exceed InpPsarMax")
         if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
             issues.append("InpMaxVirtualExposure: must cover InpVolume")
+
+    if ea == "PATrendRiderXAUv1SimEA":
+        trend = _TF_SECONDS.get(int(inputs["InpTrendTF"]))
+        structure = _TF_SECONDS.get(int(inputs["InpStructureTF"]))
+        entry = _TF_SECONDS.get(int(inputs["InpEntryTF"]))
+        if trend is None or structure is None or entry is None:
+            issues.append("timeframes: must use known MT5 period constants")
+        elif not (trend > structure > entry):
+            issues.append(
+                "timeframes: must be ordered trend > structure > entry"
+            )
+        if inputs["InpMaxPositions"] != 1:
+            issues.append("InpMaxPositions: must be 1 in v1")
+        minimum_bars = (
+            inputs["InpAtrPeriod"]
+            + inputs["InpAtrBaselineBars"]
+            + inputs["InpSwingLeft"]
+            + inputs["InpSwingRight"]
+            + 10
+        )
+        if inputs["InpEntryBars"] < minimum_bars:
+            issues.append(
+                "InpEntryBars: must leave room for ATR baseline and swings"
+            )
+        if inputs["InpTrailingStartR"] < inputs["InpBreakEvenAtR"]:
+            issues.append(
+                "InpTrailingStartR: must be at least InpBreakEvenAtR"
+            )
+        if inputs["InpMaxSlAtr"] <= inputs["InpMinSlAtr"]:
+            issues.append("InpMaxSlAtr: must exceed InpMinSlAtr")
+        if inputs["InpConfirmationCloseZone"] >= 0.5:
+            issues.append("InpConfirmationCloseZone: must be below 0.5")
 
     return issues
 

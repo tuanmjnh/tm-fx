@@ -3,8 +3,9 @@
 //|        MT5 EA Lab - in-memory virtual positions and P&L           |
 //|                                                                  |
 //| Simulation only. No order, position, account or broker API is     |
-//| used. P&L assumes contract size 1: one volume unit earns one      |
-//| quote-currency unit per one price unit of favourable movement.    |
+//| used. P&L assumes contract size 1 unless InitWithContractSize()   |
+//| supplies the symbol's contract size; one volume unit then earns   |
+//| contract_size quote-currency units per one price unit of move.    |
 //| Commission is a total amount per fill, not per volume.            |
 //+------------------------------------------------------------------+
 #ifndef SIM_PORTFOLIO_MQH
@@ -44,6 +45,7 @@ private:
    double            m_realized;
    double            m_peak_equity;
    double            m_max_drawdown_pct;
+   double            m_contract_size;
    bool              m_initialized;
 
    void              UpdatePeak(const double equity)
@@ -72,21 +74,42 @@ public:
       m_realized=0.0;
       m_peak_equity=0.0;
       m_max_drawdown_pct=0.0;
+      m_contract_size=1.0;
       m_initialized=false;
      }
 
    bool              Init(const double initial_balance,string &error)
      {
+      return(InitWithContractSize(initial_balance,1.0,error));
+     }
+
+   //--- Contract size converts a price move into account-currency P&L.
+   //--- Defaults to 1.0 through Init() so older simulations are unchanged.
+   bool              InitWithContractSize(const double initial_balance,
+                                          const double contract_size,
+                                          string &error)
+     {
       Reset();
       if(!SimValidateInitialBalance(initial_balance,error))
          return(false);
+      if(!SimIsFinite(contract_size) || contract_size<=0.0)
+        {
+         error="contract_size_must_be_finite_positive";
+         return(false);
+        }
 
       m_initial_balance=initial_balance;
       m_balance=initial_balance;
       m_peak_equity=initial_balance;
+      m_contract_size=contract_size;
       m_initialized=true;
       error="";
       return(true);
+     }
+
+   double            ContractSize(void) const
+     {
+      return(m_contract_size);
      }
 
    bool              IsInitialized(void) const
@@ -187,7 +210,8 @@ public:
       double total=0.0;
       const int count=ArraySize(m_positions);
       for(int i=0; i<count; i++)
-         total+=(int)m_positions[i].side*(price-m_positions[i].entry)*m_positions[i].volume;
+         total+=(int)m_positions[i].side*(price-m_positions[i].entry)*
+                m_positions[i].volume*m_contract_size;
       return(total);
      }
 
@@ -268,7 +292,8 @@ public:
 
       double gross=0.0;
       for(int i=0; i<count; i++)
-         gross+=(int)m_positions[i].side*(price-m_positions[i].entry)*m_positions[i].volume;
+         gross+=(int)m_positions[i].side*(price-m_positions[i].entry)*
+                m_positions[i].volume*m_contract_size;
 
       realized_delta=gross-commission;
       m_realized+=realized_delta;
@@ -317,7 +342,8 @@ public:
       double closed_volume=0.0;
       for(int i=0; i<count; i++)
         {
-         const double profit=(int)m_positions[i].side*(price-m_positions[i].entry);
+         const double profit=(int)m_positions[i].side*
+                             (price-m_positions[i].entry)*m_contract_size;
          if(profit>=min_profit_per_volume)
            {
             gross+=profit*m_positions[i].volume;

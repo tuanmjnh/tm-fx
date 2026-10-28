@@ -1714,3 +1714,79 @@ symbol/timeframe/giai đoạn demo; EA không gửi lệnh nên tester hiển th
 lot thật hay độ sẵn sàng live. Parity Pine vẫn `BLOCKED`; indicator gắn chart và EA multi-source vẫn
 `NOT_RUN`.
 
+
+## 42. PA TrendRider XAU v1 — triển khai mô phỏng và kiểm thử thật — 2026-10-28
+
+**Yêu cầu:** đọc `docs/PA_TrendRider_XAU_V1_Specification_Vietnamese.md`, lập kế hoạch, tự triển khai
+và chạy test, tổng hợp kết quả.
+
+**Cách hiểu phạm vi:** đặc tả mô tả EA dùng `OrderCalcProfit/Margin`, position/account API và demo
+forward test. Repo bị ràng buộc simulation-only (`decisions/0002`), nên bản triển khai dùng vị thế ảo,
+lot theo tick size/value và ghi rõ các mục live là `BLOCKED` thay vì giả lập API bị cấm.
+
+### 42.1 Deliverable
+
+| Hạng mục | File |
+|---|---|
+| 12 module chiến lược | `mt5/Include/TrendRider/TRTypes…TRMarketData.mqh` |
+| EA mô phỏng | `mt5/Experts/PATrendRiderXAUv1SimEA.mq5` |
+| Contract suite 82 vector | `mt5/Scripts/TrendRiderContractTests.mq5` |
+| Preset + 2 scenario | `configs/sim/pa_trendrider_xau.json`, `configs/project.example.json` |
+| Validator tĩnh + pytest | `scripts/validate_trendrider.py`, `python/tests/test_trendrider.py` |
+| Tài liệu | `docs/PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`, guide Track C |
+| Bằng chứng chạy | `reports/build/tester-reports/{contract_trendrider,pa_trendrider_baseline,pa_trendrider_cost_stress}/` |
+
+Core dùng chung được mở rộng tương thích ngược: `CSimPortfolio.InitWithContractSize` để P&L mô phỏng
+XAUUSDm (contract 100) khớp lot tính theo tick; `Init(balance)` vẫn giữ contract size 1 cho các EA cũ.
+Vector P23/P24 thêm vào `SimCoreTests`.
+
+### 42.2 Kiểm thử và bằng chứng
+
+| Lần chạy | Kết quả |
+|---|---|
+| Compile repo | 27 source, **0 errors, 0 warnings**, `BUILD_OK` |
+| Compile Data Folder (EA + wrapper) | **0 errors, 0 warnings** |
+| `TrendRiderContractTests` | **ALL_PASS pass=82 fail=0** (lần đầu 77/4 do vector sai; lần hai 80/1 do float floor; lần ba 81/1 do include cũ; lần bốn PASS) |
+| `SimCoreTests` | **ALL_PASS pass=125 fail=0** (gồm contract size) |
+| Baseline `XAUUSDm` M5 2026.01.05–03.05 | 13 entry/13 exit, 2 thắng/11 thua, net **−140.46**, DD **1.75%**, spread 160–360 điểm, 18 lần cooldown, 0 daily/DD lock |
+| Cost stress (commission 5/lot, slippage 20 điểm, balance 5 000) | 4 entry/4 exit, 0 thắng, net **−37.28**, DD **0.94%** |
+| Chạy lại baseline | Cùng `config_hash=274661E5`, cùng 13 lệnh, cùng −140.46 → tái lập được |
+| Audit CSV | 18 cột; ENTRY/EXIT khớp; BUY SL<entry, SELL SL>entry; `tp=0`; 7 trail đều siết SL; 0 vị thế mở cuối kỳ |
+
+Lỗi thật phát hiện và sửa trong quá trình chạy:
+
+1. **BOS phát lại khi cửa sổ trượt** — dedupe theo index (index đổi khi thêm nến) → dedupe theo
+   `swing.time`; BOS 3423 → 952, thêm vector B9.
+2. **BOS treo vô hạn** — setup không hết hạn, ~10 700 dòng chặn → xóa BOS khi `bos_too_old` hoặc
+   `ZONE_INVALIDATED`.
+3. **Tiền tố reason lặp** `ENTRY_BLOCKED|reason=ENTRY_BLOCKED|reason=…` → chuẩn hóa.
+4. **`TRLoadClosedBars` bỏ nến đóng mới nhất** → đọc đủ `copied` nến, kiểm tra khớp `iTime(...,1)`.
+
+### 42.3 Gate cuối
+
+| Lệnh | Kết quả |
+|---|---|
+| `.venv\Scripts\python.exe -m pytest -q` | **341 passed** (14.69 s) |
+| `compileall python/src python/tests scripts` | exit `0` |
+| `scripts\validate-project.py` | `SUMMARY: checks=12 fail=0` |
+| `scripts\validate_sim_configs.py --no-snapshot` | `SUMMARY: checked=7 fail=0`; 6 preset, 17 scenario |
+| `scripts\validate_trendrider.py` | `SUMMARY: checks=7 fail=0` |
+| `scripts\build-mql5.ps1` | 27 source, 0/0, `BUILD_OK` |
+
+### 42.4 Giới hạn trung thực
+
+- Mẫu 2 tháng, một symbol, model 1-minute OHLC, một bộ tham số chưa tối ưu; lỗ nhẹ **không** chứng minh
+  chiến lược tốt/xấu và không phải khuyến nghị giao dịch.
+- Không có OrderCalcProfit/Margin, margin check, netting/hedging, account currency, swap; tester hiển
+  thị 0 deal. Out-of-sample, tối ưu tham số và demo forward test: `NOT_RUN`/`BLOCKED`.
+- Balance 1 000 USD + risk 0.25% không đủ cho lot tối thiểu 0.01 của XAUUSDm với stop ~10 USD; EA từ
+  chối đúng với `min_volume_exceeds_risk`. Preset dùng 10 000 USD; đây là quyết định sản phẩm cần bàn,
+  không được che bằng cách hạ chuẩn lot.
+- Agent tester xóa sandbox `MQL5\Files` đầu mỗi lượt; CSV baseline lần đầu bị mất và phải chạy lại.
+  Quy trình chuẩn từ nay: copy bằng chứng ngay sau khi terminal thoát.
+
+### 42.5 Package
+
+`package-source.ps1 -Version 0.9.0` → `mt5-ea-ai-lab-v0.9.0-20261028-224133.zip`, 241 file, 168 mục bị
+loại (report, `.ex5`, cache, credential), SHA256 `7fdedb4c…8c1f59`. Zip không chứa CSV/report tester;
+bằng chứng runtime nằm trong `reports/build/tester-reports/` (gitignored).
