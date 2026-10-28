@@ -1,0 +1,32 @@
+# Synthetic bounded grid demo. Not a performance claim.
+experiment_id: demo-bounded-grid-synthetic
+data:
+  path: datasets/samples/synthetic_ml_demo.csv   # synthetic, not market data
+  symbol: EURUSD
+  timeframe: M5
+  timezone: UTC
+  data_kind: synthetic
+strategy:
+  fast_period: 8
+  slow_period: 21
+  allow_long: true
+  allow_short: true
+basket:
+  initial_equity: 10000.0
+  layer_units: 2000.0
+  max_layers: 3
+  max_total_units: 6000.0
+  step_points: 150.0
+  take_profit_points: 250.0
+  max_basket_loss: 20.0
+  point_size: 0.00001
+  spread_points: 8.0
+  slippage_points: 1.0
+  commission_per_side: 1.0
+  mode: grid
+  close_on_opposite_signal: true
+seed: 42
+outputs:
+  report_dir: reports/backtests/demo-bounded-grid-synthetic
+  plot: false
+notes: "Synthetic fixture; bounded grid mechanics only, not market performance."

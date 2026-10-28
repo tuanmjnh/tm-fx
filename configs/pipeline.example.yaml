@@ -1,0 +1,10 @@
+# Phase 9 end-to-end demo configuration. Synthetic data only.
+# The dataset is defined by the two stage configs and must match.
+experiment_id: demo-phase9
+backtest_config: configs/backtest.synthetic-ml.yaml
+ml_config: configs/ml_baseline.example.yaml
+outputs:
+  report_dir: reports/pipeline
+store:
+  db: experiments/phase9-demo.sqlite
+notes: "Phase 9 synthetic pipeline; research output, not market performance."

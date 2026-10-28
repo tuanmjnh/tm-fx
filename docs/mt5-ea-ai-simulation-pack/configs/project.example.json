@@ -1,0 +1,25 @@
+{
+  "project_name": "MT5 EA Lab Simulation",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "strategy_modules": [
+    "GridLabEA",
+    "DCALabEA",
+    "RunnerTrailingLabEA"
+  ],
+  "risk_defaults": {
+    "max_virtual_positions": 1,
+    "max_grid_levels": 3,
+    "max_dca_adds": 2,
+    "max_virtual_exposure": 1.0,
+    "max_daily_loss_pct": 2.0,
+    "max_drawdown_pct": 5.0,
+    "max_spread_points": 30,
+    "cooldown_bars": 1
+  },
+  "reporting": {
+    "write_csv": true,
+    "include_config_hash": true,
+    "include_assumptions": true
+  }
+}

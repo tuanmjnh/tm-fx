@@ -1,1 +1,65 @@
-"""models package (implemented in a later roadmap phase)."""
+"""Models, time splits and model cards for the ML baseline."""
+
+from mt5_ea_ai_lab.models.card import render_model_card
+from mt5_ea_ai_lab.models.logistic import (
+    MODEL_KIND,
+    MODEL_SCHEMA_VERSION,
+    LogisticConfig,
+    ModelError,
+    fit_logistic,
+    load_model,
+    predict_labels,
+    predict_proba,
+    save_model,
+    validate_model_artifact,
+)
+from mt5_ea_ai_lab.models.onnx_export import (
+    ONNX_OPSET,
+    ONNX_SCHEMA_VERSION,
+    PARITY_TOLERANCE,
+    OnnxExportError,
+    build_onnx_model,
+    compare_python_onnx,
+    export_onnx_model,
+    load_onnx_metadata,
+    predict_onnx,
+    save_onnx_metadata,
+)
+from mt5_ea_ai_lab.models.splits import (
+    Fold,
+    Segment,
+    SplitConfig,
+    SplitError,
+    SplitPlan,
+    make_time_split,
+)
+
+__all__ = [
+    "MODEL_KIND",
+    "MODEL_SCHEMA_VERSION",
+    "ONNX_OPSET",
+    "ONNX_SCHEMA_VERSION",
+    "PARITY_TOLERANCE",
+    "Fold",
+    "LogisticConfig",
+    "ModelError",
+    "OnnxExportError",
+    "Segment",
+    "SplitConfig",
+    "SplitError",
+    "SplitPlan",
+    "build_onnx_model",
+    "compare_python_onnx",
+    "export_onnx_model",
+    "fit_logistic",
+    "load_model",
+    "load_onnx_metadata",
+    "make_time_split",
+    "predict_labels",
+    "predict_onnx",
+    "predict_proba",
+    "render_model_card",
+    "save_model",
+    "save_onnx_metadata",
+    "validate_model_artifact",
+]

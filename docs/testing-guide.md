@@ -1,0 +1,432 @@
+# Hướng dẫn kiểm thử backtester, experiment store, ML, ONNX, pipeline và bounded basket (Phase 4–9)
+
+- **Phạm vi:** mô phỏng bar-by-bar cho baseline EMA crossover bằng Python, bounded DCA/grid basket,
+  metadata run trong SQLite, so sánh hai run, ML baseline (label/feature/split/logistic/model card),
+  export/kiểm chứng ONNX và pipeline end-to-end.
+- **Trạng thái:** backtester, bounded basket simulator, store, comparator, ML CLI, ONNX export/parity và
+  pipeline đã chạy thật; Strategy Tester của MT5 **chưa chạy**; EA `LabOnnxInference` mới compile, ONNX
+  runtime trong MT5 chưa xác minh (Phase 8 `READY_FOR_MANUAL_VALIDATION`).
+- **Cảnh báo:** mọi kết quả từ `datasets/samples/synthetic_ema_cross_demo.csv` và
+  `datasets/samples/synthetic_ml_demo.csv` là synthetic, không phải lịch sử thị trường và không dùng để
+  đánh giá lợi nhuận.
+
+## 1. Cách chạy
+
+```powershell
+# Từ thư mục gốc repository
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# Chạy toàn bộ test
+.\.venv\Scripts\python.exe -m pytest
+
+# Backtest bằng cấu hình mẫu (không ghi experiment store)
+.\.venv\Scripts\python.exe scripts\run_backtest.py --config configs\backtest.example.yaml
+
+# Ghi đè thư mục output
+.\.venv\Scripts\python.exe scripts\run_backtest.py `
+  --config configs\backtest.example.yaml --out-dir reports\backtests\manual-run
+
+# Backtest có metadata SQLite; artifact vào reports\backtests\<experiment_id>
+.\.venv\Scripts\python.exe scripts\run_backtest.py `
+  --config configs\experiment.example.yaml `
+  --store --experiment-id manual-phase6-001
+
+# Bounded DCA/grid simulator (không dùng experiment store)
+.\.venv\Scripts\python.exe scripts\run_basket_backtest.py `
+  --config configs\backtest.bounded-basket-synthetic.yaml
+.\.venv\Scripts\python.exe scripts\run_basket_backtest.py `
+  --config configs\backtest.bounded-grid-synthetic.yaml
+
+# So sánh hai run đã lưu
+.\.venv\Scripts\python.exe scripts\compare_experiments.py `
+  --db experiments\experiments.sqlite `
+  --baseline manual-phase6-001 --run manual-phase6-002
+
+# ML baseline (synthetic demo); thêm --store để ghi metadata
+.\.venv\Scripts\python.exe scripts\train_ml_baseline.py `
+  --config configs\ml_baseline.example.yaml
+
+# Export ONNX từ model Phase 7 và kiểm tra parity trên fixture cố định
+.\.venv\Scripts\python.exe scripts\export_onnx_model.py `
+  --model reports\ml\demo-phase7-ml\model.json `
+  --out-dir models\candidates\demo-phase7-ml `
+  --fixture python\tests\fixtures\onnx_feature_fixture.csv
+
+# Pipeline end-to-end: validate -> backtest -> ML -> store -> report
+.\.venv\Scripts\python.exe scripts\run_pipeline.py `
+  --config configs\pipeline.example.yaml
+```
+
+`run_backtest.py` trả các exit code:
+
+| Code | Ý nghĩa |
+|---|---|
+| `0` | Backtest hoàn tất |
+| `1` | Không đọc được config hoặc dataset |
+| `2` | Validation dữ liệu thất bại (`invalid_data`) |
+| `3` | Backtest lỗi sau khi đã nạp dữ liệu |
+| `4` | `experiment_id` đã tồn tại trong store; không ghi đè |
+| `5` | Không mở/ghi được experiment store |
+
+`compare_experiments.py` trả `0` khi comparable, `1` khi không comparable (báo cáo vẫn được ghi) và `2`
+khi thiếu database/run hoặc ID không hợp lệ.
+
+`run_basket_backtest.py` trả `0` khi mô phỏng hoàn tất, `1` khi config/dataset không đọc được, `2` khi
+validation dữ liệu thất bại và `3` khi mô phỏng lỗi sau khi nạp dữ liệu. CLI này chưa nối experiment
+store, không có exit `4/5` và chạy lại cùng config sẽ ghi đè artifact.
+
+`train_ml_baseline.py` trả `0` thành công, `1` lỗi config/dataset, `2` validation dữ liệu lỗi, `3` lỗi
+feature/split/train/evaluate, `4` `experiment_id` đã tồn tại và `5` không mở/ghi được store. Artifact ML
+nằm trong `outputs.report_dir/<experiment_id>/`:
+| File | Nội dung |
+|---|---|
+| `summary.json` | Config, split/checks, threshold, metric phân loại, metric chiến lược, benchmark, warning |
+| `model.json` | Feature schema, scaler mean/scale, coefficient, intercept, hyperparameter, dependency |
+| `model_card.md` | Model card dạng đọc được |
+| `predictions.csv` | Dự đoán test kèm `label`/`future_return` để audit |
+| `fold_predictions.csv` | Dự đoán out-of-fold của walk-forward validation |
+| `feature_schema.json`, `label_schema.json`, `split_plan.json` | Schema và integrity check |
+| `validation.json`, `validation.csv` | Validation OHLCV của dataset |
+
+`export_onnx_model.py` trả `0` khi export + parity đạt, `1` khi model/fixture/thư mục output không
+đọc/ghi được và `2` khi ONNX checker hoặc parity thất bại. Artifact trong `--out-dir`:
+
+| File | Nội dung |
+|---|---|
+| `model.onnx` | Graph float32: `Sub(mean) → Div(scale) → MatMul(coefficients) → Add(intercept) → Sigmoid` |
+| `model_metadata.json` | Opset/IR, input/output shape, thứ tự feature, threshold, hash model JSON/ONNX, kích thước |
+| `onnx_parity.json`, `onnx_parity.csv` | Kết quả đối chiếu Python–ONNX trên fixture (chỉ khi truyền `--fixture`) |
+
+`run_pipeline.py` trả `0` khi cả hai stage hoàn tất, `1` config/dataset lỗi hoặc hai stage lệch dataset,
+`2` validation dữ liệu lỗi (ML không chạy), `3` stage lỗi sau khi nạp dữ liệu, `4` ID/báo cáo đã tồn tại
+và `5` lỗi store. Artifact:
+
+```text
+reports/pipeline/<id>-backtest/   # summary, trades, equity, signals, validation
+reports/pipeline/<id>-ml/         # summary, model, model card, predictions, split/schema
+reports/pipeline/<id>/            # pipeline_summary.json + pipeline_report.md
+```
+
+Báo cáo pipeline gắn nhãn demo/synthetic, liệt kê limitation và hash dữ liệu/model. Chạy lại cùng ID bị
+từ chối và không ghi đè.
+
+Artifact backtest trong `outputs.report_dir` (khi dùng `--store`: trong `<report_dir>/<experiment_id>`):
+
+| File | Nội dung |
+|---|---|
+| `summary.json` | Trạng thái, config, metadata dữ liệu, validation, metric, benchmark, signal counts, trades |
+| `trades.csv` | Trades ledger |
+| `equity.csv` | Equity curve từng bar |
+| `signals.csv` | Tín hiệu từng bar kèm EMA prev/now |
+| `validation.json`, `validation.csv` | Báo cáo validation của dataset |
+| `equity.png` | Tùy chọn khi `outputs.plot: true` |
+
+Không dùng `--store`, chạy lại cùng config và dữ liệu sẽ ghi đè artifact. Có `--store`, ID trùng bị từ chối
+và artifact của run khác không bị ghi đè. `reports/`, `experiments/*.sqlite` bị gitignore. Chi tiết store:
+[`experiment-store.md`](experiment-store.md).
+
+Bounded basket CLI ghi cùng thư mục `outputs.report_dir` (không có `--store`):
+
+| File | Nội dung |
+|---|---|
+| `summary.json` | `engine=bounded_basket`, config, `effective_max_layers`, validation, metric, `hard_limits`, `basket_count` |
+| `trades.csv` | Mỗi layer một row, thêm `basket_id` và `layer_index` |
+| `baskets.csv` | Một row / basket: layer count, units, average entry, PnL, exit reason, blocked bars |
+| `equity.csv` | `position` = `side * layer_count` |
+| `signals.csv`, `validation.json/csv` | Như backtest thường |
+| `equity.png` | Tùy chọn khi `outputs.plot: true` |
+
+Metric trong `summary.json` tính trên per-layer trades, không phải per-basket. Chi tiết quy tắc và giới
+hạn: [`bounded-basket.md`](bounded-basket.md).
+
+## 2. Hợp đồng thời gian
+
+1. Tín hiệu tại bar `i` chỉ dùng close của các bar `0..i`; không dùng dữ liệu tương lai.
+2. Tín hiệu được **thực thi tại open của bar `i+1`**. Không có same-bar execution.
+3. Tín hiệu ở bar cuối cùng không có bar kế tiếp nên không được thực thi.
+4. Vị thế còn mở khi hết dữ liệu được đóng tại **close của bar cuối** với chi phí exit bình thường và
+   `exit_reason=end_of_data`. Đây là quy ước mô phỏng, không phải quyết định chiến lược.
+5. Tại open của bar kế tiếp, tín hiệu ngược chiều đóng vị thế hiện tại rồi mở vị thế mới
+   (`exit_reason=opposite_signal`). Engine một vị thế không có pyramiding; tối đa một vị thế tại một thời
+   điểm. Bounded DCA/grid là simulator riêng: một basket, nhiều layer, quy tắc ở mục 4.2.
+
+## 3. Giá khớp và chi phí
+
+- Giá tham chiếu là open/close/high/low của bar; không dùng tick data.
+- Mỗi lần khớp chịu `half_spread + slippage` theo hướng bất lợi:
+
+  ```text
+  half_spread = spread_points * point_size / 2
+  slippage    = slippage_points * point_size
+  buy_fill    = raw_price + half_spread + slippage
+  sell_fill   = raw_price - half_spread - slippage
+  ```
+
+- `commission_per_side` là tiền tệ quote cho **mỗi lần khớp** (entry và exit), không phải per lot.
+- `position_units` là số đơn vị base currency; PnL tính bằng quote currency:
+  `(exit_fill - entry_fill) * side * position_units`.
+- Không mô hình leverage, margin, margin call, swap/financing, contract size, làm tròn tick size, lot
+  constraint, requote, latency hay partial fill.
+- Benchmark buy-and-hold dùng cùng `ExecutionConfig`: mua tại open đầu tiên, bán tại close cuối cùng,
+  chịu spread/slippage/commission như chiến lược. Benchmark chỉ là baseline, không phải cam kết hiệu năng.
+
+## 4. Stop-loss, take-profit, trailing stop và gap
+
+- SL/TP được neo theo **entry fill**, không theo giá close của tín hiệu:
+
+  ```text
+  long  stop  = entry_fill - stop_loss_points  * point_size
+  long  target= entry_fill + take_profit_points* point_size
+  short stop  = entry_fill + stop_loss_points  * point_size
+  short target= entry_fill - take_profit_points* point_size
+  ```
+
+- SL/TP được kiểm tra trong cùng bar entry và các bar sau đó bằng high/low.
+- Nếu cả SL và TP đều có thể bị chạm trong một bar, **SL được giả định khớp trước**. Đây là quy ước bảo
+  thủ; dữ liệu OHLC không cho biết thứ tự thật trong bar.
+- Nếu giá mở cửa đã vượt SL (gap), fill là giá mở cửa tệ hơn, không phải giá SL:
+  long gap-down → `min(open, stop)`, short gap-up → `max(open, stop)`.
+- Nếu giá mở cửa đã vượt TP, fill là giá mở cửa tốt hơn: long gap-up → `max(open, target)`,
+  short gap-down → `min(open, target)`.
+- Không mô phỏng slippage riêng cho SL/TP ngoài `slippage_points` đã áp dụng cho mọi fill. Gap được xử lý
+  bằng open của bar, không bằng tick.
+
+### 4.1 Trailing stop
+
+- Bật bằng `trailing_stop_points` (khoảng cách, point) và tùy chọn `trailing_activation_points`
+  (excursion tối thiểu để bắt đầu kéo). Activation thiếu trailing bị từ chối.
+- Long trail dưới `high`, short trail trên `low`; stop chỉ siết, không nới.
+- Stop được tính từ bar đã đóng và chỉ có hiệu lực từ **bar kế tiếp**; không giả định chạm trong chính bar
+  đã tạo ra nó vì OHLC không cho biết thứ tự high/low.
+- Stop tĩnh vẫn là stop ban đầu nếu bật; trailing chỉ thay khi tốt hơn. Gap dùng quy tắc open tệ hơn như SL.
+- Stop bị chạm sau khi trailing move ghi `exit_reason=trailing_stop`; trước khi move ghi `stop_loss`.
+- Chi tiết, config mẫu và kết quả demo: [`trailing-stop.md`](trailing-stop.md).
+
+### 4.2 Bounded DCA/grid basket
+
+- Simulator riêng `run_bounded_basket`, một basket tại một thời điểm; không thay engine một vị thế.
+- Hard cap: `max_layers`, `max_total_units`, `max_basket_loss` (lỗ ròng), tối đa một layer mỗi bar.
+  `effective_max_layers = min(max_layers, floor(max_total_units / layer_units))`.
+- Mở layer đầu tại open bar kế tiếp. Level thêm:
+  `dca = last_fill - side*step`, `grid = first_fill - side*layer_count*step`.
+- Exit được kiểm tra trước add; nếu loss cap và TP cùng trong một bar, loss cap thắng. Layer mới chỉ ảnh
+  hưởng level từ bar kế tiếp.
+- TP neo theo average entry; loss cap dịch stop theo commission entry + exit để fill tại stop (không gap)
+  đúng lỗ ròng. Gap có thể vượt cap; đọc `hard_limits.loss_cap_overshoot`.
+- Tín hiệu ngược chiều đóng basket nếu `close_on_opposite_signal: true`; nếu false thì bỏ qua.
+- `trades.csv` là per-layer; metric `trade_count`/`win_rate`/`profit_factor` không phải per-basket.
+- Chi tiết, công thức, config và demo: [`bounded-basket.md`](bounded-basket.md).
+
+## 5. Định nghĩa metric
+
+| Metric | Định nghĩa |
+|---|---|
+| `bars` | Số bar có trong equity curve |
+| `initial_equity`, `final_equity` | Vốn đầu kỳ và equity sau khi đóng vị thế cuối kỳ |
+| `net_profit` | `final_equity - initial_equity` |
+| `total_return` | `final_equity / initial_equity - 1` |
+| `gross_profit` | Tổng `pnl` của các trade có `pnl > 0` (đã trừ commission) |
+| `gross_loss` | Trị tuyệt đối tổng `pnl` của các trade có `pnl < 0` (đã trừ commission) |
+| `profit_factor` | `gross_profit / gross_loss`; `null` nếu không có trade lỗ |
+| `win_count`, `loss_count` | Số trade lãi/lỗ; trade `pnl = 0` không thuộc cả hai |
+| `win_rate` | `win_count / trade_count`; `null` nếu không có trade |
+| `average_trade` | Trung bình `pnl` trên mọi trade |
+| `average_win`, `average_loss` | Trung bình trade lãi/lỗ; `average_loss` là số âm |
+| `expectancy` | Hiện bằng `average_trade` (tiền tệ tuyệt đối), không phải R-multiple |
+| `total_commission` | Tổng commission của mọi trade |
+| `max_drawdown` | Mức giảm lớn nhất từ đỉnh equity, đơn vị tiền tệ, luôn `>= 0` |
+| `max_drawdown_pct` | `max_drawdown` tính theo tỷ lệ đỉnh, luôn `>= 0` |
+| `exposure_ratio` | Tỷ lệ bar có vị thế mở tại cuối bar, trước khi đóng vị thế cuối kỳ |
+| `exit_reason_counts` | Số trade theo `stop_loss`, `take_profit`, `trailing_stop`, `opposite_signal`, `end_of_data` |
+| `sharpe_ratio` | Luôn `null`: chưa định nghĩa return frequency và annualization |
+
+`gross_profit`/`gross_loss` dùng `pnl` sau commission, không dùng cột `gross_pnl` trước commission. Cột
+`gross_pnl` trong trades ledger là PnL trước commission nhưng đã gồm spread/slippage.
+
+Bounded basket dùng cùng công thức metric trên **per-layer trades**, nên `trade_count`, `win_rate`,
+`profit_factor` và `exit_reason_counts` mô tả từng layer, không phải từng basket. Số basket và lý do
+đóng basket nằm riêng ở `basket_count` và `basket_exit_reason_counts`
+(`basket_take_profit`, `basket_loss_cap`, `opposite_signal`, `end_of_data`). `hard_limits` chứa cap cấu
+hình, giá trị lớn nhất quan sát được, `blocked_add_bars`, `baskets_at_layer_cap`, lỗ ròng tệ nhất và
+`loss_cap_overshoot`.
+
+Không báo Sharpe/Sortino/Calmar cho đến khi return series, tần suất và annualization được định nghĩa rõ.
+
+## 6. Trades ledger và equity curve
+
+`trades.csv`:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `trade_id` | Số thứ tự tăng dần |
+| `side` | `long` hoặc `short` |
+| `entry_time`, `exit_time` | Timestamp mở bar nơi fill xảy ra (UTC) |
+| `entry_bar`, `exit_bar` | Index bar trong dataset |
+| `entry_fill`, `exit_fill` | Giá đã gồm spread/slippage |
+| `units` | `position_units` |
+| `gross_pnl` | PnL trước commission |
+| `commission` | Tổng commission entry + exit |
+| `pnl` | `gross_pnl - commission` |
+| `bars_held` | `exit_bar - entry_bar`; có thể bằng `0` nếu SL/TP chạm trong bar entry |
+| `exit_reason` | Lý do đóng vị thế |
+
+`equity.csv`: `timestamp`, `cash`, `unrealized`, `equity = cash + unrealized`, `position`.
+`unrealized` đánh giá tại close so với entry fill và **không** trừ chi phí exit giả định. Ở bar cuối,
+vị thế bị đóng theo quy ước nên `cash` và `equity` phản ánh PnL đã thực hiện, `position = 0`.
+
+Bounded basket thêm hai cột vào `trades.csv`: `basket_id` và `layer_index`. Mỗi layer là một row, nên
+một basket đóng sẽ tạo nhiều row cùng `exit_time`/`exit_fill`/`exit_reason`. `baskets.csv` có một row mỗi
+basket: `basket_id`, `side`, `mode`, thời điểm mở/đóng, `layer_count`, `units`, `average_entry`,
+`exit_fill`, `gross_pnl`, `commission`, `pnl`, `bars_held`, `exit_reason`, `blocked_add_bars`,
+`layer_cap_reached`. `equity.csv` giữ `position = side * layer_count`; `unrealized` cộng excursion của
+tất cả layer đang mở.
+
+## 7. Validation và fail-closed
+
+Runner gọi loader và validator trước khi backtest:
+
+- Lỗi validation (timestamp trùng/không tăng, OHLC không nhất quán, giá âm/không hữu hạn, sai symbol/
+  timeframe, dataset rỗng) → `status=invalid_data`, exit code `2`, **không** chạy backtest.
+- Warning (ví dụ `synthetic_dataset`, gap) không chặn backtest nhưng được ghi trong `validation.json`.
+- Loader và validator không tự sửa, sort, deduplicate hay fill dữ liệu.
+- Backtest từ chối thêm dữ liệu không hợp lệ tại thời điểm chạy (timestamp, OHLC, NaN/Inf) để tránh chạy
+  trên input không rõ nguồn.
+
+## 8. Tái lập
+
+- Không có random trong signal, execution hay metric. `seed` được ghi vào summary và metadata nhưng hiện
+  không được dùng; nếu sau này thêm thành phần ngẫu nhiên, seed phải được truyền tường minh.
+- Cùng config + cùng dataset tạo ra trades/equity/signals/metric giống nhau. Chỉ `generated_at_utc` và
+  đường dẫn tuyệt đối trong summary là khác giữa các lần chạy.
+- Test `test_repeated_runs_are_identical` so sánh trực tiếp trades, equity, signals, metrics và benchmark.
+- Test `test_generate_signals_has_no_look_ahead` thay đổi close tương lai và xác nhận tín hiệu quá khứ
+  không đổi.
+- Với `--store`, mỗi run lưu thêm:
+  - `config_hash`: hash JSON canonical của data descriptor/strategy/execution/seed; không gồm đường dẫn,
+    output hay notes;
+  - `data_fingerprint`: SHA-256 byte gốc của dataset;
+  - `code_version`, `git_commit`, `git_dirty`.
+- Hai run được coi là comparable khi cả hai `completed`, cùng config hash, cùng data fingerprint, cùng
+  code version và (nếu có) cùng git commit. Worktree dirty hoặc dữ liệu synthetic chỉ tạo warning; xem
+  [`experiment-store.md`](experiment-store.md).
+
+## 9. ML baseline (Phase 7)
+
+- **Label:** `future_return[t] = close[t+horizon]/close[t] - 1`; `1` nếu vượt `+min_return`, `0` nếu dưới
+  `-min_return`; dead zone và tail thiếu horizon bị loại. `label_end_bar_index` dùng để purge.
+- **Feature:** 12 feature causal; test `test_features_are_causal` thay đổi toàn bộ dữ liệu sau bar 90 và
+  xác nhận feature trước bar 90 không đổi.
+- **Split:** 60/20/20 theo thời gian, purge theo label horizon; 3 fold expanding-window. CLI dừng nếu một
+  trong bốn check trong `split_plan.json` false.
+- **Threshold:** chọn trên out-of-fold validation bằng balanced accuracy (grid 0.30–0.70, tie-break gần
+  0.5); test không được dùng để chọn feature/threshold/model và chỉ đánh giá một lần.
+- **Metric:** confusion matrix, accuracy, balanced accuracy, precision, recall, F1, ROC-AUC, Brier score
+  cho phân loại; trade count, net profit, return, drawdown, exposure và exit reason cho mô phỏng chiến
+  lược. Không báo Sharpe/Sortino.
+- **Benchmark:** majority classifier; momentum rule (trailing 3 bar); buy & hold cùng cost model.
+- **Mô phỏng:** entry tại open bar kế tiếp, exit tại open sau `horizon` bar; dự đoán chồng lấn bị bỏ qua;
+  spread/slippage/commission áp dụng cho mọi fill.
+
+Demo synthetic (1.800 bar, 1.489 sample sau purge) cho test ROC-AUC 0.5708, balanced accuracy 0.5584;
+chiến lược ML lỗ -151.60 sau chi phí, kém buy & hold +295.30. Đây là kết quả nghiên cứu trên fixture,
+không phải hiệu năng thị trường. Chi tiết: [`ml-baseline.md`](ml-baseline.md).
+
+## 10. ONNX inference (Phase 8)
+
+- **Graph:** dựng trực tiếp từ `model.json` (không pickle/skl2onnx), opset 13, IR 8, float32, batch động;
+  inference shape `[1, 12]` → `[1, 1]`. Mean/scale của StandardScaler nhúng trong graph.
+- **Feature order:** lấy từ `model_metadata.json` và phải khớp `feature_schema.json`; nhập sai thứ tự
+  hoặc sai số feature bị từ chối, không tự suy diễn.
+- **Parity:** `scripts/export_onnx_model.py --fixture ...` so sánh xác suất Python `float64` (từ JSON
+  artifact) với ONNX Runtime `float32` trên 24 hàng test synthetic; tolerance tuyệt đối `1e-5`.
+  Kết quả thực tế: max abs diff `4.673e-08`, mean `1.953e-08` → PASS.
+- **Metadata/hash:** `model_metadata.json` ghi SHA-256 của model JSON và ONNX; dùng để phát hiện artifact
+  bị thay đổi trước khi copy sang MT5.
+- **EA harness:** `mt5/Experts/LabOnnxInference.mq5` gọi `OnnxCreate`, đặt input/output shape, đọc fixture
+  CSV trong `MQL5/Files` và in xác suất; `OnTick` rỗng, không có API giao dịch.
+- **Chưa kiểm chứng:** ONNX Runtime trong MT5 (build 5.0.0.6249) và parity runtime. Cần chạy EA thủ công
+  theo [`onnx-inference.md`](onnx-inference.md) trước khi kết luận tương thích. Compile 0 errors/0 warnings
+  chỉ chứng minh mã hợp lệ, không chứng minh runtime.
+
+## 11. Pipeline end-to-end (Phase 9)
+
+- **Một lệnh:** `scripts/run_pipeline.py --config configs/pipeline.example.yaml`; stage backtest và ML
+  dùng chung dataset, cùng experiment store.
+- **Kiểm tra trước khi chạy:** hai stage config phải trỏ cùng đường dẫn dataset và cùng
+  `data_kind`/`symbol`/`timeframe`; lệch bị từ chối với exit `1`.
+- **Fail-safe:** dữ liệu lỗi dừng ở stage backtest (exit `2`, ML `skipped`); ID trùng exit `4` và không
+  ghi đè báo cáo; thiếu model ONNX exit `1` khi export.
+- **Báo cáo:** `pipeline_summary.json` + `pipeline_report.md` gắn nhãn demo/synthetic, metric chọn lọc,
+  SHA-256 dữ liệu/model và limitation cố định.
+- **Tái lập:** hai lần chạy khác ID cho cùng metric backtest/ML, data SHA-256 và `model_sha256`. Snapshot
+  commit sạch (116 file, commit tạm `d3a9ea39…`, `git status` rỗng) cũng cho kết quả khớp hoàn toàn,
+  duplicate exit `4` và ONNX parity 24/24 PASS; cần lặp lại sau commit chính thức. Quy trình ở
+  [`end-to-end.md`](end-to-end.md) mục 7.
+
+## 12. Phạm vi test hiện có
+
+- `python/tests/test_signals.py`: EMA seed, warm-up, crossover BUY/SELL/HOLD, disabled direction, invalid
+  input, no look-ahead, determinism, config/length validation; fixture parity chung.
+- `python/tests/test_backtest.py`:
+  - hand-computed entry tại open bar kế tiếp, exit cuối kỳ;
+  - spread + slippage + commission;
+  - SL, TP, SL-vs-TP cùng bar (SL thắng), gap-through-stop;
+  - reversal, no-trade, end-of-data close;
+  - metric hand-computed (profit factor, drawdown, exposure);
+  - reproducibility và input/config rejection.
+- `python/tests/test_data_loader.py`, `test_validation.py`: Phase 3.
+- `python/tests/test_parity.py`: so sánh signal CSV, tolerance số học, missing row, NaN/empty, duplicate
+  key và artifact mismatch (Phase 5).
+- `python/tests/test_experiment_store.py`: schema, fingerprint, duplicate ID, terminal transition,
+  interrupted/cancelled, artifact hash, JSON NaN rejection, persistence.
+- `python/tests/test_run_backtest_store.py`: CLI completed, duplicate exit `4` không ghi đè, invalid_data,
+  load error, layout không `--store`, ID không hợp lệ.
+- `python/tests/test_experiment_compare.py`, `test_compare_experiments_cli.py`: comparability, delta,
+  warning, artifact JSON/CSV/Markdown, exit code `0/1/2`.
+- `python/tests/test_features_labels.py`: causality, warm-up/finite, timestamp không tăng/trùng, forward
+  label + tail, dead zone, giá không hợp lệ.
+- `python/tests/test_ml_splits_model.py`: chia thời gian + purge, dataset ngắn/thứ tự dòng, model
+  roundtrip/artifact sạch, single-class/thiếu feature, artifact lỗi, chọn threshold, metric degenerate.
+- `python/tests/test_ml_strategy.py`: entry bar kế tiếp/overlap/incomplete horizon, chi phí, dự đoán
+  không hợp lệ, momentum trailing return.
+- `python/tests/test_train_ml_cli.py`: artifact/model card, tái lập model hash và metric, invalid data
+  exit `2`, dataset quá nhỏ exit `3`, `--experiment-id` cần `--store`, ID trùng exit `4`.
+- `python/tests/test_onnx_export.py`: export/hash/metadata, roundtrip metadata và threshold, từ chối sai
+  shape/feature không hữu hạn, scale âm, tolerance âm, CLI export + parity pass, CLI thiếu feature exit `1`.
+- `python/tests/test_pipeline_cli.py`: pipeline hoàn tất + hai row store, ID trùng không ghi đè, dữ liệu
+  lỗi dừng trước ML, hai stage lệch dataset bị từ chối, stage config thiếu bị từ chối.
+- `python/tests/test_trailing.py`: long/short trail, stop không nới, activation, tham số không hợp lệ;
+  `test_backtest.py` thêm integration trailing/activation/static stop/short; CLI config parse và ML từ
+  chối trailing.
+- `python/tests/test_bounded_basket.py`: layer/TP/equity/position; `max_layers`; `max_total_units`; một
+  add mỗi bar; loss cap ròng có/không commission; TP cùng fill; tín hiệu ngược chiều bật/tắt; DCA vs grid
+  sau gap; hard-limit report; 11 cấu hình không hợp lệ; dữ liệu rỗng; CLI artifact, config lỗi, cờ không
+  phải bool và hai config mẫu validate được.
+
+Chạy gần nhất (bounded DCA/grid, 2026-10-28): **198 passed in 11.26s** trên repo chính. Trước đó:
+trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s**.
+
+## 13. Giới hạn và việc cần làm ở phase sau
+
+- Dữ liệu mẫu là synthetic; không có kết luận hiệu năng.
+- Chưa chạy MT5 Strategy Tester. `LabSignalExport.mq5` mới compile; parity MQL5/Python vẫn là hạng mục
+  thủ công mở (xem [`parity.md`](parity.md)).
+- Không mô hình hóa swap, margin, leverage, thanh khoản, requote, latency, weekend gap ngoài bar có sẵn.
+- Không có Sharpe/Sortino. Phase 7 có walk-forward expanding-window để chọn threshold và một test holdout,
+  nhưng chưa retrain từng test block và chưa có hyperparameter search quy mô lớn.
+- Không có portfolio/multi-symbol; mỗi run chỉ một dataset và một vị thế.
+- ML baseline chỉ một symbol/timeframe/horizon; kết quả test là single holdout, không phải bằng chứng tổng
+  quát hóa trên dữ liệu thật. ONNX đã export và parity offline, nhưng EA chưa chạy trong MT5 và chưa lấy
+  feature từ bar hiện tại (chỉ đọc fixture).
+- Chưa kiểm tra ONNX Runtime version/provider/giới hạn opset của build MT5; sai lệch float32 chỉ được
+  chấp nhận trong tolerance `1e-5`, không phải bitwise.
+- Experiment store là SQLite cục bộ: không tự phát hiện process bị kill, chưa có retention, chưa kiểm thử
+  ghi đồng thời nhiều process. Database/artifact bị gitignore và phải được sao lưu thủ công nếu cần.
+- Comparison chỉ so sánh metadata/metric, không so sánh từng dòng trades/equity.
+- `reports/` và artifact backtest bị gitignore; muốn lưu kết quả lâu dài phải sao lưu store + artifact.
+- Pipeline end-to-end đã tái lập trên snapshot commit sạch tạm thời; cần lặp lại sau commit chính thức
+  và vẫn chưa bao gồm stage ONNX/MT5. Hai stage dùng chung dataset nhưng là hai chiến lược khác nhau.
+- Bounded DCA/grid là mô phỏng một basket tại một thời điểm, không có nhiều basket song song, không có
+  margin/leverage/margin call và không nối experiment store. Loss cap là lỗ **ròng** nhưng gap qua stop
+  vẫn có thể vượt cap; đọc `loss_cap_overshoot`. Metric là per-layer, không phải per-basket, và chưa có
+  implementation MQL5/EA hay Strategy Tester cho cơ chế này.

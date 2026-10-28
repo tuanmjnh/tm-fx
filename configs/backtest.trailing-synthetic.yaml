@@ -1,0 +1,29 @@
+# Synthetic trailing-stop demo. Not a performance claim.
+experiment_id: demo-trailing-synthetic
+data:
+  path: datasets/samples/synthetic_ml_demo.csv   # synthetic, not market data
+  symbol: EURUSD
+  timeframe: M5
+  timezone: UTC
+  data_kind: synthetic
+strategy:
+  fast_period: 8
+  slow_period: 21
+  allow_long: true
+  allow_short: true
+execution:
+  initial_equity: 10000.0
+  position_units: 10000.0
+  point_size: 0.00001
+  spread_points: 8.0
+  slippage_points: 1.0
+  commission_per_side: 1.0
+  stop_loss_points: null
+  take_profit_points: null
+  trailing_stop_points: 200.0
+  trailing_activation_points: 300.0
+seed: 42
+outputs:
+  report_dir: reports/backtests/demo-trailing-synthetic
+  plot: false
+notes: "Synthetic fixture; trailing-stop mechanics only, not market performance."

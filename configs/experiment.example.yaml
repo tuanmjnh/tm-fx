@@ -1,15 +1,34 @@
-# Example experiment manifest. The runner and SQLite store are implemented later.
-experiment_id: demo-ema-cross-001
-strategy_config: configs/strategy.example.yaml
-data_config: configs/data.example.yaml
-data_kind: synthetic
+# Complete backtest config used to demo the Phase 6 experiment store.
+# Run with:
+#   python scripts/run_backtest.py --config configs/experiment.example.yaml --store
+# Optionally override the ID with --experiment-id <unique-id>.
+# With --store, artifacts go to reports/backtests/<experiment_id> and an
+# existing experiment_id is rejected instead of being overwritten.
+experiment_id: demo-phase6-store
+data:
+  path: datasets/samples/synthetic_ema_cross_demo.csv   # synthetic, not market data
+  symbol: EURUSD
+  timeframe: M5
+  timezone: UTC
+  data_kind: synthetic
+strategy:
+  fast_period: 2
+  slow_period: 3
+  allow_long: true
+  allow_short: true
+execution:
+  initial_equity: 10000.0
+  position_units: 10000.0
+  point_size: 0.00001
+  spread_points: 2.0
+  slippage_points: 1.0
+  commission_per_side: 2.5
+  stop_loss_points: null
+  take_profit_points: null
+  trailing_stop_points: null
+  trailing_activation_points: null
 seed: 42
-symbol: EURUSD
-timeframe: M5
-cost_model:
-  spread_points: null        # must be defined before any backtest is reported
-  slippage_points: null
-  commission_per_lot: null
 outputs:
-  report_dir: reports/demo-ema-cross-001
-notes: "Placeholder example; no experiment has been run."
+  report_dir: reports/backtests
+  plot: false
+notes: "Synthetic demo for the SQLite experiment store; no performance claim."

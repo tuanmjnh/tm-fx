@@ -1,0 +1,29 @@
+# Synthetic demo. Not a performance claim and not market history.
+experiment_id: demo-ema-cross-synthetic
+data:
+  path: datasets/samples/synthetic_ema_cross_demo.csv   # relative to repo root
+  symbol: EURUSD
+  timeframe: M5
+  timezone: UTC
+  data_kind: synthetic
+strategy:
+  fast_period: 2
+  slow_period: 3
+  allow_long: true
+  allow_short: true
+execution:
+  initial_equity: 10000.0
+  position_units: 10000.0
+  point_size: 0.00001
+  spread_points: 2.0
+  slippage_points: 1.0
+  commission_per_side: 2.5
+  stop_loss_points: null
+  take_profit_points: null
+  trailing_stop_points: null
+  trailing_activation_points: null
+seed: 42
+outputs:
+  report_dir: reports/backtests/demo-ema-cross-synthetic
+  plot: false
+notes: "Synthetic fixture; results only demonstrate the simulation mechanics."

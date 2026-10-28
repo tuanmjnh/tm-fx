@@ -1,0 +1,29 @@
+# Synthetic dataset shared with the ML demo. Not a performance claim.
+experiment_id: demo-phase9-backtest
+data:
+  path: datasets/samples/synthetic_ml_demo.csv   # relative to repo root
+  symbol: EURUSD
+  timeframe: M5
+  timezone: UTC
+  data_kind: synthetic
+strategy:
+  fast_period: 8
+  slow_period: 21
+  allow_long: true
+  allow_short: true
+execution:
+  initial_equity: 10000.0
+  position_units: 10000.0
+  point_size: 0.00001
+  spread_points: 8.0
+  slippage_points: 1.0
+  commission_per_side: 1.0
+  stop_loss_points: null
+  take_profit_points: null
+  trailing_stop_points: null
+  trailing_activation_points: null
+seed: 42
+outputs:
+  report_dir: reports/pipeline
+  plot: false
+notes: "Phase 9 synthetic demo: same dataset as the ML stage."

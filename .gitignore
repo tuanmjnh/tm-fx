@@ -54,12 +54,19 @@ reports/*
 *.sqlite
 *.sqlite3
 *.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 *.db
+*.db-journal
 
 # Logs and tool temp caches
 logs/
 *.log
 matplotlib-*/
+# Created when TEMP/TMP points at the repository root on Windows
+pip-*/
+pytest-of-*/
+tmpsnub_*
 
 # OS / editor
 .DS_Store
