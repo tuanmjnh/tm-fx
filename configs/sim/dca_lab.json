@@ -23,7 +23,7 @@
     "InpMaxAddVolume": 1.0,
     "InpBasketTargetPoints": 600.0,
     "InpBasketStopPoints": 900.0,
-    "InpMaxSpreadPoints": 50.0,
+    "InpMaxSpreadPoints": 600.0,
     "InpMaxVirtualExposure": 2.0,
     "InpMaxDailyLossPct": 2.0,
     "InpMaxDrawdownPct": 5.0,
@@ -43,6 +43,7 @@
   },
   "assumptions": {
     "contract_size": 1,
+    "symbol": "XAUUSDm: point 0.001, 3 digits, measured spread ~260 points; spread cap 600 points",
     "commission": "total cash per fill, charged on open and close",
     "slippage": "points, adverse on every fill including basket stop",
     "swap": "not modelled in this preset",

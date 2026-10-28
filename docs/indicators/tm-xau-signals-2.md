@@ -261,10 +261,10 @@ Thứ tự cố định mỗi nến:
 | Repaint audit | `REPAINT_AUDIT_TMXAUSignals2.md` |
 | Buffer contract | `BUFFER_CONTRACT_TMXAUSignals2.md` |
 | Indicator | `mt5/Indicators/PinePort/TMXAUSignals2.mq5` |
-| Contract tests | `mt5/Scripts/TMXAUSignals2ContractTests.mq5` — **chưa chạy** |
+| Contract tests | `mt5/Scripts/TMXAUSignals2ContractTests.mq5` — **PASS 107/107** (MT5, 2026-10-28) |
 | EA hỗ trợ | `NOT_IMPLEMENTED` |
 | Parity | `BLOCKED` — chưa có CSV Pine |
-| Runtime | `NOT_RUN` |
+| Runtime | Contract test PASS; indicator gắn chart/plot chưa xác minh |
 
 ## Repaint Audit — TM XAU Signals 2 (Pine v6)
 
@@ -1523,7 +1523,7 @@ khẳng định công thức, không phải kết quả runtime.
 | B5 | volMin 200, vol 195, volMA 50 | `isTimRaw` true nhưng `volEvtOk` false → `isTim` false |
 | B6 | volSessOn true, window 480–960; phút 600 / 1000 | `isTim` true / false |
 | B7 | relVol 1.19 và 1.20 với rvMin 1.2, close>open | score 0 / +1 |
-| B8 | close 10,11,10,9, vol 10,20,30 | OBV 0 → 10 → −10 → −40 |
+| B8 | close 10,11,10,9; vol 10,10,20,30 (mỗi bar set `prevClose`) | OBV 0 → 10 → −10 → −40 |
 | B9 | OBV len 1, close 10,11,10,11 vol 10 | slope 0 / 10 / −10 / 10 |
 | B10 | OBV len 2, bar 0–1 | slope = obv (warm-up `nz(na)=0`: 0 / 10) |
 

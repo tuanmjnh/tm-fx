@@ -661,13 +661,24 @@ void FzBuildRmaSeries(const double &src[],const int total,const int len,double &
    ArrayInitialize(out,EMPTY_VALUE);
    if(len<=0 || total<=0)
       return;
-   for(int j=len-1; j<total; j++)
+   int seed=-1;
+   for(int j=len-1; j<total && seed<0; j++)
      {
-      if(j==len-1)
-        {
-         out[j]=FzSmaAt(src,total,j,len);
-         continue;
-        }
+      bool ok=true;
+      for(int i=j-len+1; i<=j; i++)
+         if(FzIsNa(src[i]))
+           {
+            ok=false;
+            break;
+           }
+      if(ok)
+         seed=j;
+     }
+   if(seed<0)
+      return;
+   out[seed]=FzSmaAt(src,total,seed,len);
+   for(int j=seed+1; j<total; j++)
+     {
       if(FzIsNa(out[j-1]) || FzIsNa(src[j]))
          continue;
       out[j]=(((double)(len-1))*out[j-1]+src[j])/(double)len;

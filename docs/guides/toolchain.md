@@ -62,6 +62,6 @@ phase cũ là ảnh chụp lịch sử, không phải invariant. Điều kiện 
 ## Chưa làm được ở môi trường này
 
 - Chạy `SimCoreTests` (123/0) và `SimPlanTests` (39/0) trong MT5: đã PASS ngày 2026-10-28.
-- Strategy Tester: `WonderwhalesSimEA` đã chạy 3 scenario; 4 EA mô phỏng còn lại (12 scenario) và contract
-  test 6 indicator vẫn `NOT_RUN` cho tới khi có thao tác thủ công.
+- Strategy Tester: 13/15 scenario đã chạy (3 `ww_*`, 10 runner/grid/DCA); 2 `plan_*`
+  `BLOCKED_PERFORMANCE`; contract test 6 indicator đã chạy **6/6 PASS** (547 check) ngày 2026-10-28.
 - Compile/test thành công không chứng minh hành vi runtime hay P&L; W8 vẫn là bước bắt buộc.

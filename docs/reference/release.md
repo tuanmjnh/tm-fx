@@ -7,9 +7,9 @@
   phải ghi rõ trạng thái trong báo cáo.
 
 > **Lưu ý (2026-10-28):** checklist này ghi lại lần đóng gói 0.8.1, **trước** khi thêm `WonderwhalesSimEA`
-> (bản hiện tại là 0.8.3). Gate hiện tại — pytest xanh, 25 source compile 0/0, `checked=6`, 5 preset,
-> 15 scenario — nằm ở [`../PROGRESS.md`](../PROGRESS.md) §40. Strategy Tester: 3/15 scenario (`ww_*`) đã
-> chạy thật; 12 scenario còn lại `NOT_RUN`.
+> (bản hiện tại là 0.8.4). Gate hiện tại — pytest xanh, 25 source compile 0/0, `checked=6`, 5 preset,
+> 15 scenario — nằm ở [`../PROGRESS.md`](../PROGRESS.md) §41. Strategy Tester: 13/15 scenario đã chạy thật;
+> 2 scenario `plan_*` `BLOCKED_PERFORMANCE`; contract test 6 indicator PASS 547 check.
 
 ## 1. Bắt buộc
 
@@ -46,8 +46,9 @@
 | 5 | Tái lập sau checkout commit sạch | Đã xác minh snapshot Phase 9 (2026-10-28): 155 test pass, metric/data SHA/model SHA khớp, duplicate exit `4`, ONNX parity PASS. Trailing stop + bounded DCA/grid + Track C (324 test) chưa lặp lại trên commit sạch; chờ commit chính thức |
 | 6 | `SimCoreTests` trong MT5 | **PASS** 2026-10-28: `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core` (tab Experts, terminal EXNESS chưa đăng nhập) |
 | 6b | `SimPlanTests` trong MT5 | **PASS** 2026-10-28: `TEST|RESULT|ALL_PASS|pass=39 fail=0|suite=sim_plan`; lần chạy đầu phát hiện 8 vector sai đơn vị point và 1 lỗi biên số thực, đã sửa `SimPlanTests.mq5` + `SimPlan.mqh` rồi chạy lại |
-| 7 | Strategy Tester cho 4 EA mô phỏng (12 scenario) | `NOT_RUN`; hướng dẫn + template ở `docs/guides/strategy-tester.md` |
-| 8 | CSV thật của runner/grid/DCA/plan | `NOT_RUN`; chỉ có vector và test tĩnh |
+| 7 | Strategy Tester cho 4 EA mô phỏng (12 scenario) | **PASS một phần** 2026-10-28: 10/10 scenario runner/grid/DCA có SUMMARY; 2 `plan_*` `BLOCKED_PERFORMANCE` (1 tháng chẩn đoán 197 s, 0 entry) |
+| 8 | CSV thật của runner/grid/DCA/plan | Có CSV thật cho 10 scenario (archived, gitignored); DCA `adds=0` là bug reporting, CSV chứng minh 2 add |
+| 9 | Contract test 6 indicator trong Strategy Tester | **PASS 6/6** (547 check) 2026-10-28; 3 bug implementation đã sửa |
 
 ## 3. Trước khi commit/tag
 

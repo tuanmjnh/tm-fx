@@ -290,14 +290,14 @@ bằng cách tách nhánh `btMulti`, nhưng EA của repo này vẫn không port
 | Repaint audit | `docs/indicators/longkaco-vsa.md` |
 | Buffer contract | `docs/indicators/longkaco-vsa.md` |
 | MQL5 indicator | `mt5/Indicators/PinePort/LongKacoVSA.mq5` |
-| Contract tests | `mt5/Scripts/LongKacoVSAContractTests.mq5` (compile; **chưa chạy terminal**) |
+| Contract tests | `mt5/Scripts/LongKacoVSAContractTests.mq5` — **PASS 47/47** (MT5, 2026-10-28) |
 | Pine vs MQL5 parity | `BLOCKED` — chưa có CSV export từ TradingView |
-| Strategy Tester | `NOT_RUN` |
+| Strategy Tester | Contract test PASS trong tester; indicator gắn chart/plot chưa xác minh |
 
 ### 11. Blocker
 
 1. Chưa có CSV reference từ Pine trên cùng symbol/timeframe/input → parity `BLOCKED`.
-2. Chưa chạy indicator/EA trong terminal → runtime `NOT_RUN`.
+2. Contract tests đã PASS; indicator gắn chart và EA multi-source chưa chạy runtime.
 3. License nguồn Pine chưa xác nhận.
 
 ## Repaint Audit — LongKaco VSA (Pine v6)
@@ -780,6 +780,6 @@ bước **thủ công**; compile không chứng minh test pass.
 | Contract | FROZEN |
 | Header | `mt5/Include/PinePort/LongKacoVSAContract.mqh` |
 | Indicator | `mt5/Indicators/PinePort/LongKacoVSA.mq5` |
-| Contract tests | `mt5/Scripts/LongKacoVSAContractTests.mq5` — **chưa chạy** |
+| Contract tests | `mt5/Scripts/LongKacoVSAContractTests.mq5` — **PASS 47/47** (2026-10-28) |
 | EA hỗ trợ LongKaco | `NOT_IMPLEMENTED` (EA hiện chỉ đọc Wonderwhales) |
 | Parity | `BLOCKED` — chưa có CSV Pine |

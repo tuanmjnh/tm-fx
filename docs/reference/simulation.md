@@ -315,8 +315,8 @@ Nếu thiếu dòng `TEST|RESULT|ALL_PASS` → coi như `NOT_RUN`, không suy lu
 |---|---|
 | Compile `SimCoreTests.mq5` | PASS — 0 errors, 0 warnings; `SimCoreTests.ex5` 73,646 bytes (byte size depends on the MetaEditor build; the log is authoritative) |
 | Chạy test vector trong MT5 | **PASS** — `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core` ngày 2026-10-28 18:36 |
-| Kiểm tra CSV logger trên file thật | PASS một phần — CSV 18 cột của `WonderwhalesSimEA` đã sinh trong 3 lần Strategy Tester headless ngày 2026-10-28 |
-| EA sử dụng core | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA` compile PASS — chỉ `WonderwhalesSimEA` chạy thật (3 scenario); bốn EA còn lại `NOT_RUN` |
+| Kiểm tra CSV logger trên file thật | PASS — CSV 18 cột của `WonderwhalesSimEA` (3 scenario) và `RunnerTrailingLabEA`/`GridLabEA`/`DCALabEA` (10 scenario) ngày 2026-10-28 |
+| EA sử dụng core | `RunnerTrailingLabEA` 3/3, `GridLabEA` 3/3, `DCALabEA` 4/4 scenario chạy thật; `WonderwhalesSimEA` 3/3; `PinePlanSimEA` `BLOCKED_PERFORMANCE` (full kỳ không xong, diagnostic 1 tháng 0 entry) |
 
 ## RunnerTrailingLabEA (simulation-only, W3)
 
@@ -407,8 +407,8 @@ Schema 18 cột dùng chung mục **Simulation core** ở đầu tài liệu nà
 | Hạng mục | Trạng thái |
 |---|---|
 | Compile | PASS — 0 errors, 0 warnings; `RunnerTrailingLabEA.ex5` 52,622 bytes (byte size depends on the MetaEditor build) |
-| Chạy trong MT5 | `NOT_RUN` — cần terminal/Strategy Tester |
-| CSV thực tế | `NOT_RUN` — chưa có file log runtime |
+| Chạy trong MT5 | **PASS** — 3/3 scenario `runner_baseline`, `runner_conservative_stress`, `runner_edge_no_breakeven` ngày 2026-10-28; cả ba `HALTED` bởi RiskGuard |
+| CSV thực tế | `reports/build/tester-reports/runner_*/` (54 / 36 / 70 trade) |
 | So khớp với Python trailing simulator | Chưa làm — khác mô hình (Python dùng bar OHLC, EA dùng tick + EMA cross) |
 
 ### 8. Giới hạn đã biết
@@ -518,8 +518,8 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 | Hạng mục | Trạng thái |
 |---|---|
 | Compile | PASS — 0 errors, 0 warnings; `GridLabEA.ex5` 51,590 bytes (byte size depends on the MetaEditor build) |
-| Chạy trong MT5 | `NOT_RUN` — cần terminal/Strategy Tester |
-| CSV thực tế | `NOT_RUN` |
+| Chạy trong MT5 | **PASS** — 3/3 scenario `grid_*` ngày 2026-10-28; baseline/stress `ACTIVE`, edge `HALTED` |
+| CSV thực tế | `reports/build/tester-reports/grid_*/` |
 | So khớp Python bounded-basket simulator | Chưa làm; mô hình Python dùng bar OHLC, EA dùng tick |
 
 ### 9. Giới hạn đã biết
@@ -634,8 +634,8 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 | Hạng mục | Trạng thái |
 |---|---|
 | Compile | PASS — 0 errors, 0 warnings; `DCALabEA.ex5` 47,606 bytes (byte size depends on the MetaEditor build) |
-| Chạy trong MT5 | `NOT_RUN` — cần terminal/Strategy Tester |
-| CSV thực tế | `NOT_RUN` |
+| Chạy trong MT5 | **PASS** — 4/4 scenario `dca_*` ngày 2026-10-28; tất cả `HALTED` bởi RiskGuard; `SUMMARY adds=0` là lỗi báo cáo, CSV có 2 add ở `dca_baseline` |
+| CSV thực tế | `reports/build/tester-reports/dca_*/` |
 | Cross-check P&L Python | PASS — `python/tests/test_dca_vectors.py` (cùng vector D16–D19) |
 
 ### 9. Giới hạn đã biết
@@ -651,8 +651,8 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 
 - **Mục tiêu:** preset kiểm thử cho năm EA Track C và một cổng kiểm tra tĩnh từ chối cấu hình không phải
   mô phỏng hoặc có dấu hiệu tài khoản/broker trước khi nạp vào MT5.
-- **Trạng thái:** validator exit 0 trên 6 file cấu hình (5 preset + project); pytest PASS; chưa chạy EA
-  trong MT5 (`NOT_RUN`).
+- **Trạng thái:** validator exit 0 trên 6 file cấu hình (5 preset + project); pytest PASS; 13/15 scenario
+  đã chạy thật, 2 scenario `plan_*` `BLOCKED_PERFORMANCE`.
 - **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W6.
 
 ### 1. File
@@ -760,8 +760,8 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 | Validator trên 5 preset + project | PASS — `checked=6 fail=0` (presets=5, scenarios=15) |
 | Snapshot | PASS — 6 file, chạy lại `unchanged` |
 | pytest toàn bộ | PASS — xem số test trong [`PROGRESS.md`](../PROGRESS.md) |
-| Nạp preset vào EA trong MT5 | PASS một phần — 3 preset Wonderwhales đã nạp headless qua `.set` trong `MQL5\Profiles\Tester` ngày 2026-10-28; 12 scenario còn lại `NOT_RUN` |
-| Strategy Tester | PASS một phần — 3/15 scenario (`ww_*`) đã chạy `XAUUSDm` M15; 12 scenario còn lại `NOT_RUN` |
+| Nạp preset vào EA trong MT5 | PASS — toàn bộ 12 `sim_*` `.set` nạp headless qua `MQL5\Profiles\Tester` ngày 2026-10-28 |
+| Strategy Tester | PASS 13/15 scenario — `ww_*` 3/3, `runner_*` 3/3, `grid_*` 3/3, `dca_*` 4/4; `plan_*` 2 `BLOCKED_PERFORMANCE` (mục 9.2 của guide) |
 
 ### 8. Giới hạn
 
@@ -775,7 +775,8 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 - **Mục tiêu:** một EA mô phỏng duy nhất đọc **trade plan** của ba indicator PinePort
   (`PriceActionMTF`, `TMXAUSignals2`, `TMIndicator2`) và mở một vị thế ảo cho mỗi tín hiệu biên hợp lệ.
 - **Trạng thái:** compile `0 errors, 0 warnings`; `SimPlanTests` **PASS runtime 39/0** (MT5, 2026-10-28);
-  EA runtime và Strategy Tester `NOT_RUN`; preset kiểm tra fail-closed PASS.
+  Strategy Tester `BLOCKED_PERFORMANCE` — full kỳ 9 tháng không xong sau ~13 phút do PriceActionMTF
+  tính lại quá đắt; diagnostic 1 tháng xong 197 s với `entries=0`. Preset kiểm tra fail-closed PASS.
 - **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W10.
 
 ### 1. Vì sao chỉ ba nguồn

@@ -263,10 +263,10 @@ PATTERN → BOS → CHoCH → MSS → RETEST → FAILBRK → CONT → PULL → S
 | Repaint audit | `REPAINT_AUDIT_PriceActionMTF.md` |
 | Buffer contract | `BUFFER_CONTRACT_PriceActionMTF.md` |
 | Indicator | `mt5/Indicators/PinePort/PriceActionMTF.mq5` |
-| Contract tests | `mt5/Scripts/PriceActionMTFContractTests.mq5` — **chưa chạy** |
+| Contract tests | `mt5/Scripts/PriceActionMTFContractTests.mq5` — **PASS 120/120** (MT5, 2026-10-28) |
 | EA hỗ trợ | `NOT_IMPLEMENTED` |
 | Parity | `BLOCKED` — chưa có CSV Pine |
-| Runtime | `NOT_RUN` |
+| Runtime | Contract test PASS; indicator gắn chart/plot chưa xác minh |
 
 ## Repaint Audit — Price Action MTF (Pine v6)
 
@@ -1674,7 +1674,7 @@ khẳng định công thức, không phải kết quả runtime.
 | E5 | l1 100, l2 83 (≤ 100/1.2) | HSN |
 | E6 | h1 100, h3 100.4 trong band | gán `c/cBar` cho HST còn trống |
 | E7 | neckline giữa b1=5,b2=9, low giữa = 2, hai đầu = 1 | neck 2 (không tính đầu mút) |
-| E8 | break với patNeck 110, close 100 | patHeight 10; nến sau không break → vẫn 10 |
+| E8 | break với patNeck 110, close 100 | h1 và patternHeight = 0: close 100 < neck 110 nên không phải break; xem §4.1/§6/§9.5 |
 
 #### F. Liquidity (8)
 

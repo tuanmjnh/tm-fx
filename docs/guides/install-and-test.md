@@ -259,8 +259,8 @@ Giữ nguyên cấu trúc tương đối vì source include bằng `../Include/.
 | `mt5/Scripts/TMXAUSignals2ContractTests.mq5` | `MQL5\Scripts\TMXAUSignals2ContractTests.mq5` |
 
 LongKaco VSA, TM Fusion Zones, Price Action MTF và TM XAU Signals 2 mới ở Phase 4: indicator và test script
-compile được, nhưng EA chưa đọc bốn indicator này và 47/82/119/105 vector chưa chạy. Không có hướng dẫn
-giao dịch cho chúng.
+compile được; contract test đã chạy PASS trong Strategy Tester (47/82/120/107 check), nhưng EA chưa đọc
+bốn indicator này. Không có hướng dẫn giao dịch cho chúng.
 
 Sau khi copy, mở MetaEditor và refresh Navigator nếu file chưa xuất hiện.
 
@@ -602,8 +602,9 @@ Kiểm tra tối thiểu:
 | Python tests (kể cả vector DCA/plan độc lập) | Tự động, PASS | `scripts\run-python-tests.ps1` |
 | `SimCoreTests` trong MT5 | **PASS runtime** — `pass=123 fail=0` | Mục 5; log tab Experts 2026-10-28 18:36 |
 | `SimPlanTests` trong MT5 | **PASS runtime** — `pass=39 fail=0` | Mục 5; log tab Experts 2026-10-28 18:41 |
-| Strategy Tester 15 scenario | **PASS một phần** — 3/15 (`ww_*`, `XAUUSDm` M15) đã chạy; 12 `NOT_RUN` | `strategy-tester.md` §9 |
-| Đọc/audit CSV thật | **PASS một phần** — CSV 3 scenario WW đã audit; 12 scenario còn lại `NOT_RUN` | Mục 7, `strategy-tester.md` §9 |
+| Strategy Tester 15 scenario | **PASS một phần** — 13/15 (`ww_*`, runner, grid, DCA) có SUMMARY; 2 `plan_*` `BLOCKED_PERFORMANCE` | `strategy-tester.md` §9 |
+| Đọc/audit CSV thật | **PASS** — 13 CSV thật đã audit; DCA `adds=0` là bug reporting | Mục 7, `strategy-tester.md` §9 |
+| Contract test 6 indicator | **PASS** — 6/6 suite, 547 check | `strategy-tester.md` §8 |
 
 ### 9. Xử lý sự cố
 

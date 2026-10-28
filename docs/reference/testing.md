@@ -453,16 +453,17 @@ trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s*
 |---|---|---|---|---|
 | T1 | Static | File bắt buộc, buffer 0–17, mode 0–3, 13 input, 36 test ID, không API giao dịch | `scripts/validate_pineport.py` | PASS |
 | T2 | Compile | Indicator + contract tests + EA, đọc log UTF-16 | `scripts/build_pineport.ps1` | PASS (0 error/0 warning) |
-| T3 | Unit (MQL5) | 36 vector A–E cho dir/flip, mode gate, confirmed gate, cross, missing | `WonderwhalesContractTests.mq5` | **COMPILED_NOT_RUN** |
-| T3b | Unit (MQL5) | 47 vector A–H cho bucket, flag, sweep, pivot, setup, tracking, CLX, RMA/clamp | `LongKacoVSAContractTests.mq5` | **COMPILED_NOT_RUN** |
-| T3c | Unit (MQL5) | 82 vector A–O cho clamp/MA/series, regime, ribbon, zone, structure, candle, MTF, setup, score, risk, gates, state, hash | `TMFusionZonesContractTests.mq5` | **COMPILED_NOT_RUN** |
-| T3d | Unit (MQL5) | 119 vector A–P cho math/time, series, pivot, structure, pattern, liquidity, zone, candle, score, MTF, regime, plan, state, gates, hash, bar policy | `PriceActionMTFContractTests.mq5` | **COMPILED_NOT_RUN** |
-| T3e | Unit (MQL5) | 105 vector A–O cho math/time, volume/VSA/OBV, session, structure, event ring, zones/FVG/OB, candles, indicators, scoring, MTF, plan/gates, state TP 3 tầng, hash, bar policy, normalize | `TMXAUSignals2ContractTests.mq5` | **COMPILED_NOT_RUN** |
+| T3 | Unit (MQL5) | 36 vector A–E cho dir/flip, mode gate, confirmed gate, cross, missing | `WonderwhalesContractTests.mq5` | **PASS 36/36** (2026-10-28) |
+| T3b | Unit (MQL5) | 47 vector A–H cho bucket, flag, sweep, pivot, setup, tracking, CLX, RMA/clamp | `LongKacoVSAContractTests.mq5` | **PASS 47/47** |
+| T3c | Unit (MQL5) | 82 vector A–O cho clamp/MA/series, regime, ribbon, zone, structure, candle, MTF, setup, score, risk, gates, state, hash | `TMFusionZonesContractTests.mq5` | **PASS 82/82** |
+| T3d | Unit (MQL5) | 119 vector A–P cho math/time, series, pivot, structure, pattern, liquidity, zone, candle, score, MTF, regime, plan, state, gates, hash, bar policy | `PriceActionMTFContractTests.mq5` | **PASS 120/120** |
+| T3e | Unit (MQL5) | 105 vector A–O cho math/time, volume/VSA/OBV, session, structure, event ring, zones/FVG/OB, candles, indicators, scoring, MTF, plan/gates, state TP 3 tầng, hash, bar policy, normalize | `TMXAUSignals2ContractTests.mq5` | **PASS 107/107** |
+| T3f | Unit (MQL5) | 155 vector A–P cho math/time, VWAP/session, structure, zones, candle, gates, plan TP 3 tầng, normalize | `TMIndicator2ContractTests.mq5` | **PASS 155/155** |
 | T4 | Unit (Python) | Comparator: schema, khóa, tolerance, NaN, filter, warm-up, offset, CLI | `pytest python/tests/test_pine_parity.py` | PASS |
 | T4b | Unit (Python) | Audit CSV EA: thứ tự, căn timeframe, đồng nhất symbol/mode/hash, giá rỗng, ATR âm, `detected_at` | `pytest python/tests/test_signal_audit.py` | PASS |
 | T5 | Runtime indicator | Gắn indicator lên chart, kiểm tra plot/buffer, không repaint | MT5 thủ công | **NOT_RUN** |
 | T6 | Runtime EA | EA đọc `shift=1`, ghi CSV đúng schema, không trùng | MT5 thủ công | **NOT_RUN** |
-| T7 | Strategy Tester | Chạy EA trong tester, đọc Journal/Experts | MT5 thủ công | **NOT_RUN** |
+| T7 | Strategy Tester | Chạy EA trong tester, đọc Journal/Experts | MT5 thủ công | **PASS một phần** — 13/15 scenario EA mô phỏng; 2 `plan_*` `BLOCKED_PERFORMANCE` |
 | T8 | Parity | So CSV Pine thật với CSV EA | `scripts/compare_pine_exports.py` | **BLOCKED** (thiếu reference) |
 
 ### 2. T1 — Static validation
@@ -511,7 +512,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\deploy_pineport.ps1 
 Nếu fail: đọc từng dòng `TEST|...|FAIL` để biết ID và giá trị thực. Không sửa test để khớp code nếu
 contract đúng.
 
-**Trạng thái hiện tại:** chỉ compile; chưa chạy.
+**Trạng thái hiện tại:** **PASS 36/36** trong Strategy Tester (2026-10-28); wrapper chạy một lần từ
+`OnTick`. Bằng chứng: `reports/build/contract-reports/results.txt`.
 
 #### 4b. T3c — 82 vector TM Fusion Zones
 
@@ -521,7 +523,7 @@ contract đúng.
 3. Kéo script vào chart bất kỳ. Script không đọc dữ liệu thị trường, không giao dịch, không ghi file.
 4. Tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=82 fail=0|contract=1.0.0`.
 
-**Trạng thái hiện tại:** chỉ compile; chưa chạy.
+**Trạng thái hiện tại:** **PASS 82/82** trong Strategy Tester (2026-10-28).
 
 #### 4c. T3d — 119 vector Price Action MTF
 
@@ -529,9 +531,10 @@ contract đúng.
    `mt5/Include/PinePort/PriceActionMTFContract.mqh` vào data folder.
 2. Compile (T2).
 3. Kéo script vào chart bất kỳ. Script không đọc dữ liệu thị trường, không giao dịch, không ghi file.
-4. Tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=119 fail=0|contract=1.0.0`.
+4. Tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=120 fail=0|contract=1.0.0`.
 
-**Trạng thái hiện tại:** chỉ compile; chưa chạy.
+**Trạng thái hiện tại:** **PASS 120/120** trong Strategy Tester (2026-10-28); 3 vector B7/B9/C3/E8
+được sửa theo đặc tả sau lần chạy đầu.
 
 #### 4d. T3e — 105 vector TM XAU Signals 2
 
@@ -542,7 +545,7 @@ contract đúng.
 4. Tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=107 fail=0|contract=1.0.0` (105 vector hợp đồng
    + 2 kiểm tra bổ sung C6b/N1b).
 
-**Trạng thái hiện tại:** chỉ compile; chưa chạy.
+**Trạng thái hiện tại:** **PASS 107/107** trong Strategy Tester (2026-10-28).
 
 ### 5. T4 — Python comparator tests
 

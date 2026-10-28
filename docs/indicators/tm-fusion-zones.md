@@ -606,15 +606,15 @@ equity sizing, commission hay bất kỳ lệnh thật nào.
 | Repaint audit | `docs/indicators/tm-fusion-zones.md` |
 | Buffer contract | `docs/indicators/tm-fusion-zones.md` |
 | MQL5 indicator | `mt5/Indicators/PinePort/TMFusionZones.mq5` |
-| Contract tests | `mt5/Scripts/TMFusionZonesContractTests.mq5` (compile; **chưa chạy terminal**) |
+| Contract tests | `mt5/Scripts/TMFusionZonesContractTests.mq5` — **PASS 82/82** (MT5, 2026-10-28) |
 | Pine vs MQL5 parity | `BLOCKED` — chưa có CSV export từ TradingView |
-| Strategy Tester | `NOT_RUN` |
+| Strategy Tester | Contract test PASS trong tester; indicator gắn chart/plot chưa xác minh |
 | EA support | `NOT_IMPLEMENTED` — EA hiện chỉ đọc Wonderwhales |
 
 ### 11. Blocker
 
 1. Chưa có CSV reference từ Pine trên cùng symbol/timeframe/input → parity `BLOCKED`.
-2. Chưa chạy indicator/contract tests trong terminal → runtime `NOT_RUN`.
+2. Contract tests đã PASS; indicator gắn chart chưa chạy runtime.
 3. Chưa chốt quy ước MTF tại biên HTF và pivot tie → cần CSV đối chiếu.
 4. License nguồn Pine chưa xác nhận.
 5. EA đa indicator chưa được thiết kế; TM FZ hiện chỉ có indicator + contract tests.
@@ -1372,7 +1372,7 @@ MT5 terminal là bước **thủ công**; compile không chứng minh test pass.
 | Contract | FROZEN |
 | Header | `mt5/Include/PinePort/TMFusionZonesContract.mqh` |
 | Indicator | `mt5/Indicators/PinePort/TMFusionZones.mq5` |
-| Contract tests | `mt5/Scripts/TMFusionZonesContractTests.mq5` — **chưa chạy** |
+| Contract tests | `mt5/Scripts/TMFusionZonesContractTests.mq5` — **PASS 82/82** (2026-10-28) |
 | EA hỗ trợ TM FZ | `NOT_IMPLEMENTED` |
 | Parity | `BLOCKED` — chưa có CSV Pine |
 | Runtime | `NOT_RUN` |

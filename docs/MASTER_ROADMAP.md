@@ -11,8 +11,8 @@
 | Track | Roadmap nguồn | Đã xong | Còn lại |
 |---|---|---|---|
 | **A. MT5 EA & AI Lab** | `ROADMAP_MT5_EA_AI_LAB.md` | Phase 0–9: `LabSignalEA`, `Indicators/SignalEngine`, data pipeline, backtester, comparator, SQLite store, ML baseline, ONNX + `LabOnnxInference`, pipeline end-to-end; Python trailing stop và bounded DCA/grid | Chạy pipeline trên dữ liệu MT5 thật (`BLOCKED` — chưa export history); manual Strategy Tester |
-| **B. Pine → MT5** | `ROADMAP_PINE_TO_MT5_EA.md` | 6 indicator PinePort (Wonderwhales, LongKacoVSA, TMFusionZones, PriceActionMTF, TMXAUSignals2, TMIndicator2): spec, repaint audit, buffer contract, MQL5 indicator + contract tests, compile 0/0; 2 EA signal-only; 2 comparator parity + audit CSV | Chạy contract tests/indicator/EA trong MT5 (`NOT_RUN`); parity dữ liệu thật (`BLOCKED` — chưa có CSV Pine); Strategy Tester (`NOT_RUN`) |
-| **C. Simulation Grid/DCA/Runner** | `ROADMAP_GRID_DCA_TRAILING_SIMULATION.md` | Phase 0 (docs/skeleton trong pack); Python trailing + bounded basket simulator có test | **Toàn bộ MQL5: `RiskGuard`, `CostModel`, `VirtualPortfolio`, `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, preset/config, script build/test, Strategy Tester** |
+| **B. Pine → MT5** | `ROADMAP_PINE_TO_MT5_EA.md` | 6 indicator PinePort (Wonderwhales, LongKacoVSA, TMFusionZones, PriceActionMTF, TMXAUSignals2, TMIndicator2): spec, repaint audit, buffer contract, MQL5 indicator + contract tests, compile 0/0; contract test 6/6 PASS (547 check, 2026-10-28); 2 EA signal-only; 2 comparator parity + audit CSV | Gắn indicator/chạy EA multi-source trong MT5 (`NOT_RUN`); parity dữ liệu thật (`BLOCKED` — chưa có CSV Pine); Strategy Tester cho EA PinePort (`NOT_RUN`) |
+| **C. Simulation Grid/DCA/Runner** | `ROADMAP_GRID_DCA_TRAILING_SIMULATION.md` | MQL5 đầy đủ: `RiskGuard`, `CostModel`, `VirtualPortfolio`, `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA`, preset/config, script build/test; 13/15 scenario Strategy Tester có kết quả | 2 scenario `plan_*` `BLOCKED_PERFORMANCE` (~O(n²) ở `PriceActionMTF`) |
 
 Kết luận: Track A và B đã hết việc code tự động; phần còn lại là runtime thủ công hoặc dữ liệu người dùng.
 **Track C là track duy nhất còn khối lượng code lớn và không bị chặn bởi dữ liệu ngoài.**
@@ -46,7 +46,7 @@ Kết luận: Track A và B đã hết việc code tự động; phần còn l�
 
 | ID | Việc | Trạng thái | Điều kiện mở |
 |---|---|---|---|
-| **B-R1** | Chạy 6 contract test script + gắn indicator + chạy 2 EA trong MT5 | `NOT_RUN` | Có terminal; chạy `deploy_pineport.ps1 -Apply` trước |
+| **B-R1** | Chạy 6 contract test script + gắn indicator + chạy 2 EA trong MT5 | Contract test **PASS 6/6**; gắn indicator/EA còn `NOT_RUN` | Có terminal; chạy `deploy_pineport.ps1 -Apply` trước |
 | **B-R2** | Parity Pine vs MQL5 | `BLOCKED` | Người dùng xuất CSV reference Pine cho từng indicator |
 | **B-R3** | Strategy Tester cho EA PinePort | `NOT_RUN` | Có dữ liệu lịch sử trong terminal |
 | **A-R1** | Pipeline Track A trên dữ liệu MT5 thật | `BLOCKED` | Có CSV/Parquet export từ MT5, không dùng synthetic thay thế |

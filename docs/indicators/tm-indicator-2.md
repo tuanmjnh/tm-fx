@@ -378,9 +378,10 @@ signal = okBar and tradeEligible and plan.valid
 
 - Spec: `PASS` (tài liệu).
 - Repaint audit: xem `REPAINT_AUDIT_TMIndicator2.md`.
-- Buffer contract: chưa tạo.
-- MQL5 code: chưa port.
-- Runtime/parity: `NOT_RUN` / `BLOCKED`.
+- Buffer contract: có (contract `1.0.0`, buffer 16–241).
+- MQL5 code: `mt5/Indicators/PinePort/TMIndicator2.mq5`, compile 0/0.
+- Runtime/parity: contract test **PASS 155/155** (2026-10-28); indicator gắn chart chưa xác minh;
+  parity `BLOCKED`.
 
 ## Repaint Audit — TM Indicator 2 (Pine v6, v2.1.0)
 
@@ -2147,7 +2148,7 @@ khẳng định công thức, không phải kết quả runtime.
 
 | ID | Nội dung | Kỳ vọng |
 |---|---|---|
-| G1 | volMA 100, vol 220, spike 2.2 | ratio 2.2, bucket TIM(5), isTim true |
+| G1 | volMA 100, vol 221, spike 2.2 | ratio 2.21, bucket TIM(5), isTim true |
 | G2 | vol 219.99 | bucket VERYHIGH(4), isTim false |
 | G3 | vol 180 | bucket VERYHIGH (`>=1.8`) |
 | G4 | volMA 0, vol 100 | ratio 0, bucket TIM (`100>=0`), isTim false |
@@ -2156,7 +2157,11 @@ khẳng định công thức, không phải kết quả runtime.
 | G7 | isTim bull obv+1 / isTim bear obv−1 / relVol 1.2 bull obv 0 | volumeScore 1 / −1 / 0.42 |
 | G8 | closes 10,11,10,9; vol 10,20,30,40 | OBV 0, 20, −10, −50; slope −50 (obv[10] na → 0) |
 | G9 | new day vol 10 hlc3 100; next vol 30 hlc3 102 | vwap 100 → 101.5; new day reset 110 |
-| G10 | close 101, vwap 100, ATR 2 / ATR na close 100 | 0.5 / 1.0; close 90 → −1 |
+| G10 | close 101, vwap 100, ATR 2 / ATR na close 100 | 0.5 / 0.990099; close 90 → −1 |
+
+> G1 dùng `vol=221, spike=2.2` thay cho `220`: trong double, `100.0*2.2 = 220.00000000000003`
+> nên giá trị `220` không còn đúng biên `>=`. G10 với ATR na dùng `denom=close*0.01=1.01` →
+> `1/1.01 = 0.990099`, không phải 1.0.
 
 #### H. Indicators (9)
 
@@ -2228,7 +2233,7 @@ khẳng định công thức, không phải kết quả runtime.
 | L7 | ranging box, close gần sup, pin bull, modeC on / off | ready long / không |
 | L8 | A và B cùng ready long | activeMode A (ưu tiên) |
 | L9 | modeDir 1, DIR −1; filter off | gate false / true |
-| L10 | ready A; B invalid; await; không setup | MODE_A_PULLBACK / MODE_INVALIDATED / WAIT_CONFIRMATION / NO_SETUP |
+| L10 | ready A; B invalid; await; mode NONE + `emaF` na | MODE_A_PULLBACK / MODE_INVALIDATED / WAIT_CONFIRMATION / NO_SETUP |
 
 #### M. Gates / eligibility (10)
 
@@ -2343,7 +2348,7 @@ parity `BLOCKED` (chưa có CSV Pine).
 | `TMIndicator2ContractTests.mq5` | 0 errors, 0 warnings; `.ex5` 130.042 byte |
 | `scripts/build_pineport.ps1` | `BUILD_OK: 13 source(s) compiled with 0 errors and 0 warnings` |
 | `scripts/validate_tmind2.py` | `VALIDATION_OK: pass=44 fail=0` |
-| Chạy 155 vector trong terminal | `NOT_RUN` |
+| Chạy 155 vector trong terminal | **PASS 155/155** (2026-10-28) |
 | Parity Pine-vs-MQL5 | `BLOCKED` |
 
 Compile và validator tĩnh không chứng minh vector pass; cần chạy script trong MT5 để xác nhận.

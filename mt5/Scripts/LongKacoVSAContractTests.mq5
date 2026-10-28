@@ -83,7 +83,7 @@ void CheckBucket(const string id,const double vol,const double vol_ma,
 
 void RunA()
   {
-   CheckBucket("A1",220.0,100.0,LK_BUCKET_TIM);
+   CheckBucket("A1",100.0*2.2,100.0,LK_BUCKET_TIM);
    CheckBucket("A2",180.0,100.0,LK_BUCKET_VERY_HIGH);
    CheckBucket("A3",120.0,100.0,LK_BUCKET_HIGH);
    CheckBucket("A4", 80.0,100.0,LK_BUCKET_NORMAL);
@@ -97,7 +97,7 @@ void RunB()
   {
    const LkConfig cfg=BaseConfig();
 
-   Record("B1",LkIsPurple(220.0,100.0,cfg.r_p),
+   Record("B1",LkIsPurple(100.0*cfg.r_p,100.0,cfg.r_p),
           "purple must be true at vol == ma*r_p");
    Record("B2",!LkIsPurple(219.9,100.0,cfg.r_p),
           "purple must be false just below ma*r_p");

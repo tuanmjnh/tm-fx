@@ -2204,9 +2204,10 @@ void X2EngineStep(const X2Config &cfg,X2EngineState &st,const X2Bar &bar,
    if(bar.srPivLValid)
       X2ZoneAdd(st,bar.srPivL,1,atr,cfg.srWidthAtr,cfg.srMax);
 
-   if(atrOk && !X2IsEmpty(bar.high2))
+   if(atrOk)
      {
-      if(bar.low>bar.high2 && (bar.low-bar.high2)>=cfg.fvgMinAtr*atr)
+      if(!X2IsEmpty(bar.high2) && bar.low>bar.high2
+         && (bar.low-bar.high2)>=cfg.fvgMinAtr*atr)
         {
          if(st.fvgCount>=X2_MAX_FVG)
            {
@@ -2221,7 +2222,8 @@ void X2EngineStep(const X2Config &cfg,X2EngineState &st,const X2Bar &bar,
          st.fvg[st.fvgCount].dead=false;
          st.fvgCount+=1;
         }
-      if(bar.high<bar.low2 && (bar.low2-bar.high)>=cfg.fvgMinAtr*atr)
+      if(!X2IsEmpty(bar.low2) && bar.high<bar.low2
+         && (bar.low2-bar.high)>=cfg.fvgMinAtr*atr)
         {
          if(st.fvgCount>=X2_MAX_FVG)
            {

@@ -220,9 +220,8 @@ Kiểm tra thêm trên bản dist:
 7. **Symbol/timeframe chuẩn chưa chốt.** Ảnh hưởng trực tiếp đến parity ở Phase 6.
 8. **Runtime TradingView chưa kiểm chứng.** E1–E8 của audit repaint đều `PENDING` (alert, exit nến entry,
    ladder). Không suy ra kết quả từ tài liệu.
-9. **Runtime MQL5 chưa kiểm chứng.** Indicator và EA mới chỉ compile; 36 vector Wonderwhales, 47 vector
-   LongKaco VSA, 82 vector TM Fusion Zones và 119 vector Price Action MTF chưa chạy trong terminal. Không
-   tuyên bố PASS runtime.
+9. **Runtime indicator chưa kiểm chứng.** Contract test 6 suite đã chạy PASS (547 check, 2026-10-28)
+   trong Strategy Tester; indicator gắn chart/plot và EA multi-source vẫn chưa chạy runtime.
 
 ### 7. Trạng thái Phase 1–6
 
@@ -239,14 +238,13 @@ Kiểm tra thêm trên bản dist:
   repaint matrix; timestamp contract; 10 chính sách MQL5; 18 khác biệt Pine→MQL5 (D1–D18); signal ID và
   buffer contract 18 kênh đã chốt.
 - **Phase 4:** `WonderwhalesContract.mqh`, `Wonderwhales.mq5`, `WonderwhalesContractTests.mq5`; compile
-  0 error/0 warning. 36 vector **chưa chạy**.
+  0 error/0 warning. 36 vector **PASS** trong Strategy Tester (2026-10-28).
 - **Phase 5:** `PineSignalLabEA.mq5`; compile 0 error/0 warning; chưa chạy runtime.
 - **Phase 6:** comparator `scripts/compare_pine_exports.py` + 25 unit test + 10 audit CSV test pass; parity
   thật `BLOCKED`
   vì chưa có CSV reference từ Pine.
-- **Chưa làm:** không chạy indicator/EA trong terminal, không Strategy Tester, không backtest, không chạy
-  TradingView.
-- **Phase 7:** Strategy Tester thủ công; `BLOCKED` cho tới khi có môi trường và dữ liệu.
+- **Chưa làm:** indicator gắn chart và EA chưa chạy runtime; không backtest, không chạy TradingView.
+- **Phase 7:** contract test đã chạy PASS; Strategy Tester cho EA signal-only vẫn `NOT_RUN`.
 
 #### 7.1 LongKaco VSA — Phase 1–4
 
@@ -260,7 +258,8 @@ Kiểm tra thêm trên bản dist:
   `mt5/Scripts/LongKacoVSAContractTests.mq5`; compile 0 error/0 warning (36.104 và 18.988 byte).
 - **Validator:** `scripts/validate_longkaco.py` pass=29 fail=0.
 - **Trạng thái port:** `PORTABLE_WITH_DIFFERENCES` (D1–D7 trong spec); tín hiệu chỉ trên nến đã đóng.
-- **Chưa làm:** 47 vector `NOT_RUN`; EA `NOT_IMPLEMENTED`; parity `BLOCKED`; Strategy Tester `NOT_RUN`.
+- **Đã chạy:** contract test 47/47 PASS (2026-10-28). **Chưa làm:** EA `NOT_IMPLEMENTED`; parity
+  `BLOCKED`; indicator gắn chart chưa xác minh.
 
 #### 7.2 TM Fusion Zones — Phase 1–4
 
@@ -273,7 +272,8 @@ Kiểm tra thêm trên bản dist:
   `mt5/Scripts/TMFusionZonesContractTests.mq5`; compile 0 error/0 warning (54.334 và 61.512 byte).
 - **Validator:** `scripts/validate_tmfz.py` pass=34 fail=0.
 - **Trạng thái port:** `PORTABLE_WITH_DIFFERENCES` (D1–D7 trong spec); tín hiệu chỉ trên nến đã đóng.
-- **Chưa làm:** 82 vector `NOT_RUN`; EA `NOT_IMPLEMENTED`; parity `BLOCKED`; Strategy Tester `NOT_RUN`.
+- **Đã chạy:** contract test 82/82 PASS (2026-10-28). **Chưa làm:** EA `NOT_IMPLEMENTED`; parity
+  `BLOCKED`; indicator gắn chart chưa xác minh.
 
 #### 7.3 Price Action MTF — Phase 1–4
 
@@ -289,7 +289,8 @@ Kiểm tra thêm trên bản dist:
 - **Validator:** `scripts/validate_pamtf.py` pass=34 fail=0.
 - **Trạng thái port:** `PORTABLE_WITH_DIFFERENCES` (D1–D10 + Q1–Q10 trong contract); tín hiệu chỉ trên nến
   đã đóng.
-- **Chưa làm:** 119 vector `NOT_RUN`; EA `NOT_IMPLEMENTED`; parity `BLOCKED`; Strategy Tester `NOT_RUN`.
+- **Đã chạy:** contract test 120/120 PASS (2026-10-28). **Chưa làm:** EA `NOT_IMPLEMENTED`; parity
+  `BLOCKED`; indicator gắn chart chưa xác minh.
 
 #### 7.4 TM XAU Signals 2 — Phase 1–4
 
@@ -304,7 +305,8 @@ Kiểm tra thêm trên bản dist:
 - **Validator:** `scripts/validate_tmxau2.py` pass=31 fail=0.
 - **Trạng thái port:** `PORTABLE_WITH_DIFFERENCES` (Q1–Q10 trong contract §16); tín hiệu chỉ trên nến đã
   đóng; mặc định `rr1=1.0 < rrMin=1.5` nên không phát tín hiệu nếu giữ nguyên input.
-- **Chưa làm:** 105 vector `NOT_RUN`; EA `NOT_IMPLEMENTED`; parity `BLOCKED`; Strategy Tester `NOT_RUN`.
+- **Đã chạy:** contract test 107/107 PASS (2026-10-28). **Chưa làm:** EA `NOT_IMPLEMENTED`; parity
+  `BLOCKED`; indicator gắn chart chưa xác minh.
 
 #### 7.5 TM Indicator 2 — Phase 1–4
 
@@ -323,7 +325,8 @@ Kiểm tra thêm trên bản dist:
   đóng; có strategy sibling `TM Indicator Strategy Lab 2.pine` nhưng không port execution.
 - **Điểm audit:** fill-bar chặn TP nhưng vẫn xét SL; SL ưu tiên khi cùng nến chạm TP; S/R `broken` là
   dead field; `barstate.islast` chỉ vẽ box, không mutate state.
-- **Chưa làm:** 155 vector `NOT_RUN`; EA `NOT_IMPLEMENTED`; parity `BLOCKED`; Strategy Tester `NOT_RUN`.
+- **Đã chạy:** contract test 155/155 PASS (2026-10-28). **Chưa làm:** EA `NOT_IMPLEMENTED`; parity
+  `BLOCKED`; indicator gắn chart chưa xác minh.
 
 #### 7.6 Phase 5 — EA tín hiệu đa nguồn (sáu indicator)
 
@@ -410,10 +413,10 @@ Tài liệu này liệt kê các khác biệt đã biết giữa Pine gốc và 
 
 | Hạng mục | Trạng thái |
 |---|---|
-| 36 test vector hợp đồng | Đã compile; **chưa chạy** |
-| Indicator trong MT5 (buffer, iCustom) | **Chưa chạy** |
+| 6 contract suite (547 check) | **PASS** trong Strategy Tester (2026-10-28) |
+| Indicator trong MT5 (plot, iCustom) | **Chưa xác minh** trên chart |
 | EA runtime (log, CSV, dedupe) | **Chưa chạy** |
-| Strategy Tester / backtest | **Chưa chạy**; không có execution |
+| Strategy Tester / backtest | Contract test PASS; EA signal-only chưa chạy |
 | Parity Pine-vs-MQL5 | `BLOCKED` — thiếu CSV reference |
 | Hành vi Pine runtime E1–E8 | `PENDING` |
 

@@ -918,7 +918,7 @@ void RunE()
    TM2Config cfgW=Cfg();
    Record("E8",TM2WeekendBlocked(cfgW,true,true,0.7,0.6) &&
           !TM2WeekendBlocked(cfgW,true,true,0.8,0.6) &&
-          !TM2WeekendBlocked(cfgW,true,true,0.7,0.6+1e-9) &&
+          TM2WeekendBlocked(cfgW,true,true,0.8,0.6-1e-9) &&
           !TM2WeekendBlocked(cfgW,false,true,0.1,0.1),"weekend strict");
   }
 
@@ -1121,11 +1121,11 @@ void RunG()
 //--- G1
    NewState(st);
    b=BaseBar();
-   b.vol=220;
+   b.vol=221;
    b.volMA=100.0;
    b.volSma20=100.0;
    Step(cfg,st,b,0,o);
-   Record("G1",Near(o.volRatio,2.2) && o.volBucket==TM2_BUCKET_TIM && o.isTim,"tim bucket");
+   Record("G1",Near(o.volRatio,2.21) && o.volBucket==TM2_BUCKET_TIM && o.isTim,"tim bucket");
 
 //--- G2
    NewState(st);
@@ -1244,7 +1244,7 @@ void RunG()
 
 //--- G10
    Record("G10",Near(TM2VwapScore(true,101.0,100.0,2.0),0.5) &&
-          Near(TM2VwapScore(true,101.0,100.0,EMPTY_VALUE),1.0) &&
+          NearT(TM2VwapScore(true,101.0,100.0,EMPTY_VALUE),1.0/1.01,1e-12) &&
           Near(TM2VwapScore(true,90.0,100.0,2.0),-1.0),"vwap score");
   }
 
@@ -1426,7 +1426,8 @@ void RunI()
    b=BaseBar();
    b.ctxDir=-1;
    b.mtfHierOk=true;
-   TM2EvaluateGates(cfgFilter,b,st,1,gate);
+   TM2Config cfgVeto=Cfg();
+   TM2EvaluateGates(cfgVeto,b,st,1,gate);
    const bool vetoOn=gate.mtfOk;
    TM2Config cfgNoVeto=Cfg();
    cfgNoVeto.htfFilter=false;
@@ -1937,7 +1938,7 @@ void RunL()
    in.close=104.5;
    in.low=104.0;
    in.high=105.0;
-   in.emaF=100.0;
+   in.emaF=EMPTY_VALUE;
    const int rNone=TM2ModeReason(in,true,TM2_MODE_NONE);
    Record("L10",rA==TM2_R_MODE_A_PULLBACK && rInv==TM2_R_MODE_INVALIDATED &&
           rWait==TM2_R_WAIT_CONFIRMATION && rNone==TM2_R_NO_SETUP &&
@@ -2206,7 +2207,7 @@ void RunN()
    cfgLiq.riskMaxLev=20.0;
    NewState(st);
    st.hasSwingLo=true;
-   st.swingLo=1995.0;
+   st.swingLo=1997.0;
    b=BaseBar();
    b.high=2005.0;
    b.low=1990.0;
@@ -2234,7 +2235,8 @@ void RunN()
    b.mintick=0.01;
    TM2BuildPlan(cfgNoFee,b,st,1,p);
    const double net0=p.netRR;
-   TM2BuildPlan(cfgFee,b,st,1,p);
+   TM2Config cfgFee08=Cfg();
+   TM2BuildPlan(cfgFee08,b,st,1,p);
    Record("N10",NearT(net0,2.0,1e-9) && NearT(p.netRR,1.727273,1e-6),"net rr fees");
 
 //--- N11

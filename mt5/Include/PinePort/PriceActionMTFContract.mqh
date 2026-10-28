@@ -958,7 +958,23 @@ void PaBuildMacdHist(const double &src[],const int total,const int fast,const in
          line[j]=emaFast[j]-emaSlow[j];
      }
    double signal[];
-   PaBuildEma(line,total,sig,signal);
+   ArrayResize(signal,total);
+   ArrayInitialize(signal,EMPTY_VALUE);
+   const int sigStart=slow+sig-2;
+   if(sigStart<total)
+     {
+      double sum=0.0;
+      for(int i=sigStart-sig+1; i<=sigStart; i++)
+         sum+=line[i];
+      signal[sigStart]=sum/(double)sig;
+      const double alpha=2.0/((double)sig+1.0);
+      for(int j=sigStart+1; j<total; j++)
+        {
+         if(PaIsEmpty(signal[j-1]) || PaIsEmpty(line[j]))
+            continue;
+         signal[j]=alpha*line[j]+(1.0-alpha)*signal[j-1];
+        }
+     }
    for(int j=0; j<total; j++)
      {
       if(!PaIsEmpty(line[j]) && !PaIsEmpty(signal[j]))

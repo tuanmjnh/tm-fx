@@ -27,7 +27,7 @@
     "InpTrailFixedPoints": 300.0,
     "InpMinStopPointsTrail": 5.0,
     "InpCooldownBars": 1,
-    "InpMaxSpreadPoints": 50.0,
+    "InpMaxSpreadPoints": 600.0,
     "InpMaxVirtualExposure": 1.0,
     "InpMaxDailyLossPct": 2.0,
     "InpMaxDrawdownPct": 5.0,
@@ -54,6 +54,7 @@
   },
   "assumptions": {
     "contract_size": 1,
+    "symbol": "XAUUSDm: point 0.001, 3 digits, measured spread ~260 points; spread cap 600 points",
     "entry": "simulated fill at ask/bid plus adverse slippage; the plan entry is a reference only",
     "commission": "total cash per fill, charged on open and close",
     "slippage": "points, adverse on every fill including stop fills",

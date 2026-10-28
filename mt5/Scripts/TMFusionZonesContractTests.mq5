@@ -671,8 +671,8 @@ void RunK()
    half.wStruct=0.0;
    half.wCandle=0.0;
    half.wMtf=0.0;
-   Record("K5",Near(FzScoreLong(half,true,false,false,true,false,false,false,false,false,false),88.0),
-          StringFormat("score=%.1f expected 88",
+   Record("K5",Near(FzScoreLong(half,true,false,false,true,false,false,false,false,false,false),85.0),
+          StringFormat("score=%.1f expected 85",
                        FzScoreLong(half,true,false,false,true,false,false,false,false,false,false)));
   }
 

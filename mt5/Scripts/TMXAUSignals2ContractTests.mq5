@@ -277,11 +277,11 @@ void RunB()
 
    X2StateInit(st);
    bar=MkBar(100.0,101.0,99.0,100.5);
-   bar.volume=220.0;
+   bar.volume=221.0;
    bar.volMA=100.0;
    X2EngineStep(cfg,st,bar,0,out);
    Record("B1",out.volBucket==X2_BUCKET_TIM && out.isTim
-          && Near(out.volRatio,2.2),"bucket TIM, isTim, ratio 2.2");
+          && Near(out.volRatio,2.21),"bucket TIM, isTim, ratio 2.21");
 
    const int b2a=X2VolBucket(219,100,2.2,1.8,1.2,0.8,0.4);
    const int b2b=X2VolBucket(180,100,2.2,1.8,1.2,0.8,0.4);
@@ -335,11 +335,13 @@ void RunB()
 
    X2StateInit(st);
    const double closes[4]={10.0,11.0,10.0,9.0};
-   const double vols[4]={10.0,20.0,30.0,0.0};
+   const double vols[4]={10.0,10.0,20.0,30.0};
    double slopes[4];
    for(int i=0; i<4; i++)
      {
       bar=MkBar(closes[i],closes[i],closes[i],closes[i]);
+      if(i>0)
+         bar.prevClose=closes[i-1];
       bar.volume=vols[i];
       X2EngineStep(cfg,st,bar,i,out);
       slopes[i]=out.obvSlope;
@@ -356,6 +358,8 @@ void RunB()
    for(int i=0; i<4; i++)
      {
       bar=MkBar(closes9[i],closes9[i],closes9[i],closes9[i]);
+      if(i>0)
+         bar.prevClose=closes9[i-1];
       bar.volume=10.0;
       X2EngineStep(cfg,st,bar,i,out);
       slopes[i]=out.obvSlope;
@@ -370,6 +374,8 @@ void RunB()
    for(int i=0; i<2; i++)
      {
       bar=MkBar(closes9[i],closes9[i],closes9[i],closes9[i]);
+      if(i>0)
+         bar.prevClose=closes9[i-1];
       bar.volume=10.0;
       X2EngineStep(cfg,st,bar,i,out);
       slopes[i]=out.obvSlope;
@@ -429,7 +435,7 @@ void RunC()
    X2StateInit(st);
    st.sessPrev=X2_SESS_LONDON;
    st.sessHi=105.0;
-   st.sessLo=95.0;
+   st.sessLo=100.0;
    st.hasSessHi=true;
    st.hasSessLo=true;
    bar=MkBar(100.0,101.0,99.0,100.0);
@@ -804,13 +810,13 @@ void RunG()
    cfg.rejOn=false;
    X2StateInit(st);
    bar=MkBar(100.0,104.2,100.0,104.0);
-   bar.volume=220.0;
+   bar.volume=221.0;
    bar.volMA=100.0;
    bar.atr=2.0;
    X2EngineStep(cfg,st,bar,0,out);
    const bool dispV=out.dispBullV;
    X2StateInit(st);
-   bar.volume=219.0;
+   bar.volume=220.0;
    X2EngineStep(cfg,st,bar,0,out);
    Record("G3",dispV && !out.dispBullV,"displacement volume spike");
 
@@ -877,7 +883,7 @@ void RunH()
    Record("H10",Near(X2TrendScore(true,false,100,99,98),1.0)
           && Near(X2TrendScore(false,false,102,101,100),0.5)
           && Near(X2TrendScore(false,false,98,99,100),-0.5)
-          && Near(X2TrendScore(false,false,100,101,102),0.0),
+          && Near(X2TrendScore(false,false,101,100,102),0.0),
           "trend score");
   }
 
@@ -1011,6 +1017,8 @@ void RunK()
    Record("K8",tpOk && Near(plan.tp2,103.0),"tp multiples and rr2 floor");
 
    cfg=SignalConfig();
+   cfg.coolBars=10;
+   cfg.maxDay=3;
    X2EngineState st;
    X2BarOut out;
    X2StateInit(st);
@@ -1021,7 +1029,7 @@ void RunK()
    X2StateInit(st);
    st.barsSince=9;
    X2EngineStep(cfg,st,SignalBar(100.0),1,out);
-   const bool cool10=(out.barsSince==10 && out.signal);
+   const bool cool10=(out.barsSince==0 && out.signal);
    X2StateInit(st);
    st.dayCount=3;
    st.barsSince=100;

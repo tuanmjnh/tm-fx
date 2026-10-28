@@ -279,8 +279,12 @@ Nếu thiếu history, tester lỗi, hoặc CSV rỗng → `BLOCKED`/`FAIL`, kh�
 |---|---|
 | Hướng dẫn + template | PASS (tài liệu này) |
 | `ww_baseline`, `ww_conservative_stress`, `ww_edge_atr_stop` | PASS — 3/3 report + CSV thật (2026-10-28), xem mục 9 |
-| 12 scenario của Runner/Grid/DCA/PinePlan | `NOT_RUN` — 0/12 report |
-| Kết luận hiệu năng | Không có; mọi số liệu phải đến từ report thật |
+| `runner_*` (3) | PASS — 3/3 report + CSV thật, xem mục 9.1 |
+| `grid_*` (3) | PASS — 3/3 report + CSV thật, xem mục 9.1 |
+| `dca_*` (4) | PASS — 4/4 report + CSV thật, xem mục 9.1 |
+| `plan_baseline`, `plan_edge_tp3_stop_only` | `BLOCKED_PERFORMANCE` — PriceActionMTF quá chậm ở toàn kỳ 9 tháng; diagnostic 1 tháng xong 197 s với 0 entry |
+| 6 contract test indicator | PASS — 6/6 suite, 547 check, xem [`../reference/simulation.md`](../reference/simulation.md) |
+| Kết luận hiệu năng | Không có; mọi số liệu phải đến từ report thật, không suy ra lợi nhuận |
 
 ### 9. Kết quả thật — WonderwhalesSimEA (2026-10-28)
 
@@ -299,6 +303,42 @@ Kiểm tra CSV: `config_hash` đồng nhất toàn file, SL luôn đúng phía e
 stress còn một vị thế ảo mở ở bar cuối). Net là **đơn vị mô hình** (contract size 1, không commission,
 không swap, không margin); không phải lợi nhuận và không suy ra được lot hay P&L broker.
 File: `reports/build/tester-reports/<scenario>/sim_ww_<scenario>.csv` và `tester_ww_<scenario>.htm`.
+
+### 9.1 Kết quả thật — Runner / Grid / DCA (2026-10-28)
+
+Cùng môi trường mục 9. Spread cap đã hiệu chỉnh theo spread đo được (~260 point): preset nền `600`,
+scenario stress/edge `400`; lý do ở [`../PROGRESS.md`](../PROGRESS.md) §41. `Net` là **đơn vị mô hình**,
+không phải lợi nhuận.
+
+| Scenario | Trades / entries | Win / Loss | Net | Max DD | Blocks | Trạng thái RiskGuard |
+|---|---:|---:|---:|---:|---:|---|
+| `runner_baseline` | 54 | 5 / 49 | −467.63 | 5.09% | 279 | HALTED |
+| `runner_conservative_stress` | 36 | 3 / 33 | −192.06 | 2.19% | 301 | HALTED |
+| `runner_edge_no_breakeven` | 70 | 27 / 43 | −464.69 | 5.12% | 263 | HALTED |
+| `grid_baseline` | 24 052 levels / 17 581 basket | — | +1 355.49 | 1.13% | 12 | ACTIVE |
+| `grid_conservative_stress` | 22 916 / 17 513 | — | +422.91 | 0.29% | 80 | ACTIVE |
+| `grid_edge_single_level` | 11 018 / 11 018 | — | −496.85 | 5.00% | 6 575 | HALTED |
+| `dca_baseline` | 11 012 entry (+2 adds) | — | −497.06 | 5.00% | 6 581 | HALTED |
+| `dca_conservative_stress` | 6 098 | — | −200.06 | 2.00% | 11 497 | HALTED |
+| `dca_edge_no_adds` | 11 018 | — | −496.85 | 5.00% | 6 575 | HALTED |
+| `dca_edge_bar_trigger` | 11 018 | — | −496.85 | 5.00% | 6 575 | HALTED |
+
+Ghi chú trung thực:
+
+- `HALTED` là RiskGuard dừng EA khi chạm ngưỡng drawdown/daily loss; không phải lỗi tester và không
+  phải tín hiệu hiệu năng.
+- `DCALabEA` in `adds=0` trong `SUMMARY` do bộ đếm bị reset khi đóng basket; CSV chứng minh có add
+  (`dca_baseline`: volume 0.15 và 0.225 ngoài base 0.10). Đây là lỗi báo cáo đã biết, chưa sửa.
+- `grid_edge_single_level` chỉ mở một level/basket nên trùng số với DCA — đúng cấu hình edge.
+- File: `reports/build/tester-reports/<scenario>/` (CSV 18 cột + `tester_<scenario>.htm`).
+
+### 9.2 `plan_*` — `BLOCKED_PERFORMANCE`
+
+Full kỳ 2026.01.05–2026.10.01 không hoàn tất sau ~13 phút; `metatester64` tính lại PriceActionMTF với
+chi phí tăng gần bậc hai theo số bar. Diagnostic rút còn 2026.01.05–2026.02.04: xong 197 s,
+`entries=0 rejected=0 trades=0` — chưa đủ để kết luận gì về logic plan. Không có report cho
+`plan_baseline` (chỉ CSV `INIT`) và `plan_edge_tp3_stop_only`. Muốn chạy được phải tối ưu cache
+indicator trước; không ghi đè trạng thái này bằng suy luận.
 
 ## Strategy Tester report — <scenario>
 

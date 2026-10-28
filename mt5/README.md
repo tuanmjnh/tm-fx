@@ -275,7 +275,7 @@ Hướng dẫn đầy đủ: [`docs/guides/install-and-test.md`](../docs/guides/
 
 - `confirmOnClose=false` không được port (D16).
 - EA chỉ đọc `shift=1`; không có alert native, không có execution.
-- 36 vector mới **compile**, script contract tests chưa chạy trong terminal; parity `BLOCKED`.
+- Contract test 36 vector đã chạy **PASS 36/36** trong Strategy Tester (2026-10-28); parity `BLOCKED`.
 - Indicator đã được `iCustom` nạp trong 3 lần chạy tester của `WonderwhalesSimEA` (có tín hiệu sinh ra),
   nhưng điều đó không thay thế contract test hay đối chiếu Pine.
 - Không dùng log/CSV để tuyên bố lợi nhuận hay tương thích broker.
@@ -296,7 +296,7 @@ Validator tĩnh: `scripts/validate_longkaco.py`.
 
 ### Giới hạn LongKaco
 
-- 47 vector mới **compile**, chưa chạy trong terminal.
+- Contract test 47 vector đã chạy **PASS 47/47** trong Strategy Tester (2026-10-28).
 - EA chưa đọc LongKaco; chưa có CSV, chưa có parity (`BLOCKED`).
 - Indicator chỉ vẽ marker tại nến đã đóng; `PSAR`/level không có trong contract này.
 - Không dùng buffer `RESULT`/`FILL` để vào lệnh; chúng chỉ phục vụ đối chiếu.
@@ -317,7 +317,7 @@ Validator tĩnh: `scripts/validate_tmfz.py`.
 
 ### Giới hạn TM Fusion Zones
 
-- 82 vector mới **compile**, chưa chạy trong terminal.
+- Contract test 82 vector đã chạy **PASS 82/82** trong Strategy Tester (2026-10-28).
 - EA chưa đọc TM FZ; chưa có CSV, chưa có parity (`BLOCKED`).
 - Zone/structure dùng pivot strict nên xác nhận trễ `pivotLen` nến — cấu trúc, không phải repaint.
 - Không dùng buffer `RESULT`/`FILL` để vào lệnh; chúng chỉ phục vụ đối chiếu.
@@ -338,7 +338,7 @@ Validator tĩnh: `scripts/validate_pamtf.py`.
 
 ### Giới hạn Price Action MTF
 
-- 119 vector mới **compile**, chưa chạy trong terminal.
+- Contract test đã chạy **PASS 120/120 check** trong Strategy Tester (2026-10-28).
 - EA chưa đọc PA MTF; chưa có CSV, chưa có parity (`BLOCKED`).
 - MTF dùng `request.security(expr[1], lookahead_on)` như Pine; phụ thuộc dữ liệu HTF đã đóng.
 - Không dùng buffer `SIG/EV` để vào lệnh; chúng chỉ phục vụ đối chiếu.
@@ -359,7 +359,7 @@ Validator tĩnh: `scripts/validate_tmxau2.py`.
 
 ### Giới hạn TM XAU Signals 2
 
-- 105 vector mới **compile**, chưa chạy trong terminal.
+- Contract test đã chạy **PASS 107/107 check** trong Strategy Tester (2026-10-28).
 - EA chưa đọc TM XAU2; chưa có CSV, chưa có parity (`BLOCKED`).
 - Mặc định `rr1=1.0 < rrMin=1.5` (quirk nguồn) nên indicator không phát tín hiệu nếu giữ input mặc định.
 - Không dùng buffer `SIG/ENTRY` để vào lệnh; chúng chỉ phục vụ đối chiếu.
@@ -380,7 +380,7 @@ Validator tĩnh: `scripts/validate_tmind2.py`.
 
 ### Giới hạn TM Indicator 2
 
-- 155 vector mới **compile**, chưa chạy trong terminal.
+- Contract test 155 vector đã chạy **PASS 155/155** trong Strategy Tester (2026-10-28).
 - EA chưa đọc TM Indicator 2; chưa có CSV, chưa có parity (`BLOCKED`).
 - Contract buffer 16–241 là `INDICATOR_CALCULATIONS`; chỉ 0–15 là plot.
 - Không dùng buffer `ENTRY/SIG` để vào lệnh; chúng chỉ phục vụ đối chiếu.
@@ -443,11 +443,13 @@ Thư viện dùng chung cho các EA mô phỏng (`RunnerTrailingLabEA`, `GridLab
 - Toolchain dùng chung: `scripts/check-environment.ps1`, `scripts/build-mql5.ps1`,
   `scripts/run-python-tests.ps1`, `scripts/validate-project.py`, `scripts/package-source.ps1`
   (chi tiết `docs/guides/toolchain.md`).
-- Test vector runtime `NOT_RUN`: cần mở MT5 và chạy script; kết quả đúng phải có
-  `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core`.
-- EA runtime `NOT_RUN`; preset mẫu `configs/sim/runner_trailing.json`, `configs/sim/grid_lab.json`,
-  `configs/sim/dca_lab.json`, `configs/sim/pine_plan_lab.json`, `configs/sim/wonderwhales_xauusdm.json`;
-  scenario baseline/stress/edge: `configs/project.example.json` (15 scenario).
+- Test vector runtime **PASS**: `SimCoreTests` `pass=123 fail=0` và `SimPlanTests` `pass=39 fail=0`
+  (MT5, 2026-10-28).
+- EA runtime **PASS một phần**: runner/grid/DCA đã chạy 10 scenario Strategy Tester (có SUMMARY);
+  `plan_*` `BLOCKED_PERFORMANCE`. Preset mẫu `configs/sim/runner_trailing.json`,
+  `configs/sim/grid_lab.json`, `configs/sim/dca_lab.json`, `configs/sim/pine_plan_lab.json`,
+  `configs/sim/wonderwhales_xauusdm.json`; scenario baseline/stress/edge:
+  `configs/project.example.json` (15 scenario).
 - Kiểm tra fail-closed trước khi nạp preset: `python scripts/validate_sim_configs.py` (chi tiết
   `docs/reference/simulation.md`).
 - Không có API giao dịch; `python/tests/test_sim_core_source.py` chặn hồi quy bằng cách quét token cấm
@@ -483,7 +485,9 @@ Thư viện dùng chung cho các EA mô phỏng (`RunnerTrailingLabEA`, `GridLab
   theo plan; target fill đúng target, không credit gap có lợi; SL được kiểm trước target.
 - Runtime: `SimPlanTests` PASS trong MT5 ngày 2026-10-28 (`TEST|RESULT|ALL_PASS|pass=39 fail=0|suite=sim_plan`).
   Lần chạy đầu phát hiện hằng số `point` sai trong test và lỗi biên số thực ở ngưỡng target; đã sửa
-  `SimPlanTests.mq5` + `SimPlan.mqh` rồi chạy lại. EA trong Strategy Tester vẫn `NOT_RUN`.
+  `SimPlanTests.mq5` + `SimPlan.mqh` rồi chạy lại. EA trong Strategy Tester: 2 scenario `plan_*`
+  `BLOCKED_PERFORMANCE` — 1 tháng chẩn đoán chạy 197 s với 0 entry; 9 tháng không xong trong ~13 phút
+  (~O(n²) ở `PriceActionMTF`).
 - Không đưa LongKaco VSA và TM Fusion Zones vào EA này: hai nguồn đó dùng máy trạng thái `FILL/RESULT`
   và `POS_SIDE`, không phải plan tĩnh.
 - Chi tiết luật, token lỗi và giới hạn: `docs/reference/simulation.md` mục **PinePlanSimEA**; preset:
@@ -511,8 +515,8 @@ mở **một vị thế ảo** trên `XAUUSDm`. Không có API giao dịch.
 - Guard symbol: `InpRequireSymbol` khác rỗng và khác `_Symbol` → `INIT_PARAMETERS_INCORRECT`.
 - Entry bị từ chối (`STOP_REJECTED`) nếu khoảng SL nhỏ hơn `InpMinStopPoints`; không nới stop để vào lệnh.
 - Runtime: **PASS** 3 scenario Strategy Tester headless trên `XAUUSDm` M15 (2026-10-28) — baseline 869
-  trades/+26.97; stress 787/−7.50; edge ATR 795/+24.96 (đơn vị model, contract size 1). 12 scenario còn
-  lại `NOT_RUN`; parity Pine `BLOCKED`.
+  trades/+26.97; stress 787/−7.50; edge ATR 795/+24.96 (đơn vị model, contract size 1). Không suy ra
+  lợi nhuận; parity Pine `BLOCKED`.
 - Calibration: `XAUUSDm` point 0.001, spread ~260 point → `InpFixedStopPoints=3000`, `InpMaxSpreadPoints=600`
   (stress 400).
 - Chi tiết: `docs/reference/simulation.md` mục **WonderwhalesSimEA**;

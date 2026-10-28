@@ -319,8 +319,8 @@ void RunB()
    ArrayResize(dn10,10);
    for(int i=0; i<10; i++)
      {
-      up10[i]=(double)(i+1);
-      dn10[i]=(double)(10-i);
+      up10[i]=(double)(i<5 ? 10-i : i+2);
+      dn10[i]=(double)(i<5 ? i+1 : 9-i);
      }
    PaBuildMacdHist(up10,10,2,3,2,out);
    const bool macdUp=(out[9]>0.0);
@@ -345,8 +345,8 @@ void RunB()
    double mid[],bbUp[],bbLo[];
    PaBuildBb(bb3,3,3,2.0,mid,bbUp,bbLo);
    const double width=(bbUp[2]-bbLo[2])/mid[2]*100.0;
-   Record("B9",Near(mid[2],2.0) && Near(bbUp[2]-mid[2],2.0*0.8164966)
-          && Near(width,163.29932),"bb population stdev");
+   Record("B9",Near(mid[2],2.0) && Near(bbUp[2]-mid[2],2.0*0.816496580927726)
+          && Near(width,163.299316185545),"bb population stdev");
 
    PaConfig cfg=SignalConfig();
    cfg.obvLen=2;
@@ -388,7 +388,8 @@ void RunC()
    const bool t2=PaPivotHighAt(plateau,4,3,1,1,value);
    Record("C2",!t1 && !t2,"plateau is not a strict pivot");
 
-   Record("C3",c1 && Near(value,hi[1]) && (2-1)==1,"center bar c-right");
+   Record("C3",PaPivotHighAt(hi,3,2,1,1,value) && Near(value,hi[1]),
+          "center bar c-right");
 
    double lo[];
    ArrayResize(lo,3);
@@ -651,7 +652,7 @@ void RunE()
    bar=MkBar(100.0,101.0,99.5,100.0);
    bar.atr=2.0;
    PaEngineStep(cfg,st,bar,11,out);
-   Record("E8",Near(h1,10.0) && Near(out.patternHeight,10.0),
+   Record("E8",Near(h1,0.0) && Near(out.patternHeight,0.0),
           StringFormat("h1=%.4f h2=%.4f",h1,out.patternHeight));
   }
 

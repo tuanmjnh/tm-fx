@@ -1581,7 +1581,7 @@ hay sẵn sàng live.
 
 **Bối cảnh:** người dùng đóng MT5 và yêu cầu chạy nốt Strategy Tester. Chạy headless bằng
 `terminal64.exe /config:<ini>` (`ShutdownTerminal=1`), không nhập credential — terminal tự đăng nhập lại
-demo 464140826 trên Exness-MT5Trial17.
+tài khoản demo trên Exness-MT5Trial17.
 
 **Phát hiện khi chạy lần đầu (1 tháng 09/2026):** cả 176 tín hiệu bị `ENTRY_BLOCKED|reason=spread_exceeded`.
 Probe EA tạm (`ZZProbeSpread`, đã xoá sau khi dùng) in: `symbol=XAUUSDm|digits=3|point=0.00100000|
@@ -1629,4 +1629,88 @@ kỳ); block reason khớp RiskGuard. CSV và report archived (gitignored) trong
 symbol/timeframe/giai đoạn demo; tester hiển thị 0 deal vì EA không gửi lệnh. Không suy ra lợi nhuận,
 lot thật hay độ sẵn sàng live. 12 scenario còn lại và contract test 6 indicator vẫn `NOT_RUN`; parity
 Pine vẫn `BLOCKED`.
+
+## 41. 12 scenario còn lại + 6 contract test — chạy thật — 2026-10-28
+
+**Bối cảnh:** tiếp tục từ §40 theo yêu cầu "tự động làm lần lượt tất cả các mục còn lại". Chạy headless
+`terminal64.exe /config:<ini>` như §40, không credential trong ini. `.set` stage trong repo rồi `cp` sang
+`MQL5\Profiles\Tester\` (headless chỉ đọc thư mục này; GUI "Load" đọc `MQL5\Presets\`).
+
+**Calibration spread cho 4 preset còn lại:** preset runner/grid/DCA/plan còn dùng `max_spread_points=200`
+như WW trước calibration, trong khi spread đo thật của `XAUUSDm` là ~260 point → mọi entry sẽ bị chặn.
+Đặt base **600**, stress **400** (stress chặt hơn base 200 point, vẫn trên spread đo), ghi vào preset JSON
+và `reports/build/tester-sets/*.set`. Tester dùng chung `XAUUSDm` M15, 2026.01.05–2026.10.01, model 1-min
+OHLC, deposit 10,000 USD, leverage 1:100, build 6249, 17,595 bar. Mỗi scenario một `InpLogFile` riêng.
+
+**Kết quả 10/10 scenario còn chạy được (model units, contract size 1):**
+
+| Scenario | Kết luận | Số liệu SUMMARY |
+|---|---|---|
+| `runner_baseline` | HALTED | 54 trades (5/49), net −467.63, DD 5.09%, 279 blocks |
+| `runner_conservative_stress` | HALTED | 36 trades (3/33), net −192.06, DD 2.19%, 301 blocks |
+| `runner_edge_no_breakeven` | HALTED | 70 trades (27/43), net −464.69, DD 5.12%, 263 blocks |
+| `grid_baseline` | ACTIVE | 24,052 levels, 17,581 baskets, net +1,355.49, DD 1.13%, 12 blocks |
+| `grid_conservative_stress` | ACTIVE | 22,916 levels, 17,513 baskets, net +422.91, DD 0.29%, 80 blocks |
+| `grid_edge_single_level` | HALTED | 11,018 levels/baskets, net −496.85, DD 5.00%, 6,575 blocks |
+| `dca_baseline` | HALTED | 11,012 baskets, net −497.06, DD 5.00%, 6,581 blocks |
+| `dca_conservative_stress` | HALTED | 6,098 baskets, net −200.06, DD 2.00%, 11,497 blocks |
+| `dca_edge_no_adds` | HALTED | 11,018 baskets, net −496.85, DD 5.00%, 6,575 blocks |
+| `dca_edge_bar_trigger` | HALTED | 11,018 baskets, net −496.85, DD 5.00%, 6,575 blocks |
+
+HALTED ở đây là RiskGuard dừng EA theo drawdown/ngày; ACTIVE là chạy hết kỳ không chạm guard. Không có
+kết luận lợi nhuận: grid "dương" do mô hình mở/đóng level liên tục trong 9 tháng với contract size 1 và
+spread giả định, chưa phải kết quả giao dịch thật.
+
+**2 scenario plan — `BLOCKED_PERFORMANCE`:**
+
+| Scenario | Trạng thái | Bằng chứng |
+|---|---|---|
+| `plan_baseline` | BLOCKED_PERFORMANCE | CSV chỉ có dòng `INIT`, không có `SUMMARY`; dừng sau ~13 phút chưa hết 9 tháng |
+| `plan_edge_tp3_stop_only` | BLOCKED_PERFORMANCE | không sinh CSV trong thời gian chạy |
+
+Chẩn đoán tách biệt 1 tháng (`diag_plan_1m`): chạy **197 s** và kết thúc sạch với
+`source=PriceActionMTF|entries=0|rejected=0|trades=0|net=0.00`. Không phải treo, mà là chi phí tính toán:
+`PinePlanSimEA` gọi `PriceActionMTF` với cấu trúc ~O(n²) trên mỗi bar (17,595 bar × 9 tháng), nên 9 tháng
+không kịp trong cửa sổ chạy. Ghi nhận là giới hạn hiệu năng, không phải PASS/FAIL chiến lược; tối ưu
+PriceActionMTF là việc riêng.
+
+**Bug báo cáo DCA:** `SUMMARY` của `dca_baseline` ghi `adds=0`, nhưng CSV có 2 dòng `ENTRY` nối basket với
+volume 0.15 rồi 0.225 → counter `adds` bị reset khi basket đóng, không phải EA không add. Đã đối chiếu CSV
+và ghi nhận là bug reporting; **không sửa** trong phạm vi này (sửa sẽ đổi SUMMARY của 4 scenario vừa chạy).
+
+**6 contract test indicator — lần chạy thật đầu tiên:** wrapper tạm `ZZContract_*` (rename `OnStart` →
+`RunAllTests`, chạy một lần từ `OnTick` có guard) compile bằng MetaEditor CLI (`0 errors, 0 warnings` cho
+cả 6) và chạy trong Strategy Tester trên `XAUUSDm` M1, 2026.01.05–01.06. Wrapper include
+`../Include/PinePort/*.mqh` từ **bản deploy trong Data Folder**, nên phải copy header đã sửa sang đó trước
+khi compile lại.
+
+| Suite | Lần đầu | Sau sửa | Nguyên nhân lần đầu fail |
+|---|---|---|---|
+| `Wonderwhales` | 36/0 PASS | 36/0 PASS | — |
+| `LongKacoVSA` | 45/2 FAIL | 47/0 PASS | biên float: `100.0*2.2 == 220.00000000000003` |
+| `TMFusionZones` | 80/2 FAIL | 82/0 PASS | **bug**: RMA seed bỏ qua chuỗi na → ADX rỗng toàn bộ; K5 kỳ vọng sai (spec = 85) |
+| `TMXAUSignals2` | 97/10 FAIL | 107/0 PASS | **bug**: FVG thiếu guard na + điều kiện gate chết; vector thiếu `prevClose`; biên float; config test sai |
+| `PriceActionMTF` | 116/4 FAIL | 120/0 PASS | **bug**: EMA signal của MACD thiếu seed → hist rỗng; literal bị cắt; harness reset giá trị; bảng spec mâu thuẫn |
+| `TMIndicator2` | 148/7 FAIL | 155/0 PASS | vector test dùng sai config/giá trị biên |
+
+Tổng sau sửa: **547 check, 6/6 PASS**. Ba bug implementation thật được sửa trong
+`TMFusionZonesContract.mqh` (seed RMA na-aware), `PriceActionMTFContract.mqh` (seed EMA signal) và
+`TMXAUSignals2Contract.mqh` (guard na + gate FVG). Bằng chứng: `reports/build/contract-reports/results.txt`
+cùng HTM/PNG từng suite. Wrapper và `.ini` tạm đã xoá khỏi `MQL5\Experts` và staging.
+
+### 41.1 Gate sau toàn bộ thay đổi
+
+| Lệnh | Kết quả |
+|---|---|
+| `pytest -q` | `328 passed` (16.07 s) |
+| `compileall python/src python/tests scripts` | exit 0 |
+| `validate-project.py` | `SUMMARY: checks=11 fail=0` |
+| `validate_sim_configs.py` | `SUMMARY: checked=6 fail=0`; presets=5, scenarios=15; snapshot mới `PinePlanSimEA-B2FDB097`, `RunnerTrailingLabEA-D3165082`, `track-c-simulation-presets-85840B47`; WW `C25B3983` không đổi |
+| `build-mql5.ps1` | 25 source, 0 errors, 0 warnings, `BUILD_OK` |
+| `package-source.ps1 -Version 0.8.4` | `mt5-ea-ai-lab-v0.8.4-20261028-215649.zip`, 222 file; sha256 `ad141f25…c626083`; không chứa `.ex5`, `.venv`, report, credential |
+
+**Giới hạn:** kết quả scenario là của model (contract size 1, spread giả định theo preset), một
+symbol/timeframe/giai đoạn demo; EA không gửi lệnh nên tester hiển thị 0 deal. Không suy ra lợi nhuận,
+lot thật hay độ sẵn sàng live. Parity Pine vẫn `BLOCKED`; indicator gắn chart và EA multi-source vẫn
+`NOT_RUN`.
 
