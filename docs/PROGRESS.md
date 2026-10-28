@@ -39,8 +39,8 @@
 | B. Pine → MT5 | Phase 4 (TM Indicator 2) | PASS (compile); vector `NOT_RUN` | `TMIndicator2.mq5` + `TMIndicator2Contract.mqh` + `TMIndicator2ContractTests.mq5`; 0 error/0 warning; `validate_tmind2.py` pass=44 |
 | B. Pine → MT5 | Phase 5–6 (TM Indicator 2) | EA `PASS (compile)`; runtime `NOT_RUN`; parity `BLOCKED` | `PineMultiSignalLabEA.mq5` đọc `TM2_BUF_SIGNAL/DIR`; comparator Phase 6 sẵn sàng; chưa có CSV reference từ Pine |
 | B. Pine → MT5 | Phase 6 (đa nguồn) | PASS (comparator/tests); parity `BLOCKED` | `multi_source_parity.py` + `compare_multi_signal_exports.py` + 21 test; exit 3 = `BLOCKED` khi thiếu CSV |
-| C. Simulation MQL5 | W1–W7, W9, W10 PASS + WonderwhalesSimEA; W8 `NOT_RUN` | PASS (compile + tests tĩnh); self-check `SimCoreTests` 123/0 + `SimPlanTests` 39/0 PASS runtime; EA runtime `NOT_RUN` | `SimDca` + `SimPlan` + 5 EA; 123 + 39 vector; `build-mql5.ps1` 25 source 0/0; pytest 328 pass; preset checked=6 (5 preset + project); 0/15 scenario có report |
-| A. MT5 EA Lab | Phase 1–9 + trailing + bounded DCA/grid | PASS (tests) | Backtester, store, ML/ONNX, trailing và bounded có test; toàn bộ pytest 324 pass |
+| C. Simulation MQL5 | W1–W7, W9, W10 PASS + WonderwhalesSimEA; W8 PASS một phần (3/15) | PASS (compile + tests tĩnh); self-check `SimCoreTests` 123/0 + `SimPlanTests` 39/0 PASS runtime; 3 scenario WW chạy Strategy Tester thật | `SimDca` + `SimPlan` + 5 EA; 123 + 39 vector; `build-mql5.ps1` 25 source 0/0; pytest 328 pass; preset checked=6 (5 preset + project); 3/15 scenario có report + CSV, 12 `NOT_RUN` |
+| A. MT5 EA Lab | Phase 1–9 + trailing + bounded DCA/grid | PASS (tests) | Backtester, store, ML/ONNX, trailing và bounded có test; toàn bộ pytest 328 pass |
 
 ## 2. Môi trường đã kiểm tra
 
@@ -1573,4 +1573,60 @@ không lưu credential. `InpRequireSymbol=XAUUSDm` từ chối khởi tạo trê
 **Chưa làm / `NOT_RUN`:** Strategy Tester cho 5 EA (0/15 scenario) và contract test 6 indicator vẫn cần
 chạy thủ công; chưa có CSV runtime; parity Pine vẫn `BLOCKED`. Không có kết luận hiệu năng, lợi nhuận
 hay sẵn sàng live.
+
+> **Cập nhật (§40):** 3 scenario WW đã chạy thật, preset được calibration theo spec `XAUUSDm`, và EA được
+> compile lại (`WonderwhalesSimEA.ex5` 57,522 bytes). Bảng bằng chứng ở trên là ảnh chụp trước đó.
+
+## 40. Strategy Tester Wonderwhales — chạy thật và calibration `XAUUSDm` — 2026-10-28
+
+**Bối cảnh:** người dùng đóng MT5 và yêu cầu chạy nốt Strategy Tester. Chạy headless bằng
+`terminal64.exe /config:<ini>` (`ShutdownTerminal=1`), không nhập credential — terminal tự đăng nhập lại
+demo 464140826 trên Exness-MT5Trial17.
+
+**Phát hiện khi chạy lần đầu (1 tháng 09/2026):** cả 176 tín hiệu bị `ENTRY_BLOCKED|reason=spread_exceeded`.
+Probe EA tạm (`ZZProbeSpread`, đã xoá sau khi dùng) in: `symbol=XAUUSDm|digits=3|point=0.00100000|
+spread_int=260|ask_bid_points=260.00|stops_level=0|contract=100.00`. Nguyên nhân: `InpMaxSpreadPoints=200`
+quá chặt so với spec thật. Không nới guard một cách tuỳ tiện; calibration theo số đo và ghi vào preset/docs.
+
+**Thay đổi:**
+
+| File | Nội dung |
+|---|---|
+| `mt5/Experts/WonderwhalesSimEA.mq5` | `InpFixedStopPoints` 300.0 → 3000.0; `InpMaxSpreadPoints` 200.0 → 600.0 |
+| `configs/sim/wonderwhales_xauusdm.json` | Giá trị mặc định mới + `assumptions.symbol` ghi spec thật (3 digits, point 0.001, contract 100, spread ~260) |
+| `configs/project.example.json` | `ww_conservative_stress` override spread 100 → 400 |
+| `docs/guides/strategy-tester.md` | §4.5/§8 cập nhật; thêm §9 kết quả thật + ghi chú `Profiles\Tester` vs `Presets` |
+
+**Thiết lập chạy:** `XAUUSDm` M15, 2026.01.05–2026.10.01, model "1 minute OHLC", deposit 10,000 USD,
+leverage 1:100, build 6249, 17,595 bar M15 (1,053,473 tick). Mỗi scenario dùng `InpLogFile` riêng; `.set`
+đặt trong `MQL5\Profiles\Tester\`.
+
+**Kết quả thật:**
+
+| Scenario | hash | Trades | W/L | Net (model) | Max DD | Blocks |
+|---|---|---:|---|---:|---:|---|
+| `ww_baseline` | `6E969FE1` | 869 | 318/551 | +26.97 | 0.85% | 0 |
+| `ww_conservative_stress` | `69086031` | 787 | 276/511 | −7.50 | 0.46% | 139 (134 cooldown, 5 spread) |
+| `ww_edge_atr_stop` | `C9EABF3B` | 795 | 390/405 | +24.96 | 0.88% | 0 |
+
+**Audit CSV:** `config_hash` đồng nhất trong từng file; SL luôn đúng phía entry; entry/exit cân bằng ở
+`ww_edge_atr_stop` (795/795) và lệch đúng 1 ở baseline/stress (870/869, 788/787 → còn 1 vị thế ảo mở cuối
+kỳ); block reason khớp RiskGuard. CSV và report archived (gitignored) trong
+`reports/build/tester-reports/<scenario>/`.
+
+**Gate sau calibration (chạy lại toàn bộ):**
+
+| Lệnh | Kết quả |
+|---|---|
+| `pytest -q` | `328 passed` |
+| `compileall python/src python/tests scripts` | exit 0 |
+| `validate-project.py` | `SUMMARY: checks=11 fail=0` |
+| `validate_sim_configs.py` | `SUMMARY: checked=6 fail=0`; snapshot WW mới `C25B3983` (preset đổi giá trị), project `F458630D` |
+| `build-mql5.ps1` | 25 source, 0 errors, 0 warnings, `BUILD_OK` |
+| `package-source.ps1 -Version 0.8.3` | 222 file; sha256 `f772277f…572645`; không chứa `.ex5`, `.venv`, report, credential |
+
+**Giới hạn:** P&L theo contract size 1 của model (broker contract 100); spread đo một thời điểm; một
+symbol/timeframe/giai đoạn demo; tester hiển thị 0 deal vì EA không gửi lệnh. Không suy ra lợi nhuận,
+lot thật hay độ sẵn sàng live. 12 scenario còn lại và contract test 6 indicator vẫn `NOT_RUN`; parity
+Pine vẫn `BLOCKED`.
 

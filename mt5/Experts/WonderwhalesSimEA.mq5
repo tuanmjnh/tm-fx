@@ -60,14 +60,14 @@ input ENUM_WW_SIDE_FILTER InpSideFilter = WW_SIDE_BOTH;
 input group "Stops"
 input ENUM_WW_STOP_MODE InpStopMode = WW_STOP_PSAR;
 input double InpAtrPctMultiplier    = 2.0;      // used by ATR% mode
-input double InpFixedStopPoints     = 300.0;    // used by fixed mode
+input double InpFixedStopPoints     = 3000.0;   // used by fixed mode
 input double InpMinStopPoints       = 150.0;    // minimum SL distance from entry
 input int    InpMaxHoldingBars      = 0;        // 0 = disabled
 input bool   InpExitOnFlip          = true;     // close on the opposite signal
 
 input group "RiskGuard"
 input int    InpCooldownBars        = 1;
-input double InpMaxSpreadPoints     = 200.0;
+input double InpMaxSpreadPoints     = 600.0;
 input double InpMaxVirtualExposure  = 0.10;     // normalized volume cap
 input double InpMaxDailyLossPct     = 2.0;      // 0 = disabled
 input double InpMaxDrawdownPct      = 5.0;      // 0 = disabled

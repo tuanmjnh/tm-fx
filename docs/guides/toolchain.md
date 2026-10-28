@@ -24,7 +24,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-python-tests.ps1
 
 .venv\Scripts\python.exe scripts\validate-project.py
 
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package-source.ps1 -Version 0.8.2
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package-source.ps1 -Version 0.8.3
 ```
 
 `-MetaEditorPath` dùng khi MetaEditor không nằm ở `C:\Program Files\MetaTrader 5 EXNESS\`.
@@ -51,7 +51,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package-source.ps1 -
 | `build-mql5.ps1` | 25 source, 0 errors, 0 warnings, `BUILD_OK` |
 | `run-python-tests.ps1` | `328 passed`, `TESTS_OK` |
 | `validate-project.py` | `SUMMARY: checks=11 fail=0` (kể cả `WonderwhalesSimEA`) |
-| `package-source.ps1 -Version 0.8.2` | 222 file — bản hiện tại, gồm `WonderwhalesSimEA` + preset + docs đồng bộ; zip + `MANIFEST.sha256` |
+| `package-source.ps1 -Version 0.8.3` | 222 file — bản hiện tại: calibration `XAUUSDm` (stop 3000, spread 600/400) + kết quả 3 scenario tester; sha256 `f772277f…572645` |
+| `package-source.ps1 -Version 0.8.2` | 222 file — gồm `WonderwhalesSimEA` nhưng **trước** calibration spread/stop |
 | `package-source.ps1 -Version 0.8.1` | 220 file — trước `WonderwhalesSimEA`, giữ làm mốc lịch sử |
 | `package-source.ps1 -Version 0.8.0` | 220 file sau hợp nhất docs (W10) — trước hai bản sửa `SimPlan`, giữ làm mốc lịch sử |
 
@@ -61,5 +62,6 @@ phase cũ là ảnh chụp lịch sử, không phải invariant. Điều kiện 
 ## Chưa làm được ở môi trường này
 
 - Chạy `SimCoreTests` (123/0) và `SimPlanTests` (39/0) trong MT5: đã PASS ngày 2026-10-28.
-- Chạy 5 EA trong Strategy Tester và contract test 6 indicator: `NOT_RUN` cho tới khi có thao tác thủ công.
+- Strategy Tester: `WonderwhalesSimEA` đã chạy 3 scenario; 4 EA mô phỏng còn lại (12 scenario) và contract
+  test 6 indicator vẫn `NOT_RUN` cho tới khi có thao tác thủ công.
 - Compile/test thành công không chứng minh hành vi runtime hay P&L; W8 vẫn là bước bắt buộc.

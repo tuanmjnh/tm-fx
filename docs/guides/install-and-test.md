@@ -597,13 +597,13 @@ Kiểm tra tối thiểu:
 | Hạng mục | Trạng thái | Cách xác minh |
 |---|---|---|
 | Validate preset/scenario | Tự động, PASS | `scripts\validate_sim_configs.py` |
-| Compile 24 file `.mq5` | Tự động, PASS | `scripts\build-mql5.ps1` |
+| Compile 25 file `.mq5` | Tự động, PASS | `scripts\build-mql5.ps1` |
 | Static scan API giao dịch/placeholder | Tự động, PASS | `scripts\validate-project.py` |
 | Python tests (kể cả vector DCA/plan độc lập) | Tự động, PASS | `scripts\run-python-tests.ps1` |
 | `SimCoreTests` trong MT5 | **PASS runtime** — `pass=123 fail=0` | Mục 5; log tab Experts 2026-10-28 18:36 |
 | `SimPlanTests` trong MT5 | **PASS runtime** — `pass=39 fail=0` | Mục 5; log tab Experts 2026-10-28 18:41 |
-| Strategy Tester 15 scenario | **Thủ công, NOT_RUN** | `strategy-tester.md` |
-| Đọc/audit CSV thật | **Thủ công, NOT_RUN** | Mục 7 |
+| Strategy Tester 15 scenario | **PASS một phần** — 3/15 (`ww_*`, `XAUUSDm` M15) đã chạy; 12 `NOT_RUN` | `strategy-tester.md` §9 |
+| Đọc/audit CSV thật | **PASS một phần** — CSV 3 scenario WW đã audit; 12 scenario còn lại `NOT_RUN` | Mục 7, `strategy-tester.md` §9 |
 
 ### 9. Xử lý sự cố
 
@@ -720,7 +720,8 @@ không nhất thiết bằng `ref_entry`; không có `TARGET_HIT` với fill vư
   `configs/sim/wonderwhales_xauusdm.json`.
 - **Nguyên tắc:** EA đọc tín hiệu buy/sell trên nến đã đóng và mở **một vị thế ảo**; không gửi lệnh,
   không đọc tài khoản.
-- **Trạng thái:** compile 0/0 (repo và Data Folder); runtime EA/Strategy Tester `NOT_RUN`.
+- **Trạng thái:** compile 0/0 (repo và Data Folder); **Strategy Tester PASS 3/3 scenario `ww_*`** chạy
+  headless trên `XAUUSDm` M15 ngày 2026-10-28 (không deal, không credential trong ini).
 
 ### 1. Điều kiện
 
@@ -742,10 +743,11 @@ không nhất thiết bằng `ref_entry`; không có `TARGET_HIT` với fill vư
 | `InpMode` | 0 | SAR; 1 EMA, 2 SAR+EMA, 3 SAR+EMA+ATR |
 | `InpWarmupBars` | 300 | phải ≥ `InpEma200` |
 | `InpStopMode` | 0 | 0 PSAR, 1 ATR%, 2 fixed |
+| `InpFixedStopPoints` | 3000.0 | dùng cho mode fixed; `XAUUSDm` point 0.001 → 3.0 giá |
 | `InpMinStopPoints` | 150.0 | khoảng SL tối thiểu; dưới ngưỡng → `STOP_REJECTED` |
 | `InpExitOnFlip` | true | đóng khi tín hiệu đảo |
 | `InpMaxHoldingBars` | 0 | 0 = tắt |
-| `InpMaxSpreadPoints` | 200.0 | spread XAUUSDm rộng hơn FX |
+| `InpMaxSpreadPoints` | 600.0 | spread đo được ~260 point; 200 quá chặt và chặn mọi entry |
 
 Preset đầy đủ và toàn bộ 35 input: [`configs/sim/wonderwhales_xauusdm.json`](../../configs/sim/wonderwhales_xauusdm.json).
 
@@ -756,6 +758,11 @@ Preset đầy đủ và toàn bộ 35 input: [`configs/sim/wonderwhales_xauusdm.
 3. Kéo EA lên chart `XAUUSDm` hoặc chạy Strategy Tester M15/M5. Mỗi lần chạy dùng `InpLogFile` riêng.
 4. Journal phải có `LAB|INFO|wonderwhales|initialized`, `LAB|INFO|wonderwhales|simulation_only`, và không
    có `LAB|ERROR|wonderwhales` trừ khi input cố ý sai.
+
+Chạy headless (đã dùng thật): tạo `.set` từ preset + override, đặt trong `MQL5\Profiles\Tester\` (GUI
+**Load** đọc `MQL5\Presets\`, còn tham số `ExpertParameters` của terminal headless chỉ đọc
+`MQL5\Profiles\Tester\`), rồi gọi `terminal64.exe /config:<ini>` với `ShutdownTerminal=1`. CSV của agent
+sandbox bị xoá đầu mỗi run — copy ngay sau khi tester kết thúc. Chi tiết lệnh: `strategy-tester.md` §9.
 
 ### 4. Đọc CSV và reason token
 
@@ -779,6 +786,19 @@ Kiểm tra tối thiểu: SL luôn đúng phía entry và cách fill ≥ `InpMin
 | Không có entry | Chưa đủ warmup, tín hiệu = 0, spread > cap, cooldown, guard chặn | Đọc reason `RISK` |
 | Nhiều `STOP_REJECTED` | PSAR quá gần fill hoặc `InpMinStopPoints` quá cao | Giảm ngưỡng hoặc đổi `InpStopMode` |
 | Không có CSV | Sai `InpLogFile` hoặc tester sandbox khác | Tìm trong `Tester\Agent-*\MQL5\Files` |
+
+### 6. Kết quả chạy thật (2026-10-28)
+
+`XAUUSDm` M15, 2026.01.05–2026.10.01, model "1 minute OHLC", deposit 10,000 USD, build 6249:
+
+| Scenario | hash | Trades | W/L | Net (model) | Max DD | Blocks |
+|---|---|---:|---|---:|---:|---|
+| `ww_baseline` | `6E969FE1` | 869 | 318/551 | +26.97 | 0.85% | 0 |
+| `ww_conservative_stress` | `69086031` | 787 | 276/511 | −7.50 | 0.46% | 139 (134 cooldown, 5 spread) |
+| `ww_edge_atr_stop` | `C9EABF3B` | 795 | 390/405 | +24.96 | 0.88% | 0 |
+
+CSV và report archived (gitignored) trong `reports/build/tester-reports/<scenario>/`. Con số theo contract
+size 1 của model; không phải lot thật, không phải bằng chứng lợi nhuận, và tester hiển thị 0 deal là đúng.
 
 ## Kiểm kê môi trường — Phase 0
 

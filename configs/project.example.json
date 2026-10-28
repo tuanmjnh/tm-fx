@@ -138,7 +138,7 @@
       "overrides": {
         "InpVolume": 0.05,
         "InpMaxVirtualExposure": 0.05,
-        "InpMaxSpreadPoints": 100.0,
+        "InpMaxSpreadPoints": 400.0,
         "InpMaxDailyLossPct": 1.0,
         "InpMaxDrawdownPct": 2.0,
         "InpCooldownBars": 5,

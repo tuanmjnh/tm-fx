@@ -275,7 +275,9 @@ Hướng dẫn đầy đủ: [`docs/guides/install-and-test.md`](../docs/guides/
 
 - `confirmOnClose=false` không được port (D16).
 - EA chỉ đọc `shift=1`; không có alert native, không có execution.
-- 36 vector mới **compile**, chưa chạy; indicator/EA chưa chạy runtime; parity `BLOCKED`.
+- 36 vector mới **compile**, script contract tests chưa chạy trong terminal; parity `BLOCKED`.
+- Indicator đã được `iCustom` nạp trong 3 lần chạy tester của `WonderwhalesSimEA` (có tín hiệu sinh ra),
+  nhưng điều đó không thay thế contract test hay đối chiếu Pine.
 - Không dùng log/CSV để tuyên bố lợi nhuận hay tương thích broker.
 
 ## 10. PinePort — LongKaco VSA (signal-only, Phase 4)
@@ -505,9 +507,13 @@ mở **một vị thế ảo** trên `XAUUSDm`. Không có API giao dịch.
 | 8 | `WW_BUF_ATR_PCT` | khoảng SL chế độ ATR% |
 
 - Compile: 0 errors, 0 warnings trong repo và trong Data Folder MT5
-  (`WonderwhalesSimEA.ex5` 57,968 bytes, 2026-10-28). Dòng `Result:` trong log là bằng chứng chính.
+  (`WonderwhalesSimEA.ex5` 57,522 bytes, 2026-10-28). Dòng `Result:` trong log là bằng chứng chính.
 - Guard symbol: `InpRequireSymbol` khác rỗng và khác `_Symbol` → `INIT_PARAMETERS_INCORRECT`.
 - Entry bị từ chối (`STOP_REJECTED`) nếu khoảng SL nhỏ hơn `InpMinStopPoints`; không nới stop để vào lệnh.
-- Runtime EA và Strategy Tester `NOT_RUN`; chưa có CSV thật; parity Pine `BLOCKED`.
+- Runtime: **PASS** 3 scenario Strategy Tester headless trên `XAUUSDm` M15 (2026-10-28) — baseline 869
+  trades/+26.97; stress 787/−7.50; edge ATR 795/+24.96 (đơn vị model, contract size 1). 12 scenario còn
+  lại `NOT_RUN`; parity Pine `BLOCKED`.
+- Calibration: `XAUUSDm` point 0.001, spread ~260 point → `InpFixedStopPoints=3000`, `InpMaxSpreadPoints=600`
+  (stress 400).
 - Chi tiết: `docs/reference/simulation.md` mục **WonderwhalesSimEA**;
   indicator: `docs/indicators/wonderwhales.md`.

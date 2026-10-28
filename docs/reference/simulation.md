@@ -315,8 +315,8 @@ Nếu thiếu dòng `TEST|RESULT|ALL_PASS` → coi như `NOT_RUN`, không suy lu
 |---|---|
 | Compile `SimCoreTests.mq5` | PASS — 0 errors, 0 warnings; `SimCoreTests.ex5` 73,646 bytes (byte size depends on the MetaEditor build; the log is authoritative) |
 | Chạy test vector trong MT5 | **PASS** — `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core` ngày 2026-10-28 18:36 |
-| Kiểm tra CSV logger trên file thật | `NOT_RUN` — cần môi trường MT5 sandbox |
-| EA sử dụng core | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA` compile PASS — chạy thật `NOT_RUN` |
+| Kiểm tra CSV logger trên file thật | PASS một phần — CSV 18 cột của `WonderwhalesSimEA` đã sinh trong 3 lần Strategy Tester headless ngày 2026-10-28 |
+| EA sử dụng core | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA` compile PASS — chỉ `WonderwhalesSimEA` chạy thật (3 scenario); bốn EA còn lại `NOT_RUN` |
 
 ## RunnerTrailingLabEA (simulation-only, W3)
 
@@ -760,8 +760,8 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 | Validator trên 5 preset + project | PASS — `checked=6 fail=0` (presets=5, scenarios=15) |
 | Snapshot | PASS — 6 file, chạy lại `unchanged` |
 | pytest toàn bộ | PASS — xem số test trong [`PROGRESS.md`](../PROGRESS.md) |
-| Nạp preset vào EA trong MT5 | `NOT_RUN` — cần terminal |
-| Strategy Tester | `NOT_RUN` — cần terminal + dữ liệu |
+| Nạp preset vào EA trong MT5 | PASS một phần — 3 preset Wonderwhales đã nạp headless qua `.set` trong `MQL5\Profiles\Tester` ngày 2026-10-28; 12 scenario còn lại `NOT_RUN` |
+| Strategy Tester | PASS một phần — 3/15 scenario (`ww_*`) đã chạy `XAUUSDm` M15; 12 scenario còn lại `NOT_RUN` |
 
 ### 8. Giới hạn
 
@@ -897,8 +897,9 @@ compile không bắt được:
 - **Mục tiêu:** dùng tín hiệu buy/sell của indicator `PinePort\Wonderwhales` để mở **một vị thế ảo** trên
   `XAUUSDm`, thoát theo SL / đảo tín hiệu / max holding. Chạy được trong Strategy Tester M15 hoặc M5,
   xuất CSV 18 cột. Không có API gửi lệnh.
-- **Trạng thái:** compile `0 errors, 0 warnings` (cả trong repo và trong Data Folder MT5); runtime EA và
-  Strategy Tester `NOT_RUN`; preset + 3 scenario kiểm tra fail-closed PASS.
+- **Trạng thái:** compile `0 errors, 0 warnings` (cả trong repo và trong Data Folder MT5); 3 scenario
+  Strategy Tester headless đã chạy thật trên `XAUUSDm` M15 ngày 2026-10-28 (baseline, conservative stress,
+  edge ATR stop) — kết quả ở mục 8; preset + 3 scenario kiểm tra fail-closed PASS.
 - **Nguồn:** yêu cầu người dùng 2026-10-28 (chỉ `XAUUSDm`), hợp đồng buffer ở
   [`docs/indicators/wonderwhales.md`](../indicators/wonderwhales.md) và
   `mt5/Include/PinePort/WonderwhalesContract.mqh`.
@@ -1004,15 +1005,30 @@ với preset `configs/sim/wonderwhales_xauusdm.json`, kiểm tra tab Experts và
 | Hạng mục | Trạng thái |
 |---|---|
 | Compile trong repo | PASS — 0 errors, 0 warnings |
-| Compile trong Data Folder MT5 | PASS — 0 errors, 0 warnings; `WonderwhalesSimEA.ex5` 57,968 bytes (2026-10-28) |
+| Compile trong Data Folder MT5 | PASS — 0 errors, 0 warnings; `WonderwhalesSimEA.ex5` 57,522 bytes (2026-10-28) |
 | Indicator `PinePort\Wonderwhales` đã cài | PASS — có `.ex5` trong `MQL5\Indicators\PinePort\` |
-| Chạy trong MT5 / Strategy Tester | `NOT_RUN` — agent không mở terminal hay điều khiển tester |
-| CSV thực tế | `NOT_RUN` |
+| Chạy trong MT5 / Strategy Tester | **PASS** — 3 scenario headless trên `XAUUSDm` M15, 2026.01.05–2026.10.01, model 1 phút OHLC, deposit 10,000 USD, build 6249 (bảng dưới) |
+| CSV thực tế | PASS — `sim_ww_<scenario>.csv` 18 cột, archived trong `reports/build/tester-reports/` (gitignored) |
 | So khớp Pine | `BLOCKED` — chưa có CSV reference |
+
+| Scenario | config_hash | Trades | W/L | Net (đơn vị model) | Max DD | Blocks |
+|---|---|---:|---|---:|---:|---|
+| `ww_baseline` | `6E969FE1` | 869 | 318/551 | +26.97 | 0.85% | 0 |
+| `ww_conservative_stress` | `69086031` | 787 | 276/511 | −7.50 | 0.46% | 139 (134 cooldown, 5 spread) |
+| `ww_edge_atr_stop` | `C9EABF3B` | 795 | 390/405 | +24.96 | 0.88% | 0 |
+
+Đọc bảng này đúng cách: P&L tính theo contract size 1 của model (không phải lot/contract 100 của broker),
+Strategy Tester hiển thị 0 deal vì EA không gửi lệnh, và baseline/stress còn 1 vị thế ảo mở ở cuối kỳ
+(870/869 và 788/787 entry/exit; edge cân bằng 795/795). Không suy ra lợi nhuận hay độ sẵn sàng giao dịch
+thật từ các con số này.
 
 ### 9. Giới hạn đã biết
 
 - Tín hiệu là ảnh chụp trên nến đã đóng; EA không kiểm tra repaint của indicator.
 - Không mô phỏng partial fill, requote, spread biến thiên, swap hay margin.
 - Contract size = 1 là giả định mô phỏng; P&L trong CSV không phải tiền broker.
-- Chưa có kết quả runtime hay hiệu năng; không suy diễn từ compile/static test.
+- Calibration 2026-10-28: `XAUUSDm` có point 0.001, 3 chữ số, spread đo được ~260 point và contract size
+  100. Vì vậy `InpFixedStopPoints` mặc định là 3000 (3.0 giá) và `InpMaxSpreadPoints` là 600; preset stress
+  dùng 400. Đây là ngưỡng theo symbol thật, không phải tối ưu hiệu năng.
+- Kết quả 3 scenario là một mẫu M15 trên dữ liệu demo Exness, một cấu hình chi phí giả định; không phải
+  bằng chứng lợi nhuận và không mở rộng cho symbol/timeframe khác.

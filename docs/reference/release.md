@@ -1,14 +1,15 @@
 # Internal release checklist — MT5 EA & AI Lab
 
 - **Ngày:** 2026-10-28 (cập nhật sau Track C W1–W9)
-- **Phạm vi:** bản nghiên cứu offline (Phase 0–9 + trailing stop + bounded DCA/grid + 4 EA mô phỏng).
+- **Phạm vi:** bản nghiên cứu offline (Phase 0–9 + trailing stop + bounded DCA/grid + 5 EA mô phỏng).
   Không phải sản phẩm giao dịch và không có execution.
 - **Quy tắc:** không release nếu bất kỳ mục “Bắt buộc” nào chưa đạt. Mục “Thủ công” có thể để mở nhưng
   phải ghi rõ trạng thái trong báo cáo.
 
 > **Lưu ý (2026-10-28):** checklist này ghi lại lần đóng gói 0.8.1, **trước** khi thêm `WonderwhalesSimEA`
-> (bản hiện tại là 0.8.2). Gate hiện tại — 328 test, 25 source compile 0/0, `checked=6`, 5 preset,
-> 15 scenario — nằm ở [`../PROGRESS.md`](../PROGRESS.md) §39. Strategy Tester cho 5 EA vẫn `NOT_RUN`.
+> (bản hiện tại là 0.8.3). Gate hiện tại — pytest xanh, 25 source compile 0/0, `checked=6`, 5 preset,
+> 15 scenario — nằm ở [`../PROGRESS.md`](../PROGRESS.md) §40. Strategy Tester: 3/15 scenario (`ww_*`) đã
+> chạy thật; 12 scenario còn lại `NOT_RUN`.
 
 ## 1. Bắt buộc
 

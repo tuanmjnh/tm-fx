@@ -135,8 +135,11 @@
 - **Preset JSON không được EA đọc trực tiếp:** EA nhận input trên chart/tester; JSON chỉ là nguồn kiểm tra
   và snapshot. Nhập sai một input là sai cấu hình dù validator đã pass cho file JSON.
 - **Runtime evidence một phần:** `SimCoreTests` 123/0 và `SimPlanTests` 39/0 đã chạy thật trong MT5 ngày
-  2026-10-28; 15 scenario Strategy Tester (5 EA) vẫn `NOT_RUN`. Test vector không chứng minh EA chạy đúng trên
+  2026-10-28; 3/15 scenario Strategy Tester (`ww_*` của `WonderwhalesSimEA`) đã chạy thật cùng ngày;
+  12 scenario còn lại (runner/grid/DCA/plan) vẫn `NOT_RUN`. Test vector không chứng minh EA chạy đúng trên
   dữ liệu thị trường, không đo spread/slippage thực và không thay thế report tester.
+- **Kết quả tester WW không phải bằng chứng lợi nhuận:** P&L theo contract size 1 của model, spread đo một
+  thời điểm, một symbol/một timeframe/một giai đoạn demo. Không suy ra lot thật hay độ sẵn sàng live.
 - **Không có execution:** năm EA không có API gửi lệnh; Strategy Tester hiển thị 0 deal là đúng. Mọi nỗ
   lực “chạy bot trên Exness” theo nghĩa đặt lệnh nằm ngoài repo này và cần ADR riêng.
 - **Plan của indicator không phải lệnh thật:** `PinePlanSimEA` khớp tại ask/bid hiện tại, không khớp
@@ -175,7 +178,7 @@
 | Rủi ro | Trạng thái hiện tại | Ghi chú |
 |---|---|---|
 | MT5/MetaEditor thay đổi theo build | Đã xác minh build 5.0.0.6249 (EXNESS) khi compile ngày 2026-10-28 | Phải xác minh lại nếu terminal cập nhật build |
-| Agent không có kết quả Strategy Tester thật | Compile 0 errors/0 warnings cho 24 file `.mq5` ngày 2026-10-28; `SimCoreTests` 123/0 và `SimPlanTests` 39/0 PASS runtime; Strategy Tester **chưa chạy** | Cần chạy Strategy Tester/self-check/parity/ONNX thủ công; giữ `READY_FOR_MANUAL_VALIDATION` cho EA |
+| Agent không có kết quả Strategy Tester thật | Compile 0 errors/0 warnings cho toàn bộ `.mq5` ngày 2026-10-28; `SimCoreTests` 123/0 và `SimPlanTests` 39/0 PASS runtime; 3/15 scenario Strategy Tester (`ww_*`) đã chạy, 12 scenario còn lại **chưa chạy** | Chạy nốt runner/grid/DCA/plan, self-check, parity và ONNX thủ công; giữ `READY_FOR_MANUAL_VALIDATION` cho EA |
 | OS là Windows 10, roadmap khuyến nghị Windows 11 | Đã ghi nhận | Không chặn các phase hiện tại; theo dõi lỗi đặc thù MT5 |
 | Khác biệt indicator MQL5 và Python | Cửa sổ EMA đã thống nhất `slow+1` và có comparator; MQL5 export chưa chạy | Chạy export thủ công và so sánh toàn bộ fixture trước khi tuyên bố tương đương |
 | Parity bị suy rộng quá mức | Comparator chỉ so sánh đúng hai file; self-comparison không phải parity | Ghi rõ rows_compared, fixture và trạng thái MQL5 runtime trong báo cáo |

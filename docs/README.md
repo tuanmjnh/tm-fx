@@ -21,8 +21,8 @@ không còn file rời rạc ở thư mục `docs/`.
 | Phase 9 | Pipeline end-to-end | DONE |
 | Track B | 6 indicator PinePort + contract headless + EA tín hiệu đa nguồn | Compile 0/0; contract runtime `NOT_RUN` |
 | Track C W1–W7, W9, W10 | Simulation core, runner/grid/DCA, plan-driven EA, preset, toolchain | PASS offline (compile + static + Python) |
-| Track C — `WonderwhalesSimEA` | EA tín hiệu Wonderwhales trên `XAUUSDm`, 3 chế độ stop | Compile 0/0 (repo + Data Folder); runtime/Strategy Tester `NOT_RUN` |
-| Track C W8 | Strategy Tester thủ công | `NOT_RUN` — chưa có report/CSV thật |
+| Track C — `WonderwhalesSimEA` | EA tín hiệu Wonderwhales trên `XAUUSDm`, 3 chế độ stop | Compile 0/0 (repo + Data Folder); **Strategy Tester PASS 3/3 scenario `ww_*`** (2026-10-28, không deal) |
+| Track C W8 | Strategy Tester thủ công | PASS một phần — 3/15 scenario đã chạy; 12 scenario còn lại `NOT_RUN` |
 
 - **MQL5:** 25 file `.mq5` và 19 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
   `0 errors, 0 warnings` (2026-10-28). Compile chỉ chứng minh cú pháp, không chứng minh hành vi.

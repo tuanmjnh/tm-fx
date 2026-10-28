@@ -9,10 +9,11 @@ Nội dung:
 ---
 ## Strategy Tester thủ công cho EA mô phỏng (W8 + W10)
 
-**Trạng thái 2026-10-28: `NOT_RUN`.** Chưa có report Strategy Tester thật cho `RunnerTrailingLabEA`,
-`GridLabEA`, `DCALabEA`, `PinePlanSimEA` hay `WonderwhalesSimEA`. Agent không mở terminal, không điều khiển
-GUI, không đăng nhập tài khoản và không chạy `metatester64.exe`; mọi kết quả dưới đây phải do người dùng
-chạy và dán lại.
+**Trạng thái 2026-10-28:** `WonderwhalesSimEA` đã chạy **3/3 scenario** bằng Strategy Tester headless
+(`terminal64.exe /config:…`, model *1 minute OHLC*, `XAUUSDm` M15, 2026.01.05–2026.10.01); report + CSV
+thật lưu trong `reports/build/tester-reports/`. 12 scenario của `RunnerTrailingLabEA`, `GridLabEA`,
+`DCALabEA`, `PinePlanSimEA` vẫn `NOT_RUN`. Agent chỉ dùng CLI headless có `ShutdownTerminal=1`, không
+điều khiển GUI và không nhập credential.
 
 ### 1. Nguyên tắc
 
@@ -201,12 +202,12 @@ EA cần indicator nguồn (`PriceActionMTF`, `TMXAUSignals2` hoặc `TMIndicato
 | `InpWarmupBars` | 300 |
 | `InpSideFilter` | 0 |
 | `InpStopMode` | 0 (PSAR) |
-| `InpAtrPctMultiplier` / `InpFixedStopPoints` | 2.0 / 300.0 |
+| `InpAtrPctMultiplier` / `InpFixedStopPoints` | 2.0 / 3000.0 |
 | `InpMinStopPoints` | 150.0 |
 | `InpMaxHoldingBars` | 0 |
 | `InpExitOnFlip` | true |
 | `InpCooldownBars` | 1 |
-| `InpMaxSpreadPoints` | 200.0 |
+| `InpMaxSpreadPoints` | 600.0 |
 | `InpMaxVirtualExposure` | 0.1 |
 | `InpMaxDailyLossPct` / `InpMaxDrawdownPct` | 2.0 / 5.0 |
 | `InpHaltOnBreach` | false |
@@ -215,6 +216,13 @@ EA cần indicator nguồn (`PriceActionMTF`, `TMXAUSignals2` hoặc `TMIndicato
 EA cần indicator `Wonderwhales` đã cài trong `MQL5\Indicators\PinePort\`. Chạy `WonderwhalesContractTests`
 trước; tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0` (chưa chạy runtime,
 xem [`install-and-test.md`](install-and-test.md)).
+
+Lưu ý spec thật của `XAUUSDm` trên tài khoản demo Exness: **3 digits, point 0.001, contract size 100**;
+spread đo tại 2026.09.01 00:00 là **260 points** (~0.26 USD). Vì vậy mặc định dùng
+`InpMaxSpreadPoints=600.0` và `InpFixedStopPoints=3000.0`; cap 200 points cũ chặn toàn bộ tín hiệu.
+P&L trong CSV vẫn theo **contract size = 1** của mô hình, không phải tiền broker. Khi chạy headless,
+`ExpertParameters` chỉ được nhận file trong `MQL5\Profiles\Tester`; nút **Load** trong GUI đọc
+`MQL5\Presets`.
 
 ### 5. Ma trận kịch bản
 
@@ -233,7 +241,7 @@ xem [`install-and-test.md`](install-and-test.md)).
 | `plan_baseline` | PinePlanSimEA | — (nguồn PA, TP1, filter hai chiều) |
 | `plan_edge_tp3_stop_only` | PinePlanSimEA | `InpTargetMode=1`, `InpMinStopPoints=20.0`, `InpMinTargetPoints=20.0`, `InpMaxSpreadPoints=20.0` |
 | `ww_baseline` | WonderwhalesSimEA | — (XAUUSDm, PSAR stop, exit on flip) |
-| `ww_conservative_stress` | WonderwhalesSimEA | `InpVolume=0.05`, `InpMaxVirtualExposure=0.05`, `InpMaxSpreadPoints=100.0`, `InpMaxDailyLossPct=1.0`, `InpMaxDrawdownPct=2.0`, `InpCooldownBars=5`, `InpMinStopPoints=200.0` |
+| `ww_conservative_stress` | WonderwhalesSimEA | `InpVolume=0.05`, `InpMaxVirtualExposure=0.05`, `InpMaxSpreadPoints=400.0`, `InpMaxDailyLossPct=1.0`, `InpMaxDrawdownPct=2.0`, `InpCooldownBars=5`, `InpMinStopPoints=200.0` |
 | `ww_edge_atr_stop` | WonderwhalesSimEA | `InpStopMode=1`, `InpAtrPctMultiplier=3.0`, `InpExitOnFlip=false`, `InpMaxHoldingBars=16` |
 
 Tổng cộng 15 scenario. `config_hash` khác nhau giữa các override là bình thường; mỗi report phải ghi
@@ -270,8 +278,27 @@ Nếu thiếu history, tester lỗi, hoặc CSV rỗng → `BLOCKED`/`FAIL`, kh�
 | Hạng mục | Trạng thái |
 |---|---|
 | Hướng dẫn + template | PASS (tài liệu này) |
-| `runner_baseline` … `ww_edge_atr_stop` | `NOT_RUN` — 0/15 scenario có report |
+| `ww_baseline`, `ww_conservative_stress`, `ww_edge_atr_stop` | PASS — 3/3 report + CSV thật (2026-10-28), xem mục 9 |
+| 12 scenario của Runner/Grid/DCA/PinePlan | `NOT_RUN` — 0/12 report |
 | Kết luận hiệu năng | Không có; mọi số liệu phải đến từ report thật |
+
+### 9. Kết quả thật — WonderwhalesSimEA (2026-10-28)
+
+Môi trường: `terminal64.exe /config:…` headless, model *1 minute OHLC*, `XAUUSDm` M15,
+2026.01.05–2026.10.01, deposit 10 000 USD, leverage 1:100, build 6249, demo `464140826`
+(Exness-MT5Trial17; file cấu hình không chứa credential). Report HTML có **0 deal** — đúng thiết kế
+simulation-only; số liệu dưới đây lấy từ CSV 18 cột.
+
+| Scenario | `config_hash` | Trades | Win / Loss | Net (model units) | Max DD | Blocks |
+|---|---|---:|---:|---:|---:|---:|
+| `ww_baseline` | `6E969FE1` | 869 | 318 / 551 | +26.97 | 0.85% | 0 |
+| `ww_conservative_stress` | `69086031` | 787 | 276 / 511 | −7.50 | 0.46% | 139 (134 cooldown, 5 spread) |
+| `ww_edge_atr_stop` | `C9EABF3B` | 795 | 390 / 405 | +24.96 | 0.88% | 0 |
+
+Kiểm tra CSV: `config_hash` đồng nhất toàn file, SL luôn đúng phía entry, entry/exit khớp (baseline và
+stress còn một vị thế ảo mở ở bar cuối). Net là **đơn vị mô hình** (contract size 1, không commission,
+không swap, không margin); không phải lợi nhuận và không suy ra được lot hay P&L broker.
+File: `reports/build/tester-reports/<scenario>/sim_ww_<scenario>.csv` và `tester_ww_<scenario>.htm`.
 
 ## Strategy Tester report — <scenario>
 
