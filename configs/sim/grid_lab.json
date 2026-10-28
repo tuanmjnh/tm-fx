@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "ea": "GridLabEA",
+  "version": "1.00",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "Bounded virtual grid basket: fixed or ATR spacing, level/volume/exposure caps, basket stop required.",
+  "strategy": "grid_lab",
+  "symbol": "EURUSD",
+  "timeframe": "H1",
+  "inputs": {
+    "InpInitialBalance": 10000.0,
+    "InpEnableLog": true,
+    "InpLogFile": "sim_grid_log.csv",
+    "InpDebug": false,
+    "InpGridSide": 1,
+    "InpSpacingMode": 0,
+    "InpSpacingPoints": 300.0,
+    "InpAtrPeriod": 14,
+    "InpAtrMultiplier": 1.0,
+    "InpMaxGridLevels": 5,
+    "InpBaseVirtualVolume": 0.1,
+    "InpVolumeMultiplier": 1.5,
+    "InpMaxLevelVolume": 1.0,
+    "InpExitMode": 1,
+    "InpLevelTargetPoints": 300.0,
+    "InpBasketTargetPoints": 600.0,
+    "InpBasketStopPoints": 900.0,
+    "InpMaxSpreadPoints": 50.0,
+    "InpMaxVirtualExposure": 2.0,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpHaltOnBreach": false,
+    "InpCommissionPerVolume": 0.0,
+    "InpSlippagePoints": 0.0
+  },
+  "enum_map": {
+    "InpGridSide": {
+      "1": "GRID_LONG",
+      "-1": "GRID_SHORT"
+    },
+    "InpSpacingMode": {
+      "0": "SIM_GRID_FIXED_POINTS",
+      "1": "SIM_GRID_ATR_MULTIPLE"
+    },
+    "InpExitMode": {
+      "0": "GRID_EXIT_LEVEL",
+      "1": "GRID_EXIT_BASKET"
+    }
+  },
+  "assumptions": {
+    "contract_size": 1,
+    "commission": "total cash per fill, charged on open and close",
+    "slippage": "points, adverse on every fill including basket stop",
+    "swap": "not modelled in this preset",
+    "level_volume": "base * multiplier^(level-1), clamped by max level volume",
+    "exposure_cap": "an add is blocked, never partially filled, when exposure + volume exceeds the cap"
+  }
+}

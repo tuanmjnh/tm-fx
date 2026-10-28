@@ -24,7 +24,7 @@ này **không** tuyên bố MQL5 và Python tương đương.
 | Comparator package | `python/src/mt5_ea_ai_lab/evaluation/parity.py` | Có |
 | Comparator CLI | `scripts/compare_signals.py` | Đã chạy thật |
 | Unit test comparator/fixture | `python/tests/test_parity.py`, `python/tests/test_signals.py` | Pass |
-| Tài liệu quy trình/tolerance/sai khác | `docs/parity.md` | Có |
+| Tài liệu quy trình/tolerance/sai khác | `docs/reference/parity.md` | Có |
 | Self-check report | `reports/parity/self_check/` (gitignored) | Match 12/12 |
 | Negative comparator report | `reports/parity/mismatch_selftest/` (gitignored) | 3 mismatch đúng như kỳ vọng |
 | Báo cáo Phase 5 | `docs/phase-reports/phase-5.md` | File này |
@@ -79,7 +79,7 @@ Report self-check: `reports/parity/self_check/mismatch_report.json` có `status=
 ### MQL5 export chưa chạy
 
 Không có `parity_signals_mql5.csv` thật. Agent không tự mở terminal vì terminal có thể kết nối tài khoản
-broker. Quy trình thủ công đầy đủ ở [`docs/parity.md`](../parity.md) mục 3.2–3.3. Sau khi chạy, kỳ vọng
+broker. Quy trình thủ công đầy đủ ở [`docs/reference/parity.md`](../reference/parity.md) mục 3.2–3.3. Sau khi chạy, kỳ vọng
 log `event=export_done rows=12 buy=1 sell=1 hold=7 unknown=3`; chỉ khi đó mới có dữ liệu để kết luận
 parity.
 
@@ -95,7 +95,7 @@ parity.
 | Báo cáo mismatch | Một phần | Generator chạy thật với self-check và negative test; chưa có report MQL5 thật |
 | Mismatch liệt kê theo timestamp và field | Đạt (cho comparator) | Negative report: 00:25/`fast`, 00:45/`signal`, 00:45/`reason` |
 | Không tuyên bố tương đương khi chỉ so sánh vài hàng | Đạt | So sánh toàn bộ 12 hàng; self-comparison được ghi rõ không phải parity |
-| Ghi rõ hạn chế chạy terminal tự động | Đạt | `docs/parity.md`, mục 5–6 báo cáo này |
+| Ghi rõ hạn chế chạy terminal tự động | Đạt | `docs/reference/parity.md`, mục 5–6 báo cáo này |
 
 Kết luận: deliverables tooling và tài liệu đạt; nghiệm thu parity thực tế **chưa đạt** cho đến khi chạy
 MQL5 export và comparator trên output thật.
@@ -120,7 +120,7 @@ Tạo mới:
 - `python/tests/test_parity.py`
 - `scripts/export_python_signals.py`
 - `scripts/compare_signals.py`
-- `docs/parity.md`
+- `docs/reference/parity.md`
 - `docs/phase-reports/phase-5.md`
 
 Cập nhật:
@@ -128,10 +128,10 @@ Cập nhật:
 - `mt5/Scripts/LabSignalEngineTests.mq5` (fixture 4-bar, cửa sổ `slow+1`; compile lại)
 - `python/tests/test_signals.py` (test fixture chung)
 - `python/src/mt5_ea_ai_lab/evaluation/__init__.py`
-- `docs/strategy-signal-spec.md` (cửa sổ cuộn, fixture mới, mục parity)
+- `docs/reference/strategy-signal-spec.md` (cửa sổ cuộn, fixture mới, mục parity)
 - `datasets/samples/README.md` (mô tả fixture parity; sửa vị trí BUY của demo)
 - `mt5/README.md` (script export, compile results, quy trình thủ công, an toàn)
-- `README.md`, `docs/architecture.md`, `docs/environment.md`, `docs/risk-and-limitations.md`
+- `README.md`, `docs/reference/architecture.md`, `docs/guides/install-and-test.md`, `docs/reference/risk.md`
 
 Không thêm dependency mới ở Phase 5.
 
@@ -152,10 +152,10 @@ Không thêm dependency mới ở Phase 5.
 ## 10. Kiểm tra thủ công gợi ý
 
 1. Compile lại `LabSignalEngineTests.mq5` và chạy trên chart; kỳ vọng `TEST|RESULT|ALL_PASS`.
-2. Làm theo [`docs/parity.md`](../parity.md) mục 3.2 để tạo `parity_signals_mql5.csv`.
+2. Làm theo [`docs/reference/parity.md`](../reference/parity.md) mục 3.2 để tạo `parity_signals_mql5.csv`.
 3. Kiểm tra `event=export_done rows=12 buy=1 sell=1 hold=7 unknown=3` trong Experts.
 4. Chạy Python export và comparator; kỳ vọng exit 0, `rows_compared=12`, `mismatch_count=0`.
-5. Nếu có mismatch, lưu report và điều tra theo mục 7 của `docs/parity.md`; không sửa tolerance để che
+5. Nếu có mismatch, lưu report và điều tra theo mục 7 của `docs/reference/parity.md`; không sửa tolerance để che
    text mismatch.
 6. Ghi build terminal và kết quả thật vào báo cáo này trước khi đổi trạng thái thành `DONE`.
 

@@ -3,7 +3,7 @@
 //|      MT5 EA & AI Lab - synthetic checks for the WW contract      |
 //|                                                                  |
 //| Runs once. No file I/O, no market data, no account access, no    |
-//| trading functions. Vectors: docs/BUFFER_CONTRACT_Wonderwhales.md |
+//| trading functions. Vectors: docs/indicators/wonderwhales.md |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

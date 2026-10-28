@@ -233,7 +233,7 @@ Không gọi những kết quả này là kết quả giao dịch thật.
 
 ### Deliverables
 - Skeleton repository.
-- `README.md`, `docs/architecture.md`, `docs/risk-and-limitations.md`.
+- `README.md`, `docs/reference/architecture.md`, `docs/reference/risk.md`.
 - Python virtual environment hướng dẫn được, dependency list ban đầu.
 - Checklist môi trường và trạng thái kiểm tra.
 
@@ -303,7 +303,7 @@ Không gọi những kết quả này là kết quả giao dịch thật.
 ### Deliverables
 - Python package `data/` và `validation/`.
 - `scripts/validate_dataset.py`.
-- `docs/data-dictionary.md`.
+- `docs/reference/data-dictionary.md`.
 - Bộ fixture và unit tests.
 
 ### Acceptance criteria
@@ -328,7 +328,7 @@ Không gọi những kết quả này là kết quả giao dịch thật.
 - `backtest/`, `evaluation/`.
 - `scripts/run_backtest.py`.
 - Báo cáo summary JSON/CSV và biểu đồ tùy chọn.
-- `docs/testing-guide.md` giải thích giả định mô phỏng.
+- `docs/reference/testing.md` giải thích giả định mô phỏng.
 
 ### Acceptance criteria
 - Unit tests cho vào/ra, chi phí, vị thế cuối kỳ, bar gap và trường hợp không có giao dịch.

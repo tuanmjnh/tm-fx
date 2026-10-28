@@ -16,7 +16,7 @@
 | Config mẫu | `configs/backtest.example.yaml` |
 | Dataset demo synthetic | `datasets/samples/synthetic_ema_cross_demo.csv` |
 | Unit test | `python/tests/test_signals.py`, `python/tests/test_backtest.py` |
-| Hướng dẫn giả định mô phỏng | `docs/testing-guide.md` |
+| Hướng dẫn giả định mô phỏng | `docs/reference/testing.md` |
 | Báo cáo Phase 4 | `docs/phase-reports/phase-4.md` |
 
 ## 2. Quyết định thiết kế
@@ -66,12 +66,12 @@ commission=2.5 mỗi chiều:
 | Unit test cho vào/ra, chi phí, vị thế cuối kỳ, bar gap, không giao dịch | Đạt | `test_buy_executes_at_next_open_and_closes_at_end_of_data`, `test_costs_are_applied_to_both_fills_and_commission_per_side`, `test_gap_through_stop_fills_at_the_worse_open`, `test_no_trade_dataset_keeps_equity_flat` |
 | Test nhỏ có expected output tính tay | Đạt | Demo 300.00 no-cost / 294.60 có phí; stop-loss -10.00; reversal -200/+500 |
 | Chạy lại cùng config thu được kết quả tương đương | Đạt | `test_repeated_runs_are_identical`; trades/equity/signals/metrics/benchmark bằng nhau |
-| Mọi metric được định nghĩa; không báo Sharpe khi chưa xác định annualization | Đạt | Bảng metric trong `docs/testing-guide.md`; `sharpe_ratio=null`, `undefined_metrics` |
+| Mọi metric được định nghĩa; không báo Sharpe khi chưa xác định annualization | Đạt | Bảng metric trong `docs/reference/testing.md`; `sharpe_ratio=null`, `undefined_metrics` |
 | Tách signal, execution assumptions và metric | Đạt | `signals/`, `backtest/`, `evaluation/` độc lập |
 | Xuất trades ledger, equity curve, summary | Đạt | `trades.csv`, `equity.csv`, `signals.csv`, `summary.json` |
 | Benchmark baseline | Đạt | `buy_and_hold_benchmark` dùng cùng cost model |
 | Seed cố định cho phần ngẫu nhiên | Đạt (không có random) | `seed` được ghi trong summary; không có RNG trong engine |
-| `docs/testing-guide.md` giải thích giả định | Đạt | Đã tạo |
+| `docs/reference/testing.md` giải thích giả định | Đạt | Đã tạo |
 
 ## 5. File đã tạo/sửa
 
@@ -86,7 +86,7 @@ Tạo mới:
 - `scripts/run_backtest.py`
 - `configs/backtest.example.yaml`
 - `datasets/samples/synthetic_ema_cross_demo.csv`
-- `docs/testing-guide.md`
+- `docs/reference/testing.md`
 - `docs/phase-reports/phase-4.md`
 
 Cập nhật:
@@ -97,8 +97,8 @@ Cập nhật:
 - `datasets/samples/README.md`
 - `requirements.txt` (thêm `PyYAML==6.0.3`)
 - `.gitignore` (bỏ qua temp dir của pip/pytest khi `TEMP` trỏ vào repo)
-- `docs/strategy-signal-spec.md` (ghi chú cửa sổ EMA của EA so với fixture)
-- `README.md`, `docs/architecture.md`, `docs/environment.md`, `docs/risk-and-limitations.md`
+- `docs/reference/strategy-signal-spec.md` (ghi chú cửa sổ EMA của EA so với fixture)
+- `README.md`, `docs/reference/architecture.md`, `docs/guides/install-and-test.md`, `docs/reference/risk.md`
 
 ## 6. Vấn đề còn tồn tại
 

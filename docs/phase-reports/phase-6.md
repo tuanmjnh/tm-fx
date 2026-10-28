@@ -21,7 +21,7 @@
 | Test tích hợp backtest | `python/tests/test_run_backtest_store.py` |
 | Test so sánh | `python/tests/test_experiment_compare.py` |
 | Test CLI so sánh | `python/tests/test_compare_experiments_cli.py` |
-| Hướng dẫn store/comparability | `docs/experiment-store.md` |
+| Hướng dẫn store/comparability | `docs/reference/experiment-store.md` |
 | Báo cáo Phase 6 | `docs/phase-reports/phase-6.md` |
 
 ## 2. Quyết định thiết kế
@@ -120,7 +120,7 @@ Tạo mới:
 - `python/tests/test_run_backtest_store.py`
 - `python/tests/test_experiment_compare.py`
 - `python/tests/test_compare_experiments_cli.py`
-- `docs/experiment-store.md`
+- `docs/reference/experiment-store.md`
 - `docs/phase-reports/phase-6.md`
 
 Cập nhật:
@@ -129,8 +129,8 @@ Cập nhật:
 - `scripts/run_backtest.py`
 - `configs/experiment.example.yaml` (placeholder → cấu hình runnable)
 - `.gitignore` (`*.sqlite-wal`, `*.sqlite-shm`, `*.db-journal`)
-- `docs/testing-guide.md`, `docs/architecture.md`, `docs/environment.md`,
-  `docs/risk-and-limitations.md`, `README.md`
+- `docs/reference/testing.md`, `docs/reference/architecture.md`, `docs/guides/install-and-test.md`,
+  `docs/reference/risk.md`, `README.md`
 
 Không đổi: MQL5 source, dependency Python (dùng `sqlite3` stdlib), `requirements.txt`.
 

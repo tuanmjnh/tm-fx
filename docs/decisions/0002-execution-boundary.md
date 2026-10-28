@@ -31,7 +31,7 @@
 ## Hệ quả
 
 - Docs và release checklist phải tiếp tục ghi rõ “không execution/live”.
-- `docs/guide.md` chỉ hướng dẫn compile, self-check, parity, ONNX và Strategy Tester offline.
+- `docs/guides/install-and-test.md` chỉ hướng dẫn compile, self-check, parity, ONNX và Strategy Tester offline.
 - Không có kết quả backtest/live nào được dùng làm cam kết hiệu năng.
 - Muốn có bot demo, cần một kế hoạch riêng với yêu cầu an toàn ở mục 5; không tự thêm vào repo hiện tại.
 

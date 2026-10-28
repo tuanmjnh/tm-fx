@@ -28,9 +28,9 @@ Phase 3 thêm pipeline đọc dữ liệu và validation không sửa dữ liệ
 | `python/tests/test_validation.py` | Tạo mới | 15 test validation |
 | `python/tests/fixtures/synthetic_eurusd_m5.csv` | Tạo mới | 6 nến synthetic hợp lệ |
 | `python/tests/fixtures/README.md` | Tạo mới | Cảnh báo synthetic |
-| `docs/data-dictionary.md` | Tạo mới | Schema, check, report schema |
+| `docs/reference/data-dictionary.md` | Tạo mới | Schema, check, report schema |
 | `requirements.txt` | Sửa | Thêm `pyarrow==26.0.0` |
-| `docs/environment.md` | Sửa | Kết quả cài pyarrow, 38 test, CLI |
+| `docs/guides/install-and-test.md` | Sửa | Kết quả cài pyarrow, 38 test, CLI |
 | `README.md` | Sửa | Trạng thái Phase 3, lệnh khả dụng |
 | `docs/phase-reports/phase-3.md` | Tạo mới | Báo cáo này |
 
@@ -82,4 +82,4 @@ normalize). Đã sửa test dùng `timestamp` + `datetime`; lần chạy lại p
 ## 7. Phase tiếp theo
 
 Phase 4 — Python backtester: mô hình cost, trade lifecycle, ledger/equity, metrics, CLI
-`scripts/run_backtest.py`, test với expected output tính tay, `docs/testing-guide.md`.
+`scripts/run_backtest.py`, test với expected output tính tay, `docs/reference/testing.md`.

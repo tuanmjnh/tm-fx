@@ -3,7 +3,7 @@
 //|        MT5 EA & AI Lab - PinePort of Wonderwhales (signal-only)  |
 //|                                                                  |
 //| Custom indicator only. No file I/O, no account access, no order  |
-//| functions. Contract: docs/BUFFER_CONTRACT_Wonderwhales.md        |
+//| functions. Contract: docs/indicators/wonderwhales.md        |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

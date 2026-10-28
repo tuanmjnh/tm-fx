@@ -3,7 +3,7 @@
 //|     MT5 EA & AI Lab - PinePort buffer contract and pure logic   |
 //|                                                                  |
 //| No file I/O, no account access, no trading functions.            |
-//| Contract: docs/BUFFER_CONTRACT_Wonderwhales.md                   |
+//| Contract: docs/indicators/wonderwhales.md                   |
 //+------------------------------------------------------------------+
 #ifndef WONDERWHALES_CONTRACT_MQH
 #define WONDERWHALES_CONTRACT_MQH

@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-    Package the Wonderwhales PinePort source, docs, tests and helper scripts.
+    Package the PinePort sources (Wonderwhales, LongKaco VSA, TM Fusion Zones,
+    Price Action MTF, TM XAU Signals 2), docs, tests and helper scripts.
 
 .DESCRIPTION
     Creates a versioned zip under reports\packages plus a SHA256 manifest.
@@ -36,24 +37,72 @@ if (-not $OutDir) {
 $files = @(
     "README.md",
     "pyproject.toml",
-    "docs/INDICATOR_SPEC_Wonderwhales.md",
-    "docs/REPAINT_AUDIT_Wonderwhales.md",
-    "docs/BUFFER_CONTRACT_Wonderwhales.md",
-    "docs/PINE_PARITY_Wonderwhales.md",
-    "docs/PINE_MQL5_COMPATIBILITY.md",
-    "docs/TEST_PLAN.md",
-    "docs/PINEPORT_INSTALL_AND_TEST.md",
-    "docs/PINE_INVENTORY.md",
+    "docs/indicators/wonderwhales.md",
+    "docs/indicators/wonderwhales.md",
+    "docs/indicators/wonderwhales.md",
+    "docs/indicators/parity.md",
+    "docs/indicators/parity.md",
+    "docs/indicators/longkaco-vsa.md",
+    "docs/indicators/longkaco-vsa.md",
+    "docs/indicators/longkaco-vsa.md",
+    "docs/indicators/tm-fusion-zones.md",
+    "docs/indicators/tm-fusion-zones.md",
+    "docs/indicators/tm-fusion-zones.md",
+    "docs/indicators/price-action-mtf.md",
+    "docs/indicators/price-action-mtf.md",
+    "docs/indicators/price-action-mtf.md",
+    "docs/indicators/tm-xau-signals-2.md",
+    "docs/indicators/tm-xau-signals-2.md",
+    "docs/indicators/tm-xau-signals-2.md",
+    "docs/indicators/tm-indicator-2.md",
+    "docs/indicators/tm-indicator-2.md",
+    "docs/indicators/tm-indicator-2.md",
+    "docs/indicators/README.md",
+    "docs/reference/testing.md",
+    "docs/guides/install-and-test.md",
+    "docs/indicators/README.md",
     "docs/PROGRESS.md",
     "mt5/README.md",
+    "mt5/Include/LabLogger.mqh",
     "mt5/Include/PinePort/WonderwhalesContract.mqh",
+    "mt5/Include/PinePort/LongKacoVSAContract.mqh",
+    "mt5/Include/PinePort/TMFusionZonesContract.mqh",
+    "mt5/Include/PinePort/PriceActionMTFContract.mqh",
+    "mt5/Include/PinePort/TMXAUSignals2Contract.mqh",
+    "mt5/Include/PinePort/TMIndicator2Contract.mqh",
     "mt5/Indicators/PinePort/Wonderwhales.mq5",
+    "mt5/Indicators/PinePort/LongKacoVSA.mq5",
+    "mt5/Indicators/PinePort/TMFusionZones.mq5",
+    "mt5/Indicators/PinePort/PriceActionMTF.mq5",
+    "mt5/Indicators/PinePort/TMXAUSignals2.mq5",
+    "mt5/Indicators/PinePort/TMIndicator2.mq5",
     "mt5/Experts/PineSignalLabEA.mq5",
+    "mt5/Experts/PineMultiSignalLabEA.mq5",
     "mt5/Scripts/WonderwhalesContractTests.mq5",
+    "mt5/Scripts/LongKacoVSAContractTests.mq5",
+    "mt5/Scripts/TMFusionZonesContractTests.mq5",
+    "mt5/Scripts/PriceActionMTFContractTests.mq5",
+    "mt5/Scripts/TMXAUSignals2ContractTests.mq5",
+    "mt5/Scripts/TMIndicator2ContractTests.mq5",
     "python/src/mt5_ea_ai_lab/evaluation/pine_parity.py",
+    "python/src/mt5_ea_ai_lab/evaluation/signal_audit.py",
+    "python/src/mt5_ea_ai_lab/evaluation/multi_signal_audit.py",
+    "python/src/mt5_ea_ai_lab/evaluation/multi_source_parity.py",
     "python/tests/test_pine_parity.py",
+    "python/tests/test_signal_audit.py",
+    "python/tests/test_multi_signal_audit.py",
+    "python/tests/test_multi_source_parity.py",
     "scripts/compare_pine_exports.py",
+    "scripts/audit_signal_csv.py",
+    "scripts/audit_multi_signal_csv.py",
+    "scripts/compare_multi_signal_exports.py",
+    "scripts/deploy_pineport.ps1",
     "scripts/validate_pineport.py",
+    "scripts/validate_longkaco.py",
+    "scripts/validate_tmfz.py",
+    "scripts/validate_pamtf.py",
+    "scripts/validate_tmxau2.py",
+    "scripts/validate_tmind2.py",
     "scripts/build_pineport.ps1",
     "scripts/package_pineport.ps1"
 )
@@ -79,7 +128,7 @@ if ($missing.Count -gt 0) {
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$name = "wonderwhales-pineport-v$Version-$stamp"
+$name = "pineport-v$Version-$stamp"
 $stage = Join-Path $OutDir ("stage-" + $name)
 $zipPath = Join-Path $OutDir ($name + ".zip")
 

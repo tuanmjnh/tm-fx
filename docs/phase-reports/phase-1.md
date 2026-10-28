@@ -25,7 +25,7 @@ Phase 1 tạo EA MQL5 chỉ đọc dữ liệu và ghi log, không có bất k�
 | `mt5/Experts/LabSignalEA.mq5` | Tạo mới | EA signal-only; không có hàm execution |
 | `mt5/Include/LabLogger.mqh` | Tạo mới | Logger; có `SetDebugEnabled` |
 | `mt5/README.md` | Tạo mới | Hướng dẫn sync/compile/tester và mẫu log |
-| `docs/environment.md` | Cập nhật | Ghi kết quả compile Phase 1 |
+| `docs/guides/install-and-test.md` | Cập nhật | Ghi kết quả compile Phase 1 |
 | `docs/phase-reports/phase-1.md` | Tạo mới | Báo cáo này |
 
 Không sửa roadmap/prompt. Không có file người dùng bị xóa/ghi đè.

@@ -24,7 +24,7 @@ Không có secret, thông tin tài khoản hay code gửi lệnh giao dịch tro
 |---|---|
 | Root | `README.md`, `.gitignore`, `requirements.txt`, `pyproject.toml` |
 | Config mẫu | `configs/data.example.yaml`, `configs/strategy.example.yaml`, `configs/experiment.example.yaml` |
-| Tài liệu | `docs/architecture.md`, `docs/environment.md`, `docs/risk-and-limitations.md`, `docs/decisions/0001-project-baseline.md`, `docs/phase-reports/phase-0.md` |
+| Tài liệu | `docs/reference/architecture.md`, `docs/guides/install-and-test.md`, `docs/reference/risk.md`, `docs/decisions/0001-project-baseline.md`, `docs/phase-reports/phase-0.md` |
 | Python package | `python/src/mt5_ea_ai_lab/__init__.py` và `__init__.py` cho 10 subpackage: `data`, `validation`, `features`, `labels`, `signals`, `backtest`, `models`, `evaluation`, `reporting`, `experiment_store` |
 | Test | `python/tests/test_package_smoke.py` |
 | Thư mục dữ liệu/model | `datasets/raw/.gitkeep`, `datasets/processed/.gitkeep`, `datasets/samples/README.md`, `models/candidates/.gitkeep`, `models/registry.json` |
@@ -54,7 +54,7 @@ Không sửa nội dung hai tài liệu roadmap/prompt. Không có file người
 
 Cảnh báo ghi nhận: khi import matplotlib, cache mặc định `%LOCALAPPDATA%\matplotlib` không ghi được và
 matplotlib tạo cache tạm trong repo. Cache tạm đã được xóa, mẫu `matplotlib-*/` đã thêm vào `.gitignore`;
-cách đặt `MPLCONFIGDIR` được ghi trong `docs/environment.md`.
+cách đặt `MPLCONFIGDIR` được ghi trong `docs/guides/install-and-test.md`.
 
 ## 4. Xác minh thủ công còn lại
 
@@ -65,7 +65,7 @@ Phase 1 hoặc do người dùng quyết định:
    `.venv\Scripts\python.exe` nên chưa kiểm tra Execution Policy.
 2. Tùy chọn nâng cấp pip (đã thất bại một lần trong môi trường này; không bắt buộc).
 3. Phase 1: sync EA vào `MQL5/Experts` của terminal, compile bằng MetaEditor, chạy Strategy Tester và đọc
-   Journal/Experts. Quy trình chi tiết ở `docs/environment.md`, mục 4.
+   Journal/Experts. Quy trình chi tiết ở `docs/guides/install-and-test.md`, mục 4.
 4. Quyết định commit/push và cấu hình remote (Phase 0 không commit).
 
 ## 5. Tiêu chí nghiệm thu Phase 0
@@ -75,7 +75,7 @@ Phase 1 hoặc do người dùng quyết định:
 | Người khác đọc README biết cách chuẩn bị môi trường và chạy test | Đạt | Lệnh đã chạy thật; có phương án dự phòng khi PowerShell chặn activate |
 | Không có bí mật hoặc dữ liệu tài khoản trong Git | Đạt (hiện tại) | Chưa có commit; quét working tree không thấy secret; `.gitignore` chặn `.env`, `accounts.dat`, `servers.dat` |
 | Chưa có logic giao dịch thật | Đạt | Không có file `.mq5`/`.mqh`; quét không thấy lệnh execution |
-| Skeleton repository + tài liệu + dependency list + checklist môi trường | Đạt | Xem mục 2 và `docs/environment.md` |
+| Skeleton repository + tài liệu + dependency list + checklist môi trường | Đạt | Xem mục 2 và `docs/guides/install-and-test.md` |
 
 **Kết luận:** Phase 0 đạt các tiêu chí nghiệm thu và được đánh dấu `DONE`. Việc compile/tester MQL5 không
 thuộc Phase 0; khi sang Phase 1, trạng thái MQL5 sẽ chỉ là `DONE` nếu có kết quả MetaEditor/Strategy Tester thật.

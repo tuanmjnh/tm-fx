@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "ea": "RunnerTrailingLabEA",
+  "version": "1.00",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "Single virtual position, EMA cross signal, ATR initial stop, breakeven and trailing stop.",
+  "strategy": "runner_trailing",
+  "symbol": "EURUSD",
+  "timeframe": "H1",
+  "inputs": {
+    "InpInitialBalance": 10000.0,
+    "InpVolume": 1.0,
+    "InpEnableLog": true,
+    "InpLogFile": "sim_runner_log.csv",
+    "InpDebug": false,
+    "InpSideFilter": 0,
+    "InpFastEma": 20,
+    "InpSlowEma": 50,
+    "InpAtrPeriod": 14,
+    "InpAtrSlMultiplier": 2.0,
+    "InpBreakEvenEnabled": true,
+    "InpBreakEvenTriggerPoints": 400.0,
+    "InpBreakEvenOffsetPoints": 0.0,
+    "InpTrailMode": 1,
+    "InpTrailFixedPoints": 300.0,
+    "InpTrailAtrMultiplier": 2.0,
+    "InpMinStopPoints": 5.0,
+    "InpUpdateOnClosedBarOnly": true,
+    "InpMaxHoldingBars": 0,
+    "InpCooldownBars": 1,
+    "InpMaxSpreadPoints": 50.0,
+    "InpMaxVirtualExposure": 1.0,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpHaltOnBreach": false,
+    "InpCommissionPerVolume": 0.0,
+    "InpSlippagePoints": 0.0
+  },
+  "enum_map": {
+    "InpTrailMode": {
+      "0": "RUNNER_TRAIL_FIXED",
+      "1": "RUNNER_TRAIL_ATR"
+    },
+    "InpSideFilter": {
+      "0": "RUNNER_SIDE_BOTH",
+      "1": "RUNNER_SIDE_LONG_ONLY",
+      "2": "RUNNER_SIDE_SHORT_ONLY"
+    }
+  },
+  "assumptions": {
+    "contract_size": 1,
+    "commission": "total cash per fill, charged on open and close",
+    "slippage": "points, adverse on every fill including stop fills",
+    "swap": "not modelled in this preset"
+  }
+}

@@ -36,7 +36,18 @@ if (-not $LogDir) {
 $sources = @(
     "mt5\Indicators\PinePort\Wonderwhales.mq5",
     "mt5\Scripts\WonderwhalesContractTests.mq5",
-    "mt5\Experts\PineSignalLabEA.mq5"
+    "mt5\Indicators\PinePort\LongKacoVSA.mq5",
+    "mt5\Scripts\LongKacoVSAContractTests.mq5",
+    "mt5\Indicators\PinePort\TMFusionZones.mq5",
+    "mt5\Scripts\TMFusionZonesContractTests.mq5",
+    "mt5\Indicators\PinePort\PriceActionMTF.mq5",
+    "mt5\Scripts\PriceActionMTFContractTests.mq5",
+    "mt5\Indicators\PinePort\TMXAUSignals2.mq5",
+    "mt5\Scripts\TMXAUSignals2ContractTests.mq5",
+    "mt5\Indicators\PinePort\TMIndicator2.mq5",
+    "mt5\Scripts\TMIndicator2ContractTests.mq5",
+    "mt5\Experts\PineSignalLabEA.mq5",
+    "mt5\Experts\PineMultiSignalLabEA.mq5"
 )
 
 function Read-Utf16Log {

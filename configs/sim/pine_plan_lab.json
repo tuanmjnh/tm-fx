@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "ea": "PinePlanSimEA",
+  "version": "1.00",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "Single virtual position from a PinePort trade plan (Price Action MTF by default). Plan SL and target only; no order API.",
+  "strategy": "pine_plan",
+  "symbol": "XAUUSD",
+  "timeframe": "M15",
+  "inputs": {
+    "InpSource": 0,
+    "InpInitialBalance": 10000.0,
+    "InpVolume": 1.0,
+    "InpEnableLog": true,
+    "InpLogFile": "sim_plan_log.csv",
+    "InpDebug": false,
+    "InpSideFilter": 0,
+    "InpTargetMode": 0,
+    "InpMinStopPoints": 5.0,
+    "InpMinTargetPoints": 5.0,
+    "InpMaxHoldingBars": 0,
+    "InpBreakEvenEnabled": false,
+    "InpBreakEvenTriggerPoints": 400.0,
+    "InpBreakEvenOffsetPoints": 0.0,
+    "InpTrailEnabled": false,
+    "InpTrailFixedPoints": 300.0,
+    "InpMinStopPointsTrail": 5.0,
+    "InpCooldownBars": 1,
+    "InpMaxSpreadPoints": 50.0,
+    "InpMaxVirtualExposure": 1.0,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpHaltOnBreach": false,
+    "InpCommissionPerVolume": 0.0,
+    "InpSlippagePoints": 0.0
+  },
+  "enum_map": {
+    "InpSource": {
+      "0": "PLAN_SOURCE_PA",
+      "1": "PLAN_SOURCE_X2",
+      "2": "PLAN_SOURCE_TM2"
+    },
+    "InpSideFilter": {
+      "0": "PLAN_SIDE_BOTH",
+      "1": "PLAN_SIDE_LONG_ONLY",
+      "-1": "PLAN_SIDE_SHORT_ONLY"
+    },
+    "InpTargetMode": {
+      "0": "SIM_PLAN_TARGET_TP1",
+      "1": "SIM_PLAN_TARGET_TP3",
+      "2": "SIM_PLAN_TARGET_NONE"
+    }
+  },
+  "assumptions": {
+    "contract_size": 1,
+    "entry": "simulated fill at ask/bid plus adverse slippage; the plan entry is a reference only",
+    "commission": "total cash per fill, charged on open and close",
+    "slippage": "points, adverse on every fill including stop fills",
+    "target_fill": "the target price is used as the fill; favourable gaps are not credited",
+    "swap": "not modelled in this preset",
+    "indicator": "iCustom with the indicator's default inputs; the EA never overrides them"
+  }
+}

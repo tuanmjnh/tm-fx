@@ -1,5 +1,5 @@
 # Python 3.11 baseline, verified on 2026-10-27 in a Windows 10 venv.
-# Update deliberately and record the change in docs/environment.md.
+# Update deliberately and record the change in docs/guides/install-and-test.md.
 numpy==2.4.6
 pandas==2.3.3
 pyarrow==26.0.0

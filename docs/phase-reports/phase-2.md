@@ -13,7 +13,7 @@ Phase 2 tách tính toán indicator khỏi quyết định tín hiệu:
 - `mt5/Include/SignalEngine.mqh` — enum signal/reason, config, crossover thuần, engine EMA crossover.
 - `mt5/Scripts/LabSignalEngineTests.mq5` — self-check 40+ assertion, in `TEST|PASS/FAIL` ra Experts.
 - `mt5/Experts/LabSignalEA.mq5` — dùng engine trên nến đóng, log `event=signal` mỗi nến.
-- `docs/strategy-signal-spec.md` — định nghĩa chiến lược, warm-up, reason code, fixture/expected output.
+- `docs/reference/strategy-signal-spec.md` — định nghĩa chiến lược, warm-up, reason code, fixture/expected output.
 
 Không có API giao dịch, không đọc tài khoản, không kết nối broker.
 
@@ -25,9 +25,9 @@ Không có API giao dịch, không đọc tài khoản, không kết nối broke
 | `mt5/Include/SignalEngine.mqh` | Tạo mới | `LAB_SIGNAL_UNKNOWN/HOLD/BUY/SELL`, reason code |
 | `mt5/Scripts/LabSignalEngineTests.mq5` | Tạo mới | Self-check, không giao dịch |
 | `mt5/Experts/LabSignalEA.mq5` | Sửa | Thêm input EMA, gọi engine trên nến đóng, log signal |
-| `docs/strategy-signal-spec.md` | Tạo mới | Đặc tả + fixture + expected output |
+| `docs/reference/strategy-signal-spec.md` | Tạo mới | Đặc tả + fixture + expected output |
 | `mt5/README.md` | Sửa | Mapping `Scripts/`, input mới, event mới, cách chạy test |
-| `docs/architecture.md` | Sửa | Trạng thái Phase 1/2 |
+| `docs/reference/architecture.md` | Sửa | Trạng thái Phase 1/2 |
 | `README.md` | Sửa | Trạng thái Phase 2, link spec/report |
 | `docs/phase-reports/phase-2.md` | Tạo mới | Báo cáo này |
 
@@ -87,4 +87,4 @@ Windows tường minh; kết quả trong bảng là từ lần chạy tường m
 
 Phase 3 — Python data pipeline và validation: loader CSV/Parquet, chuẩn hóa timestamp/symbol/timeframe,
 validate duplicate/out-of-order/OHLC/NaN/Inf/gap, báo cáo JSON/CSV, fixture synthetic và
-`docs/data-dictionary.md`.
+`docs/reference/data-dictionary.md`.

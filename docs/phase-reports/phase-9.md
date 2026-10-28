@@ -17,8 +17,8 @@
 | Config demo end-to-end | `configs/pipeline.example.yaml`, `configs/backtest.synthetic-ml.yaml` |
 | Test fail-safe và tái lập | `python/tests/test_pipeline_cli.py` (5 test) |
 | Sample report gắn nhãn demo/synthetic | `docs/phase-reports/phase-9-sample-report.md` |
-| Hướng dẫn pipeline, exit code, artifact | `docs/end-to-end.md` |
-| Checklist phát hành nội bộ | `docs/release-checklist.md` |
+| Hướng dẫn pipeline, exit code, artifact | `docs/reference/pipeline.md` |
+| Checklist phát hành nội bộ | `docs/reference/release.md` |
 | Báo cáo Phase 9 | `docs/phase-reports/phase-9.md` |
 
 Artifact sinh ra (gitignored): `reports/pipeline/demo-phase9/` (báo cáo tổng hợp),
@@ -86,9 +86,9 @@ Không được dùng để kết luận chiến lược hoặc hiệu năng th�
 | Nạp dữ liệu, validate, tạo feature/tín hiệu, backtest, lưu experiment, sinh report | Đạt | Hai stage `completed`; hai row trong `experiments/phase9-demo.sqlite`; báo cáo JSON/Markdown |
 | Thử dữ liệu lỗi và model thiếu để xác minh fail-safe | Đạt | Test exit `2`/`1`; duplicate exit `4`; ONNX missing model exit `1` |
 | Kiểm tra khả năng lặp lại sau checkout commit sạch | Đạt trên snapshot commit sạch | Snapshot 116 file, commit tạm `d3a9ea39…`, `git status` sạch; 155 test pass; pipeline exit `0`; metric/data SHA/model SHA khớp; ONNX parity PASS. Cần lặp lại sau commit chính thức để gắn commit hash repository |
-| Có thể tái tạo một run demo từ hướng dẫn | Đạt (cùng worktree và snapshot sạch) | `docs/end-to-end.md` mục 1 và 7; metric/hash khớp |
+| Có thể tái tạo một run demo từ hướng dẫn | Đạt (cùng worktree và snapshot sạch) | `docs/reference/pipeline.md` mục 1 và 7; metric/hash khớp |
 | Sample report đánh dấu demo/synthetic | Đạt | `docs/phase-reports/phase-9-sample-report.md` |
-| Checklist phát hành nội bộ | Đạt | `docs/release-checklist.md` |
+| Checklist phát hành nội bộ | Đạt | `docs/reference/release.md` |
 | Không có mật khẩu/tài khoản môi giới | Đạt | Không có credential trong code/config/report; không kết nối broker |
 | Không có lệnh giao dịch thật hoặc cơ chế tự kích hoạt execution | Đạt | Không có `OrderSend`/`CTrade.Buy`/`CTrade.Sell`; pipeline chỉ gọi backtest/ML |
 | Giới hạn và giả định hiển thị rõ trong báo cáo | Đạt | `limitations` trong `pipeline_summary.json` và mục Limitations của report |
@@ -118,16 +118,16 @@ Tạo mới:
 - `configs/pipeline.example.yaml`
 - `configs/backtest.synthetic-ml.yaml`
 - `python/tests/test_pipeline_cli.py`
-- `docs/end-to-end.md`
-- `docs/release-checklist.md`
+- `docs/reference/pipeline.md`
+- `docs/reference/release.md`
 - `docs/phase-reports/phase-9.md`
 - `docs/phase-reports/phase-9-sample-report.md`
 
 Cập nhật:
 
 - `README.md` (trạng thái, cấu trúc, config mẫu, lệnh pipeline, exit code, an toàn, liên kết)
-- `docs/architecture.md`, `docs/environment.md`, `docs/testing-guide.md`,
-  `docs/risk-and-limitations.md`, `docs/data-dictionary.md`
+- `docs/reference/architecture.md`, `docs/guides/install-and-test.md`, `docs/reference/testing.md`,
+  `docs/reference/risk.md`, `docs/reference/data-dictionary.md`
 
 Không thêm execution, không thay đổi signal engine/EA, không kết nối broker, không thêm secret.
 
@@ -136,7 +136,7 @@ Không thêm execution, không thay đổi signal engine/EA, không kết nối 
 1. **Tái lập sau commit chính thức chưa lặp lại:** đã xác minh trên snapshot commit sạch tạm thời
    (`d3a9ea39…`, 116 file, `git status` rỗng) với kết quả khớp hoàn toàn, nhưng snapshot không phải commit
    trong repository này và đã xóa sau kiểm tra. Sau khi người dùng commit Phase 0–9, chạy lại quy trình
-   ngắn trong `docs/end-to-end.md` mục 7 để gắn kết quả với commit hash chính thức.
+   ngắn trong `docs/reference/pipeline.md` mục 7 để gắn kết quả với commit hash chính thức.
 2. **MT5 Strategy Tester/ONNX runtime vẫn thủ công:** pipeline không chạy terminal; Phase 8 vẫn
    `READY_FOR_MANUAL_VALIDATION`.
 3. **Dữ liệu synthetic:** không có kết luận về chất lượng dữ liệu thị trường thực, spread/slippage thực
@@ -162,7 +162,7 @@ commit chính thức để gắn kết quả với commit hash của repository.
 4. So sánh `pipeline_summary.json` với bảng mục 3: data SHA-256, model SHA-256, metric backtest/ML phải
    khớp; nếu khác, ghi rõ môi trường/dependency trước khi kết luận.
 5. Chạy lại cùng `clean-check` để xác nhận exit `4` và báo cáo không bị ghi đè.
-6. Thực hiện các kiểm tra MT5 còn mở theo `docs/release-checklist.md` và `docs/onnx-inference.md`; ghi
+6. Thực hiện các kiểm tra MT5 còn mở theo `docs/reference/release.md` và `docs/reference/onnx.md`; ghi
    build terminal và kết quả thật.
 7. Không đặt secret trong config/report; không commit `.sqlite`, model artifact hay output thí nghiệm.
 

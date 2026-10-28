@@ -27,7 +27,7 @@
 | Test split/model/metric | `python/tests/test_ml_splits_model.py` |
 | Test mô phỏng chiến lược | `python/tests/test_ml_strategy.py` |
 | Test CLI + store | `python/tests/test_train_ml_cli.py` |
-| Hướng dẫn ML baseline | `docs/ml-baseline.md` |
+| Hướng dẫn ML baseline | `docs/reference/ml-baseline.md` |
 | Báo cáo Phase 7 | `docs/phase-reports/phase-7.md` |
 
 ## 2. Quyết định thiết kế
@@ -106,7 +106,7 @@ config hash `abee20763963a73e1ad18b479d4d5796d1cae40519dbc525265941f69f6215e6`; 
 
 | Tiêu chí (roadmap) | Kết quả | Bằng chứng |
 |---|---|---|
-| Định nghĩa target/label trước model, ghi rõ horizon | Đạt | `labels/direction.py`; `label_schema.json`; `docs/ml-baseline.md` mục 2 |
+| Định nghĩa target/label trước model, ghi rõ horizon | Đạt | `labels/direction.py`; `label_schema.json`; `docs/reference/ml-baseline.md` mục 2 |
 | Feature chỉ dùng dữ liệu có sẵn tại thời điểm dự đoán | Đạt | `test_features_are_causal` sửa tương lai và so sánh feature quá khứ |
 | Baseline đơn giản (logistic regression) | Đạt | `models/logistic.py`; artifact JSON; demo chạy thật |
 | Chia train/validation/test theo thời gian, không shuffle | Đạt | `models/splits.py`; `split_plan.json`; `test_time_split_is_chronological_and_purged` |
@@ -151,15 +151,15 @@ Tạo mới:
 - `python/tests/test_ml_splits_model.py`
 - `python/tests/test_ml_strategy.py`
 - `python/tests/test_train_ml_cli.py`
-- `docs/ml-baseline.md`
+- `docs/reference/ml-baseline.md`
 - `docs/phase-reports/phase-7.md`
 
 Cập nhật:
 
 - `python/src/mt5_ea_ai_lab/features/__init__.py`, `labels/__init__.py`, `models/__init__.py`,
   `evaluation/__init__.py`, `backtest/__init__.py`
-- `README.md`, `docs/architecture.md`, `docs/environment.md`, `docs/testing-guide.md`,
-  `docs/risk-and-limitations.md`, `docs/data-dictionary.md`, `datasets/samples/README.md`
+- `README.md`, `docs/reference/architecture.md`, `docs/guides/install-and-test.md`, `docs/reference/testing.md`,
+  `docs/reference/risk.md`, `docs/reference/data-dictionary.md`, `datasets/samples/README.md`
 
 Không đổi dependency: `scikit-learn 1.9.1` đã có trong `requirements.txt` từ Phase 0. Không thêm ONNX,
 không thêm execution, không thay đổi MQL5 source.

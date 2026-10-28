@@ -19,7 +19,7 @@
 | Fixture 12 feature cho EA | `mt5/Files/onnx_feature_fixture.csv` |
 | EA inference-only | `mt5/Experts/LabOnnxInference.mq5` |
 | Test export/parity/CLI | `python/tests/test_onnx_export.py` |
-| Hướng dẫn ONNX và kiểm tra thủ công | `docs/onnx-inference.md` |
+| Hướng dẫn ONNX và kiểm tra thủ công | `docs/reference/onnx.md` |
 | Dependency pin | `requirements.txt` (`onnx==1.23.2`, `onnxruntime==1.31.1`) |
 | Báo cáo Phase 8 | `docs/phase-reports/phase-8.md` |
 
@@ -83,7 +83,7 @@ ONNX Runtime trong MT5 chạy được hoặc cho cùng kết quả.
 | Đối chiếu dự đoán Python–ONNX trên fixture cố định | Đạt | 24 hàng; max abs diff `4.673e-08` < `1e-5`; `onnx_parity.json/csv` |
 | EA inference-only, chỉ đọc input và in prediction | Đạt (mã nguồn) | `LabOnnxInference.mq5`; `OnTick()` rỗng; không có API order/trade |
 | Dùng `OnnxCreate`/`OnnxSetInputShape`/`OnnxRun` | Đạt (compile) | 0 errors/0 warnings; chưa chạy runtime |
-| Kiểm thử ONNX trong Strategy Tester, ghi build/runtime | **Chưa đạt** | Cần người dùng chạy thủ công; xem `docs/onnx-inference.md` mục 4 |
+| Kiểm thử ONNX trong Strategy Tester, ghi build/runtime | **Chưa đạt** | Cần người dùng chạy thủ công; xem `docs/reference/onnx.md` mục 4 |
 | Sai schema/feature/missing model dừng an toàn | Đạt (Python + thiết kế EA) | Export/load fail closed; test sai shape/feature; `OnInit` trả `INIT_FAILED` |
 | Không có execution code | Đạt | Không có `OrderSend`/`CTrade` trong EA hoặc repo |
 
@@ -108,7 +108,7 @@ Tạo mới:
 - `python/tests/fixtures/onnx_feature_fixture.csv`
 - `mt5/Experts/LabOnnxInference.mq5`
 - `mt5/Files/onnx_feature_fixture.csv`
-- `docs/onnx-inference.md`
+- `docs/reference/onnx.md`
 - `docs/phase-reports/phase-8.md`
 
 Cập nhật:
@@ -116,8 +116,8 @@ Cập nhật:
 - `python/src/mt5_ea_ai_lab/models/logistic.py` (tách `validate_model_artifact` dùng chung)
 - `python/src/mt5_ea_ai_lab/models/__init__.py`
 - `requirements.txt` (`onnx`, `onnxruntime`)
-- `README.md`, `docs/architecture.md`, `docs/environment.md`, `docs/testing-guide.md`,
-  `docs/risk-and-limitations.md`, `docs/data-dictionary.md`, `mt5/README.md`
+- `README.md`, `docs/reference/architecture.md`, `docs/guides/install-and-test.md`, `docs/reference/testing.md`,
+  `docs/reference/risk.md`, `docs/reference/data-dictionary.md`, `mt5/README.md`
 
 Không thêm execution, không thay đổi signal engine/EA Phase 1–5, không kết nối broker.
 

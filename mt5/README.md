@@ -23,6 +23,18 @@ Repo giữ mã nguồn tách khỏi data folder của terminal. Khi muốn chạ
 | `mt5/Indicators/PinePort/Wonderwhales.mq5` | `<Data Folder>/MQL5/Indicators/PinePort/Wonderwhales.mq5` |
 | `mt5/Experts/PineSignalLabEA.mq5` | `<Data Folder>/MQL5/Experts/PineSignalLabEA.mq5` |
 | `mt5/Scripts/WonderwhalesContractTests.mq5` | `<Data Folder>/MQL5/Scripts/WonderwhalesContractTests.mq5` |
+| `mt5/Include/PinePort/LongKacoVSAContract.mqh` | `<Data Folder>/MQL5/Include/PinePort/LongKacoVSAContract.mqh` |
+| `mt5/Indicators/PinePort/LongKacoVSA.mq5` | `<Data Folder>/MQL5/Indicators/PinePort/LongKacoVSA.mq5` |
+| `mt5/Scripts/LongKacoVSAContractTests.mq5` | `<Data Folder>/MQL5/Scripts/LongKacoVSAContractTests.mq5` |
+| `mt5/Include/PinePort/TMFusionZonesContract.mqh` | `<Data Folder>/MQL5/Include/PinePort/TMFusionZonesContract.mqh` |
+| `mt5/Indicators/PinePort/TMFusionZones.mq5` | `<Data Folder>/MQL5/Indicators/PinePort/TMFusionZones.mq5` |
+| `mt5/Scripts/TMFusionZonesContractTests.mq5` | `<Data Folder>/MQL5/Scripts/TMFusionZonesContractTests.mq5` |
+| `mt5/Include/PinePort/PriceActionMTFContract.mqh` | `<Data Folder>/MQL5/Include/PinePort/PriceActionMTFContract.mqh` |
+| `mt5/Indicators/PinePort/PriceActionMTF.mq5` | `<Data Folder>/MQL5/Indicators/PinePort/PriceActionMTF.mq5` |
+| `mt5/Scripts/PriceActionMTFContractTests.mq5` | `<Data Folder>/MQL5/Scripts/PriceActionMTFContractTests.mq5` |
+| `mt5/Include/PinePort/TMXAUSignals2Contract.mqh` | `<Data Folder>/MQL5/Include/PinePort/TMXAUSignals2Contract.mqh` |
+| `mt5/Indicators/PinePort/TMXAUSignals2.mq5` | `<Data Folder>/MQL5/Indicators/PinePort/TMXAUSignals2.mq5` |
+| `mt5/Scripts/TMXAUSignals2ContractTests.mq5` | `<Data Folder>/MQL5/Scripts/TMXAUSignals2ContractTests.mq5` |
 
 EA và test script include bằng đường dẫn tương đối (`../Include/...`), nên **phải giữ nguyên cấu trúc
 thư mục** `Experts/`, `Scripts/` và `Include/` khi copy.
@@ -100,7 +112,7 @@ Các event hiện có:
 
 `event=tick` (DEBUG) chỉ xuất hiện khi input `InpLogEveryTick = true`.
 
-Quy tắc tín hiệu, warm-up và reason code: [`docs/strategy-signal-spec.md`](../docs/strategy-signal-spec.md).
+Quy tắc tín hiệu, warm-up và reason code: [`docs/reference/strategy-signal-spec.md`](../docs/reference/strategy-signal-spec.md).
 
 ## 4. Input
 
@@ -163,7 +175,7 @@ Quy trình:
 3. Kéo `LabSignalExport` vào một chart bất kỳ, giữ input mặc định, chọn OK.
 4. Đọc **Experts**: kỳ vọng `event=export_done rows=12 buy=1 sell=1 hold=7 unknown=3 ...`.
 5. Copy `parity_signals_mql5.csv` về `reports\parity\` và chạy
-   `scripts\compare_signals.py` theo [`docs/parity.md`](../docs/parity.md).
+   `scripts\compare_signals.py` theo [`docs/reference/parity.md`](../docs/reference/parity.md).
 
 Script **chưa được chạy** trong terminal; chỉ mới compile. Vì vậy chưa có kết luận parity MQL5/Python.
 Script từ chối file có ít hơn `slow_period + 1` dòng. CSV parser chỉ hỗ trợ file phân tách bằng dấu phẩy,
@@ -183,7 +195,7 @@ EA **không** lấy dữ liệu thị trường, **không** tạo tín hiệu v�
 
 Quy trình:
 
-1. Export model bằng `scripts\export_onnx_model.py` (xem [`docs/onnx-inference.md`](../docs/onnx-inference.md)).
+1. Export model bằng `scripts\export_onnx_model.py` (xem [`docs/reference/onnx.md`](../docs/reference/onnx.md)).
 2. Copy `models/candidates/demo-phase7-ml/model.onnx` và `mt5/Files/onnx_feature_fixture.csv` vào
    `<Data Folder>/MQL5/Files/`.
 3. Sync `mt5/Experts/LabOnnxInference.mq5` vào `<Data Folder>/MQL5/Experts/` và compile (`F7`).
@@ -239,7 +251,7 @@ Port từ Pine `Wonderwhales` sang MQL5, giữ đúng logic tín hiệu trên n�
 | 13–15 | BB upper / mid / lower | `EMPTY_VALUE` |
 | 16 / 17 | Volume MA / ratio | `EMPTY_VALUE` / `0.0` |
 
-Chi tiết: [`docs/BUFFER_CONTRACT_Wonderwhales.md`](../docs/BUFFER_CONTRACT_Wonderwhales.md).
+Chi tiết: [`docs/indicators/wonderwhales.md`](../docs/indicators/wonderwhales.md).
 
 ### Compile
 
@@ -247,7 +259,7 @@ Chi tiết: [`docs/BUFFER_CONTRACT_Wonderwhales.md`](../docs/BUFFER_CONTRACT_Won
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build_pineport.ps1
 ```
 
-Script đọc log UTF-16 và chỉ PASS khi cả ba file `0 errors, 0 warnings`; không tin exit code MetaEditor.
+Script đọc log UTF-16 và chỉ PASS khi cả năm file `0 errors, 0 warnings`; không tin exit code MetaEditor.
 
 ### Chạy
 
@@ -257,7 +269,7 @@ Script đọc log UTF-16 và chỉ PASS khi cả ba file `0 errors, 0 warnings`;
 4. Gắn `PineSignalLabEA`; đọc `MQL5/Files/pine_signal_log.csv`.
 5. Chạy `WonderwhalesContractTests`; kỳ vọng `TEST|RESULT|ALL_PASS|pass=36 fail=0`.
 
-Hướng dẫn đầy đủ: [`docs/PINEPORT_INSTALL_AND_TEST.md`](../docs/PINEPORT_INSTALL_AND_TEST.md).
+Hướng dẫn đầy đủ: [`docs/guides/install-and-test.md`](../docs/guides/install-and-test.md).
 
 ### Giới hạn
 
@@ -265,3 +277,208 @@ Hướng dẫn đầy đủ: [`docs/PINEPORT_INSTALL_AND_TEST.md`](../docs/PINEP
 - EA chỉ đọc `shift=1`; không có alert native, không có execution.
 - 36 vector mới **compile**, chưa chạy; indicator/EA chưa chạy runtime; parity `BLOCKED`.
 - Không dùng log/CSV để tuyên bố lợi nhuận hay tương thích broker.
+
+## 10. PinePort — LongKaco VSA (signal-only, Phase 4)
+
+Port từ Pine `LongKaco VSA` sang MQL5. Chỉ tín hiệu trên nến đã đóng; **không port execution** và
+**không gửi lệnh**. EA hiện **chưa** đọc indicator này (`NOT_IMPLEMENTED`).
+
+| Thành phần | Vai trò |
+|---|---|
+| `Include/PinePort/LongKacoVSAContract.mqh` | Contract `1.0.0`: enum buffer 8–28, mode/event/result, pure helper, FNV-1a hash |
+| `Indicators/PinePort/LongKacoVSA.mq5` | 29 buffer = 8 plot marker (0–7) + 21 contract buffer (8–28) |
+| `Scripts/LongKacoVSAContractTests.mq5` | 47 vector tổng hợp A–H; không đọc thị trường, không giao dịch |
+
+Buffer contract, signal ID và test vector: [`docs/indicators/longkaco-vsa.md`](../docs/indicators/longkaco-vsa.md).
+Validator tĩnh: `scripts/validate_longkaco.py`.
+
+### Giới hạn LongKaco
+
+- 47 vector mới **compile**, chưa chạy trong terminal.
+- EA chưa đọc LongKaco; chưa có CSV, chưa có parity (`BLOCKED`).
+- Indicator chỉ vẽ marker tại nến đã đóng; `PSAR`/level không có trong contract này.
+- Không dùng buffer `RESULT`/`FILL` để vào lệnh; chúng chỉ phục vụ đối chiếu.
+
+## 11. PinePort — TM Fusion Zones (signal-only, Phase 4)
+
+Port từ Pine `TM Fusion Zones` sang MQL5. Chỉ tín hiệu trên nến đã đóng; **không port execution** và
+**không gửi lệnh**. EA hiện **chưa** đọc indicator này (`NOT_IMPLEMENTED`).
+
+| Thành phần | Vai trò |
+|---|---|
+| `Include/PinePort/TMFusionZonesContract.mqh` | Contract `1.0.0`: enum buffer 10–32, regime/setup/block, pure helper, FNV-1a hash |
+| `Indicators/PinePort/TMFusionZones.mq5` | 33 buffer = 10 plot (ribbon, signal, TP1/TP2/SL, level line) + 23 contract buffer (10–32) |
+| `Scripts/TMFusionZonesContractTests.mq5` | 82 vector tổng hợp A–O; không đọc thị trường, không giao dịch, không ghi file |
+
+Buffer contract, signal ID và test vector: [`docs/indicators/tm-fusion-zones.md`](../docs/indicators/tm-fusion-zones.md).
+Validator tĩnh: `scripts/validate_tmfz.py`.
+
+### Giới hạn TM Fusion Zones
+
+- 82 vector mới **compile**, chưa chạy trong terminal.
+- EA chưa đọc TM FZ; chưa có CSV, chưa có parity (`BLOCKED`).
+- Zone/structure dùng pivot strict nên xác nhận trễ `pivotLen` nến — cấu trúc, không phải repaint.
+- Không dùng buffer `RESULT`/`FILL` để vào lệnh; chúng chỉ phục vụ đối chiếu.
+
+## 12. PinePort — Price Action MTF (signal-only, Phase 4)
+
+Port từ Pine `Price Action MTF` sang MQL5. Chỉ tín hiệu trên nến đã đóng; **không port execution** và
+**không gửi lệnh**. EA hiện **chưa** đọc indicator này (`NOT_IMPLEMENTED`).
+
+| Thành phần | Vai trò |
+|---|---|
+| `Include/PinePort/PriceActionMTFContract.mqh` | Contract `1.0.0`: enum buffer 12–106, quality/regime/block, pure helper, FNV-1a hash |
+| `Indicators/PinePort/PriceActionMTF.mq5` | 107 buffer = 12 plot (score, entry/SL/TP, signal, event) + 95 contract buffer (12–106) |
+| `Scripts/PriceActionMTFContractTests.mq5` | 119 vector tổng hợp A–P; không đọc thị trường, không giao dịch, không ghi file |
+
+Buffer contract, signal ID và test vector: [`docs/indicators/price-action-mtf.md`](../docs/indicators/price-action-mtf.md).
+Validator tĩnh: `scripts/validate_pamtf.py`.
+
+### Giới hạn Price Action MTF
+
+- 119 vector mới **compile**, chưa chạy trong terminal.
+- EA chưa đọc PA MTF; chưa có CSV, chưa có parity (`BLOCKED`).
+- MTF dùng `request.security(expr[1], lookahead_on)` như Pine; phụ thuộc dữ liệu HTF đã đóng.
+- Không dùng buffer `SIG/EV` để vào lệnh; chúng chỉ phục vụ đối chiếu.
+
+## 13. PinePort — TM XAU Signals 2 (signal-only, Phase 4)
+
+Port từ Pine `TM XAU Signals 2` sang MQL5. Chỉ tín hiệu trên nến đã đóng; **không port execution** và
+**không gửi lệnh**. EA hiện **chưa** đọc indicator này (`NOT_IMPLEMENTED`).
+
+| Thành phần | Vai trò |
+|---|---|
+| `Include/PinePort/TMXAUSignals2Contract.mqh` | Contract `1.0.0`: enum buffer 13–152, quality/bucket/session/close/block/event, pure helper, FNV-1a hash |
+| `Indicators/PinePort/TMXAUSignals2.mq5` | 153 buffer = 13 plot (EMA, VWAP, volume, entry, TP/SL, active lines) + 140 contract buffer (13–152) |
+| `Scripts/TMXAUSignals2ContractTests.mq5` | 105 vector hợp đồng A–O (+2 kiểm tra bổ sung); không đọc thị trường, không giao dịch, không ghi file |
+
+Buffer contract, signal ID và test vector: [`docs/indicators/tm-xau-signals-2.md`](../docs/indicators/tm-xau-signals-2.md).
+Validator tĩnh: `scripts/validate_tmxau2.py`.
+
+### Giới hạn TM XAU Signals 2
+
+- 105 vector mới **compile**, chưa chạy trong terminal.
+- EA chưa đọc TM XAU2; chưa có CSV, chưa có parity (`BLOCKED`).
+- Mặc định `rr1=1.0 < rrMin=1.5` (quirk nguồn) nên indicator không phát tín hiệu nếu giữ input mặc định.
+- Không dùng buffer `SIG/ENTRY` để vào lệnh; chúng chỉ phục vụ đối chiếu.
+
+## 14. PinePort — TM Indicator 2 (signal-only, Phase 4)
+
+Port từ Pine `TM Indicator 2` v2.1.0 sang MQL5. Chỉ tín hiệu trên nến đã đóng; **không port execution** và
+**không gửi lệnh**. EA hiện **chưa** đọc indicator này (`NOT_IMPLEMENTED`).
+
+| Thành phần | Vai trò |
+|---|---|
+| `Include/PinePort/TMIndicator2Contract.mqh` | Contract `1.0.0`: enum buffer 16–241, regime/session/reason/mode/order/stage/close/event/bucket, pure helper, engine step, FNV-1a hash |
+| `Indicators/PinePort/TMIndicator2.mq5` | 242 buffer = 16 plot (EMA, VWAP, volume, entry, TP/SL, active lines) + 226 contract buffer (16–241); 118 input |
+| `Scripts/TMIndicator2ContractTests.mq5` | 155 vector hợp đồng A–P; không đọc thị trường, không giao dịch, không ghi file |
+
+Buffer contract, signal ID và test vector: [`docs/indicators/tm-indicator-2.md`](../docs/indicators/tm-indicator-2.md).
+Validator tĩnh: `scripts/validate_tmind2.py`.
+
+### Giới hạn TM Indicator 2
+
+- 155 vector mới **compile**, chưa chạy trong terminal.
+- EA chưa đọc TM Indicator 2; chưa có CSV, chưa có parity (`BLOCKED`).
+- Contract buffer 16–241 là `INDICATOR_CALCULATIONS`; chỉ 0–15 là plot.
+- Không dùng buffer `ENTRY/SIG` để vào lệnh; chúng chỉ phục vụ đối chiếu.
+
+## 15. PinePort — EA tín hiệu đa nguồn (Phase 5)
+
+`PineMultiSignalLabEA.mq5` đọc cả sáu indicator PinePort tại `shift=1` (nến đã đóng), ghi một CSV thống
+nhất và **không** có bất kỳ hàm giao dịch nào. EA cũ `PineSignalLabEA.mq5` vẫn giữ nguyên cho Wonderwhales.
+
+| Nguồn | Input bật/tắt | Buffer đọc |
+|---|---|---|
+| Wonderwhales | `InpEnableWw` | `WW_BUF_BUY_SIGNAL`, `WW_BUF_SELL_SIGNAL`, `WW_BUF_SAR_DIR` |
+| LongKacoVSA | `InpEnableLk` | `LK_BUF_FILL`, `LK_BUF_DIR`, `ENTRY/SL/TP` |
+| TMFusionZones | `InpEnableFz` | `FZ_BUF_SIGNAL_LONG/SHORT`, `SCORE_*`, `ENTRY/SL/TP1..3` |
+| PriceActionMTF | `InpEnablePa` | `PA_BUF_SIG_LONG/SHORT`, `SCORE100`, plan, `BLOCK` |
+| TMXAUSignals2 | `InpEnableX2` | `X2_BUF_SIG`, `X2_BUF_DIR`, `SCORE100`, plan, `BLOCK` |
+| TMIndicator2 | `InpEnableTm2` | `TM2_BUF_SIGNAL`, `TM2_BUF_DIR`, `SCORE100`, plan, `NO_TRADE_REASON` |
+
+- CSV: `MQL5/Files/pine_multi_signal_log.csv` (đổi bằng `InpOutputFile`).
+- Schema 18 cột: `detected_at,bar_open_time,confirmed_at,symbol,timeframe,source,contract_version,signal_id,side,dir,score,entry,sl,tp1,tp2,tp3,reason,input_hash`.
+- Audit: `python scripts/audit_multi_signal_csv.py --csv <csv>`.
+- Parity: `python scripts/compare_multi_signal_exports.py --reference <pine.csv> --mql5 <csv> --mql5-offset-minutes 180`
+  (exit 3 = `BLOCKED` khi thiếu CSV reference; xem `docs/indicators/parity.md`).
+
+### Giới hạn
+
+- EA mới **compile**, chưa chạy trong terminal (`NOT_RUN`); chưa có CSV thật.
+- `iCustom` giới hạn 63 tham số, nên EA gọi indicator **không truyền input** (dùng default). Muốn đổi
+  cấu hình phải sửa default của indicator hoặc tạo EA riêng.
+- `input_hash` là FNV-1a của `source|contract_version|indicator-defaults`, không phải hash cấu hình thật.
+- Không dùng tín hiệu để vào lệnh; EA chỉ ghi log phục vụ đối chiếu.
+
+## 16. Simulation core + Runner/Grid/DCA EAs (Track C, W1–W5)
+
+Thư viện dùng chung cho ba EA mô phỏng (`RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`):
+
+| File | Vai trò |
+|---|---|
+| `Include/Sim/SimTypes.mqh` | Side ảo, FNV-1a 32-bit, helper fingerprint config |
+| `Include/Sim/SimValidate.mqh` | Validate price/volume/commission/levels/percent/spread/warmup/slippage |
+| `Include/Sim/SimPortfolio.mqh` | Vị thế ảo trong bộ nhớ, average entry, equity, drawdown, partial close |
+| `Include/Sim/SimCostModel.mqh` | Spread/commission/slippage/swap khai báo, `FillPrice` bất lợi |
+| `Include/Sim/SimRiskGuard.mqh` | Hard cap, cooldown, kill switch, `ACTIVE/BLOCKED/HALTED` |
+| `Include/Sim/SimTrailing.mqh` | Breakeven + trailing thuần, stop-hit/gap helper |
+| `Include/Sim/SimGrid.mqh` | Cap tầng/volume/exposure, giá tầng, trigger, target/stop basket |
+| `Include/Sim/SimDca.mqh` | Cap số lần add/volume/exposure, volume từng lần add, trigger giá/bar |
+| `Include/Sim/SimLogger.mqh` | CSV 18 cột trong `MQL5/Files` |
+| `Scripts/SimCoreTests.mq5` | 123 test vector tự sinh, chạy một lần trên chart bất kỳ |
+| `Experts/RunnerTrailingLabEA.mq5` | Một vị thế ảo, EMA cross, ATR SL, breakeven/trailing, max holding |
+| `Experts/GridLabEA.mq5` | Grid một chiều, volume multiplier có clamp, exit LEVEL/BASKET, basket stop bắt buộc |
+| `Experts/DCALabEA.mq5` | DCA một chiều, trigger giá/bar, tối đa một fill mỗi bar, basket target/stop bắt buộc |
+
+- Compile hiện tại (2026-10-28, `scripts/build-mql5.ps1`): 0 errors, 0 warnings
+  (`SimCoreTests.ex5` 73,646 bytes; `RunnerTrailingLabEA.ex5` 52,622 bytes;
+  `GridLabEA.ex5` 51,590 bytes; `DCALabEA.ex5` 47,606 bytes). Byte size phụ thuộc
+  bản MetaEditor/đường dẫn biên dịch; dòng `Result:` trong log là bằng chứng chính.
+- Toolchain dùng chung: `scripts/check-environment.ps1`, `scripts/build-mql5.ps1`,
+  `scripts/run-python-tests.ps1`, `scripts/validate-project.py`, `scripts/package-source.ps1`
+  (chi tiết `docs/guides/toolchain.md`).
+- Test vector runtime `NOT_RUN`: cần mở MT5 và chạy script; kết quả đúng phải có
+  `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core`.
+- EA runtime `NOT_RUN`; preset mẫu `configs/sim/runner_trailing.json`, `configs/sim/grid_lab.json`,
+  `configs/sim/dca_lab.json`; scenario baseline/stress/edge: `configs/project.example.json`.
+- Kiểm tra fail-closed trước khi nạp preset: `python scripts/validate_sim_configs.py` (chi tiết
+  `docs/reference/simulation.md`).
+- Không có API giao dịch; `python/tests/test_sim_core_source.py` chặn hồi quy bằng cách quét token cấm
+  trên toàn bộ `Include/Sim`, `Scripts/SimCoreTests.mq5` và `Experts/*.mq5`.
+- P&L basket DCA có cross-check độc lập bằng Python: `python/tests/test_dca_vectors.py`.
+- Chi tiết công thức, token lỗi và ví dụ tay: `docs/reference/simulation.md`; ba EA có mục riêng trong
+  cùng tài liệu.
+- Bàn giao Track C: cài đặt/kiểm thử `docs/guides/install-and-test.md`; Strategy Tester thủ công
+  `docs/guides/strategy-tester.md`; toolchain `docs/guides/toolchain.md`. Cả 3 EA đều simulation-only:
+  Strategy Tester hiển thị 0 deal là đúng.
+
+## 17. PinePlanSimEA — vị thế ảo theo trade plan (Track C, W10)
+
+`PinePlanSimEA.mq5` đọc plan của một trong ba indicator (`PriceActionMTF`, `TMXAUSignals2`,
+`TMIndicator2`) qua `iCustom` và mở **một vị thế ảo** cho mỗi tín hiệu biên trên nến đã đóng.
+
+| File | Vai trò |
+|---|---|
+| `Include/Sim/SimPlan.mqh` | Resolve side, validate plan (token ổn định), chọn/hit/fill target |
+| `Experts/PinePlanSimEA.mq5` | Đọc buffer, `CSimRiskGuard`, breakeven/trailing tùy chọn, CSV |
+| `Scripts/SimPlanTests.mq5` | 39 vector thuần: 7 resolve, 19 validate, 13 target |
+| `../configs/sim/pine_plan_lab.json` | Preset baseline, `SIMULATION_ONLY` |
+
+| Nguồn | `DIR` | `PLAN_VALID` | `ENTRY` | `SL` | `TP1..3` | Tín hiệu |
+|---|---:|---:|---:|---:|---|---|
+| Price Action MTF | 13 | 17 | 18 | 19 | 20–22 | `SIG_LONG` 24, `SIG_SHORT` 25 |
+| TM XAU Signals 2 | 14 | 28 | 29 | 30 | 31–33 | `SIG` 35 + `DIR` |
+| TM Indicator 2 | 20 | 42 | 45 | 47 | 48–50 | `SIGNAL` 59 + `DIR` |
+
+- Compile: 0 errors, 0 warnings (`PinePlanSimEA.ex5` 59,326 bytes; `SimPlanTests.ex5` 15,892 bytes lần build
+  gần nhất 2026-10-28). Byte size phụ thuộc MetaEditor/đường dẫn; dòng `Result:` là bằng chứng chính.
+- Entry khớp tại `ask`/`bid` + slippage; `plan.entry` chỉ là `ref_entry` trong log. SL/target giữ nguyên
+  theo plan; target fill đúng target, không credit gap có lợi; SL được kiểm trước target.
+- Runtime: `SimPlanTests` PASS trong MT5 ngày 2026-10-28 (`TEST|RESULT|ALL_PASS|pass=39 fail=0|suite=sim_plan`).
+  Lần chạy đầu phát hiện hằng số `point` sai trong test và lỗi biên số thực ở ngưỡng target; đã sửa
+  `SimPlanTests.mq5` + `SimPlan.mqh` rồi chạy lại. EA trong Strategy Tester vẫn `NOT_RUN`.
+- Không đưa LongKaco VSA và TM Fusion Zones vào EA này: hai nguồn đó dùng máy trạng thái `FILL/RESULT`
+  và `POS_SIDE`, không phải plan tĩnh.
+- Chi tiết luật, token lỗi và giới hạn: `docs/reference/simulation.md` mục **PinePlanSimEA**; preset:
+  `configs/sim/pine_plan_lab.json`.

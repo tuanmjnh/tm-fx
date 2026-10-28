@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "ea": "DCALabEA",
+  "version": "1.00",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "Bounded virtual DCA basket: price-distance or bar-interval additions, hard add/volume/exposure caps, mandatory basket stop.",
+  "strategy": "dca_lab",
+  "symbol": "EURUSD",
+  "timeframe": "H1",
+  "inputs": {
+    "InpInitialBalance": 10000.0,
+    "InpEnableLog": true,
+    "InpLogFile": "sim_dca_log.csv",
+    "InpDebug": false,
+    "InpDcaSide": 1,
+    "InpBaseVirtualVolume": 0.1,
+    "InpTriggerMode": 0,
+    "InpDcaDistancePoints": 300.0,
+    "InpBarsBetweenAdds": 5,
+    "InpMaxDcaAdds": 3,
+    "InpAddVolumeMultiplier": 1.5,
+    "InpMaxAddVolume": 1.0,
+    "InpBasketTargetPoints": 600.0,
+    "InpBasketStopPoints": 900.0,
+    "InpMaxSpreadPoints": 50.0,
+    "InpMaxVirtualExposure": 2.0,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpHaltOnBreach": false,
+    "InpCommissionPerVolume": 0.0,
+    "InpSlippagePoints": 0.0
+  },
+  "enum_map": {
+    "InpDcaSide": {
+      "1": "DCA_LONG",
+      "-1": "DCA_SHORT"
+    },
+    "InpTriggerMode": {
+      "0": "SIM_DCA_PRICE_DISTANCE",
+      "1": "SIM_DCA_BAR_INTERVAL"
+    }
+  },
+  "assumptions": {
+    "contract_size": 1,
+    "commission": "total cash per fill, charged on open and close",
+    "slippage": "points, adverse on every fill including basket stop",
+    "swap": "not modelled in this preset",
+    "add_volume": "base * multiplier^add_index, clamped by max add volume",
+    "adds_per_bar": "at most one fill per bar; count cap is independent of exposure cap",
+    "exposure_cap": "an add is blocked, never partially filled, when exposure + volume exceeds the cap",
+    "max_dca_adds_zero": "0 means no additions at all, never unlimited"
+  }
+}

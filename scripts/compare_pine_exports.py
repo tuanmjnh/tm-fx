@@ -6,7 +6,7 @@ Exit codes:
     2  an input file or argument was invalid
 
 The Pine CSV must use the schema documented in
-``docs/BUFFER_CONTRACT_Wonderwhales.md``. This script does not create or alter
+``docs/indicators/wonderwhales.md``. This script does not create or alter
 reference data; it only compares two existing exports.
 """
 

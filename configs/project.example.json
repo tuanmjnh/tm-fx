@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "project": "track-c-simulation-presets",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "Baseline, conservative-stress and edge-case test presets for the three Track C simulation EAs. Simulation only: no account, broker, credential or order API is referenced.",
+  "presets": {
+    "RunnerTrailingLabEA": "configs/sim/runner_trailing.json",
+    "GridLabEA": "configs/sim/grid_lab.json",
+    "DCALabEA": "configs/sim/dca_lab.json",
+    "PinePlanSimEA": "configs/sim/pine_plan_lab.json"
+  },
+  "scenarios": [
+    {
+      "name": "runner_baseline",
+      "ea": "RunnerTrailingLabEA",
+      "preset": "configs/sim/runner_trailing.json",
+      "overrides": {}
+    },
+    {
+      "name": "runner_conservative_stress",
+      "ea": "RunnerTrailingLabEA",
+      "preset": "configs/sim/runner_trailing.json",
+      "overrides": {
+        "InpVolume": 0.5,
+        "InpMaxVirtualExposure": 0.5,
+        "InpMaxDailyLossPct": 1.0,
+        "InpMaxDrawdownPct": 2.0,
+        "InpMaxSpreadPoints": 20.0,
+        "InpCooldownBars": 5
+      }
+    },
+    {
+      "name": "runner_edge_no_breakeven",
+      "ea": "RunnerTrailingLabEA",
+      "preset": "configs/sim/runner_trailing.json",
+      "overrides": {
+        "InpBreakEvenEnabled": false,
+        "InpMaxHoldingBars": 10
+      }
+    },
+    {
+      "name": "grid_baseline",
+      "ea": "GridLabEA",
+      "preset": "configs/sim/grid_lab.json",
+      "overrides": {}
+    },
+    {
+      "name": "grid_conservative_stress",
+      "ea": "GridLabEA",
+      "preset": "configs/sim/grid_lab.json",
+      "overrides": {
+        "InpMaxGridLevels": 3,
+        "InpBaseVirtualVolume": 0.05,
+        "InpMaxLevelVolume": 0.2,
+        "InpMaxVirtualExposure": 0.4,
+        "InpMaxSpreadPoints": 20.0,
+        "InpMaxDailyLossPct": 1.0,
+        "InpMaxDrawdownPct": 2.0
+      }
+    },
+    {
+      "name": "grid_edge_single_level",
+      "ea": "GridLabEA",
+      "preset": "configs/sim/grid_lab.json",
+      "overrides": {
+        "InpMaxGridLevels": 1
+      }
+    },
+    {
+      "name": "dca_baseline",
+      "ea": "DCALabEA",
+      "preset": "configs/sim/dca_lab.json",
+      "overrides": {}
+    },
+    {
+      "name": "dca_conservative_stress",
+      "ea": "DCALabEA",
+      "preset": "configs/sim/dca_lab.json",
+      "overrides": {
+        "InpMaxDcaAdds": 2,
+        "InpBaseVirtualVolume": 0.05,
+        "InpAddVolumeMultiplier": 1.2,
+        "InpMaxAddVolume": 0.1,
+        "InpMaxVirtualExposure": 0.3,
+        "InpBasketTargetPoints": 300.0,
+        "InpBasketStopPoints": 400.0,
+        "InpMaxSpreadPoints": 20.0,
+        "InpMaxDailyLossPct": 1.0,
+        "InpMaxDrawdownPct": 2.0
+      }
+    },
+    {
+      "name": "dca_edge_no_adds",
+      "ea": "DCALabEA",
+      "preset": "configs/sim/dca_lab.json",
+      "overrides": {
+        "InpMaxDcaAdds": 0
+      }
+    },
+    {
+      "name": "dca_edge_bar_trigger",
+      "ea": "DCALabEA",
+      "preset": "configs/sim/dca_lab.json",
+      "overrides": {
+        "InpTriggerMode": 1,
+        "InpBarsBetweenAdds": 10
+      }
+    },
+    {
+      "name": "plan_baseline",
+      "ea": "PinePlanSimEA",
+      "preset": "configs/sim/pine_plan_lab.json",
+      "overrides": {}
+    },
+    {
+      "name": "plan_edge_tp3_stop_only",
+      "ea": "PinePlanSimEA",
+      "preset": "configs/sim/pine_plan_lab.json",
+      "overrides": {
+        "InpTargetMode": 1,
+        "InpMinStopPoints": 20.0,
+        "InpMinTargetPoints": 20.0,
+        "InpMaxSpreadPoints": 20.0
+      }
+    }
+  ]
+}
