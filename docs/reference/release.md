@@ -6,6 +6,10 @@
 - **Quy tắc:** không release nếu bất kỳ mục “Bắt buộc” nào chưa đạt. Mục “Thủ công” có thể để mở nhưng
   phải ghi rõ trạng thái trong báo cáo.
 
+> **Lưu ý (2026-10-28):** checklist này ghi lại lần đóng gói 0.8.1, **trước** khi thêm `WonderwhalesSimEA`
+> (bản hiện tại là 0.8.2). Gate hiện tại — 328 test, 25 source compile 0/0, `checked=6`, 5 preset,
+> 15 scenario — nằm ở [`../PROGRESS.md`](../PROGRESS.md) §39. Strategy Tester cho 5 EA vẫn `NOT_RUN`.
+
 ## 1. Bắt buộc
 
 | # | Kiểm tra | Cách xác minh | Trạng thái |

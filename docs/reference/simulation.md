@@ -1,6 +1,6 @@
-# Simulation MQL5 — core, runner, grid, DCA, plan, preset
+# Simulation MQL5 — core, runner, grid, DCA, plan, wonderwhales, preset
 
-> Tài liệu tổng hợp, giữ nguyên nội dung gốc; tiêu đề đã hạ một cấp để thống nhất một cây tài liệu. Nguồn: `sim-core.md`, `sim-runner.md`, `sim-grid.md`, `sim-dca.md`, `sim-presets.md` + mục PinePlanSimEA (W10).
+> Tài liệu tổng hợp, giữ nguyên nội dung gốc; tiêu đề đã hạ một cấp để thống nhất một cây tài liệu. Nguồn: `sim-core.md`, `sim-runner.md`, `sim-grid.md`, `sim-dca.md`, `sim-presets.md` + mục PinePlanSimEA (W10) + mục WonderwhalesSimEA (2026-10-28).
 
 Nội dung:
 1. Simulation core (MQL5) — W1–W5
@@ -9,12 +9,14 @@ Nội dung:
 4. DCALabEA (simulation-only, W5)
 5. Preset và validator fail-closed (W6)
 6. PinePlanSimEA — EA mô phỏng theo trade plan (W10)
+7. WonderwhalesSimEA — tín hiệu Wonderwhales trên XAUUSDm
 
 ---
 ## Simulation core (MQL5) — W1–W5
 
-- **Phạm vi:** thư viện dùng chung cho bốn EA mô phỏng Track C (`RunnerTrailingLabEA`, `GridLabEA`,
-  `DCALabEA`, `PinePlanSimEA`). Chỉ tạo vị thế ảo trong bộ nhớ; không có API gửi lệnh, không đọc tài khoản.
+- **Phạm vi:** thư viện dùng chung cho năm EA mô phỏng Track C (`RunnerTrailingLabEA`, `GridLabEA`,
+  `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA`). Chỉ tạo vị thế ảo trong bộ nhớ; không có API gửi
+  lệnh, không đọc tài khoản.
 - **Trạng thái:** compile `0 errors, 0 warnings`; `SimCoreTests` **PASS runtime 123/0** trong MT5 ngày
   2026-10-28; `SimPlanTests` **PASS runtime 39/0** cùng ngày.
 - **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W1–W5.
@@ -314,7 +316,7 @@ Nếu thiếu dòng `TEST|RESULT|ALL_PASS` → coi như `NOT_RUN`, không suy lu
 | Compile `SimCoreTests.mq5` | PASS — 0 errors, 0 warnings; `SimCoreTests.ex5` 73,646 bytes (byte size depends on the MetaEditor build; the log is authoritative) |
 | Chạy test vector trong MT5 | **PASS** — `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core` ngày 2026-10-28 18:36 |
 | Kiểm tra CSV logger trên file thật | `NOT_RUN` — cần môi trường MT5 sandbox |
-| EA sử dụng core | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA` compile PASS — chạy thật `NOT_RUN` |
+| EA sử dụng core | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA` compile PASS — chạy thật `NOT_RUN` |
 
 ## RunnerTrailingLabEA (simulation-only, W3)
 
@@ -647,9 +649,9 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 
 ## Preset và validator fail-closed (W6)
 
-- **Mục tiêu:** preset kiểm thử cho bốn EA Track C và một cổng kiểm tra tĩnh từ chối cấu hình không phải
+- **Mục tiêu:** preset kiểm thử cho năm EA Track C và một cổng kiểm tra tĩnh từ chối cấu hình không phải
   mô phỏng hoặc có dấu hiệu tài khoản/broker trước khi nạp vào MT5.
-- **Trạng thái:** validator exit 0 trên 5 file cấu hình (4 preset + project); pytest PASS; chưa chạy EA
+- **Trạng thái:** validator exit 0 trên 6 file cấu hình (5 preset + project); pytest PASS; chưa chạy EA
   trong MT5 (`NOT_RUN`).
 - **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W6.
 
@@ -661,7 +663,8 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 | `configs/sim/grid_lab.json` | Baseline `GridLabEA` |
 | `configs/sim/dca_lab.json` | Baseline `DCALabEA` |
 | `configs/sim/pine_plan_lab.json` | Baseline `PinePlanSimEA` (nguồn Price Action MTF) |
-| `configs/project.example.json` | Baseline + conservative stress + edge-case cho cả bốn EA |
+| `configs/sim/wonderwhales_xauusdm.json` | Baseline `WonderwhalesSimEA` cho `XAUUSDm` |
+| `configs/project.example.json` | Baseline + conservative stress + edge-case cho cả năm EA |
 | `python/src/mt5_ea_ai_lab/sim_configs.py` | Contract input từng EA, validate preset/project, snapshot |
 | `scripts/validate_sim_configs.py` | CLI kiểm tra toàn bộ preset và scenario |
 | `python/tests/test_sim_configs.py` | Test preset hợp lệ, fail-closed, cross-field, snapshot |
@@ -673,7 +676,7 @@ Mỗi preset là một JSON object với các trường bắt buộc:
 | Trường | Ràng buộc |
 |---|---|
 | `schema_version` | `1` |
-| `ea` | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA` hoặc `PinePlanSimEA` |
+| `ea` | `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA` hoặc `WonderwhalesSimEA` |
 | `version` | chuỗi khác rỗng |
 | `execution_mode` | đúng `SIMULATION_ONLY` (phân biệt hoa thường) |
 | `allow_live_trading` | `false` (boolean, không nhận `0`) |
@@ -696,6 +699,7 @@ Validator phản chiếu `OnInit` của từng EA; EA vẫn là nguồn chân l�
 | Grid | `InpMaxLevelVolume ≥ InpBaseVirtualVolume`; exposure ≥ base; fixed spacing > 0; ATR mode → period ≥ 2 và multiplier > 0; LEVEL mode → level target > 0; BASKET mode → basket target > 0; basket stop > 0 |
 | DCA | `InpMaxAddVolume ≥ InpBaseVirtualVolume`; exposure ≥ base; price mode → distance > 0; bar mode → `InpBarsBetweenAdds ≥ 1`; `InpMaxDcaAdds` trong `[0, 1000]`; basket target/stop > 0 |
 | PinePlan | exposure ≥ volume; breakeven bật → trigger > 0; trail bật → `InpTrailFixedPoints > 0` |
+| Wonderwhales | `InpSlowEma > InpFastEma`; `InpEma200 > InpSlowEma`; `InpWarmupBars ≥ InpEma200`; `psar_start`/`psar_inc` ≤ `psar_max`; exposure ≥ volume |
 
 Kiểm tra kiểu: boolean phải là boolean thật; enum phải là số nguyên trong tập cho phép; input số nguyên
 không nhận `1.5`; volume/balance phải hữu hạn và dương; percent trong `[0, 100]`; commission/slippage ≥ 0.
@@ -703,7 +707,7 @@ không nhận `1.5`; volume/balance phải hữu hạn và dương; percent tron
 
 ### 4. Scenario
 
-`configs/project.example.json` trỏ tới bốn preset và định nghĩa 12 scenario. Override được merge lên
+`configs/project.example.json` trỏ tới năm preset và định nghĩa 15 scenario. Override được merge lên
 `inputs` của preset rồi validate lại toàn bộ, nên một override phá cap sẽ bị chặn.
 
 | Scenario | EA | Mục đích |
@@ -720,6 +724,9 @@ không nhận `1.5`; volume/balance phải hữu hạn và dương; percent tron
 | `dca_edge_bar_trigger` | DCA | trigger theo bar, 10 bar giữa hai lần add |
 | `plan_baseline` | PinePlan | nguồn Price Action MTF, TP1, filter hai chiều |
 | `plan_edge_tp3_stop_only` | PinePlan | TP3, min stop/target 20 point, spread cap 20 |
+| `ww_baseline` | Wonderwhales | cấu hình mặc định trên `XAUUSDm`, PSAR stop, exit on flip |
+| `ww_conservative_stress` | Wonderwhales | volume/exposure 0.05, spread 100, daily 1%, DD 2%, cooldown 5, min stop 200 |
+| `ww_edge_atr_stop` | Wonderwhales | ATR% stop ×3, tắt exit-on-flip, max holding 16 bar |
 
 Đây là cấu hình kiểm thử, không phải khuyến nghị giao dịch.
 
@@ -740,7 +747,7 @@ D:\Applications\tm-fx\.venv\Scripts\python.exe scripts\validate_sim_configs.py
 PASS: dca_lab.json (ea=DCALabEA)
   snapshot: reports\config-snapshots\DCALabEA-2CF1CD9A.json (unchanged)
 ...
-SUMMARY: checked=5 fail=0
+SUMMARY: checked=6 fail=0
 ```
 
 Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root hoặc `configs/sim`.
@@ -750,8 +757,8 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Validator trên 4 preset + project | PASS — `checked=5 fail=0` |
-| Snapshot | PASS — 5 file, chạy lại `unchanged` |
+| Validator trên 5 preset + project | PASS — `checked=6 fail=0` (presets=5, scenarios=15) |
+| Snapshot | PASS — 6 file, chạy lại `unchanged` |
 | pytest toàn bộ | PASS — xem số test trong [`PROGRESS.md`](../PROGRESS.md) |
 | Nạp preset vào EA trong MT5 | `NOT_RUN` — cần terminal |
 | Strategy Tester | `NOT_RUN` — cần terminal + dữ liệu |
@@ -883,4 +890,129 @@ compile không bắt được:
 - Plan là ảnh chụp trên nến tín hiệu; EA không dựng lại logic indicator và không kiểm tra repaint.
 - Không mô phỏng partial fill, slippage theo volume, swap, margin hay stop-out.
 - Không chứng minh indicator và EA khớp Pine; parity vẫn `BLOCKED` cho tới khi có CSV reference.
+- Chưa có kết quả runtime hay hiệu năng; không suy diễn từ compile/static test.
+
+## WonderwhalesSimEA — tín hiệu Wonderwhales trên XAUUSDm (2026-10-28)
+
+- **Mục tiêu:** dùng tín hiệu buy/sell của indicator `PinePort\Wonderwhales` để mở **một vị thế ảo** trên
+  `XAUUSDm`, thoát theo SL / đảo tín hiệu / max holding. Chạy được trong Strategy Tester M15 hoặc M5,
+  xuất CSV 18 cột. Không có API gửi lệnh.
+- **Trạng thái:** compile `0 errors, 0 warnings` (cả trong repo và trong Data Folder MT5); runtime EA và
+  Strategy Tester `NOT_RUN`; preset + 3 scenario kiểm tra fail-closed PASS.
+- **Nguồn:** yêu cầu người dùng 2026-10-28 (chỉ `XAUUSDm`), hợp đồng buffer ở
+  [`docs/indicators/wonderwhales.md`](../indicators/wonderwhales.md) và
+  `mt5/Include/PinePort/WonderwhalesContract.mqh`.
+
+### 1. An toàn
+
+- Không có `OrderSend`, `OrderSendAsync`, `CTrade`, `MqlTradeRequest` hay hàm position/order nào. Mọi vị
+  thế là bản ghi trong `CSimPortfolio`.
+- Không đọc account, không kết nối broker, không lưu credential.
+- `OnInit` fail-closed: input sai → log token + `INIT_PARAMETERS_INCORRECT`.
+- `InpRequireSymbol` mặc định `XAUUSDm`: chạy trên symbol khác bị từ chối tại `OnInit`. Đặt chuỗi rỗng
+  để tắt guard khi cần thử symbol khác.
+
+### 2. Input chính
+
+| Nhóm | Input | Ý nghĩa |
+|---|---|---|
+| Simulation | `InpInitialBalance`, `InpVolume` | balance ảo, volume mỗi entry |
+| Simulation | `InpEnableLog`, `InpLogFile`, `InpDebug` | logger CSV và debug print |
+| Simulation | `InpRequireSymbol` | guard symbol, rỗng = chấp nhận mọi symbol |
+| Signal | `InpMode` | `SAR`, `EMA`, `SAR_EMA`, `SAR_EMA_ATR` (truyền vào indicator) |
+| Signal | `InpPsarStart/Inc/Max`, `InpFastEma`, `InpSlowEma`, `InpEma200` | tham số indicator |
+| Signal | `InpAtrLen`, `InpMinAtrPct`, `InpVolMaLen`, `InpRsiLen`, `InpBbLen`, `InpBbMult` | tham số indicator |
+| Signal | `InpWarmupBars` | số bar tối thiểu trước khi cho entry; phải ≥ `InpEma200` |
+| Signal | `InpSideFilter` | `BOTH` / `LONG_ONLY` / `SHORT_ONLY` |
+| Stops | `InpStopMode` | `PSAR` / `ATR_PCT` / `FIXED` |
+| Stops | `InpAtrPctMultiplier` | dùng cho `ATR_PCT` |
+| Stops | `InpFixedStopPoints` | dùng cho `FIXED` |
+| Stops | `InpMinStopPoints` | SL phải cách fill ít nhất bao nhiêu point, nếu không thì không vào lệnh |
+| Stops | `InpMaxHoldingBars`, `InpExitOnFlip` | 0 = tắt max holding; đóng khi tín hiệu đảo |
+| RiskGuard | `InpCooldownBars`, `InpMaxSpreadPoints`, `InpMaxVirtualExposure` | cooldown, spread, exposure |
+| RiskGuard | `InpMaxDailyLossPct`, `InpMaxDrawdownPct`, `InpHaltOnBreach` | hard cap theo equity ảo |
+| Costs | `InpCommissionPerVolume`, `InpSlippagePoints` | giả định chi phí, áp dụng mọi fill |
+
+Preset mẫu: [`configs/sim/wonderwhales_xauusdm.json`](../../configs/sim/wonderwhales_xauusdm.json).
+
+### 3. Tín hiệu
+
+EA gọi `iCustom(_Symbol,_Period,"PinePort\\Wonderwhales", ...)` với đúng 12 input của indicator và đọc
+nến `shift=1` (nến đã đóng):
+
+| Buffer | Hằng số | Dùng cho |
+|---:|---|---|
+| 0 | `WW_BUF_PSAR` | khoảng cách SL ở chế độ `PSAR` |
+| 3 | `WW_BUF_BUY_SIGNAL` | tín hiệu mua (`> 0.5`) |
+| 4 | `WW_BUF_SELL_SIGNAL` | tín hiệu bán (`> 0.5`) |
+| 8 | `WW_BUF_ATR_PCT` | khoảng cách SL ở chế độ `ATR_PCT` |
+
+Cả hai tín hiệu cùng bật → EA ưu tiên BUY và không kiểm tra xung đột; đây là hành vi đã biết, indicator
+được kỳ vọng không phát cả hai trên cùng nến.
+
+### 4. Luật chạy
+
+1. Mỗi tick: cập nhật mid, equity đầu ngày, phát hiện bar mới. Bỏ qua khi
+   `Bars < InpWarmupBars + 5`.
+2. Đang có vị thế: kiểm tra **SL trước** (long theo bid, short theo ask); gap qua SL → fill giá thị
+   trường tệ hơn + slippage, reason `SL_GAP|gap_points=...`.
+3. Sau SL, trên bar mới: `InpMaxHoldingBars > 0` và đủ số bar → đóng tại `bid`/`ask`, reason
+   `MAX_HOLDING_BARS`.
+4. Sau đó, trên bar mới và `InpExitOnFlip=true`: tín hiệu ngược chiều trên nến đã đóng → đóng tại
+   `bid`/`ask`, reason `SIGNAL_FLIP`.
+5. Không có vị thế và có bar mới: đọc tín hiệu nến 1; áp `InpSideFilter`; hỏi `CSimRiskGuard`; fill bất
+   lợi qua `CSimCostModel`; tính khoảng SL; nếu khoảng SL < `InpMinStopPoints` → log `STOP_REJECTED` và
+   **không vào lệnh**; ngược lại mở vị thế ảo.
+6. Không mở vị thế mới ngay trên bar vừa đóng lệnh (`g_last_exit_bar`).
+
+### 5. Khoảng SL
+
+| `InpStopMode` | Công thức | Ghi chú |
+|---|---|---|
+| `PSAR` (0) | `abs(fill - psar_bar1)` | PSAR nằm sai phía hoặc quá gần → bị `InpMinStopPoints` chặn |
+| `ATR_PCT` (1) | `fill * (atr_pct / 100) * InpAtrPctMultiplier` | `atr_pct` là buffer 8 của indicator |
+| `FIXED` (2) | `InpFixedStopPoints * point` | không phụ thuộc indicator |
+
+SL long = `fill - distance`, short = `fill + distance`. Không đặt TP; EA không dùng trailing.
+
+### 6. Log event
+
+Schema 18 cột dùng chung mục **Simulation core**. Event của EA:
+
+| Event | Khi nào | Reason |
+|---|---|---|
+| `INIT` | `OnInit` thành công | `SIMULATION_ONLY\|config_hash=...\|indicator=...\|contract=...` |
+| `ENTRY` | mở vị thế ảo | `SIGNAL_WW_BUY`/`SIGNAL_WW_SELL` + `stop_mode=`, `distance_points=`, `risk=`, `spread_points=` |
+| `RISK` | tín hiệu/stop bị chặn | `ENTRY_BLOCKED\|reason=...`, `STOP_REJECTED\|distance_points=...\|min_points=...`, `sl_invalid` |
+| `EXIT` | SL, max holding, đảo tín hiệu | `SL_HIT`, `SL_GAP\|gap_points=...`, `MAX_HOLDING_BARS`, `SIGNAL_FLIP` + `bars=`, `pnl=`, `commission=` |
+| `SUMMARY` | `OnDeinit` | `trades=`, `wins=`, `losses=`, `flats=`, `net=`, `realized=`, `max_dd=`, `blocks=`, `halted=` |
+
+### 7. Build và chạy tay
+
+```powershell
+& "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe" `
+  /compile:"D:\Applications\tm-fx\mt5\Experts\WonderwhalesSimEA.mq5" `
+  /log:"D:\Applications\tm-fx\reports\build\WonderwhalesSimEA.log"
+```
+
+Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Tester trên `XAUUSDm` M15 (hoặc M5)
+với preset `configs/sim/wonderwhales_xauusdm.json`, kiểm tra tab Experts và CSV được khai báo trong
+`InpLogFile`.
+
+### 8. Trạng thái thật
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Compile trong repo | PASS — 0 errors, 0 warnings |
+| Compile trong Data Folder MT5 | PASS — 0 errors, 0 warnings; `WonderwhalesSimEA.ex5` 57,968 bytes (2026-10-28) |
+| Indicator `PinePort\Wonderwhales` đã cài | PASS — có `.ex5` trong `MQL5\Indicators\PinePort\` |
+| Chạy trong MT5 / Strategy Tester | `NOT_RUN` — agent không mở terminal hay điều khiển tester |
+| CSV thực tế | `NOT_RUN` |
+| So khớp Pine | `BLOCKED` — chưa có CSV reference |
+
+### 9. Giới hạn đã biết
+
+- Tín hiệu là ảnh chụp trên nến đã đóng; EA không kiểm tra repaint của indicator.
+- Không mô phỏng partial fill, requote, spread biến thiên, swap hay margin.
+- Contract size = 1 là giả định mô phỏng; P&L trong CSV không phải tiền broker.
 - Chưa có kết quả runtime hay hiệu năng; không suy diễn từ compile/static test.

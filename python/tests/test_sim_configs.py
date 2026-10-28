@@ -24,6 +24,7 @@ PRESETS = (
     ("grid_lab.json", "GridLabEA"),
     ("dca_lab.json", "DCALabEA"),
     ("pine_plan_lab.json", "PinePlanSimEA"),
+    ("wonderwhales_xauusdm.json", "WonderwhalesSimEA"),
 )
 
 
@@ -226,3 +227,32 @@ def test_snapshot_never_overwrites(tmp_path: Path) -> None:
     assert same_path == path
     assert created_again is False
     assert path.read_text(encoding="utf-8") == "sentinel\n"
+
+
+def test_wonderwhales_symbol_guard_can_be_disabled() -> None:
+    config = _preset("wonderwhales_xauusdm.json")
+    config["inputs"]["InpRequireSymbol"] = ""
+    assert validate_preset(config) == []
+
+
+def test_wonderwhales_cross_checks() -> None:
+    config = _preset("wonderwhales_xauusdm.json")
+    config["inputs"]["InpSlowEma"] = config["inputs"]["InpFastEma"]
+    assert any("InpSlowEma" in issue for issue in validate_preset(config))
+
+    config = _preset("wonderwhales_xauusdm.json")
+    config["inputs"]["InpWarmupBars"] = 100
+    assert any("InpWarmupBars" in issue for issue in validate_preset(config))
+
+    config = _preset("wonderwhales_xauusdm.json")
+    config["inputs"]["InpMaxVirtualExposure"] = 0.05
+    assert any("InpMaxVirtualExposure" in issue for issue in validate_preset(config))
+
+
+def test_wonderwhales_rejects_out_of_range_enums() -> None:
+    config = _preset("wonderwhales_xauusdm.json")
+    config["inputs"]["InpMode"] = 4
+    config["inputs"]["InpStopMode"] = 3
+    issues = validate_preset(config)
+    assert any("InpMode" in issue for issue in issues)
+    assert any("InpStopMode" in issue for issue in issues)

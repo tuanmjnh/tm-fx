@@ -3,12 +3,13 @@
   "project": "track-c-simulation-presets",
   "execution_mode": "SIMULATION_ONLY",
   "allow_live_trading": false,
-  "description": "Baseline, conservative-stress and edge-case test presets for the three Track C simulation EAs. Simulation only: no account, broker, credential or order API is referenced.",
+  "description": "Baseline, conservative-stress and edge-case test presets for the Track C simulation EAs. Simulation only: no account, broker, credential or order API is referenced.",
   "presets": {
     "RunnerTrailingLabEA": "configs/sim/runner_trailing.json",
     "GridLabEA": "configs/sim/grid_lab.json",
     "DCALabEA": "configs/sim/dca_lab.json",
-    "PinePlanSimEA": "configs/sim/pine_plan_lab.json"
+    "PinePlanSimEA": "configs/sim/pine_plan_lab.json",
+    "WonderwhalesSimEA": "configs/sim/wonderwhales_xauusdm.json"
   },
   "scenarios": [
     {
@@ -122,6 +123,37 @@
         "InpMinStopPoints": 20.0,
         "InpMinTargetPoints": 20.0,
         "InpMaxSpreadPoints": 20.0
+      }
+    },
+    {
+      "name": "ww_baseline",
+      "ea": "WonderwhalesSimEA",
+      "preset": "configs/sim/wonderwhales_xauusdm.json",
+      "overrides": {}
+    },
+    {
+      "name": "ww_conservative_stress",
+      "ea": "WonderwhalesSimEA",
+      "preset": "configs/sim/wonderwhales_xauusdm.json",
+      "overrides": {
+        "InpVolume": 0.05,
+        "InpMaxVirtualExposure": 0.05,
+        "InpMaxSpreadPoints": 100.0,
+        "InpMaxDailyLossPct": 1.0,
+        "InpMaxDrawdownPct": 2.0,
+        "InpCooldownBars": 5,
+        "InpMinStopPoints": 200.0
+      }
+    },
+    {
+      "name": "ww_edge_atr_stop",
+      "ea": "WonderwhalesSimEA",
+      "preset": "configs/sim/wonderwhales_xauusdm.json",
+      "overrides": {
+        "InpStopMode": 1,
+        "InpAtrPctMultiplier": 3.0,
+        "InpExitOnFlip": false,
+        "InpMaxHoldingBars": 16
       }
     }
   ]

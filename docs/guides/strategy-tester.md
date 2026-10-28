@@ -10,8 +10,9 @@ Nội dung:
 ## Strategy Tester thủ công cho EA mô phỏng (W8 + W10)
 
 **Trạng thái 2026-10-28: `NOT_RUN`.** Chưa có report Strategy Tester thật cho `RunnerTrailingLabEA`,
-`GridLabEA`, `DCALabEA` hay `PinePlanSimEA`. Agent không mở terminal, không điều khiển GUI, không đăng
-nhập tài khoản và không chạy `metatester64.exe`; mọi kết quả dưới đây phải do người dùng chạy và dán lại.
+`GridLabEA`, `DCALabEA`, `PinePlanSimEA` hay `WonderwhalesSimEA`. Agent không mở terminal, không điều khiển
+GUI, không đăng nhập tài khoản và không chạy `metatester64.exe`; mọi kết quả dưới đây phải do người dùng
+chạy và dán lại.
 
 ### 1. Nguyên tắc
 
@@ -30,23 +31,26 @@ nhập tài khoản và không chạy `metatester64.exe`; mọi kết quả dư�
 ### 2. Chuẩn bị (một lần)
 
 1. Mở MT5 EXNESS bằng tài khoản demo/offline mà bạn tự chọn. Không cần đăng nhập trong repo này.
-2. Tải history cho `EURUSD` (hoặc symbol bạn chọn) ở khung thời gian chạy, tối thiểu khoảng ngày sẽ test.
+2. Tải history cho symbol sẽ test ở khung thời gian chạy, tối thiểu khoảng ngày sẽ test. Các preset
+   Runner/Grid/DCA/Plan viết cho `EURUSD`; preset Wonderwhales ghim `XAUUSDm` qua `InpRequireSymbol`
+   (yêu cầu test `XAUUSDm` M15 hoặc M5 kể từ 2026-10-28).
 3. Copy source vào Data Folder và compile bằng toolchain của repo:
    ```powershell
    powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 -Filter "Experts\*"
    ```
    Script chỉ compile, không mở terminal. Nếu bạn dùng `deploy_pineport.ps1`, chỉ dùng chế độ copy/compile,
    không dùng chế độ chạy terminal.
-4. Xác nhận trong MT5 Navigator có `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA` và
-   indicator nguồn của plan (PA/X2/TM2).
+4. Xác nhận trong MT5 Navigator có `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`,
+   `WonderwhalesSimEA`, và trong `MQL5\Indicators\PinePort\` có `Wonderwhales` cùng indicator nguồn của
+   plan (PA/X2/TM2).
 
 ### 3. Thông số chung
 
 | Mục | Giá trị |
 |---|---|
-| Expert | một trong 4 EA ở trên |
-| Symbol | `EURUSD` (hoặc symbol có history thật; ghi rõ) |
-| Period | `H1` |
+| Expert | một trong 5 EA ở trên |
+| Symbol | `EURUSD` cho Runner/Grid/DCA/Plan; `XAUUSDm` cho Wonderwhales (hoặc symbol có history thật; ghi rõ) |
+| Period | `H1` cho Runner/Grid/DCA/Plan; `M15` hoặc `M5` cho Wonderwhales |
 | Model | `Every tick based on real ticks` nếu có, nếu không ghi rõ model đã dùng |
 | Deposit | `10000` (chỉ là balance ảo của EA; tester deposit không được EA dùng) |
 | Leverage | bất kỳ; EA không dùng margin |
@@ -179,6 +183,39 @@ stress/edge, sửa đúng các input trong cột override.
 EA cần indicator nguồn (`PriceActionMTF`, `TMXAUSignals2` hoặc `TMIndicator2`) đã cài trong
 `MQL5\Indicators\PinePort\`. Chạy `SimPlanTests` trước; kỳ vọng `pass=39 fail=0|suite=sim_plan`.
 
+#### 4.5 `WonderwhalesSimEA` — `configs/sim/wonderwhales_xauusdm.json`
+
+| Input | Giá trị |
+|---|---|
+| `InpInitialBalance` | 10000.0 |
+| `InpVolume` | 0.1 |
+| `InpEnableLog` | true |
+| `InpLogFile` | sim_wonderwhales_xauusdm.csv |
+| `InpDebug` | false |
+| `InpRequireSymbol` | XAUUSDm |
+| `InpMode` | 0 (SAR) |
+| `InpPsarStart` / `InpPsarInc` / `InpPsarMax` | 0.02 / 0.02 / 0.2 |
+| `InpFastEma` / `InpSlowEma` / `InpEma200` | 20 / 50 / 200 |
+| `InpAtrLen` / `InpMinAtrPct` | 14 / 0.5 |
+| `InpVolMaLen` / `InpRsiLen` / `InpBbLen` / `InpBbMult` | 20 / 14 / 20 / 2.0 |
+| `InpWarmupBars` | 300 |
+| `InpSideFilter` | 0 |
+| `InpStopMode` | 0 (PSAR) |
+| `InpAtrPctMultiplier` / `InpFixedStopPoints` | 2.0 / 300.0 |
+| `InpMinStopPoints` | 150.0 |
+| `InpMaxHoldingBars` | 0 |
+| `InpExitOnFlip` | true |
+| `InpCooldownBars` | 1 |
+| `InpMaxSpreadPoints` | 200.0 |
+| `InpMaxVirtualExposure` | 0.1 |
+| `InpMaxDailyLossPct` / `InpMaxDrawdownPct` | 2.0 / 5.0 |
+| `InpHaltOnBreach` | false |
+| `InpCommissionPerVolume` / `InpSlippagePoints` | 0.0 / 0.0 |
+
+EA cần indicator `Wonderwhales` đã cài trong `MQL5\Indicators\PinePort\`. Chạy `WonderwhalesContractTests`
+trước; tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0` (chưa chạy runtime,
+xem [`install-and-test.md`](install-and-test.md)).
+
 ### 5. Ma trận kịch bản
 
 | Scenario | EA | Override so với preset |
@@ -195,8 +232,11 @@ EA cần indicator nguồn (`PriceActionMTF`, `TMXAUSignals2` hoặc `TMIndicato
 | `dca_edge_bar_trigger` | DCALabEA | `InpTriggerMode=1`, `InpBarsBetweenAdds=10` |
 | `plan_baseline` | PinePlanSimEA | — (nguồn PA, TP1, filter hai chiều) |
 | `plan_edge_tp3_stop_only` | PinePlanSimEA | `InpTargetMode=1`, `InpMinStopPoints=20.0`, `InpMinTargetPoints=20.0`, `InpMaxSpreadPoints=20.0` |
+| `ww_baseline` | WonderwhalesSimEA | — (XAUUSDm, PSAR stop, exit on flip) |
+| `ww_conservative_stress` | WonderwhalesSimEA | `InpVolume=0.05`, `InpMaxVirtualExposure=0.05`, `InpMaxSpreadPoints=100.0`, `InpMaxDailyLossPct=1.0`, `InpMaxDrawdownPct=2.0`, `InpCooldownBars=5`, `InpMinStopPoints=200.0` |
+| `ww_edge_atr_stop` | WonderwhalesSimEA | `InpStopMode=1`, `InpAtrPctMultiplier=3.0`, `InpExitOnFlip=false`, `InpMaxHoldingBars=16` |
 
-Tổng cộng 12 scenario. `config_hash` khác nhau giữa các override là bình thường; mỗi report phải ghi
+Tổng cộng 15 scenario. `config_hash` khác nhau giữa các override là bình thường; mỗi report phải ghi
 đúng preset + override đã dùng.
 
 ### 6. Invariant phải kiểm từ CSV (không chỉ nhìn equity)
@@ -207,7 +247,8 @@ Tổng cộng 12 scenario. `config_hash` khác nhau giữa các override là bì
 | Grid | Số tầng ≤ `InpMaxGridLevels`; tổng volume ≤ `InpMaxVirtualExposure`; mỗi tầng đúng giá spacing; volume mỗi tầng ≤ `InpMaxLevelVolume`; basket stop bắt buộc |
 | DCA | Số add ≤ `InpMaxDcaAdds`; tối đa 1 fill/bar; volume add = base × multiplier^n, clamp `InpMaxAddVolume`; exposure không vượt cap kể cả khi giá đi một chiều; stop/target tính trên average entry |
 | PinePlan | `PLAN_VALID=1` trước mọi entry; SL đúng phía entry; target khớp đúng `TP1/TP3` đã chọn (không credit gap có lợi); SL kiểm trước target; tối đa 1 vị thế ảo; `ref_entry` chỉ là tham chiếu |
-| Cả 4 | `SUMMARY` chỉ xuất hiện một lần; equity/drawdown khớp cột log; không có dòng `BLOCKED/HALTED` trái kỳ vọng; daily loss/drawdown dừng đúng ngưỡng |
+| Wonderwhales | Entry chỉ khi buffer buy/sell của bar đã đóng = 1.0; `InpWarmupBars` chặn tín hiệu đầu; SL đúng phía entry và cách fill ≥ `InpMinStopPoints` (nếu không → `STOP_REJECTED`, không vào lệnh); SL kiểm trước exit-on-flip; tối đa 1 vị thế ảo; cooldown chặn entry mới |
+| Cả 5 | `SUMMARY` chỉ xuất hiện một lần; equity/drawdown khớp cột log; không có dòng `BLOCKED/HALTED` trái kỳ vọng; daily loss/drawdown dừng đúng ngưỡng |
 
 ### 7. Cách ghi report
 
@@ -229,7 +270,7 @@ Nếu thiếu history, tester lỗi, hoặc CSV rỗng → `BLOCKED`/`FAIL`, kh�
 | Hạng mục | Trạng thái |
 |---|---|
 | Hướng dẫn + template | PASS (tài liệu này) |
-| `runner_baseline` … `plan_edge_tp3_stop_only` | `NOT_RUN` — 0/12 scenario có report |
+| `runner_baseline` … `ww_edge_atr_stop` | `NOT_RUN` — 0/15 scenario có report |
 | Kết luận hiệu năng | Không có; mọi số liệu phải đến từ report thật |
 
 ## Strategy Tester report — <scenario>

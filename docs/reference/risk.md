@@ -135,9 +135,9 @@
 - **Preset JSON không được EA đọc trực tiếp:** EA nhận input trên chart/tester; JSON chỉ là nguồn kiểm tra
   và snapshot. Nhập sai một input là sai cấu hình dù validator đã pass cho file JSON.
 - **Runtime evidence một phần:** `SimCoreTests` 123/0 và `SimPlanTests` 39/0 đã chạy thật trong MT5 ngày
-  2026-10-28; 12 scenario Strategy Tester vẫn `NOT_RUN`. Test vector không chứng minh EA chạy đúng trên
+  2026-10-28; 15 scenario Strategy Tester (5 EA) vẫn `NOT_RUN`. Test vector không chứng minh EA chạy đúng trên
   dữ liệu thị trường, không đo spread/slippage thực và không thay thế report tester.
-- **Không có execution:** bốn EA không có API gửi lệnh; Strategy Tester hiển thị 0 deal là đúng. Mọi nỗ
+- **Không có execution:** năm EA không có API gửi lệnh; Strategy Tester hiển thị 0 deal là đúng. Mọi nỗ
   lực “chạy bot trên Exness” theo nghĩa đặt lệnh nằm ngoài repo này và cần ADR riêng.
 - **Plan của indicator không phải lệnh thật:** `PinePlanSimEA` khớp tại ask/bid hiện tại, không khớp
   `plan.entry`; SL/target lấy nguyên từ plan và có thể đã lỗi thời so với giá khi EA đọc. `ref_entry`

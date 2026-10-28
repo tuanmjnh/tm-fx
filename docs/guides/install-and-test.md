@@ -451,10 +451,10 @@ Ghi lại:
 - Nếu cần rollback: dùng package version trước trong `reports\packages\` hoặc `git checkout <commit>`
   sau khi đã commit thay đổi hiện tại. Không dùng `git reset --hard` khi còn thay đổi chưa commit.
 
-## Track C — Cài đặt và kiểm thử EA mô phỏng (runner/grid/DCA/plan)
+## Track C — Cài đặt và kiểm thử EA mô phỏng (runner/grid/DCA/plan/wonderwhales)
 
-- **Đối tượng:** `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `SimCoreTests`,
-  `SimPlanTests` và preset trong `configs/sim/`.
+- **Đối tượng:** `RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`, `PinePlanSimEA`, `WonderwhalesSimEA`,
+  `SimCoreTests`, `SimPlanTests` và preset trong `configs/sim/`.
 - **Trạng thái 2026-10-28:** compile + static tests PASS; `SimCoreTests` 123/0 và `SimPlanTests` 39/0
   đã chạy thật trong MT5 (terminal chưa đăng nhập, chart `XAUUSDm,M1`); Strategy Tester `NOT_RUN`.
 - **Nguyên tắc:** simulation-only. Không có API gửi lệnh, không kết nối broker, không lưu credential.
@@ -489,9 +489,9 @@ Kỳ vọng: `SUMMARY: checks=22 fail=0` và `ENVIRONMENT_OK`.
 .\.venv\Scripts\python.exe scripts\validate_sim_configs.py
 ```
 
-Kỳ vọng: `SUMMARY: checked=5 fail=0`; snapshot ghi một lần vào `reports\config-snapshots\` và lần sau
-báo `unchanged`. Validator từ chối `execution_mode` khác `SIMULATION_ONLY`, `allow_live_trading != false`,
-input thiếu/thừa, khóa nhạy cảm và override scenario sai.
+Kỳ vọng: `SUMMARY: checked=6 fail=0` (5 preset + project, 15 scenario); snapshot ghi một lần vào
+`reports\config-snapshots\` và lần sau báo `unchanged`. Validator từ chối `execution_mode` khác
+`SIMULATION_ONLY`, `allow_live_trading != false`, input thiếu/thừa, khóa nhạy cảm và override scenario sai.
 
 ### 4. Copy source vào Data Folder
 
@@ -504,11 +504,14 @@ Trong MT5: **File → Open Data Folder**. Giữ nguyên cấu trúc tương đ�
 | `mt5/Experts/GridLabEA.mq5` | `MQL5\Experts\GridLabEA.mq5` |
 | `mt5/Experts/DCALabEA.mq5` | `MQL5\Experts\DCALabEA.mq5` |
 | `mt5/Experts/PinePlanSimEA.mq5` | `MQL5\Experts\PinePlanSimEA.mq5` |
+| `mt5/Experts/WonderwhalesSimEA.mq5` | `MQL5\Experts\WonderwhalesSimEA.mq5` |
 | `mt5/Scripts/SimCoreTests.mq5` | `MQL5\Scripts\SimCoreTests.mq5` |
 | `mt5/Scripts/SimPlanTests.mq5` | `MQL5\Scripts\SimPlanTests.mq5` |
 
 `PinePlanSimEA` còn cần ba contract header và ba indicator PinePort đã cài theo
 [`mt5/README.md`](../../mt5/README.md) mục 9–14 (`Include\PinePort\*`, `Indicators\PinePort\*`).
+`WonderwhalesSimEA` cần `Include\PinePort\WonderwhalesContract.mqh` và indicator
+`Indicators\PinePort\Wonderwhales.ex5`; EA ghim symbol `XAUUSDm` qua `InpRequireSymbol`.
 
 Copy thủ công; repo không có script tự động ghi vào thư mục MT5. Không copy `accounts.dat`,
 `servers.dat`, `origin.txt` hoặc file phiên vào repo.
@@ -547,12 +550,20 @@ TEST|RESULT|ALL_PASS|pass=39 fail=0|suite=sim_plan
 Script này chỉ kiểm tra `SimPlan.mqh` (resolve side, validate plan, chọn/hit/fill target), không đọc
 indicator hay thị trường.
 
+Chạy `WonderwhalesContractTests` trước khi dùng `WonderwhalesSimEA`; tab **Experts** phải có:
+
+```text
+TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0
+```
+
+Script chỉ kiểm tra contract buffer/mode/hash của indicator Wonderwhales; không đọc thị trường.
+
 ### 6. Chạy EA
 
 - Trên chart: kéo EA, nhập input theo bảng trong [`strategy-tester.md`](strategy-tester.md),
   bật **Algo Trading** chỉ để `OnTick` chạy. EA không gửi lệnh.
 - Strategy Tester: `Ctrl+R`, chọn EA/symbol/period/khoảng ngày, dùng preset baseline rồi các override
-  stress/edge. Quy trình đầy đủ, ma trận 12 scenario và template report:
+  stress/edge. Quy trình đầy đủ, ma trận 15 scenario và template report:
   [`strategy-tester.md`](strategy-tester.md).
 
 Mỗi lần chạy dùng `InpLogFile` riêng (logger ghi nối). Ví dụ:
@@ -591,7 +602,7 @@ Kiểm tra tối thiểu:
 | Python tests (kể cả vector DCA/plan độc lập) | Tự động, PASS | `scripts\run-python-tests.ps1` |
 | `SimCoreTests` trong MT5 | **PASS runtime** — `pass=123 fail=0` | Mục 5; log tab Experts 2026-10-28 18:36 |
 | `SimPlanTests` trong MT5 | **PASS runtime** — `pass=39 fail=0` | Mục 5; log tab Experts 2026-10-28 18:41 |
-| Strategy Tester 12 scenario | **Thủ công, NOT_RUN** | `strategy-tester.md` |
+| Strategy Tester 15 scenario | **Thủ công, NOT_RUN** | `strategy-tester.md` |
 | Đọc/audit CSV thật | **Thủ công, NOT_RUN** | Mục 7 |
 
 ### 9. Xử lý sự cố
@@ -702,6 +713,72 @@ không nhất thiết bằng `ref_entry`; không có `TARGET_HIT` với fill vư
 | Nhiều `plan_invalid` | Indicator đang trả plan rỗng hoặc chưa warmup | Chờ đủ bar; kiểm tra indicator trên chart |
 | Không có CSV | Sai `InpLogFile` hoặc tester sandbox khác | Tìm trong `Tester\Agent-*\MQL5\Files` |
 | Tester 0 deal | Đúng thiết kế simulation-only | Không coi là lỗi |
+
+## Track C — WonderwhalesSimEA (XAUUSDm)
+
+- **Đối tượng:** `WonderwhalesSimEA`, indicator `PinePort\Wonderwhales`, preset
+  `configs/sim/wonderwhales_xauusdm.json`.
+- **Nguyên tắc:** EA đọc tín hiệu buy/sell trên nến đã đóng và mở **một vị thế ảo**; không gửi lệnh,
+  không đọc tài khoản.
+- **Trạng thái:** compile 0/0 (repo và Data Folder); runtime EA/Strategy Tester `NOT_RUN`.
+
+### 1. Điều kiện
+
+| Thành phần | Yêu cầu |
+|---|---|
+| Indicator | `Wonderwhales.ex5` trong `MQL5\Indicators\PinePort\` |
+| Contract header | `WonderwhalesContract.mqh` trong `MQL5\Include\PinePort\` |
+| Sim core | 10 file `MQL5\Include\Sim\*.mqh` |
+| Symbol/timeframe | `XAUUSDm` M15 hoặc M5; guard `InpRequireSymbol` từ chối symbol khác |
+| History | Cần tối thiểu `InpWarmupBars + 5` bar; thiếu → EA chờ, không vào lệnh |
+
+### 2. Input baseline
+
+| Input | Giá trị | Ghi chú |
+|---|---|---|
+| `InpRequireSymbol` | `XAUUSDm` | chuỗi rỗng = tắt guard |
+| `InpVolume` / `InpMaxVirtualExposure` | 0.1 / 0.1 | exposure phải ≥ volume |
+| `InpLogFile` | `sim_wonderwhales_xauusdm.csv` | đổi tên mỗi lần chạy |
+| `InpMode` | 0 | SAR; 1 EMA, 2 SAR+EMA, 3 SAR+EMA+ATR |
+| `InpWarmupBars` | 300 | phải ≥ `InpEma200` |
+| `InpStopMode` | 0 | 0 PSAR, 1 ATR%, 2 fixed |
+| `InpMinStopPoints` | 150.0 | khoảng SL tối thiểu; dưới ngưỡng → `STOP_REJECTED` |
+| `InpExitOnFlip` | true | đóng khi tín hiệu đảo |
+| `InpMaxHoldingBars` | 0 | 0 = tắt |
+| `InpMaxSpreadPoints` | 200.0 | spread XAUUSDm rộng hơn FX |
+
+Preset đầy đủ và toàn bộ 35 input: [`configs/sim/wonderwhales_xauusdm.json`](../../configs/sim/wonderwhales_xauusdm.json).
+
+### 3. Chạy
+
+1. Copy EA + contract + indicator theo mục 4 và compile.
+2. Chạy `WonderwhalesContractTests`; kỳ vọng `TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0`.
+3. Kéo EA lên chart `XAUUSDm` hoặc chạy Strategy Tester M15/M5. Mỗi lần chạy dùng `InpLogFile` riêng.
+4. Journal phải có `LAB|INFO|wonderwhales|initialized`, `LAB|INFO|wonderwhales|simulation_only`, và không
+   có `LAB|ERROR|wonderwhales` trừ khi input cố ý sai.
+
+### 4. Đọc CSV và reason token
+
+| Event | Reason | Nghĩa |
+|---|---|---|
+| `INIT` | `SIMULATION_ONLY\|config_hash=...\|indicator=...\|contract=...` | khởi tạo |
+| `ENTRY` | `SIGNAL_WW_BUY` / `SIGNAL_WW_SELL` + `stop_mode=`, `distance_points=`, `risk=`, `spread_points=` | fill ảo |
+| `RISK` | `ENTRY_BLOCKED\|reason=...` / `STOP_REJECTED\|distance_points=...\|min_points=...` | bị chặn |
+| `EXIT` | `SL_HIT`, `SL_GAP\|gap_points=...`, `MAX_HOLDING_BARS`, `SIGNAL_FLIP` | thoát |
+| `SUMMARY` | `trades=`, `wins=`, `losses=`, `flats=`, `net=`, `realized=`, `max_dd=` | tổng kết |
+
+Kiểm tra tối thiểu: SL luôn đúng phía entry và cách fill ≥ `InpMinStopPoints`; không có entry khi
+`Bars < InpWarmupBars + 5`; một vị thế ảo tại một thời điểm; không có deal thật.
+
+### 5. Xử lý sự cố
+
+| Hiện tượng | Nguyên nhân thường gặp | Hành động |
+|---|---|---|
+| `symbol_guard_expected=...` | Chart không phải `XAUUSDm` | Đổi chart hoặc để trống `InpRequireSymbol` |
+| `indicator_init_failed` | Thiếu `Wonderwhales.ex5`/contract | Cài đủ mục 1 và compile lại |
+| Không có entry | Chưa đủ warmup, tín hiệu = 0, spread > cap, cooldown, guard chặn | Đọc reason `RISK` |
+| Nhiều `STOP_REJECTED` | PSAR quá gần fill hoặc `InpMinStopPoints` quá cao | Giảm ngưỡng hoặc đổi `InpStopMode` |
+| Không có CSV | Sai `InpLogFile` hoặc tester sandbox khác | Tìm trong `Tester\Agent-*\MQL5\Files` |
 
 ## Kiểm kê môi trường — Phase 0
 

@@ -39,7 +39,7 @@
 | B. Pine → MT5 | Phase 4 (TM Indicator 2) | PASS (compile); vector `NOT_RUN` | `TMIndicator2.mq5` + `TMIndicator2Contract.mqh` + `TMIndicator2ContractTests.mq5`; 0 error/0 warning; `validate_tmind2.py` pass=44 |
 | B. Pine → MT5 | Phase 5–6 (TM Indicator 2) | EA `PASS (compile)`; runtime `NOT_RUN`; parity `BLOCKED` | `PineMultiSignalLabEA.mq5` đọc `TM2_BUF_SIGNAL/DIR`; comparator Phase 6 sẵn sàng; chưa có CSV reference từ Pine |
 | B. Pine → MT5 | Phase 6 (đa nguồn) | PASS (comparator/tests); parity `BLOCKED` | `multi_source_parity.py` + `compare_multi_signal_exports.py` + 21 test; exit 3 = `BLOCKED` khi thiếu CSV |
-| C. Simulation MQL5 | W1–W7, W9, W10 PASS; W8 `NOT_RUN` | PASS (compile + tests tĩnh); self-check `SimCoreTests` 123/0 + `SimPlanTests` 39/0 PASS runtime; EA runtime `NOT_RUN` | `SimDca` + `SimPlan` + 4 EA; 123 + 39 vector; `build-mql5.ps1` 24 source 0/0; pytest 324 pass; preset checked=5; 0/12 scenario có report |
+| C. Simulation MQL5 | W1–W7, W9, W10 PASS + WonderwhalesSimEA; W8 `NOT_RUN` | PASS (compile + tests tĩnh); self-check `SimCoreTests` 123/0 + `SimPlanTests` 39/0 PASS runtime; EA runtime `NOT_RUN` | `SimDca` + `SimPlan` + 5 EA; 123 + 39 vector; `build-mql5.ps1` 25 source 0/0; pytest 328 pass; preset checked=6 (5 preset + project); 0/15 scenario có report |
 | A. MT5 EA Lab | Phase 1–9 + trailing + bounded DCA/grid | PASS (tests) | Backtester, store, ML/ONNX, trailing và bounded có test; toàn bộ pytest 324 pass |
 
 ## 2. Môi trường đã kiểm tra
@@ -1537,4 +1537,40 @@ hai bản sửa, nên zip 0.8.0 không khớp source hiện tại. 0.8.1 là b�
 | Nội dung sửa | `mt5/Include/Sim/SimPlan.mqh` có `tolerance=1e-9`; `mt5/Scripts/SimPlanTests.mq5` dùng `point=0.001` (đã kiểm tra trực tiếp trong zip) |
 
 **Không đổi:** vẫn không chứa `.ex5`, log, `reports`, dataset, model, `.venv` hay credential.
+
+## 39. WonderwhalesSimEA — EA mô phỏng tín hiệu Wonderwhales trên XAUUSDm — 2026-10-28
+
+**Yêu cầu:** dựa trên indicator Wonderwhales, tạo EA hỗ trợ backtest trên MT5, chỉ tập trung `XAUUSDm`.
+Phạm vi được chấp nhận là **simulation-only**: EA mở vị thế ảo, không có API gửi lệnh thật.
+
+**Đã tạo/sửa:**
+
+| File | Nội dung |
+|---|---|
+| `mt5/Experts/WonderwhalesSimEA.mq5` | EA mới: đọc buffer WW tại `shift=1`, một vị thế ảo, SL PSAR/ATR%/fixed, exit-on-flip, max holding, RiskGuard, CSV 18 cột |
+| `configs/sim/wonderwhales_xauusdm.json` | Preset `SIMULATION_ONLY`, `allow_live_trading=false`, 35 input khớp EA |
+| `configs/project.example.json` | Thêm preset WW + 3 scenario: `ww_baseline`, `ww_conservative_stress`, `ww_edge_atr_stop` (tổng 15) |
+| `python/src/mt5_ea_ai_lab/sim_configs.py` | Registry input WW, kiểu `str_optional`, cross-check EMA/warmup/PSAR/exposure |
+| `python/tests/test_sim_configs.py` | Thêm preset WW và 4 test (symbol guard, cross-check, enum) |
+| `reports/build/tester-sets/ww_*.set` | 3 preset Strategy Tester, mỗi scenario một `InpLogFile` riêng |
+
+**Bằng chứng chạy thật:**
+
+| Lệnh | Kết quả |
+|---|---|
+| `build-mql5.ps1` (toàn repo) | 25 source, 0 errors, 0 warnings, `BUILD_OK` |
+| MetaEditor CLI compile `WonderwhalesSimEA.mq5` (repo) | `Result: 0 errors, 0 warnings` |
+| MetaEditor CLI compile trong Data Folder MT5 | `Result: 0 errors, 0 warnings`; `WonderwhalesSimEA.ex5` 57,968 bytes |
+| Copy vào Data Folder | `MQL5\Experts\WonderwhalesSimEA.mq5`, 3 file `.set` trong `MQL5\Presets\` |
+| `pytest -q` | `328 passed` |
+| `validate-project.py` | `SUMMARY: checks=11 fail=0` |
+| `validate_sim_configs.py` | `SUMMARY: checked=6 fail=0`; `presets=5 scenarios=15` |
+| `package-source.ps1 -Version 0.8.2` | 222 file; zip + `MANIFEST.sha256` (không chứa `.ex5`, `.venv`, report, credential) |
+
+**An toàn:** không có `OrderSend`, `CTrade`, `MqlTradeRequest` hay API position/order; không đọc account,
+không lưu credential. `InpRequireSymbol=XAUUSDm` từ chối khởi tạo trên symbol khác.
+
+**Chưa làm / `NOT_RUN`:** Strategy Tester cho 5 EA (0/15 scenario) và contract test 6 indicator vẫn cần
+chạy thủ công; chưa có CSV runtime; parity Pine vẫn `BLOCKED`. Không có kết luận hiệu năng, lợi nhuận
+hay sẵn sàng live.
 

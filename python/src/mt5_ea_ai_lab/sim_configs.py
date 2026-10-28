@@ -57,6 +57,7 @@ class Enum:
 
 BOOL = "bool"
 STR = "str"
+STR_OPTIONAL = "str_optional"
 
 
 _COMMON: dict[str, Any] = {
@@ -142,6 +143,34 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
         "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
     },
+    "WonderwhalesSimEA": {
+        **_COMMON,
+        "InpVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
+        "InpRequireSymbol": STR_OPTIONAL,
+        "InpMode": Enum((0, 1, 2, 3)),
+        "InpPsarStart": Num(minimum=0.0, min_exclusive=True),
+        "InpPsarInc": Num(minimum=0.0, min_exclusive=True),
+        "InpPsarMax": Num(minimum=0.0, min_exclusive=True),
+        "InpFastEma": Num(minimum=1.0, integer=True),
+        "InpSlowEma": Num(minimum=1.0, integer=True),
+        "InpEma200": Num(minimum=1.0, integer=True),
+        "InpAtrLen": Num(minimum=1.0, integer=True),
+        "InpMinAtrPct": Num(minimum=0.0),
+        "InpVolMaLen": Num(minimum=1.0, integer=True),
+        "InpRsiLen": Num(minimum=1.0, integer=True),
+        "InpBbLen": Num(minimum=1.0, integer=True),
+        "InpBbMult": Num(minimum=0.0, min_exclusive=True),
+        "InpWarmupBars": Num(minimum=0.0, integer=True),
+        "InpSideFilter": Enum((0, 1, 2)),
+        "InpStopMode": Enum((0, 1, 2)),
+        "InpAtrPctMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpFixedStopPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpMinStopPoints": Num(minimum=0.0),
+        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
+        "InpExitOnFlip": BOOL,
+        "InpCooldownBars": Num(minimum=0.0, integer=True),
+        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
+    },
 }
 
 EA_NAMES = tuple(EA_INPUTS)
@@ -159,6 +188,12 @@ def _validate_value(name: str, spec: Any, value: Any) -> list[str]:
     if spec is STR:
         if not isinstance(value, str) or not value.strip():
             return [f"{name}: must be a non-empty string"]
+        if "," in value:
+            return [f"{name}: must not contain a comma (CSV reason column)"]
+        return []
+    if spec is STR_OPTIONAL:
+        if not isinstance(value, str):
+            return [f"{name}: must be a string"]
         if "," in value:
             return [f"{name}: must not contain a comma (CSV reason column)"]
         return []
@@ -230,6 +265,20 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("InpBreakEvenTriggerPoints: must be positive when enabled")
         if inputs["InpTrailEnabled"] and inputs["InpTrailFixedPoints"] <= 0:
             issues.append("InpTrailFixedPoints: must be positive when enabled")
+
+    if ea == "WonderwhalesSimEA":
+        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
+            issues.append("InpSlowEma: must be greater than InpFastEma")
+        if inputs["InpEma200"] <= inputs["InpSlowEma"]:
+            issues.append("InpEma200: must be greater than InpSlowEma")
+        if inputs["InpWarmupBars"] < inputs["InpEma200"]:
+            issues.append("InpWarmupBars: must cover InpEma200")
+        if inputs["InpPsarStart"] > inputs["InpPsarMax"]:
+            issues.append("InpPsarStart: must not exceed InpPsarMax")
+        if inputs["InpPsarInc"] > inputs["InpPsarMax"]:
+            issues.append("InpPsarInc: must not exceed InpPsarMax")
+        if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
+            issues.append("InpMaxVirtualExposure: must cover InpVolume")
 
     return issues
 

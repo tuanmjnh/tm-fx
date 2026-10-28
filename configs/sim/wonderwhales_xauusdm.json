@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "ea": "WonderwhalesSimEA",
+  "version": "1.00",
+  "execution_mode": "SIMULATION_ONLY",
+  "allow_live_trading": false,
+  "description": "Wonderwhales signal with one virtual position on XAUUSDm. PSAR-flip exit, PSAR/ATR%/fixed stop, CSV logs only; no order API.",
+  "strategy": "wonderwhales_sim",
+  "symbol": "XAUUSDm",
+  "timeframe": "M15",
+  "inputs": {
+    "InpInitialBalance": 10000.0,
+    "InpVolume": 0.1,
+    "InpEnableLog": true,
+    "InpLogFile": "sim_wonderwhales_xauusdm.csv",
+    "InpDebug": false,
+    "InpRequireSymbol": "XAUUSDm",
+    "InpMode": 0,
+    "InpPsarStart": 0.02,
+    "InpPsarInc": 0.02,
+    "InpPsarMax": 0.2,
+    "InpFastEma": 20,
+    "InpSlowEma": 50,
+    "InpEma200": 200,
+    "InpAtrLen": 14,
+    "InpMinAtrPct": 0.5,
+    "InpVolMaLen": 20,
+    "InpRsiLen": 14,
+    "InpBbLen": 20,
+    "InpBbMult": 2.0,
+    "InpWarmupBars": 300,
+    "InpSideFilter": 0,
+    "InpStopMode": 0,
+    "InpAtrPctMultiplier": 2.0,
+    "InpFixedStopPoints": 300.0,
+    "InpMinStopPoints": 150.0,
+    "InpMaxHoldingBars": 0,
+    "InpExitOnFlip": true,
+    "InpCooldownBars": 1,
+    "InpMaxSpreadPoints": 200.0,
+    "InpMaxVirtualExposure": 0.1,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpHaltOnBreach": false,
+    "InpCommissionPerVolume": 0.0,
+    "InpSlippagePoints": 0.0
+  },
+  "enum_map": {
+    "InpMode": {
+      "0": "WW_MODE_SAR",
+      "1": "WW_MODE_EMA",
+      "2": "WW_MODE_SAR_EMA",
+      "3": "WW_MODE_SAR_EMA_ATR"
+    },
+    "InpSideFilter": {
+      "0": "WW_SIDE_BOTH",
+      "1": "WW_SIDE_LONG_ONLY",
+      "2": "WW_SIDE_SHORT_ONLY"
+    },
+    "InpStopMode": {
+      "0": "WW_STOP_PSAR",
+      "1": "WW_STOP_ATR_PCT",
+      "2": "WW_STOP_FIXED"
+    }
+  },
+  "assumptions": {
+    "contract_size": 1,
+    "symbol": "point 0.01 and 2 digits on XAUUSDm; distances are multiples of that point",
+    "entry": "virtual fill at ask/bid plus adverse slippage on the closed-bar signal",
+    "stop": "distance from fill; PSAR mode falls back to rejection when the line is on the wrong side or too close",
+    "exit": "SL hit (checked first), optional opposite signal, optional max holding bars",
+    "commission": "total cash per fill, charged on open and close",
+    "swap": "not modelled in this preset",
+    "pnl_units": "price difference multiplied by virtual volume; not broker money"
+  }
+}

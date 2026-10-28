@@ -21,13 +21,14 @@ không còn file rời rạc ở thư mục `docs/`.
 | Phase 9 | Pipeline end-to-end | DONE |
 | Track B | 6 indicator PinePort + contract headless + EA tín hiệu đa nguồn | Compile 0/0; contract runtime `NOT_RUN` |
 | Track C W1–W7, W9, W10 | Simulation core, runner/grid/DCA, plan-driven EA, preset, toolchain | PASS offline (compile + static + Python) |
+| Track C — `WonderwhalesSimEA` | EA tín hiệu Wonderwhales trên `XAUUSDm`, 3 chế độ stop | Compile 0/0 (repo + Data Folder); runtime/Strategy Tester `NOT_RUN` |
 | Track C W8 | Strategy Tester thủ công | `NOT_RUN` — chưa có report/CSV thật |
 
-- **MQL5:** 24 file `.mq5` và 19 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
+- **MQL5:** 25 file `.mq5` và 19 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
   `0 errors, 0 warnings` (2026-10-28). Compile chỉ chứng minh cú pháp, không chứng minh hành vi.
 - **Python:** test suite chạy bằng `scripts/run-python-tests.ps1`; con số chính xác lấy từ lần chạy
   gần nhất trong [`PROGRESS.md`](PROGRESS.md).
-- **Preset:** `scripts/validate_sim_configs.py` kiểm tra 4 preset và 12 scenario fail-closed.
+- **Preset:** `scripts/validate_sim_configs.py` kiểm tra 5 preset và 15 scenario fail-closed.
 - Không có kết luận hiệu năng, P&L hay “sẵn sàng live” ở bất kỳ tài liệu nào.
 
 ## 2. Bản đồ tài liệu

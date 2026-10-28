@@ -413,7 +413,8 @@ nhất và **không** có bất kỳ hàm giao dịch nào. EA cũ `PineSignalLa
 
 ## 16. Simulation core + Runner/Grid/DCA EAs (Track C, W1–W5)
 
-Thư viện dùng chung cho ba EA mô phỏng (`RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`):
+Thư viện dùng chung cho các EA mô phỏng (`RunnerTrailingLabEA`, `GridLabEA`, `DCALabEA`,
+`PinePlanSimEA`, `WonderwhalesSimEA`):
 
 | File | Vai trò |
 |---|---|
@@ -430,6 +431,8 @@ Thư viện dùng chung cho ba EA mô phỏng (`RunnerTrailingLabEA`, `GridLabEA
 | `Experts/RunnerTrailingLabEA.mq5` | Một vị thế ảo, EMA cross, ATR SL, breakeven/trailing, max holding |
 | `Experts/GridLabEA.mq5` | Grid một chiều, volume multiplier có clamp, exit LEVEL/BASKET, basket stop bắt buộc |
 | `Experts/DCALabEA.mq5` | DCA một chiều, trigger giá/bar, tối đa một fill mỗi bar, basket target/stop bắt buộc |
+| `Experts/PinePlanSimEA.mq5` | Một vị thế ảo theo trade plan của PA/X2/TM2 |
+| `Experts/WonderwhalesSimEA.mq5` | Một vị thế ảo từ tín hiệu Wonderwhales trên `XAUUSDm` |
 
 - Compile hiện tại (2026-10-28, `scripts/build-mql5.ps1`): 0 errors, 0 warnings
   (`SimCoreTests.ex5` 73,646 bytes; `RunnerTrailingLabEA.ex5` 52,622 bytes;
@@ -441,16 +444,17 @@ Thư viện dùng chung cho ba EA mô phỏng (`RunnerTrailingLabEA`, `GridLabEA
 - Test vector runtime `NOT_RUN`: cần mở MT5 và chạy script; kết quả đúng phải có
   `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core`.
 - EA runtime `NOT_RUN`; preset mẫu `configs/sim/runner_trailing.json`, `configs/sim/grid_lab.json`,
-  `configs/sim/dca_lab.json`; scenario baseline/stress/edge: `configs/project.example.json`.
+  `configs/sim/dca_lab.json`, `configs/sim/pine_plan_lab.json`, `configs/sim/wonderwhales_xauusdm.json`;
+  scenario baseline/stress/edge: `configs/project.example.json` (15 scenario).
 - Kiểm tra fail-closed trước khi nạp preset: `python scripts/validate_sim_configs.py` (chi tiết
   `docs/reference/simulation.md`).
 - Không có API giao dịch; `python/tests/test_sim_core_source.py` chặn hồi quy bằng cách quét token cấm
   trên toàn bộ `Include/Sim`, `Scripts/SimCoreTests.mq5` và `Experts/*.mq5`.
 - P&L basket DCA có cross-check độc lập bằng Python: `python/tests/test_dca_vectors.py`.
-- Chi tiết công thức, token lỗi và ví dụ tay: `docs/reference/simulation.md`; ba EA có mục riêng trong
+- Chi tiết công thức, token lỗi và ví dụ tay: `docs/reference/simulation.md`; mỗi EA có mục riêng trong
   cùng tài liệu.
 - Bàn giao Track C: cài đặt/kiểm thử `docs/guides/install-and-test.md`; Strategy Tester thủ công
-  `docs/guides/strategy-tester.md`; toolchain `docs/guides/toolchain.md`. Cả 3 EA đều simulation-only:
+  `docs/guides/strategy-tester.md`; toolchain `docs/guides/toolchain.md`. Cả 5 EA đều simulation-only:
   Strategy Tester hiển thị 0 deal là đúng.
 
 ## 17. PinePlanSimEA — vị thế ảo theo trade plan (Track C, W10)
@@ -482,3 +486,28 @@ Thư viện dùng chung cho ba EA mô phỏng (`RunnerTrailingLabEA`, `GridLabEA
   và `POS_SIDE`, không phải plan tĩnh.
 - Chi tiết luật, token lỗi và giới hạn: `docs/reference/simulation.md` mục **PinePlanSimEA**; preset:
   `configs/sim/pine_plan_lab.json`.
+
+## 18. WonderwhalesSimEA — vị thế ảo từ tín hiệu Wonderwhales (Track C, 2026-10-28)
+
+`WonderwhalesSimEA.mq5` đọc tín hiệu buy/sell của `PinePort\Wonderwhales` tại `shift=1` (nến đã đóng) và
+mở **một vị thế ảo** trên `XAUUSDm`. Không có API giao dịch.
+
+| File | Vai trò |
+|---|---|
+| `Include/PinePort/WonderwhalesContract.mqh` | Buffer map + mode + hash dùng chung với indicator |
+| `Experts/WonderwhalesSimEA.mq5` | Tín hiệu WW, SL PSAR/ATR%/fixed, exit-on-flip, max holding, CSV |
+| `../configs/sim/wonderwhales_xauusdm.json` | Preset baseline, `SIMULATION_ONLY`, `InpRequireSymbol=XAUUSDm` |
+
+| Buffer | Hằng số | Dùng cho |
+|---:|---|---|
+| 0 | `WW_BUF_PSAR` | khoảng SL chế độ PSAR |
+| 3 / 4 | `WW_BUF_BUY_SIGNAL` / `WW_BUF_SELL_SIGNAL` | tín hiệu vào lệnh |
+| 8 | `WW_BUF_ATR_PCT` | khoảng SL chế độ ATR% |
+
+- Compile: 0 errors, 0 warnings trong repo và trong Data Folder MT5
+  (`WonderwhalesSimEA.ex5` 57,968 bytes, 2026-10-28). Dòng `Result:` trong log là bằng chứng chính.
+- Guard symbol: `InpRequireSymbol` khác rỗng và khác `_Symbol` → `INIT_PARAMETERS_INCORRECT`.
+- Entry bị từ chối (`STOP_REJECTED`) nếu khoảng SL nhỏ hơn `InpMinStopPoints`; không nới stop để vào lệnh.
+- Runtime EA và Strategy Tester `NOT_RUN`; chưa có CSV thật; parity Pine `BLOCKED`.
+- Chi tiết: `docs/reference/simulation.md` mục **WonderwhalesSimEA**;
+  indicator: `docs/indicators/wonderwhales.md`.

@@ -9,13 +9,14 @@ backtest có thể tái lập cho MetaTrader 5.
   trong terminal. Phase 0/3/4/6/7/9 **DONE**; Phase 5 **READY_FOR_MANUAL_VALIDATION** (MQL5 export đã
   compile nhưng chưa chạy); Phase 1/2 compile 0 errors/0 warnings, chờ chạy Strategy Tester/self-check
   thủ công. Track C W1–W7, W9, W10 **PASS** (compile + static + toolchain); `SimCoreTests` 123/0 và
-  `SimPlanTests` 39/0 đã **PASS runtime** trong MT5 ngày 2026-10-28; W8 Strategy Tester **`NOT_RUN`** —
-  4 EA mô phỏng chưa chạy trong terminal.
+  `SimPlanTests` 39/0 đã **PASS runtime** trong MT5 ngày 2026-10-28; `WonderwhalesSimEA` mới bổ sung
+  (compile 0/0, runtime `NOT_RUN`); W8 Strategy Tester **`NOT_RUN`** — 5 EA mô phỏng chưa chạy trong
+  terminal (15 scenario).
 - **Phạm vi hiện tại:** signal-only, mô phỏng offline (SL/TP tĩnh, trailing stop, bounded DCA/grid
-  basket và vị thế ảo theo trade plan của PinePort), metadata thí nghiệm cục bộ, ML baseline, ONNX
-  inference-only và pipeline end-to-end trên dữ liệu synthetic. Không gửi lệnh giao dịch thật, không
-  kết nối tài khoản môi giới, không lưu thông tin đăng nhập.
-- **MT5:** 24 file `.mq5` và 19 file `.mqh` đã compile **0 errors, 0 warnings** bằng
+  basket, vị thế ảo theo trade plan của PinePort và tín hiệu Wonderwhales trên `XAUUSDm`), metadata thí
+  nghiệm cục bộ, ML baseline, ONNX inference-only và pipeline end-to-end trên dữ liệu synthetic. Không
+  gửi lệnh giao dịch thật, không kết nối tài khoản môi giới, không lưu thông tin đăng nhập.
+- **MT5:** 25 file `.mq5` và 19 file `.mqh` đã compile **0 errors, 0 warnings** bằng
   `scripts/build-mql5.ps1` (2026-10-28); self-check, parity runtime, ONNX runtime, `SimCoreTests`,
   `SimPlanTests` và Strategy Tester vẫn chờ chạy thủ công. Quy trình:
   [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
@@ -82,7 +83,7 @@ tm-fx/                             # tên thư mục hiện tại; nội dung th
 │   ├── phase-reports/
 │   └── *-pack/                    # input pack gốc, chỉ đọc
 ├── mt5/
-│   ├── Experts/                   # signal-only, ONNX harness, 4 EA mô phỏng
+│   ├── Experts/                   # signal-only, ONNX harness, 5 EA mô phỏng
 │   ├── Include/                   # Logger, Indicators, SignalEngine, PinePort, Sim
 │   ├── Indicators/PinePort/       # 6 indicator port
 │   ├── Files/                     # fixture CSV cho ONNX runtime (copy sang MQL5/Files)
@@ -230,7 +231,7 @@ không mở/ghi được. Giả định mô phỏng và định nghĩa metric:
   [`docs/decisions/0002-execution-boundary.md`](docs/decisions/0002-execution-boundary.md).
 - ML baseline chỉ dùng dữ liệu synthetic trong demo; metric phân loại và metric chiến lược mô phỏng được
   báo cáo riêng, không phải bằng chứng lợi nhuận.
-- Bounded DCA/grid có simulator Python và 4 EA MQL5 mô phỏng (runner/grid/DCA/plan) chưa chạy trong
+- Bounded DCA/grid có simulator Python và 5 EA MQL5 mô phỏng (runner/grid/DCA/plan/Wonderwhales) chưa chạy trong
   terminal; không nối experiment store và không thay đổi engine một vị thế. Demo synthetic lỗ sau chi
   phí, không dùng làm khuyến nghị chiến lược.
 - Pipeline Phase 9 chỉ chạy validate/backtest/ML/store/report cục bộ; không chạy MT5 Strategy Tester,
@@ -257,10 +258,10 @@ ONNX inference: [`docs/reference/onnx.md`](docs/reference/onnx.md).
 Pipeline end-to-end: [`docs/reference/pipeline.md`](docs/reference/pipeline.md).
 Bounded DCA/grid: [`docs/reference/bounded-basket.md`](docs/reference/bounded-basket.md).
 Simulation core MQL5 (portfolio/logger/validate): [`docs/reference/simulation.md`](docs/reference/simulation.md).
-Runner trailing, Grid, DCA và PinePlanSimEA (mô phỏng): [`docs/reference/simulation.md`](docs/reference/simulation.md).
+Runner trailing, Grid, DCA, PinePlanSimEA và WonderwhalesSimEA (mô phỏng): [`docs/reference/simulation.md`](docs/reference/simulation.md).
 Preset/validator fail-closed: [`docs/reference/simulation.md`](docs/reference/simulation.md).
 Toolchain root (check/build/test/validate/package): [`docs/guides/toolchain.md`](docs/guides/toolchain.md).
-Strategy Tester cho 4 EA mô phỏng: [`docs/guides/strategy-tester.md`](docs/guides/strategy-tester.md).
+Strategy Tester cho 5 EA mô phỏng: [`docs/guides/strategy-tester.md`](docs/guides/strategy-tester.md).
 Cài đặt/kiểm thử Track C: [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
 Mục lục tài liệu đầy đủ: [`docs/README.md`](docs/README.md).
 Release checklist: [`docs/reference/release.md`](docs/reference/release.md).

@@ -24,7 +24,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-python-tests.ps1
 
 .venv\Scripts\python.exe scripts\validate-project.py
 
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package-source.ps1 -Version 0.8.1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package-source.ps1 -Version 0.8.2
 ```
 
 `-MetaEditorPath` dùng khi MetaEditor không nằm ở `C:\Program Files\MetaTrader 5 EXNESS\`.
@@ -48,10 +48,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package-source.ps1 -
 | Lệnh | Kết quả |
 |---|---|
 | `check-environment.ps1` | `SUMMARY: checks=22 fail=0`, `ENVIRONMENT_OK` |
-| `build-mql5.ps1` | 24 source, 0 errors, 0 warnings, `BUILD_OK` |
-| `run-python-tests.ps1` | `324 passed`, `TESTS_OK` |
-| `validate-project.py` | `SUMMARY: checks=10 fail=0` (43 source, 0 hit) |
-| `package-source.ps1 -Version 0.8.1` | 220 file — bản hiện tại, gồm hai bản sửa `SimPlan`; zip + `MANIFEST.sha256` |
+| `build-mql5.ps1` | 25 source, 0 errors, 0 warnings, `BUILD_OK` |
+| `run-python-tests.ps1` | `328 passed`, `TESTS_OK` |
+| `validate-project.py` | `SUMMARY: checks=11 fail=0` (kể cả `WonderwhalesSimEA`) |
+| `package-source.ps1 -Version 0.8.2` | 222 file — bản hiện tại, gồm `WonderwhalesSimEA` + preset + docs đồng bộ; zip + `MANIFEST.sha256` |
+| `package-source.ps1 -Version 0.8.1` | 220 file — trước `WonderwhalesSimEA`, giữ làm mốc lịch sử |
 | `package-source.ps1 -Version 0.8.0` | 220 file sau hợp nhất docs (W10) — trước hai bản sửa `SimPlan`, giữ làm mốc lịch sử |
 
 Byte size `.ex5` thay đổi theo bản MetaEditor và cách truyền đường dẫn biên dịch; các con số trong báo cáo
@@ -60,5 +61,5 @@ phase cũ là ảnh chụp lịch sử, không phải invariant. Điều kiện 
 ## Chưa làm được ở môi trường này
 
 - Chạy `SimCoreTests` (123/0) và `SimPlanTests` (39/0) trong MT5: đã PASS ngày 2026-10-28.
-- Chạy 4 EA trong Strategy Tester và contract test 6 indicator: `NOT_RUN` cho tới khi có thao tác thủ công.
+- Chạy 5 EA trong Strategy Tester và contract test 6 indicator: `NOT_RUN` cho tới khi có thao tác thủ công.
 - Compile/test thành công không chứng minh hành vi runtime hay P&L; W8 vẫn là bước bắt buộc.
