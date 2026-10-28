@@ -117,10 +117,10 @@
   do đóng basket nằm ở `basket_count`/`basket_exit_reason_counts`.
 - **Thứ tự intrabar:** exit được kiểm tra trước add và loss cap thắng TP khi cùng bar; OHLC không cho biết
   thứ tự thật. Layer mới chỉ ảnh hưởng level từ bar kế tiếp, nên kết quả có thể khác bot chạy tick.
-- **Simulator Python và EA MQL5 là hai implementation riêng:** từ W3–W5 đã có EA MQL5 mô phỏng bounded
-  grid/DCA/runner, nhưng chưa chạy Strategy Tester; Python và MQL5 chưa được đối chiếu trên cùng chuỗi
-  tick. CLI Python vẫn không ghi experiment store; không dùng demo synthetic làm bằng chứng hiệu năng
-  hay sẵn sàng live.
+- **Simulator Python và EA MQL5 là hai implementation riêng:** EA MQL5 mô phỏng bounded grid/DCA/runner
+  đã chạy 10 scenario Strategy Tester, nhưng Python và MQL5 chưa được đối chiếu trên cùng chuỗi tick.
+  CLI Python vẫn không ghi experiment store; không dùng demo synthetic làm bằng chứng hiệu năng hay
+  sẵn sàng live.
 
 ### Rủi ro simulation MQL5 (Track C: runner/grid/DCA/plan)
 
@@ -134,12 +134,13 @@
   lần chạy. Phải dùng tên file riêng cho mỗi run và kiểm tra header/số dòng.
 - **Preset JSON không được EA đọc trực tiếp:** EA nhận input trên chart/tester; JSON chỉ là nguồn kiểm tra
   và snapshot. Nhập sai một input là sai cấu hình dù validator đã pass cho file JSON.
-- **Runtime evidence một phần:** `SimCoreTests` 123/0 và `SimPlanTests` 39/0 đã chạy thật trong MT5 ngày
-  2026-10-28; 3/15 scenario Strategy Tester (`ww_*` của `WonderwhalesSimEA`) đã chạy thật cùng ngày;
-  12 scenario còn lại (runner/grid/DCA/plan) vẫn `NOT_RUN`. Test vector không chứng minh EA chạy đúng trên
-  dữ liệu thị trường, không đo spread/slippage thực và không thay thế report tester.
-- **Kết quả tester WW không phải bằng chứng lợi nhuận:** P&L theo contract size 1 của model, spread đo một
-  thời điểm, một symbol/một timeframe/một giai đoạn demo. Không suy ra lot thật hay độ sẵn sàng live.
+- **Runtime evidence một phần:** `SimCoreTests` 123/0, `SimPlanTests` 39/0, 6 contract suite (547 check)
+  và 13/15 scenario Strategy Tester đã chạy thật trong MT5 ngày 2026-10-28; 2 scenario `plan_*` là
+  `BLOCKED_PERFORMANCE`. Test vector không chứng minh EA chạy đúng trên dữ liệu thị trường, không đo
+  spread/slippage thực và không thay thế report tester.
+- **Kết quả tester không phải bằng chứng lợi nhuận:** P&L theo contract size 1 của model, spread giả định
+  theo preset hoặc đo một thời điểm, một symbol/một timeframe/một giai đoạn demo. Không suy ra lot thật
+  hay độ sẵn sàng live.
 - **Không có execution:** năm EA không có API gửi lệnh; Strategy Tester hiển thị 0 deal là đúng. Mọi nỗ
   lực “chạy bot trên Exness” theo nghĩa đặt lệnh nằm ngoài repo này và cần ADR riêng.
 - **Plan của indicator không phải lệnh thật:** `PinePlanSimEA` khớp tại ask/bid hiện tại, không khớp
@@ -178,7 +179,7 @@
 | Rủi ro | Trạng thái hiện tại | Ghi chú |
 |---|---|---|
 | MT5/MetaEditor thay đổi theo build | Đã xác minh build 5.0.0.6249 (EXNESS) khi compile ngày 2026-10-28 | Phải xác minh lại nếu terminal cập nhật build |
-| Agent không có kết quả Strategy Tester thật | Compile 0 errors/0 warnings cho toàn bộ `.mq5` ngày 2026-10-28; `SimCoreTests` 123/0 và `SimPlanTests` 39/0 PASS runtime; 3/15 scenario Strategy Tester (`ww_*`) đã chạy, 12 scenario còn lại **chưa chạy** | Chạy nốt runner/grid/DCA/plan, self-check, parity và ONNX thủ công; giữ `READY_FOR_MANUAL_VALIDATION` cho EA |
+| Agent không có đủ kết quả Strategy Tester | Compile 0 errors/0 warnings cho toàn bộ `.mq5` ngày 2026-10-28; `SimCoreTests` 123/0, `SimPlanTests` 39/0, 6 contract suite (547 check) PASS; 13/15 scenario có SUMMARY, 2 `plan_*` `BLOCKED_PERFORMANCE` | Giữ `READY_FOR_MANUAL_VALIDATION`; tối ưu `PriceActionMTF` trước khi chạy lại plan; parity và ONNX vẫn thủ công |
 | OS là Windows 10, roadmap khuyến nghị Windows 11 | Đã ghi nhận | Không chặn các phase hiện tại; theo dõi lỗi đặc thù MT5 |
 | Khác biệt indicator MQL5 và Python | Cửa sổ EMA đã thống nhất `slow+1` và có comparator; MQL5 export chưa chạy | Chạy export thủ công và so sánh toàn bộ fixture trước khi tuyên bố tương đương |
 | Parity bị suy rộng quá mức | Comparator chỉ so sánh đúng hai file; self-comparison không phải parity | Ghi rõ rows_compared, fixture và trạng thái MQL5 runtime trong báo cáo |

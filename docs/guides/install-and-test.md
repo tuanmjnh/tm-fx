@@ -12,8 +12,9 @@ Nội dung:
 ## Chạy và kiểm chứng MT5 EA & AI Lab trên MetaTrader 5
 
 - **Ngày:** 2026-10-28
-- **Trạng thái:** signal-only, offline. Bốn file MQL5 đã compile **0 errors, 0 warnings** trong Data Folder
-  của MT5 EXNESS; self-check, parity runtime, ONNX runtime và Strategy Tester **chưa chạy**.
+- **Trạng thái:** signal-only, offline. Toàn bộ `.mq5` đã compile **0 errors, 0 warnings**; self-check
+  `SimCoreTests`/`SimPlanTests`, 6 contract suite (547 check) và 13/15 scenario Strategy Tester đã chạy
+  thật. Parity runtime, ONNX runtime và 2 scenario `plan_*` vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`.
 - **Cảnh báo:** không đăng nhập tài khoản live, không nhập mật khẩu/investor password/OTP/server, không
   gửi thông tin tài khoản cho agent. EA trong repo không có `OrderSend`/`CTrade`, không mở/đóng lệnh.
   **0 trade là kết quả đúng** khi chạy `LabSignalEA`.

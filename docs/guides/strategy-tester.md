@@ -9,11 +9,11 @@ Nội dung:
 ---
 ## Strategy Tester thủ công cho EA mô phỏng (W8 + W10)
 
-**Trạng thái 2026-10-28:** `WonderwhalesSimEA` đã chạy **3/3 scenario** bằng Strategy Tester headless
-(`terminal64.exe /config:…`, model *1 minute OHLC*, `XAUUSDm` M15, 2026.01.05–2026.10.01); report + CSV
-thật lưu trong `reports/build/tester-reports/`. 12 scenario của `RunnerTrailingLabEA`, `GridLabEA`,
-`DCALabEA`, `PinePlanSimEA` vẫn `NOT_RUN`. Agent chỉ dùng CLI headless có `ShutdownTerminal=1`, không
-điều khiển GUI và không nhập credential.
+**Trạng thái 2026-10-28:** 13/15 scenario đã chạy bằng Strategy Tester headless
+(`terminal64.exe /config:…`, model *1 minute OHLC*, `XAUUSDm` M15, 2026.01.05–2026.10.01): 3 `ww_*`,
+10 runner/grid/DCA. 2 scenario `plan_*` là `BLOCKED_PERFORMANCE`. Report + CSV thật lưu trong
+`reports/build/tester-reports/`. Agent chỉ dùng CLI headless có `ShutdownTerminal=1`, không điều khiển
+GUI và không nhập credential.
 
 ### 1. Nguyên tắc
 
@@ -213,9 +213,9 @@ EA cần indicator nguồn (`PriceActionMTF`, `TMXAUSignals2` hoặc `TMIndicato
 | `InpHaltOnBreach` | false |
 | `InpCommissionPerVolume` / `InpSlippagePoints` | 0.0 / 0.0 |
 
-EA cần indicator `Wonderwhales` đã cài trong `MQL5\Indicators\PinePort\`. Chạy `WonderwhalesContractTests`
-trước; tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0` (chưa chạy runtime,
-xem [`install-and-test.md`](install-and-test.md)).
+EA cần indicator `Wonderwhales` đã cài trong `MQL5\Indicators\PinePort\`. `WonderwhalesContractTests` đã
+**PASS 36/36** trong Strategy Tester (2026-10-28); tab **Experts** có
+`TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0`.
 
 Lưu ý spec thật của `XAUUSDm` trên tài khoản demo Exness: **3 digits, point 0.001, contract size 100**;
 spread đo tại 2026.09.01 00:00 là **260 points** (~0.26 USD). Vì vậy mặc định dùng
