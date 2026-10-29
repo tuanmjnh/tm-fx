@@ -34,7 +34,7 @@
 | 15 | Không có credential/account ID trong docs/log | Review `git diff` và log MT5 trước commit | Đạt: log compile không chứa account/server |
 | 16 | Preset Track C fail-closed | `scripts\validate_sim_configs.py` | Đạt: checked=7 fail=0 (6 preset, 17 scenario); snapshot bất biến |
 | 16b | Preset demo fail-closed | `scripts\validate_demo_execution.py` | Đạt: checks=6 fail=0; DEMO_ONLY, `InpEnableExecution=false`, TP bắt buộc, magic tách khỏi bản mô phỏng |
-| 16c | Guard contract test | Compile + chạy `mt5\Scripts\ExecGuardTests.mq5` | Compile 0/0; chạy trong MetaEditor để xác nhận guard matrix (chưa chạy: `NOT_RUN`) |
+| 16c | Guard contract test | Compile + chạy `mt5\Scripts\ExecGuardTests.mq5` | Compile 0/0; **runtime PASS** 2026-10-29 (xem mục 10) |
 | 17 | Build MQL5 toàn bộ | `scripts\build-mql5.ps1` | Đạt: 29 source, 0 errors, 0 warnings (2026-10-29) |
 | 18 | Static scan toàn project | `scripts\validate-project.py` | Đạt: checks=14 fail=0; 62 source không có API giao dịch ngoài scope/placeholder |
 | 19 | Package source loại artifact | `scripts\package-source.ps1 -Version <x.y.z>` | Đạt: không có `.venv`, `.ex5`, log, report trong zip; manifest SHA256 |
@@ -53,9 +53,9 @@
 | 7 | Strategy Tester cho 4 EA mô phỏng (12 scenario) | **PASS một phần** 2026-10-28: 10/10 scenario runner/grid/DCA có SUMMARY; 2 `plan_*` `BLOCKED_PERFORMANCE` (1 tháng chẩn đoán 197 s, 0 entry) |
 | 8 | CSV thật của runner/grid/DCA/plan | Có CSV thật cho 10 scenario (archived, gitignored); DCA `adds=0` là bug reporting, CSV chứng minh 2 add |
 | 9 | Contract test 6 indicator trong Strategy Tester | **PASS 6/6** (547 check) 2026-10-28; 3 bug implementation đã sửa |
-| 10 | `ExecGuardTests` trong MetaEditor | Chưa chạy: `NOT_RUN`; chỉ compile 0/0. Chạy script để xác nhận toàn bộ guard matrix |
+| 10 | `ExecGuardTests` trong MetaEditor | **PASS** 2026-10-29: `TEST\|BEGIN\|suite=execguard` → `TEST\|G1..G51\|PASS` → `TEST\|RESULT\|ALL_PASS\|pass=51 fail=0\|suite=execguard` (log `MQL5\Logs\20261029.log`, chạy như script trên chart XAUUSDm,M5). Script là synthetic: không gọi `OrderSend`, không đọc thông tin tài khoản — nên PASS này chứng minh **ma trận guard**, không chứng minh đường gửi lệnh thật của `ExecBroker.mqh` |
 | 11 | Dry-run `PATrendRiderXAUv1DemoEA` trên demo | **PASS** 2026-10-29 trên demo `464140826` (Exness-MT5Trial17, hedge): `INIT mode=DRY_RUN`, một `RISK ENTRY_BLOCKED reason=bias_unknown`, `SUMMARY entries=0 exits=0 net=0.00`, tab Trade trống. Lưu ý: dry-run không khởi tạo được khi nút Algo Trading của terminal tắt (`scope_rejected|terminal_trade_disabled`) |
-| 12 | Demo execution một phiên có giám sát | **ĐANG CHẠY** 2026-10-29: `InpEnableExecution=true`, `INIT mode=DEMO_EXECUTION config_hash=6B439450`, `restored=1`. Chưa có `ENTRY`/`EXIT` nào; kill switch chưa thử. Kết luận phiên chỉ ghi khi có bằng chứng thật |
+| 12 | Demo execution một phiên có giám sát | **ĐANG CHẠY** 2026-10-29: `InpEnableExecution=true`, `INIT mode=DEMO_EXECUTION config_hash=6B439450`, `restored=1`. CSV `pa_trendrider_demo.csv` có sự kiện cấu trúc thật (`BOS tf=M5 event=BOS_BEAR`) và hai `RISK ENTRY_BLOCKED reason=regime_range` — EA sống, chặn đúng luật, chưa có `ENTRY`/`EXIT`. Kill switch mới được kiểm ở mức token (`G46`: `ExecBlockName(EXEC_BLOCK_KILL_SWITCH)=="kill_switch_active"`), chưa thử bằng file `PA_TREND_RIDER_DEMO_STOP.txt` thật. Kết luận phiên chỉ ghi khi có bằng chứng thật |
 
 ## 3. Trước khi commit/tag
 

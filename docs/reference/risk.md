@@ -167,7 +167,9 @@
 - **Không đăng nhập tài khoản live:** không dùng login/password/investor password/OTP; nếu terminal hiện
   hộp thoại đăng nhập thì Cancel. Không lưu credential trong config, log, report hay Git.
 - **Kết quả compile không phải kết quả runtime:** compile 0 errors/0 warnings chỉ chứng minh cú pháp.
-  `ExecGuardTests` vẫn là `NOT_RUN` (mới compile). Đường demo đã có log thật đầu tiên ngày 2026-10-29 —
+  `ExecGuardTests` đã chạy thật 2026-10-29 với `pass=51 fail=0`, nhưng đó là test synthetic không gọi
+  `OrderSend` — đường gửi lệnh thật của `ExecBroker.mqh` vẫn chưa có bằng chứng runtime. Đường demo đã có
+  log thật đầu tiên ngày 2026-10-29 —
   dry-run `entries=0` và một phiên `mode=DEMO_EXECUTION` chưa có `ENTRY` — ghi ở
   [`../PROGRESS.md`](../PROGRESS.md) §43.5; vẫn không suy diễn hành vi từ compile hay từ test vector.
 - **Live/real vẫn là phạm vi mới:** muốn execution trên tài khoản thật phải lập ADR mới, review riêng và

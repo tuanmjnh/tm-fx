@@ -1846,6 +1846,7 @@ Hai phát hiện runtime khi thao tác với terminal đang mở:
 | `scripts\validate_demo_execution.py` | `SUMMARY: checks=6 fail=0` |
 | `scripts\build-mql5.ps1` | **29 source, 0 errors, 0 warnings**, `BUILD_OK` |
 | `scripts\deploy_pineport.ps1` | `DEPLOY_OK`; dry-run 56 file `identical`, 25 target 0/0 |
+| `ExecGuardTests.mq5` chạy trong terminal | `TEST\|RESULT\|ALL_PASS\|pass=51 fail=0\|suite=execguard` |
 
 Test mới trong `python/tests/test_validate_project.py` chứng minh allow-list đi đúng hai chiều: `OrderSend`
 chỉ được phép trong `EXEC_SOURCES`, còn `WebRequest` vẫn bị chặn ngay cả trong file exec.
@@ -1871,6 +1872,13 @@ trước đây mọi mục ở phần này là `NOT_RUN`.
    rồi `REGIME regime=RANGE bias=range_both h1=UNKNOWN m15=UNKNOWN`. State file
    `pa_trendrider_demo_state.csv`: `ledger day_start=5000.00000000 peak=5000.00000000 streak=0 dd_locked=0`.
    Chưa có dòng `ENTRY`/`EXIT` nào.
+4. **Tín hiệu runtime thật tiếp theo** (chart đã chuyển sang `XAUUSDm,M5`): `BOS tf=M5 event=BOS_BEAR`
+   ngay sau đó `RISK SELL ENTRY_BLOCKED reason=regime_range regime=RANGE spread_points=240.0` — engine phát
+   hiện break-of-structure và **chặn** vì H1/M15 vẫn `RANGE`, đúng luật "không vào lệnh trong vùng tích lũy".
+5. **`ExecGuardTests` trong terminal**: `TEST|BEGIN|suite=execguard` → `TEST|G1..G51|PASS` →
+   `TEST|RESULT|ALL_PASS|pass=51 fail=0|suite=execguard` (log `MQL5\Logs\20261029.log`, 09:32:46). Script là
+   synthetic — nó chỉ gọi `ExecGuard` với dữ giả, không `OrderSend` — nên PASS này chứng minh ma trận guard,
+   **không** chứng minh đường gửi lệnh thật của `ExecBroker.mqh`.
 
 `RISK` chỉ ghi khi reason chặn đổi (`reason==g_last_block_reason` → return) và `REGIME` chỉ ghi khi regime
 đổi, nên CSV đứng yên nhiều phút là **bình thường**, không phải EA treo; H1/M15 đang `UNKNOWN`/`RANGE` nên
@@ -1880,10 +1888,11 @@ chưa có setup hợp lệ.
 
 - Chưa có lệnh nào được gửi; phiên execution mới bắt đầu và **không** chứng minh chiến lược có lợi nhuận.
   0 entry là kết quả hợp lệ, không phải thành tích.
-- `ExecGuardTests` mới compile 0/0, **chưa chạy** trong MetaEditor → guard matrix vẫn `NOT_RUN`.
-- Kill switch (`PA_TREND_RIDER_DEMO_STOP.txt`) chưa được thử trên tài khoản demo.
-- Chart gắn EA là `XAUUSDm,H1`; logic không phụ thuộc timeframe chart vì EA tự lấy H1/M15/M5 theo input và
-  phát hiện bar mới theo `InpEntryTF`.
+- `ExecGuardTests` đã chạy thật: `pass=51 fail=0` (2026-10-29). Vì script synthetic nên **đường `OrderSend`
+  thật của `ExecBroker.mqh` vẫn chưa có bằng chứng runtime** — cần một `ENTRY` thật trên demo để đóng mục này.
+- Kill switch (`PA_TREND_RIDER_DEMO_STOP.txt`) mới được kiểm ở mức token (`G46`), chưa thử bằng file thật.
+- Chart gắn EA hiện là `XAUUSDm,M5` (trước đó `H1`); logic không phụ thuộc timeframe chart vì EA tự lấy
+  H1/M15/M5 theo input và phát hiện bar mới theo `InpEntryTF`. Chuyển timeframe chỉ làm EA nạp lại.
 - Một phiên demo, một symbol, một bộ tham số; kết quả chỉ có giá trị dry-run/giám sát, không phải điều kiện
   để chạy live.
 
