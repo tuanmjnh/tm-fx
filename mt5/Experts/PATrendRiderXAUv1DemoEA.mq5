@@ -1317,14 +1317,15 @@ int OnInit(void)
                          "timeframes=%s|point=%.8f|volume_min=%.2f|"+
                          "volume_step=%.2f|contract_size=%.2f|"+
                          "stops_level_points=%.1f|freeze_level_points=%.1f|"+
-                         "equity=%.2f|config_hash=%s",
+                         "equity=%.2f|config_hash=%s|mql_trade_allowed=%d",
                          (g_dry_run ? "DRY_RUN" : "DEMO_EXECUTION"),
                          TRStateName(g_state.State()),(restored ? 1 : 0),
                          _Symbol,InpAllowedSymbols,InpMagicNumber,
                          InpTakeProfitR,g_tf_text,g_spec.point,
                          g_spec.volume_min,g_spec.volume_step,
                          g_spec.contract_size,g_spec.stops_level_points,
-                         g_spec.freeze_level_points,equity,g_config_hash));
+                         g_spec.freeze_level_points,equity,g_config_hash,
+                         (MQLInfoInteger(MQL_TRADE_ALLOWED) ? 1 : 0)));
 
    g_ready=true;
    DrawChartStatus(TR_REGIME_UNKNOWN,"waiting_first_bar","none",0.0,0.0,0);

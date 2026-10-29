@@ -195,14 +195,15 @@
 - **Probe dùng một chiều BUY:** `ExecOpenMarket(is_buy=false)` đi qua cùng mã nhưng chiều SELL chưa có
   bằng chứng runtime trên server thật; retcode từ chối theo giờ, freeze hay requite cũng chưa được kiểm.
 - **Cờ "Allow Algo Trading" riêng của chương trình:** guard của DemoEA đọc `TERMINAL_TRADE_ALLOWED` của
-  terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản nhưng **không** đọc `MQL_TRADE_ALLOWED`, nên nếu cờ
-  này tắt thì lỗi chỉ lộ ra lúc có tín hiệu chứ không fail ở `INIT`. `ExecDemoProbe` thì từ chối chạy khi
-  `MQL_TRADE_ALLOWED` tắt — đó là lý do nó chứng minh được cả ba lớp bật cùng lúc.
-- **Gắn EA qua `[StartUp]` không tự chứng minh `MQL_TRADE_ALLOWED`:** khi terminal nạp EA bằng
-  `/config:` + `[StartUp] Expert=…`, quyền giao dịch của EA đến từ `[Experts] AllowLiveTrading=1`. Nếu
-  thiếu key này, `OnInit` vẫn `mode=DEMO_EXECUTION` (guard không đọc `MQL_TRADE_ALLOWED`) và lệnh đầu
-  tiên mới lộ `OrderSend` error 10027. Vì vậy sau mỗi lần gắn bằng startup config phải kiểm cả
-  `AllowLiveTrading=1` lẫn dòng `INIT`, và lần `ENTRY` đầu tiên vẫn là bằng chứng cuối cùng.
+  terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản. Từ 2026-10-29 dòng `INIT` ghi thêm
+  `mql_trade_allowed=1|0` từ `MQLInfoInteger(MQL_TRADE_ALLOWED)`, nên quyền của chính EA được kiểm ngay
+  khi nạp thay vì đợi tín hiệu. Đây là **quan sát**, không phải lớp chặn: EA vẫn `INIT_SUCCEEDED` khi cờ
+  tắt và lỗi chỉ lộ ở `OrderSend` (error 10027). `ExecDemoProbe` thì từ chối chạy khi cờ tắt — đó là lý
+  do nó chứng minh được cả ba lớp bật cùng lúc.
+- **Gắn EA qua `[StartUp]`:** quyền giao dịch của EA đến từ `[Experts] AllowLiveTrading=1`. Sau mỗi lần
+  nạp bằng startup config, kiểm `INIT` phải có `mql_trade_allowed=1`; nếu là `0` thì dừng và sửa cấu
+  hình, đừng chờ tín hiệu để thấy `OrderSend` error 10027. Lần `ENTRY` đầu tiên vẫn là bằng chứng cuối
+  cùng về phía server (fill, slippage, requote).
 - **Algo Trading của terminal nằm trong file cấu hình:** build 6292 lưu trạng thái ở
   `config\common.ini` → `[Experts] Enabled=`, kèm cờ tự tắt `Account=1, Profile=1, Chart=0, Api=0`. Khi
   `Enabled=0`, mọi EA có guard `terminal_trade_disabled` từ chối `OnInit` mã 1 (fail-closed đúng thiết kế).

@@ -2524,8 +2524,8 @@ thì xem bar đổi trạng thái (BOS/REGIME) hoặc `SUMMARY` sau `OnDeinit`.
 
 ### 50.6 Còn mở
 
-- **Chưa có `ENTRY` thật** từ DemoEA (kỳ vọng ~3.1 lệnh/tháng); `MQL_TRADE_ALLOWED` vẫn chưa được chứng
-  minh cho tới lần `OrderSend` đầu tiên.
+- **Chưa có `ENTRY` thật** từ DemoEA (kỳ vọng ~3.1 lệnh/tháng); `MQL_TRADE_ALLOWED` khi đó chỉ lộ ra ở
+  lần `OrderSend` đầu tiên — nay đã kiểm được ngay từ `INIT`, xem §52.
 - 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Pine ↔ MQL5 Track B vẫn `BLOCKED` (thiếu CSV
   reference từ TradingView).
 
@@ -2596,7 +2596,54 @@ Panel nằm đè lên nhãn `XAUUSDm,M5` ở góc trên trái (xem ghi chú tron
 ### 51.4 Còn mở
 
 - **Vẫn chưa có `ENTRY`**: panel chứng minh EA sống và cho thấy lý do chặn, **không** chứng minh
-  `MQL_TRADE_ALLOWED`; điều đó chỉ lộ ra ở lần `OrderSend` đầu tiên (lỗi 10027 nếu thiếu).
+  `MQL_TRADE_ALLOWED`; điều đó chỉ lộ ra ở lần `OrderSend` đầu tiên (lỗi 10027 nếu thiếu) — §52 đã ghi
+  cờ này ngay trong `INIT`.
 - Không nới gate nào để "thấy lệnh": vẫn chờ tín hiệu hợp lệ theo regime/BOS; cron watcher
   `051f5383` vẫn báo khi có `ENTRY`.
+- 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Track B vẫn `BLOCKED` (thiếu CSV reference).
+
+## 52. Kiểm tra quyền giao dịch và chạy live lại trên demo — 2026-10-29
+
+### 52.1 Yêu cầu và khoảng trống được đóng
+
+Người dùng yêu cầu *"kiểm tra và thực hiện chạy trực tiếp"*. Trước §52, trạng thái "EA đã được phép giao
+dịch live demo" chưa kiểm được tại thời điểm nạp: guard chỉ đọc `ACCOUNT_TRADE_MODE_DEMO`,
+`ACCOUNT_TRADE_ALLOWED`, `TERMINAL_TRADE_ALLOWED`, còn `MQL_TRADE_ALLOWED` (quyền riêng của EA, đến từ
+`[Experts] AllowLiveTrading=1`) chỉ lộ ra ở `OrderSend` đầu tiên với error 10027.
+
+Thay đổi: dòng `INIT` ghi thêm `mql_trade_allowed=%d` từ `MQLInfoInteger(MQL_TRADE_ALLOWED)`
+([`../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5:1320`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1320)).
+Đây là **quan sát**, không phải lớp chặn: EA vẫn `INIT_SUCCEEDED` khi cờ tắt, guard và điều kiện vào lệnh
+không đổi.
+
+### 52.2 Compile, nạp lại và kết quả
+
+- Compile `Result: 0 errors, 0 warnings` (3409 ms), `.ex5` ghi lúc 18:23:14 local.
+- Khởi động lại lúc 18:23:22 local từ `reports/build/demo-arm/startup.ini`.
+- Journal: `47 inputs read from expert ...`, `expert PATrendRiderXAUv1DemoEA (XAUUSDm,M5) loaded successfully`,
+  `'464140826': authorized on Exness-MT5Trial17 ... (ping: 67.93 ms)`,
+  `terminal synchronized ... 0 positions, 0 orders, 355 symbols`,
+  `trading has been enabled, demo account - hedging mode`.
+- `INIT` lúc `11:23:25` UTC:
+  `mode=DEMO_EXECUTION|restored=1|equity=4999.76|config_hash=6B439450|mql_trade_allowed=1`.
+- Panel (ảnh `reports/build/shots/screen8.png`, gitignored): `DEMO_EXECUTION`, `magic=25002001`,
+  `state=WAITING_FOR_SETUP`, `regime=RANGE`, `bias=timeframe_conflict`, `bar=11:15`,
+  `block=ENTRY_BLOCKED|reason=bias_unknown`, `position=none`, `entries=0`, `exits=0`.
+- Bar `11:15`: `REGIME regime=RANGE|bias=timeframe_conflict` và `RISK ENTRY_BLOCKED|reason=bias_unknown|
+  spread_points=240.0|atr=4.02` — đúng những gì panel hiển thị.
+- Tài khoản: balance/equity 4 999.76, 0 vị thế, 0 lệnh.
+
+### 52.3 Phân biệt với lần Strategy Tester 18:18
+
+Cùng ngày, lúc 18:18:49 local có một lần chạy `PATrendRiderXAUv1DemoEA.ex5` **trong Strategy Tester**
+(dữ liệu 2026.01.05, 1 lệnh buy, SL dời về hòa, `final balance 5000.00`, `connection closed`). Đó là
+backtest, không phải phiên live. Phiên live là chart `XAUUSDm,M5` trên tài khoản demo 464140826, chạy
+tick thật từ server; hai thứ độc lập và Strategy Tester không ảnh hưởng EA trên chart.
+
+### 52.4 Còn mở
+
+- **Chưa có `ENTRY`** — panel/CSV đang chặn ở `bias_unknown` (`regime=RANGE`, H1/M15 xung đột). Không nới
+  gate nào để tạo lệnh; watcher `051f5383` sẽ báo khi có `ENTRY`/`EXIT`.
+- `mql_trade_allowed=1` chứng minh quyền phía terminal; phía server (fill/requote/slippage) đã có bằng
+  chứng probe ngày 2026-10-29 (`reference/release.md` mục 16), lần `ENTRY` thật vẫn là bằng chứng cuối.
 - 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Track B vẫn `BLOCKED` (thiếu CSV reference).

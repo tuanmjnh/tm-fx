@@ -108,8 +108,8 @@ Period=M5
   `InpEnableExecution=true`, `InpResetStateOnInit=false`; giữ nguyên `InpLogFile`/`InpStateFile` nếu muốn
   nối tiếp journal và ledger đang có.
 - `Enabled=1` là nút **Algo Trading**; `AllowLiveTrading=1` là quyền giao dịch cấp cho EA được nạp lúc
-  khởi động. Thiếu `AllowLiveTrading=1` thì `OnInit` vẫn qua (DemoEA **không** đọc `MQL_TRADE_ALLOWED`)
-  nhưng lệnh đầu tiên sẽ bị terminal chặn với `OrderSend` error 10027 — xem
+  khởi động. Dòng `INIT` ghi thêm `mql_trade_allowed=1|0` (từ 2026-10-29); nếu là `0` thì terminal chưa
+  cấp quyền và lệnh đầu tiên sẽ bị chặn với `OrderSend` error 10027 — xem
   [`../reference/risk.md`](../reference/risk.md).
 - File cấu hình chỉ chứa input chiến lược và cờ quyền; **không** chứa login/password/server. Terminal vẫn
   dùng phiên đăng nhập đã lưu; đăng nhập lại là thao tác tay, agent không điền hộ.
@@ -196,7 +196,7 @@ CSV `pa_trendrider_demo.csv` dùng schema 18 cột của `SimLogger`. Tên event
 
 | Event | Ý nghĩa |
 |---|---|
-| `INIT` | Chế độ (`DRY_RUN`/`DEMO_EXECUTION`), `state`, `restored`, symbol, magic, TP R, `config_hash` |
+| `INIT` | Chế độ (`DRY_RUN`/`DEMO_EXECUTION`), `state`, `restored`, symbol, magic, TP R, `config_hash`, `mql_trade_allowed` |
 | `REGIME` | Chỉ ghi khi regime đổi: `regime`, `bias`, `h1`, `m15`, `vol`, `spread_block`, `risk_lock` |
 | `RISK` | `side`, `price`, `atr` khi vào lệnh; `ENTRY_BLOCKED|reason=…` khi bị chặn (chỉ ghi khi reason đổi) |
 | `BOS` | Break-of-structure trên `M5`/`M15` |
