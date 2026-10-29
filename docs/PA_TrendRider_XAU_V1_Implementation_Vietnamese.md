@@ -109,17 +109,23 @@ daily/DD/streak/cooldown, serialize ledger, BE/trailing đơn điệu, state tra
 ### 6.2 Strategy Tester
 
 Điều kiện chung: `XAUUSDm`, chart M5, model *1 minute OHLC*, 2026-01-05 → 2026-03-05, deposit
-10 000 USD (stress: 5 000 USD), leverage 1:100, không tối ưu tham số.
+**5 000 USD** cho cả hai scenario, leverage 1:100, không tối ưu tham số.
 
 | Scenario | Entry | Exit | Win/Loss | Net mô phỏng | Max DD | Ghi chú |
 |---|---|---|---|---|---|---|
-| `pa_trendrider_baseline` | 13 | 13 | 2 / 11 | **−140.46** | 1.75% | spread 160–360 điểm; 18 lần cooldown; 0 daily/DD lock |
-| `pa_trendrider_cost_stress` | 4 | 4 | 0 / 4 | **−37.28** | 0.94% | commission 5/lot, slippage 20 điểm, spread cap 400 |
+| `pa_trendrider_baseline` | 4 | 4 | 0 / 4 | **−36.72** | 0.93% | spread 160–360 điểm; 6 lần cooldown; 22 setup bị `lot_rejected` |
+| `pa_trendrider_cost_stress` | 4 | 4 | 0 / 4 | **−37.28** | 0.94% | commission 5/lot, slippage 20 điểm, spread cap 400; 60 lần chặn spread |
 
-- Tất cả exit của baseline là SL/trailing (13 `SL_GAP`, gap nhỏ do tick 1 phút); không có TP.
-- Audit CSV: 18 cột, ENTRY/EXIT khớp cặp, không có vị thế mở cuối kỳ, BUY có SL < entry, SELL có
-  SL > entry, 7 lần trailing đều siết SL, không có lệnh trùng.
-- Chạy lại baseline cho **cùng kết quả** (−140.46, 13 lệnh, cùng `config_hash=274661E5`).
+- Cả 8 exit đều là `SL_GAP` (gap nhỏ do tick 1 phút); không có TP. Có 1 lần trailing break-even
+  (`profit_r≈1.0`) và 0 lần daily/DD lock.
+- Audit CSV: 18 cột, ENTRY/EXIT khớp cặp, không có vị thế mở cuối kỳ, BUY có SL < entry, `tp=0`,
+  trailing chỉ siết SL.
+- Chạy lại baseline cho **cùng kết quả tuyệt đối**: 4 lệnh, net −36.72, `config_hash=5935E19B`,
+  SHA256 CSV `557ef758…f717c`.
+- **Vì sao ít lệnh hơn bản 10 000 USD:** với 5 000 USD và risk 0.25% (12.50 USD), lot tối thiểu 0.01 chỉ
+  chịu được stop tới ~12.5 USD; 22 setup có stop xa hơn bị EA từ chối đúng với
+  `lot_rejected|min_volume_exceeds_risk`. Bản 10 000 USD (risk 25 USD) chạy 13 lệnh. Đây là thay đổi do
+  giới hạn lot, không phải do tín hiệu.
 - **Diễn giải trung thực:** đây là baseline của một giả thuyết chưa tối ưu, lỗ nhẹ trong mẫu 2 tháng;
   không đủ để kết luận chiến lược tốt hay xấu, càng không phải khuyến nghị giao dịch.
 
@@ -134,10 +140,15 @@ daily/DD/streak/cooldown, serialize ledger, BE/trailing đơn điệu, state tra
 
 ### 6.4 Áp lực rủi ro đã biết
 
-Với balance 1 000 USD và risk 0.25% (2.50 USD), lot tối thiểu 0.01 của XAUUSDm lỗ khoảng 10 USD cho
-stop 10 USD → EA **từ chối đúng** với `lot_rejected|min_volume_exceeds_risk`. Preset dùng 10 000 USD
-để có volume 0.01–0.02. Đây là xung đột giữa đặc tả và giới hạn lot của broker, cần quyết định sản
-phẩm riêng (tăng risk, tăng balance hoặc chấp nhận bỏ tín hiệu).
+Với balance 5 000 USD và risk 0.25% (12.50 USD), lot tối thiểu 0.01 của XAUUSDm lỗ đúng bằng khoảng
+cách stop tính bằng USD (0.01 lot × contract 100). Stop ATR/cấu trúc thường 7–12 USD nên phần lớn
+khớp, nhưng stop rộng hơn 12.5 USD bị **từ chối đúng** với `lot_rejected|min_volume_exceeds_risk`
+(22 lần trong mẫu). Với 1 000 USD (risk 2.50 USD) gần như mọi setup bị chặn; bản 10 000 USD
+(risk 25 USD) chạy 13 lệnh.
+
+Đây là xung đột giữa đặc tả (risk 0.25%) và giới hạn lot của broker, cần quyết định sản phẩm riêng:
+tăng balance, tăng risk percent, hoặc chấp nhận bỏ tín hiệu. Không được hạ chuẩn lot hay bỏ kiểm tra
+risk để che xung đột này.
 
 ## 7. Chạy lại
 

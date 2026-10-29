@@ -1748,10 +1748,10 @@ Vector P23/P24 thêm vào `SimCoreTests`.
 | Compile Data Folder (EA + wrapper) | **0 errors, 0 warnings** |
 | `TrendRiderContractTests` | **ALL_PASS pass=82 fail=0** (lần đầu 77/4 do vector sai; lần hai 80/1 do float floor; lần ba 81/1 do include cũ; lần bốn PASS) |
 | `SimCoreTests` | **ALL_PASS pass=125 fail=0** (gồm contract size) |
-| Baseline `XAUUSDm` M5 2026.01.05–03.05 | 13 entry/13 exit, 2 thắng/11 thua, net **−140.46**, DD **1.75%**, spread 160–360 điểm, 18 lần cooldown, 0 daily/DD lock |
-| Cost stress (commission 5/lot, slippage 20 điểm, balance 5 000) | 4 entry/4 exit, 0 thắng, net **−37.28**, DD **0.94%** |
-| Chạy lại baseline | Cùng `config_hash=274661E5`, cùng 13 lệnh, cùng −140.46 → tái lập được |
-| Audit CSV | 18 cột; ENTRY/EXIT khớp; BUY SL<entry, SELL SL>entry; `tp=0`; 7 trail đều siết SL; 0 vị thế mở cuối kỳ |
+| Baseline `XAUUSDm` M5 2026.01.05–03.05, deposit 5 000 | 4 entry/4 exit, 0 thắng/4 thua, net **−36.72**, DD **0.93%**, 6 lần cooldown, 22 setup `lot_rejected` |
+| Cost stress (commission 5/lot, slippage 20 điểm, deposit 5 000) | 4 entry/4 exit, 0 thắng, net **−37.28**, DD **0.94%**, 60 lần chặn spread |
+| Chạy lại baseline | Cùng `config_hash=5935E19B`, cùng 4 lệnh, cùng −36.72, CSV SHA256 trùng → tái lập được |
+| Audit CSV | 18 cột; ENTRY/EXIT khớp; BUY SL<entry; `tp=0`; trail siết SL; 0 vị thế mở cuối kỳ |
 
 Lỗi thật phát hiện và sửa trong quá trình chạy:
 
@@ -1779,14 +1779,15 @@ Lỗi thật phát hiện và sửa trong quá trình chạy:
   chiến lược tốt/xấu và không phải khuyến nghị giao dịch.
 - Không có OrderCalcProfit/Margin, margin check, netting/hedging, account currency, swap; tester hiển
   thị 0 deal. Out-of-sample, tối ưu tham số và demo forward test: `NOT_RUN`/`BLOCKED`.
-- Balance 1 000 USD + risk 0.25% không đủ cho lot tối thiểu 0.01 của XAUUSDm với stop ~10 USD; EA từ
-  chối đúng với `min_volume_exceeds_risk`. Preset dùng 10 000 USD; đây là quyết định sản phẩm cần bàn,
-  không được che bằng cách hạ chuẩn lot.
+- Balance 5 000 USD + risk 0.25% (12.50 USD) chỉ chịu được stop tới ~12.5 USD với lot tối thiểu 0.01
+  của XAUUSDm; 22 setup rộng hơn bị EA từ chối đúng với `min_volume_exceeds_risk`. Đây là quyết định
+  sản phẩm (balance/risk/lot), không được che bằng cách hạ chuẩn lot.
 - Agent tester xóa sandbox `MQL5\Files` đầu mỗi lượt; CSV baseline lần đầu bị mất và phải chạy lại.
   Quy trình chuẩn từ nay: copy bằng chứng ngay sau khi terminal thoát.
 
 ### 42.5 Package
 
-`package-source.ps1 -Version 0.9.0` → `mt5-ea-ai-lab-v0.9.0-20261028-224133.zip`, 241 file, 168 mục bị
-loại (report, `.ex5`, cache, credential), SHA256 `7fdedb4c…8c1f59`. Zip không chứa CSV/report tester;
-bằng chứng runtime nằm trong `reports/build/tester-reports/` (gitignored).
+`package-source.ps1 -Version 0.9.1` → `mt5-ea-ai-lab-v0.9.1-20261029-081621.zip`, 241 file, 168 mục bị
+loại (report, `.ex5`, cache, credential), SHA256 `a90d633e…65e3b8`. Zip không chứa CSV/report tester;
+bằng chứng runtime nằm trong `reports/build/tester-reports/` (gitignored). Bản chạy 10 000 USD trước khi
+hạ vốn được giữ ở `pa_trendrider_baseline_10k/` và `pa_trendrider_cost_stress_priordeposit/`.

@@ -9,7 +9,7 @@
   "symbol": "XAUUSDm",
   "timeframe": "M5",
   "inputs": {
-    "InpInitialBalance": 10000.0,
+    "InpInitialBalance": 5000.0,
     "InpEnableLog": true,
     "InpLogFile": "pa_trendrider_log.csv",
     "InpPersistState": true,

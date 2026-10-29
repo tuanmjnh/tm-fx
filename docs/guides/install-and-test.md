@@ -1122,8 +1122,8 @@ python reports\build\tester-run\gen_trendrider_sets.py
 | Hạng mục | Kết quả |
 |---|---|
 | Contract suite | **82/82 PASS** |
-| Baseline `pa_trendrider_baseline` | 13 entry/13 exit, 2 thắng/11 thua, net mô phỏng −140.46, DD 1.75% |
-| Cost stress `pa_trendrider_cost_stress` | 4 entry/4 exit, 0 thắng, net mô phỏng −37.28, DD 0.94% |
+| Baseline `pa_trendrider_baseline` (deposit 5 000) | 4 entry/4 exit, 0 thắng, net mô phỏng −36.72, DD 0.93%; 22 setup `lot_rejected` |
+| Cost stress `pa_trendrider_cost_stress` (deposit 5 000) | 4 entry/4 exit, 0 thắng, net mô phỏng −37.28, DD 0.94% |
 | Tester report | 0 deal (đúng thiết kế simulation-only) |
 
 Không suy ra lợi nhuận hay độ sẵn sàng live từ hai lượt chạy ngắn này.

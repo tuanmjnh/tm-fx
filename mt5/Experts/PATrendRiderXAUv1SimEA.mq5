@@ -31,7 +31,7 @@
 #include "../Include/TrendRider/TRMarketData.mqh"
 
 input group "Simulation"
-input double InpInitialBalance        = 10000.0;
+input double InpInitialBalance        = 5000.0;
 input bool   InpEnableLog             = true;
 input string InpLogFile               = "pa_trendrider_log.csv";
 input bool   InpPersistState          = true;
