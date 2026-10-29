@@ -2528,3 +2528,62 @@ thì xem bar đổi trạng thái (BOS/REGIME) hoặc `SUMMARY` sau `OnDeinit`.
   minh cho tới lần `OrderSend` đầu tiên.
 - 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Pine ↔ MQL5 Track B vẫn `BLOCKED` (thiếu CSV
   reference từ TradingView).
+
+## 51. Panel trạng thái trên chart cho DemoEA — 2026-10-29
+
+### 51.1 Báo cáo của người dùng và điều tra
+
+Người dùng báo *"mình vẫn chưa thấy bot EA chạy được"*. Kiểm tra tại 10:57 UTC cho thấy EA **đang chạy**,
+không crash và không bị gỡ:
+
+- `terminal64.exe` PID 20572, phiên khởi động từ `reports/build/demo-arm/startup.ini`.
+- Journal có `expert PATrendRiderXAUv1DemoEA (XAUUSDm,M5) loaded successfully`.
+- `pa_trendrider_demo.csv` có `INIT` lúc `10:56:35` (`mode=DEMO_EXECUTION|restored=1|config_hash=6B439450|
+  equity=4999.76`) và `REGIME` cho bar `10:50` (`regime=TREND_DOWN|bias=aligned_bearish`).
+- Không có vị thế, `entries=0`, `exits=0` — chưa có `ENTRY`, đúng như kỳ vọng ~3.1 lệnh/tháng.
+
+Nguyên nhân của cảm nhận "chưa chạy": trước thay đổi này EA **không vẽ gì lên chart** (không `Comment`,
+không `ObjectCreate`), nên trên màn hình chỉ thấy chart đứng yên; cộng với dedup log (§50.5) làm CSV im
+lặng nhiều bar. Đây là khoảng trống quan sát, không phải lỗi runtime.
+
+### 51.2 Thay đổi: panel hiển thị, không đụng logic giao dịch
+
+Thêm vào [`../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5):
+
+- `DrawChartStatus(...)` ([`:1155`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1155)) — 5 dòng `Comment()`:
+  mode+magic, symbol/timeframe/spread/ATR/equity, state/regime/bias, bar gần nhất + lý do chặn,
+  position + counters + drawdown + kill switch. Chỉ đọc state sẵn có, **không** gọi `OrderSend`/`CTrade`,
+  không đọc/ghi file.
+- `block_reason` cục bộ trong `AnalyseClosedBar` ([`:1095`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1095)):
+  lấy `decision.reason` ([`:1119`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1119)), `state|<STATE>` khi
+  state machine chặn ([`:1140`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1140)), `position_open`
+  ([`:1143`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1143)).
+- `OnInit` vẽ lần đầu với `waiting_first_bar` ([`:1329`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1329));
+  `OnDeinit` gọi `Comment("")` ([`:1335`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1335)).
+
+Không thay đổi input, preset, guard, sizing hay điều kiện vào lệnh; `config_hash` vẫn `6B439450` sau khi nạp
+lại, chứng minh cấu hình không đổi. Compile `MetaEditor64 /compile` → `Result: 0 errors, 0 warnings`
+(3386 ms), deploy sang `MQL5\Experts` của Data Folder.
+
+### 51.3 Nạp lại và bằng chứng
+
+Hai lần nạp lại (lần hai sau khi thêm tiền tố `"\n\n\n"` để hạ panel khỏi nhãn góc chart):
+
+| Thời điểm (UTC) | Sự kiện trong CSV |
+|---|---|
+| 10:55:23 | `SUMMARY` của phiên trước — `OnDeinit` chạy sạch |
+| 10:55:41 | `INIT mode=DEMO_EXECUTION restored=1 equity=4999.76 config_hash=6B439450` |
+| 10:56:21 | `SUMMARY` của lần nạp lại thứ nhất |
+| 10:56:35 | `INIT` lần hai, cùng tham số; `REGIME` bar 10:50 `TREND_DOWN/aligned_bearish` |
+
+Ảnh chụp `reports/build/shots/screen3.png` (gitignored) cho thấy chart `XAUUSDm,M5` với panel hiển thị
+`DEMO_EXECUTION`, `magic=25002001`, state/regime/bias/bar/block/position, và balance/equity 4 999.76.
+Panel vẫn hơi chồng lên nhãn `XAUUSDm,M5` của terminal ở góc trên trái, nhưng đọc được.
+
+### 51.4 Còn mở
+
+- **Vẫn chưa có `ENTRY`**: panel chứng minh EA sống và cho thấy lý do chặn, **không** chứng minh
+  `MQL_TRADE_ALLOWED`; điều đó chỉ lộ ra ở lần `OrderSend` đầu tiên (lỗi 10027 nếu thiếu).
+- Không nới gate nào để "thấy lệnh": vẫn chờ tín hiệu hợp lệ theo regime/BOS; cron watcher
+  `051f5383` vẫn báo khi có `ENTRY`.
+- 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Track B vẫn `BLOCKED` (thiếu CSV reference).

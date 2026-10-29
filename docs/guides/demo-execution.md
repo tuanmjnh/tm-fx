@@ -126,6 +126,34 @@ rồi dòng `INIT` trong `pa_trendrider_demo.csv` phải là `mode=DEMO_EXECUTIO
 và `restored=1` khi state file còn nguyên. Nếu thấy `mode=DRY_RUN` thì preset không được nạp — dừng lại,
 kiểm tra đường dẫn `MQL5\Presets` và tên key trong `.set`, không sửa mặc định của EA.
 
+### 4.2 Panel trạng thái trên chart
+
+EA vẽ panel bằng `Comment()` ở góc trên trái chart
+([`../../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5:1155`](../../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1155))
+để thấy ngay EA còn sống và đang bị chặn bởi đâu, không cần mở CSV. Dạng hiển thị (giá trị đổi theo bar):
+
+```text
+PATrendRiderXAUv1DemoEA  DEMO_EXECUTION  magic=25002001
+XAUUSDm PERIOD_H1/PERIOD_M15/PERIOD_M5  spread=<pts> pts  atr=<atr>  equity=<equity>
+state=<STATE>  regime=<REGIME>  bias=<bias_reason>
+bar=<server time bar M5 gần nhất>  block=<lý do chặn>
+position=<none|BUY/SELL vol @ entry|sl|tp>  entries=<n>  exits=<n>  dd=<%>  kill=<0|1>
+```
+
+- Dòng 1: chế độ (`DRY_RUN`/`DEMO_EXECUTION`) và magic — kiểm nhanh preset có nạp đúng không.
+- Dòng 3–4 lặp lại `state`, `regime`, `bias` và lý do chặn của bar vừa đóng. `block` nhận `none`,
+  `ENTRY_BLOCKED|reason=…` (từ signal engine), `position_open`, hoặc `state|<STATE>` khi state machine
+  từ chối vào lệnh.
+- **`bar=` là bằng chứng sống**: panel cập nhật trong `AnalyseClosedBar`, tức mỗi lần đóng bar của
+  `InpEntryTF` (M5), không phải mỗi tick. CSV có thể đứng yên nhiều bar do dedup (`REGIME` chỉ ghi khi
+  regime đổi, `ENTRY_BLOCKED` chỉ ghi khi lý do đổi — §6), nhưng `bar=` vẫn nhảy. Ngay sau `OnInit`
+  panel hiện `bias=waiting_first_bar` cho tới bar đầu tiên.
+- Panel chỉ để hiển thị: `Comment()` không gửi lệnh, không đọc/ghi file, và `OnDeinit` xoá panel bằng
+  `Comment("")` nên khi gỡ EA panel biến mất. EA dùng `Comment()` chứ không tạo chart object, nên không
+  để lại object rác trong chart profile.
+- Chuỗi bắt đầu bằng ba dòng trống để hạ panel xuống dưới nhãn `XAUUSDm,M5` do terminal vẽ ở góc trên
+  trái; với chart nhỏ panel vẫn có thể chồng nhẹ lên nhãn đó.
+
 ## 5. Kill switch và dừng khẩn cấp
 
 - Tạo file `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` (nội dung bất kỳ). Tick kế tiếp EA đóng vị thế của

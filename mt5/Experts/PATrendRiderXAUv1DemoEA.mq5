@@ -1092,6 +1092,7 @@ void AnalyseClosedBar(const double bid,const double ask)
 
    UpdateTrailing(true,bid,ask);
 
+   string block_reason="none";
    if(!g_has_position)
      {
       TRSignalContext ctx;
@@ -1115,6 +1116,7 @@ void AnalyseClosedBar(const double bid,const double ask)
       const TRSignalDecision decision=TREvaluateSignal(g_cfg,ctx,m5_bars);
       if(!decision.entry)
         {
+         block_reason=decision.reason;
          const bool protective=(decision.reason=="ENTRY_BLOCKED|reason=risk_locked" ||
                                 decision.reason=="ENTRY_BLOCKED|reason=spread_blocked" ||
                                 decision.reason=="ENTRY_BLOCKED|reason=volatility_high" ||
@@ -1134,10 +1136,47 @@ void AnalyseClosedBar(const double bid,const double ask)
         }
       else if(EntryAllowedByState())
          AttemptEntry(m5_snapshot,decision,bid,ask,equity);
+      else
+         block_reason="state|"+TRStateName(g_state.State());
      }
+   else
+      block_reason="position_open";
 
    if(g_persist_dirty)
       WriteStateFile();
+
+   DrawChartStatus(regime,bias.reason,block_reason,atr_m5,spread_points,
+                   m5_bars[ArraySize(m5_bars)-1].time);
+  }
+
+//+------------------------------------------------------------------+
+//| On-chart status panel. Display only: no order/trade calls.       |
+//+------------------------------------------------------------------+
+void DrawChartStatus(const ENUM_TR_REGIME regime,const string bias_reason,
+                     const string block_reason,const double atr,
+                     const double spread_points,const datetime bar_time)
+  {
+   string position="none";
+   if(g_has_position)
+      position=StringFormat("%s %.2f @ %.3f|sl=%.3f|tp=%.3f",
+                            (g_side==SIM_SIDE_BUY ? "BUY" : "SELL"),g_volume,
+                            g_entry,g_sl,g_tp);
+
+   const string bar_text=(bar_time>0 ? TimeToString(bar_time,
+                                                    TIME_DATE|TIME_MINUTES)
+                                    : "-");
+   Comment(StringFormat(
+              "\n\n\n"
+              "PATrendRiderXAUv1DemoEA  %s  magic=%I64d\n"+
+              "%s %s  spread=%.1f pts  atr=%.2f  equity=%.2f\n"+
+              "state=%s  regime=%s  bias=%s\n"+
+              "bar=%s  block=%s\n"+
+              "position=%s  entries=%d  exits=%d  dd=%.2f%%  kill=%d",
+              (g_dry_run ? "DRY_RUN" : "DEMO_EXECUTION"),InpMagicNumber,
+              _Symbol,g_tf_text,spread_points,atr,AccountEquity(),
+              TRStateName(g_state.State()),TRRegimeName(regime),bias_reason,
+              bar_text,block_reason,position,g_entries,g_exits,DrawdownPct(),
+              (g_kill_switch ? 1 : 0)));
   }
 
 //+------------------------------------------------------------------+
@@ -1287,11 +1326,13 @@ int OnInit(void)
                          g_spec.freeze_level_points,equity,g_config_hash));
 
    g_ready=true;
+   DrawChartStatus(TR_REGIME_UNKNOWN,"waiting_first_bar","none",0.0,0.0,0);
    return(INIT_SUCCEEDED);
   }
 
 void OnDeinit(const int reason)
   {
+   Comment("");
    if(!g_ready)
       return;
    WriteSummary();
