@@ -1165,8 +1165,9 @@ void DrawChartStatus(const ENUM_TR_REGIME regime,const string bias_reason,
    const string bar_text=(bar_time>0 ? TimeToString(bar_time,
                                                     TIME_DATE|TIME_MINUTES)
                                     : "-");
+   // Comment() always starts at the chart's top-left corner; leading blank
+   // lines are dropped, so the panel can overlap the terminal's symbol label.
    Comment(StringFormat(
-              "\n\n\n"
               "PATrendRiderXAUv1DemoEA  %s  magic=%I64d\n"+
               "%s %s  spread=%.1f pts  atr=%.2f  equity=%.2f\n"+
               "state=%s  regime=%s  bias=%s\n"+

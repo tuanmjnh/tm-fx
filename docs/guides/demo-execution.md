@@ -151,8 +151,9 @@ position=<none|BUY/SELL vol @ entry|sl|tp>  entries=<n>  exits=<n>  dd=<%>  kill
 - Panel chỉ để hiển thị: `Comment()` không gửi lệnh, không đọc/ghi file, và `OnDeinit` xoá panel bằng
   `Comment("")` nên khi gỡ EA panel biến mất. EA dùng `Comment()` chứ không tạo chart object, nên không
   để lại object rác trong chart profile.
-- Chuỗi bắt đầu bằng ba dòng trống để hạ panel xuống dưới nhãn `XAUUSDm,M5` do terminal vẽ ở góc trên
-  trái; với chart nhỏ panel vẫn có thể chồng nhẹ lên nhãn đó.
+- `Comment()` luôn bắt đầu ở góc trên trái vùng chart và **bỏ các dòng trống đầu chuỗi** (đã thử thêm
+  ba `\n`: panel không dịch xuống), nên dòng đầu của panel nằm đè lên nhãn `XAUUSDm,M5` do terminal vẽ
+  cùng góc. Chấp nhận đánh đổi này thay vì tạo chart object; phần chữ của panel vẫn đọc được.
 
 ## 5. Kill switch và dừng khẩn cấp
 

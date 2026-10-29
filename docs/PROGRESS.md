@@ -2558,16 +2558,17 @@ Thêm vào [`../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5`](../mt5/Experts/PATrend
   lấy `decision.reason` ([`:1119`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1119)), `state|<STATE>` khi
   state machine chặn ([`:1140`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1140)), `position_open`
   ([`:1143`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1143)).
-- `OnInit` vẽ lần đầu với `waiting_first_bar` ([`:1329`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1329));
-  `OnDeinit` gọi `Comment("")` ([`:1335`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1335)).
+- `OnInit` vẽ lần đầu với `waiting_first_bar` ([`:1330`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1330));
+  `OnDeinit` gọi `Comment("")` ([`:1336`](../mt5/Experts/PATrendRiderXAUv1DemoEA.mq5#L1336)).
 
 Không thay đổi input, preset, guard, sizing hay điều kiện vào lệnh; `config_hash` vẫn `6B439450` sau khi nạp
 lại, chứng minh cấu hình không đổi. Compile `MetaEditor64 /compile` → `Result: 0 errors, 0 warnings`
-(3386 ms), deploy sang `MQL5\Experts` của Data Folder.
+(3498 ms), deploy sang `MQL5\Experts` của Data Folder.
 
 ### 51.3 Nạp lại và bằng chứng
 
-Hai lần nạp lại (lần hai sau khi thêm tiền tố `"\n\n\n"` để hạ panel khỏi nhãn góc chart):
+Ba lần nạp lại: 10:55:41 và 10:56:35 (bản đầu), 11:01:30 (bản bỏ tiền tố `"\n\n\n"` — thử nghiệm cho thấy
+`Comment()` bỏ dòng trống đầu chuỗi, panel **không** dịch xuống, nên đã gỡ tiền tố vô tác dụng này):
 
 | Thời điểm (UTC) | Sự kiện trong CSV |
 |---|---|
@@ -2575,10 +2576,22 @@ Hai lần nạp lại (lần hai sau khi thêm tiền tố `"\n\n\n"` để hạ
 | 10:55:41 | `INIT mode=DEMO_EXECUTION restored=1 equity=4999.76 config_hash=6B439450` |
 | 10:56:21 | `SUMMARY` của lần nạp lại thứ nhất |
 | 10:56:35 | `INIT` lần hai, cùng tham số; `REGIME` bar 10:50 `TREND_DOWN/aligned_bearish` |
+| 11:01:20 | `SUMMARY` trước khi đóng terminal để nạp bản mới |
+| 11:01:30 | `INIT` lần ba, `restored=1`, `config_hash=6B439450`, `equity=4999.76` |
 
-Ảnh chụp `reports/build/shots/screen3.png` (gitignored) cho thấy chart `XAUUSDm,M5` với panel hiển thị
-`DEMO_EXECUTION`, `magic=25002001`, state/regime/bias/bar/block/position, và balance/equity 4 999.76.
-Panel vẫn hơi chồng lên nhãn `XAUUSDm,M5` của terminal ở góc trên trái, nhưng đọc được.
+Ảnh chụp (gitignored, `reports/build/shots/screen4..6.png`) cho thấy chart `XAUUSDm,M5` với panel:
+
+```text
+PATrendRiderXAUv1DemoEA  DEMO_EXECUTION  magic=25002001
+XAUUSDm PERIOD_H1/PERIOD_M15/PERIOD_M5  spread=240.0 pts  atr=3.71  equity=4999.76
+state=WAITING_FOR_SETUP  regime=TREND_DOWN  bias=aligned_bearish
+bar=2026.10.29 11:00  block=ENTRY_BLOCKED|reason=bos_against_bias
+position=none  entries=0  exits=0  dd=0.00%  kill=0
+```
+
+**Bằng chứng sống:** lúc 11:00:37 UTC panel đã nhảy sang `bar=11:00` trong khi CSV **không có dòng mới**
+(chỉ `INIT` và `REGIME` bar 10:55) — đúng cơ chế dedup ở §50.5, và đúng điều panel sinh ra để bù đắp.
+Panel nằm đè lên nhãn `XAUUSDm,M5` ở góc trên trái (xem ghi chú trong guide §4.2); nội dung vẫn đọc được.
 
 ### 51.4 Còn mở
 
