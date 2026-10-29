@@ -193,6 +193,13 @@
   terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản nhưng **không** đọc `MQL_TRADE_ALLOWED`, nên nếu cờ
   này tắt thì lỗi chỉ lộ ra lúc có tín hiệu chứ không fail ở `INIT`. `ExecDemoProbe` thì từ chối chạy khi
   `MQL_TRADE_ALLOWED` tắt — đó là lý do nó chứng minh được cả ba lớp bật cùng lúc.
+- **Algo Trading của terminal nằm trong file cấu hình:** build 6292 lưu trạng thái ở
+  `config\common.ini` → `[Experts] Enabled=`, kèm cờ tự tắt `Account=1, Profile=1, Chart=0, Api=0`. Khi
+  `Enabled=0`, mọi EA có guard `terminal_trade_disabled` từ chối `OnInit` mã 1 (fail-closed đúng thiết kế).
+  Ngày 2026-10-29 file này bị công cụ ghi đè 0 byte; đã dựng lại tối thiểu (`Enabled=1`, `Account=0`,
+  `Profile=0`) và terminal tự bổ sung các mục còn thiếu. Hệ quả phụ: phiên đăng nhập tự động bị mất, nên
+  lần mở kế tiếp cần người dùng tự đăng nhập qua hộp thoại `Login` — bước xác thực **không** được tự động
+  hóa. Không dùng common.ini để bật/tắt bất kỳ thứ gì ngoài algo trading demo.
 - **Probe làm dịch chuyển risk ledger của DemoEA:** `ExecRiskLedger` đọc balance tài khoản, nên −0.24 USD
   do probe gây ra xuất hiện trong dòng `RISK|…|drawdown_pct=0.0048` của EA dù EA không có vị thế nào. Hành
   vi đúng của ledger theo tài khoản, nhưng phải nhớ khi đọc `drawdown_pct` ngay sau khi chạy probe.

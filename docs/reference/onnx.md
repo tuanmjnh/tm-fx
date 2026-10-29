@@ -108,19 +108,22 @@ Compile **không** chứng minh ONNX Runtime trong MT5 chạy được. EA chưa
 | Kiểm tra schema, thứ tự feature, kiểu, normalization, output | Đạt | `model_metadata.json`; test export; parity trên fixture |
 | Đối chiếu Python–ONNX trên fixture cố định | Đạt | 24 hàng, max diff `4.673e-08` < `1e-5` |
 | EA inference-only, không gửi lệnh | Đạt (mã nguồn) | `OnTick` rỗng; không có API order/trade |
-| Dùng `OnnxCreate`/`OnnxRun` nếu build hỗ trợ | Đạt (compile) | 0 errors/0 warnings; chưa chạy runtime |
-| Kiểm thử ONNX trong Strategy Tester | **Chưa đạt** | Cần người dùng chạy thủ công; ghi build terminal |
+| Dùng `OnnxCreate`/`OnnxRun` nếu build hỗ trợ | **Đạt (runtime)** | Build 6292, `XAUUSDm,H1`, `onnx_rows=24`, log `MQL5\Logs\20261029.log` 15:06:37 |
+| Parity runtime EA ↔ Python trên fixture | **PASS** | 24/24 hàng, max abs `4.927e-08`, mean `1.997e-08`, tol `1e-5` (2026-10-29) |
 | Sai schema/feature/model dừng an toàn | Đạt (Python + thiết kế EA) | `load_model`/`export` fail closed; `OnInit` trả lỗi |
 | Không có execution code | Đạt | Không có `OrderSend`/`CTrade` trong EA |
 
-Phase 8 giữ trạng thái `READY_FOR_MANUAL_VALIDATION` vì chưa có kết quả runtime MT5. Không tuyên bố
-tương thích ONNX/MQL5 hoặc parity runtime khi chưa chạy bước 5–6.
+Phase 8 đã chạy runtime thật trên build 6292 (`XAUUSDm,H1`, 2026-10-29): EA nạp `model.onnx`, chạy 24 hàng
+fixture và cho kết quả trùng Python trong tolerance `1e-5` (max `4.927e-08`). GPU không khả dụng trên máy
+này (CUDA provider fail 35, TensorRT fail) nên runtime tự chọn CPU — đây là hành vi đúng của EA, không phải
+lỗi cấu hình. Không tuyên bố tương thích cho build khác 6292.
 
 ## 6. Giới hạn
 
 - Chỉ hỗ trợ graph logistic tuyến tính + sigmoid; chưa có model phi tuyến, LSTM hay ensemble.
 - Input/output `float32`; sai lệch với Python `float64` được chấp nhận trong `1e-5`, không phải bitwise.
-- Chưa kiểm tra ONNX Runtime version, CPU/GPU provider hoặc giới hạn opset của build MT5 5.0.0.6249.
+- Đã ghi nhận ONNX Runtime `api version 1.30.0`, provider CPU (CUDA/TensorRT không dùng được trên máy này);
+  chưa kiểm tra build khác 6292.
 - EA dùng đường dẫn tương đối trong `MQL5/Files`; chưa tự động copy model/fixture.
 - EA chỉ đọc fixture tĩnh, chưa lấy feature từ bar hiện tại; đây là harness kiểm tra inference, không
   phải chiến lược live.

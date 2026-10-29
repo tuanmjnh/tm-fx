@@ -10,16 +10,16 @@ không còn file rời rạc ở thư mục `docs/`.
 > kết nối broker.
 > Xem [`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md).
 
-## 1. Trạng thái tổng hợp (2026-10-28)
+## 1. Trạng thái tổng hợp (2026-10-29)
 
 | Mảng | Phạm vi | Trạng thái |
 |---|---|---|
 | Phase 0 | Kiểm kê môi trường, an toàn, Git | DONE |
-| Phase 1–2 | `LabSignalEA`, signal engine, indicator Wonderwhales | Compile 0/0; runtime thủ công `NOT_RUN` |
+| Phase 1–2 | `LabSignalEA`, signal engine, indicator Wonderwhales | Compile 0/0; `LabSignalEngineTests` runtime **PASS** `pass=53 fail=0`; `LabSignalEA` Strategy Tester **PASS** (0 trade, 2026-10-29) |
 | Phase 3–4 | Data pipeline, validation, backtester Python | DONE |
 | Phase 5 | Parity MQL5/Python, multi-source export | `READY_FOR_MANUAL_VALIDATION`; parity `BLOCKED` vì thiếu CSV reference |
 | Phase 6–7 | Experiment store, ML baseline | DONE |
-| Phase 8 | ONNX export + `LabOnnxInference` | Export/parity Python PASS; runtime MT5 `NOT_RUN` |
+| Phase 8 | ONNX export + `LabOnnxInference` | Export/parity Python PASS; **runtime MT5 PASS** 24/24 hàng, max abs `4.927e-08` (2026-10-29, build 6292, CPU provider) |
 | Phase 9 | Pipeline end-to-end | DONE |
 | Track B | 6 indicator PinePort + contract headless + EA tín hiệu đa nguồn | Compile 0/0; **contract runtime 6/6 PASS** (547 check) |
 | Track C W1–W7, W9, W10 | Simulation core, runner/grid/DCA, plan-driven EA, preset, toolchain | PASS offline (compile + static + Python) |

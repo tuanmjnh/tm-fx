@@ -636,3 +636,64 @@ Một thay đổi logic chỉ được merge khi:
 - Nếu thay đổi chạm logic tín hiệu: cập nhật contract + vector, chạy T3 và ghi kết quả thật.
 - Nếu thay đổi chạm CSV/schema: cập nhật comparator + test, chạy T4.
 - Không thêm API giao dịch hoặc kết nối broker.
+
+## Test plan — LabSignal runtime + Strategy Tester (2026-10-29)
+
+Bổ sung cho các ma trận phía trên: lần đầu chạy runtime cho `LabSignalEngineTests.mq5`, parity EMA,
+runtime ONNX và Strategy Tester cho `LabSignalEA.mq5`. Mọi số liệu dưới đây lấy từ log thật của terminal
+build 6292 trên `XAUUSDm`, không suy ra từ lần chạy trước.
+
+### 1. Ma trận
+
+| ID | Lớp | Nội dung | Công cụ | Kết quả |
+|---|---|---|---|---|
+| L1 | Static | Bố cục, quét API bị cấm, placeholder, cấu trúc EA mô phỏng/demo, preset | `scripts/validate-project.py` | `checks=14 fail=0` |
+| L2 | Static | Phạm vi ADR 0003, guardrail DemoEA, order probe, journal watcher | `scripts/validate_demo_execution.py` | `checks=8 fail=0` |
+| L3 | Static | Preset mô phỏng + snapshot cấu hình | `scripts/validate_sim_configs.py` | `checked=7 fail=0` |
+| L4 | Compile | 30 nguồn MQL5 (thêm `Indicators.mqh`, `SignalEngine.mqh`, `LabSignalEngineTests`, `LabSignalExport`, `LabSignalEA`, `LabOnnxInference`) | `scripts/build-mql5.ps1` | **BUILD_OK 30 source(s), 0 errors, 0 warnings** |
+| L5 | Unit MQL5 | Engine mua/bán/giữ, insufficient bars, config/giá không hợp lệ, deterministic | `LabSignalEngineTests.mq5` | **PASS `pass=53 fail=0`**, `TEST\|RESULT\|ALL_PASS` (2026-10-29 14:28:37) |
+| L6 | Parity EMA | EMA window MQL5 ↔ Python trên fixture chuẩn hóa | `LabSignalExport` + `scripts/compare_signals.py` | **PASS** (fixture đúng; xem ghi chú sự cố fixture sai bên dưới) |
+| L7 | Runtime ONNX | Nạp `model.onnx`, chạy 24 hàng fixture, so `probability` với Python | `LabOnnxInference.mq5` + `onnx_parity` | **PASS 24/24**, max abs `4.927e-08`, mean `1.997e-08`, tol `1e-5`; provider CPU (CUDA/TensorRT fail trên máy này) |
+| L8 | Strategy Tester | `LabSignalEA` signal-only, kỳ vọng 0 trade | `terminal64.exe /config:...\lab_signal_ea_m5.ini` | **PASS** — xem §2 |
+| L9 | Python | Toàn bộ suite | `pytest -q` | **372 passed in 15.73s** (chạy lại 2026-10-29) |
+
+### 2. L8 — Strategy Tester `LabSignalEA`
+
+| Trường | Giá trị thật |
+|---|---|
+| Terminal | MetaTrader 5 EXNESS x64 **build 6292** |
+| Symbol / period | `XAUUSDm` / `M5` |
+| Khoảng dữ liệu | 2026.09.01 – 2026.10.28 |
+| Model | 1 minute OHLC |
+| Deposit | 5 000 USD, leverage 1:100 |
+| Ticks / bars | 225 340 ticks, 11 285 bars, `invalid_bars=0` |
+| Signal | `BUY_OK=219`, `SELL_OK=212`, `HOLD_NO_CROSS=10 854` |
+| Trade | **0** (đúng kỳ vọng: EA signal-only, không có API gửi lệnh) |
+| Kết quả tester | `successfully finished` trong `0:00:00.407` |
+| Balance cuối | `5000.00 USD` |
+
+Artifact (bị gitignore, lưu cục bộ): `reports/build/tester-reports/lab_signal_ea_m5/`
+(`lab_signal_ea_m5.htm`, `.png`, `lab_signal_ea_signals.log.gz`, `summary.json` với `status: pass`,
+`evidence_sha256`).
+
+Cách chạy lại:
+
+```powershell
+# MT5 phải đóng trước khi chạy headless
+& "C:\Program Files\MetaTrader 5 EXNESS\terminal64.exe" /config:"D:\Applications\tm-fx\reports\build\tester-run\lab_signal_ea_m5.ini"
+```
+
+### 3. Sự cố fixture sai (ghi lại để không lặp)
+
+Lần đối chiếu EMA đầu tiên dùng nhầm fixture (fixture của cặp/khung khác), khiến comparator báo mismatch
+trong khi code không sai. Đã dừng, đối chiếu lại đúng fixture chuẩn hóa trong `python/tests/fixtures/`,
+rồi chạy lại: PASS. Bài học: mọi kết quả parity phải ghi rõ đường dẫn fixture và hash; không "sửa code cho
+khớp fixture" khi chưa xác nhận fixture đúng.
+
+### 4. Điều kiện môi trường đã phát hiện
+
+- Algo Trading của terminal được lưu ở `config\common.ini` mục `[Experts] Enabled=`. Khi tắt, mọi EA có guard
+  `terminal_trade_disabled` sẽ từ chối `OnInit` với mã 1 — đây là fail-closed đúng thiết kế, không phải bug EA.
+- `common.ini` bị ghi đè 0 byte trong lúc sự cố công cụ; đã dựng lại tối thiểu (`Enabled=1`, `Account=0`,
+  `Profile=0`) và terminal tự bổ sung phần còn thiếu. Hệ quả: terminal mất phiên đăng nhập tự động và cần
+  người dùng đăng nhập một lần bằng hộp thoại `Login` (không tự động hóa bước xác thực).

@@ -13,10 +13,12 @@ Nội dung:
 
 - **Ngày:** 2026-10-29 (bổ sung demo execution theo ADR 0003)
 - **Trạng thái:** EA mô phỏng offline/signal-only + **demo execution có guardrail**. Toàn bộ `.mq5` đã
-  compile **0 errors, 0 warnings**; self-check `SimCoreTests`/`SimPlanTests`, 6 contract suite (547 check)
-  và 13/15 scenario Strategy Tester đã chạy thật. Parity runtime, ONNX runtime và 2 scenario `plan_*`
-  vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`. `PATrendRiderXAUv1DemoEA` đã compile nhưng chưa chạy trên tài
-  khoản demo (`NOT_RUN`).
+  compile **0 errors, 0 warnings**; self-check `SimCoreTests`/`SimPlanTests`, 6 contract suite (547 check),
+  `LabSignalEngineTests` (`pass=53 fail=0`), parity EMA, ONNX runtime (24/24 hàng, max `4.927e-08`) và
+  Strategy Tester cho `LabSignalEA` (0 trade) đã chạy thật. Chỉ còn 2 scenario `plan_*`
+  `BLOCKED_PERFORMANCE` và parity Pine ↔ MQL5 của Track B `BLOCKED` vì thiếu CSV reference.
+  `PATrendRiderXAUv1DemoEA` đã armed trên demo `464140826` (`mode=DEMO_EXECUTION`) nhưng chưa có `ENTRY`
+  vì regime `RANGE`; đây là kết quả của bộ lọc, không phải lỗi.
 - **Cảnh báo:** không đăng nhập tài khoản live, không nhập mật khẩu/investor password/OTP/server, không
   gửi thông tin tài khoản cho agent. EA mô phỏng không có `OrderSend`/`CTrade`, không mở/đóng lệnh.
   **0 trade là kết quả đúng** khi chạy `LabSignalEA` hay EA mô phỏng. Demo execution chỉ chạy khi người

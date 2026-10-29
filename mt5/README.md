@@ -138,8 +138,11 @@ dùng thực hiện:
    `event=deinit`.
 6. Ghi lại build terminal, symbol, timeframe, khoảng ngày và kết quả thật vào báo cáo phase.
 
-**Chưa có kết quả Strategy Tester trong repo.** Compile thành công không chứng minh EA chạy đúng ở
-runtime; trạng thái Phase 1 vì vậy là `READY_FOR_MANUAL_VALIDATION`.
+**Đã có kết quả Strategy Tester thật (2026-10-29, build 6292):** `XAUUSDm` M5, 2026.09.01–2026.10.28,
+model 1-minute OHLC, deposit 5 000 USD → 225 340 ticks, 11 285 bars, `BUY_OK=219`, `SELL_OK=212`,
+`HOLD_NO_CROSS=10 854`, **0 trade**, balance cuối `5000.00 USD`. Chạy headless bằng
+`reports/build/tester-run/lab_signal_ea_m5.ini` (file này bị gitignore) và lưu report ở
+`reports/build/tester-reports/lab_signal_ea_m5/`. Trạng thái Phase 1: **PASS cho signal-only**.
 
 ### Chạy self-check của signal engine
 
@@ -150,7 +153,8 @@ runtime; trạng thái Phase 1 vì vậy là `READY_FOR_MANUAL_VALIDATION`.
 4. Đọc tab **Experts**: kỳ vọng `TEST|RESULT|ALL_PASS` và `fail=0`.
 5. Ghi kết quả thật (pass/fail) vào báo cáo Phase 2.
 
-Script **chưa được chạy** trong quá trình phát triển; chỉ mới compile.
+Script đã chạy thật ngày 2026-10-29 trên `XAUUSDm,H1`, build 6292: `TEST|SUMMARY|pass=53 fail=0` rồi
+`TEST|RESULT|ALL_PASS` (log `MQL5\Logs\20261029.log`, 14:28:37).
 
 ## 6. Export tín hiệu cho parity (thủ công)
 

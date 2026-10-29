@@ -2237,3 +2237,99 @@ Tổng: **844 check MQL5 PASS** trên 10/11 script. Script còn lại `LabSignal
 
 Kết luận ngắn: phần **Python + static validator + compile** đang xanh toàn bộ; phần **runtime MQL5** thiếu
 đúng một script (`LabSignalEngineTests`) và các hạng mục parity/backtest đã ghi rõ là mở từ trước.
+
+## 48. Runtime LabSignal + ONNX + Strategy Tester `LabSignalEA` — 2026-10-29
+
+Đóng bốn hạng mục runtime còn mở của §47.4. Mọi số liệu dưới đây lấy từ log/terminal build 6292 trên
+`XAUUSDm`, không suy ra từ lần chạy trước và không có kết quả nào được "điền hộ".
+
+### 48.1 Deploy và compile
+
+`scripts/deploy_pineport.ps1` được mở rộng để sync thêm 6 file của Track A vào Data Folder
+(`Indicators.mqh`, `SignalEngine.mqh`, `LabSignalEngineTests.mq5`, `LabSignalExport.mq5`,
+`LabSignalEA.mq5`, `LabOnnxInference.mq5`) và 4 target mới trong danh sách compile.
+
+`scripts\build-mql5.ps1 -MetaEditorPath "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe"`:
+**BUILD_OK — 30 source(s), 0 errors, 0 warnings** (2026-10-29).
+
+### 48.2 `LabSignalEngineTests` — runtime PASS
+
+| Trường | Giá trị |
+|---|---|
+| Chart | `XAUUSDm,H1` |
+| Build | 6292 |
+| Thời điểm | 2026-10-29 14:28:37 |
+| Kết quả | `TEST\|SUMMARY\|pass=53 fail=0` → `TEST\|RESULT\|ALL_PASS` |
+| Log | `MQL5\Logs\20261029.log` |
+
+Đây là script synthetic trong bộ nhớ (không đọc thị trường, không gọi API giao dịch): PASS chứng minh ma
+trận engine mua/bán/giữ, warm-up, config/giá không hợp lệ và tính deterministic — không chứng minh hiệu
+năng chiến lược.
+
+### 48.3 Parity EMA MQL5 ↔ Python
+
+Đã khớp trên fixture chuẩn hóa trong `python/tests/fixtures/`. **Sự cố:** lần đối chiếu đầu dùng nhầm
+fixture (khác cặp/khung), comparator báo mismatch; đã dừng, xác định lỗi nằm ở fixture chứ không phải code,
+sửa đầu vào rồi chạy lại — PASS. Không có thay đổi logic nào được thực hiện để "khớp" kết quả sai.
+
+### 48.4 ONNX runtime — PASS 24/24
+
+| Trường | Giá trị |
+|---|---|
+| EA | `LabOnnxInference` trên `XAUUSDm,H1`, build 6292 |
+| Model | `model.onnx`, ONNX Runtime `api version 1.30.0` |
+| Provider | CPU (CUDA fail 35, TensorRT fail — máy không có GPU dùng được) |
+| Số hàng | 24/24, `onnx_rows=24` |
+| Sai lệch với Python | max abs `4.927e-08`, mean `1.997e-08`, tolerance `1e-5` |
+| Deterministic | hai lần chạy (15:06:37 và 15:07:42) cho cùng probability từng hàng |
+
+### 48.5 Strategy Tester `LabSignalEA` — PASS, 0 trade
+
+| Trường | Giá trị |
+|---|---|
+| Terminal | build 6292 |
+| Symbol / period | `XAUUSDm` / `M5` |
+| Khoảng dữ liệu | 2026.09.01 – 2026.10.28 |
+| Model | 1 minute OHLC, deposit 5 000 USD, leverage 1:100 |
+| Ticks / bars | 225 340 / 11 285, `invalid_bars=0` |
+| Signal | `BUY_OK=219`, `SELL_OK=212`, `HOLD_NO_CROSS=10 854` |
+| Trade | **0** (đúng thiết kế signal-only) |
+| Kết quả | `successfully finished` trong `0:00:00.407`, balance cuối `5000.00 USD` |
+
+Chạy headless bằng `reports/build/tester-run/lab_signal_ea_m5.ini`; artifact nằm ở
+`reports/build/tester-reports/lab_signal_ea_m5/` (`htm`, `png`, log tín hiệu nén, `summary.json` với
+`status: pass` và `evidence_sha256`). `reports/` bị gitignore nên artifact chỉ tồn tại cục bộ.
+
+### 48.6 Sự cố `common.ini` và trạng thái demo
+
+- Algo Trading của terminal được lưu ở `config\common.ini` → `[Experts] Enabled=`. Khi tắt, DemoEA từ chối
+  `OnInit` mã 1 (`scope_rejected|terminal_trade_disabled`) — fail-closed đúng thiết kế.
+- Trong lúc sửa cấu hình này bằng công cụ dòng lệnh, `iconv` không tồn tại và pipeline đã ghi đè
+  `common.ini` thành **0 byte** trong khi MT5 đóng. Đã phát hiện ngay bằng `wc -c`, dựng lại file tối thiểu
+  UTF-16LE (`Enabled=1`, `Account=0`, `Profile=0`, giữ `AllowDllImport=0`) và copy vào; terminal tự bổ sung
+  `[Common]`/`[Charts]` khi khởi động.
+- **Hệ quả:** terminal mất phiên đăng nhập tự động, mở lên sẽ hiện hộp thoại `Login`. Bước xác thực này
+  **không được tự động hóa**; cần người dùng tự đăng nhập tài khoản demo một lần. Sau đó mới attach lại
+  `PATrendRiderXAUv1DemoEA` trên `XAUUSDm,M5` với `InpEnableExecution=true` (state
+  `pa_trendrider_demo_state.csv`, log `pa_trendrider_demo.csv`, `config_hash=6B439450`).
+- Trạng thái demo hiện tại: EA **chưa armed lại** sau sự cố; lần chạy cuối vẫn `state=WAITING_FOR_SETUP`,
+  `entries=0`, balance `4999.76`, và **chưa từng có `ENTRY` do DemoEA gửi**. Không có kết quả mới nào được
+  ghi cho tới khi phiên đăng nhập được thực hiện.
+
+### 48.7 Cổng kiểm tra lại sau thay đổi
+
+| Cổng | Kết quả |
+|---|---|
+| `scripts\build-mql5.ps1` | BUILD_OK 30/0/0 |
+| `scripts\validate-project.py` | `checks=14 fail=0` |
+| `scripts\validate_demo_execution.py` | `checks=8 fail=0` |
+| `scripts\validate_sim_configs.py` | `checked=7 fail=0` |
+| `pytest -q` | **372 passed in 15.73s** |
+
+### 48.8 Việc còn mở (trung thực)
+
+- DemoEA chưa được armed lại và chưa có `ENTRY` thật — phụ thuộc một lần đăng nhập thủ công + regime khác
+  `RANGE`.
+- `LabOnnxInference` chưa chạy trong Strategy Tester (mới chạy trên chart); parity Pine ↔ MQL5 Track B vẫn
+  `BLOCKED` vì thiếu CSV reference.
+- 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`.

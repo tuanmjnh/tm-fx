@@ -51,7 +51,7 @@ Kết luận: Track A và B đã hết việc code tự động; phần còn l�
 | **B-R2** | Parity Pine vs MQL5 | `BLOCKED` | Người dùng xuất CSV reference Pine cho từng indicator |
 | **B-R3** | Strategy Tester cho EA PinePort | `NOT_RUN` | Có dữ liệu lịch sử trong terminal |
 | **A-R1** | Pipeline Track A trên dữ liệu MT5 thật | `BLOCKED` | Có CSV/Parquet export từ MT5, không dùng synthetic thay thế |
-| **A-R2** | Strategy Tester cho `LabSignalEA`/`LabOnnxInference` | `NOT_RUN` | Có terminal + model ONNX hợp lệ |
+| **A-R2** | Strategy Tester cho `LabSignalEA`/`LabOnnxInference` | `LabSignalEA` **PASS** (0 trade, 2026-10-29); `LabOnnxInference` runtime chart **PASS** 24/24, tester `NOT_RUN` | Có terminal + model ONNX hợp lệ |
 
 ## 4. Chi tiết từng work item
 

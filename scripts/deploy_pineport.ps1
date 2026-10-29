@@ -58,6 +58,12 @@ if (-not $LogDir) {
 
 $files = @(
     [pscustomobject]@{ Source = "mt5\Include\LabLogger.mqh"; Target = "MQL5\Include\LabLogger.mqh" },
+    [pscustomobject]@{ Source = "mt5\Include\Indicators.mqh"; Target = "MQL5\Include\Indicators.mqh" },
+    [pscustomobject]@{ Source = "mt5\Include\SignalEngine.mqh"; Target = "MQL5\Include\SignalEngine.mqh" },
+    [pscustomobject]@{ Source = "mt5\Scripts\LabSignalEngineTests.mq5"; Target = "MQL5\Scripts\LabSignalEngineTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\LabSignalExport.mq5"; Target = "MQL5\Scripts\LabSignalExport.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\LabSignalEA.mq5"; Target = "MQL5\Experts\LabSignalEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\LabOnnxInference.mq5"; Target = "MQL5\Experts\LabOnnxInference.mq5" },
     [pscustomobject]@{ Source = "mt5\Include\PinePort\WonderwhalesContract.mqh"; Target = "MQL5\Include\PinePort\WonderwhalesContract.mqh" },
     [pscustomobject]@{ Source = "mt5\Include\PinePort\LongKacoVSAContract.mqh"; Target = "MQL5\Include\PinePort\LongKacoVSAContract.mqh" },
     [pscustomobject]@{ Source = "mt5\Include\PinePort\TMFusionZonesContract.mqh"; Target = "MQL5\Include\PinePort\TMFusionZonesContract.mqh" },
@@ -127,6 +133,10 @@ $compileTargets = @(
     "MQL5\Scripts\TMIndicator2ContractTests.mq5",
     "MQL5\Experts\PineSignalLabEA.mq5",
     "MQL5\Experts\PineMultiSignalLabEA.mq5",
+    "MQL5\Scripts\LabSignalEngineTests.mq5",
+    "MQL5\Scripts\LabSignalExport.mq5",
+    "MQL5\Experts\LabSignalEA.mq5",
+    "MQL5\Experts\LabOnnxInference.mq5",
     "MQL5\Scripts\SimCoreTests.mq5",
     "MQL5\Scripts\SimPlanTests.mq5",
     "MQL5\Experts\RunnerTrailingLabEA.mq5",

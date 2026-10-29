@@ -4,25 +4,26 @@ Repository nghiên cứu độc lập để phát triển EA MQL5, pipeline dữ
 backtest có thể tái lập cho MetaTrader 5.
 
 - **Trạng thái:** Phase 9 — end-to-end pipeline **DONE** (2026-10-27; tái lập trên snapshot commit sạch
-  đã xác minh 2026-10-28). Phase 8 — ONNX/MQL5 inference **READY_FOR_MANUAL_VALIDATION**: export ONNX và
-  parity Python–ONNX đã chạy thật; EA `LabOnnxInference.mq5` compile 0 errors/0 warnings nhưng chưa chạy
-  trong terminal. Phase 0/3/4/6/7/9 **DONE**; Phase 5 **READY_FOR_MANUAL_VALIDATION** (MQL5 export đã
-  compile nhưng chưa chạy); Phase 1/2 compile 0 errors/0 warnings, chờ chạy Strategy Tester/self-check
-  thủ công. Track C W1–W7, W9, W10 **PASS** (compile + static + toolchain); `SimCoreTests` 125/0,
-  `SimPlanTests` 39/0 và `TrendRiderContractTests` 82/0 đã **PASS runtime** trong MT5 ngày 2026-10-28;
-  15/17 scenario Strategy Tester đã **chạy thật** headless trên `XAUUSDm` (3 `ww_*`, `runner_*`,
-  `grid_*`, 4 `dca_*`, 2 `pa_*`); 2 scenario `plan_*` là `BLOCKED_PERFORMANCE` (chưa xong 9 tháng trong
-  cửa sổ chạy, xem [`docs/PROGRESS.md`](docs/PROGRESS.md) §41–§42).
+  đã xác minh 2026-10-28). Phase 8 — ONNX/MQL5 inference **PASS runtime** (2026-10-29, build 6292):
+  `LabOnnxInference` nạp model, chạy 24/24 hàng fixture, max abs `4.927e-08` với tol `1e-5`, provider CPU.
+  Phase 1/2 **PASS**: `LabSignalEngineTests` runtime `pass=53 fail=0`, `LabSignalEA` Strategy Tester 0 trade
+  trên `XAUUSDm` M5 (225 340 ticks, 11 285 bars). Phase 5 vẫn `READY_FOR_MANUAL_VALIDATION` (parity Pine ↔
+  MQL5 `BLOCKED` vì thiếu CSV reference). Track C W1–W7, W9, W10 **PASS** (compile + static + toolchain);
+  `SimCoreTests` 125/0, `SimPlanTests` 39/0 và `TrendRiderContractTests` 82/0 đã **PASS runtime** trong
+  MT5 ngày 2026-10-28; 15/17 scenario Strategy Tester đã **chạy thật** headless trên `XAUUSDm` (3 `ww_*`,
+  `runner_*`, `grid_*`, 4 `dca_*`, 2 `pa_*`); 2 scenario `plan_*` là `BLOCKED_PERFORMANCE` (chưa xong
+  9 tháng trong cửa sổ chạy, xem [`docs/PROGRESS.md`](docs/PROGRESS.md) §41–§42, §48).
 - **Phạm vi hiện tại:** signal-only, mô phỏng offline (SL/TP tĩnh, trailing stop, bounded DCA/grid
   basket, vị thế ảo theo trade plan của PinePort, tín hiệu Wonderwhales và PA TrendRider XAU v1 trên
   `XAUUSDm`), metadata thí nghiệm cục bộ, ML baseline, ONNX inference-only và pipeline end-to-end trên
-  dữ liệu synthetic. Không gửi lệnh giao dịch thật, không kết nối tài khoản môi giới, không lưu thông
-  tin đăng nhập.
-- **MT5:** 27 file `.mq5` và 31 file `.mqh` đã compile **0 errors, 0 warnings** bằng
-  `scripts/build-mql5.ps1` (2026-10-28); self-check `SimCoreTests`/`SimPlanTests`, 6/6 contract suite
-  indicator (547 check), `TrendRiderContractTests` (82 check) và 15/17 scenario Strategy Tester đã chạy
-  thật. Parity runtime, ONNX runtime và 2 scenario `plan_*` vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`. Quy
-  trình: [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
+  dữ liệu synthetic. Không có đường thực thi lệnh nào ngoài scope demo của ADR 0003
+  (`mt5/Include/Exec/*` + `PATrendRiderXAUv1DemoEA`); không chạy live/real, không lưu thông tin đăng nhập.
+- **MT5:** 30 target `.mq5` đã compile **0 errors, 0 warnings** bằng `scripts/build-mql5.ps1`
+  (2026-10-29, build 6292); self-check `SimCoreTests`/`SimPlanTests`/`LabSignalEngineTests` (53 check),
+  6/6 contract suite indicator (547 check), `TrendRiderContractTests` (82 check), ONNX runtime (24/24 hàng)
+  và 15/17 scenario Strategy Tester đã chạy thật. Chỉ còn parity Pine ↔ MQL5 (`BLOCKED` thiếu CSV
+  reference) và 2 scenario `plan_*` `BLOCKED_PERFORMANCE`. Quy trình:
+  [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
 - **Ranh giới execution:** không hỗ trợ live/real execution. Repo có **một** đường chạy demo được
   guardrail đầy đủ: `PATrendRiderXAUv1DemoEA` trên tài khoản demo hoặc Strategy Tester, mặc định dry-run,
   bắt buộc SL/TP, một vị thế và kill switch. Xem
@@ -234,9 +235,9 @@ không mở/ghi được. Giả định mô phỏng và định nghĩa metric:
   dẫn artifact.
 - Dữ liệu lớn, model artifact, log, SQLite database và output thí nghiệm bị loại khỏi Git (xem
   `.gitignore`).
-- Không kết nối Exness hay bất kỳ tài khoản môi giới nào. Không chạy live execution trong repo này;
-  `LabSignalEA` là signal-only và **0 trade là kết quả đúng**. Demo execution chỉ chạy khi người dùng tự
-  đăng nhập tài khoản demo và bật `InpEnableExecution`; xem
+- Chỉ kết nối **tài khoản demo** cho `PATrendRiderXAUv1DemoEA`; tài khoản real bị `OnInit` từ chối. Không
+  chạy live/real trong repo này; `LabSignalEA` là signal-only và **0 trade là kết quả đúng**. Demo execution
+  chỉ chạy khi người dùng tự đăng nhập tài khoản demo và bật `InpEnableExecution`; xem
   [`docs/decisions/0003-demo-execution-scope.md`](docs/decisions/0003-demo-execution-scope.md).
 - ML baseline chỉ dùng dữ liệu synthetic trong demo; metric phân loại và metric chiến lược mô phỏng được
   báo cáo riêng, không phải bằng chứng lợi nhuận.
