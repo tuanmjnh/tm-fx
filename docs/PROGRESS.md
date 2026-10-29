@@ -2396,6 +2396,23 @@ local):
 `--watch --interval 30` ghi `reports\demo-watch\watch_20261029.log` (gitignored) và đã bắt các dòng
 `RISK` của bar `08:45`/`08:50`. Checkpoint: `reports\demo-watch\journal_checkpoint.json`.
 
+Lần quét lại lúc 16:26 (sau khi người dùng đăng nhập lại) bắt thêm 6 bar `08:55`–`09:25` (server), tất cả
+`ENTRY_BLOCKED reason=bias_unknown|regime=RANGE` với ATR 5.20 → 5.84 → 5.99. Từ 15:40 đến 16:26 EA không
+bỏ bar nào; `MQL5\Logs` không có dòng lỗi nào của EA (EA chỉ ghi CSV, không `Print` định kỳ).
+
+Audit tĩnh trên **riêng phiên đang chạy** (`reports\demo-watch\session_armed.csv`, phần từ dòng `INIT`
+08:40:58 trở đi) bằng `audit_exec_csv.py`: `rows=13 entries=0 exits=0 trails=0 open_at_end=False`,
+`config_hash=6B439450` không đổi, `PROBLEMS=1` — và problem duy nhất là `INIT/SUMMARY count` vì `SUMMARY`
+chỉ được ghi trong `OnDeinit` (phiên còn sống). Chạy audit trên cả file (107 dòng, gồm cả phiên dry-run cũ
+`8A85E0D5`) thì báo thêm `config_hash changed` — đó là hiệu ứng của việc nối nhiều phiên vào một CSV, không
+phải vi phạm bất biến.
+
+Lịch tự động (Qoder automation, chạy local trên máy này, không phải Windows Task Scheduler):
+`Demo EA journal watch (ENTRY alerts)`, cron `0 7-23/2 * * 1-5` (Asia/Ho_Chi_Minh), id
+`051f5383-5e5d-49ba-9d38-24eaab8a220d`. Mỗi lần chạy chỉ chạy watcher ở trên; có `ENTRY`/`EXIT`/`TRAIL`/
+`KILL`/`ERROR` thì báo và ghi `PROGRESS`, chỉ có `ENTRY_BLOCKED` thì trả một dòng, không ghi file, không
+commit, không giao dịch. Tắt bằng cách remove job này trong Automations.
+
 ### 49.5 Điều chưa chứng minh (trung thực)
 
 - `INIT mode=DEMO_EXECUTION` chứng minh `ACCOUNT_TRADE_MODE_DEMO` + `ACCOUNT_TRADE_ALLOWED` +
