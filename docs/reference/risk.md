@@ -182,6 +182,11 @@
   `ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE`. 0 entry là kết quả hợp lệ của bộ lọc regime
   (§44.3: ~3.1 lệnh/tháng, khoảng chờ dài nhất quan sát được ~5.5 tuần), không phải lỗi và không phải
   thành tích. Không được nới gate chiến lược chỉ để tạo ra lệnh.
+- **Việc còn lại là chờ tín hiệu, không phải thêm code:** `scripts/watch_demo_journal.py` đọc
+  `MQL5\Files\pa_trendrider_demo.csv`, giữ checkpoint byte và báo `ENTRY`/`EXIT`/`TRAIL`/`FAULT` mới
+  — [`../PROGRESS.md`](../PROGRESS.md) §46. Nó **chỉ đọc file**: không mở MT5, không gọi trading API,
+  không ghi vào `MQL5\Files`. Exit code `1` nghĩa "có sự kiện" chứ không phải "có lãi"; `journal_stale`
+  chỉ cảnh báo file im lặng, nó **không** phát hiện EA đã bị gỡ khỏi chart hay terminal đã tắt.
 - **Probe dùng một chiều BUY:** `ExecOpenMarket(is_buy=false)` đi qua cùng mã nhưng chiều SELL chưa có
   bằng chứng runtime trên server thật; retcode từ chối theo giờ, freeze hay requite cũng chưa được kiểm.
 - **Cờ "Allow Algo Trading" riêng của chương trình:** guard của DemoEA đọc `TERMINAL_TRADE_ALLOWED` của

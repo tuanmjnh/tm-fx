@@ -10,6 +10,7 @@ Asserts the guardrails that separate demo execution from live trading:
   tests, order probe); the simulation EAs and presets are untouched and still
   refuse orders;
 * the order probe stays confirm-gated, tester-refusing and on its own magic;
+* the demo journal watcher stays read-only and mirrors the EA's CSV contract;
 * no network, socket or credential API is used anywhere in the Exec scope.
 
 This script never compiles, never starts MetaTrader, never logs in and never
@@ -25,6 +26,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import sys
@@ -40,6 +42,8 @@ EXEC_GUARD = "mt5/Include/Exec/ExecGuard.mqh"
 EXEC_BROKER = "mt5/Include/Exec/ExecBroker.mqh"
 EXEC_TESTS = "mt5/Scripts/ExecGuardTests.mq5"
 EXEC_PROBE = "mt5/Scripts/ExecDemoProbe.mq5"
+SIM_LOGGER = "mt5/Include/Sim/SimLogger.mqh"
+JOURNAL_WATCHER = "scripts/watch_demo_journal.py"
 DEMO_PRESET = "configs/demo/pa_trendrider_xau_demo.json"
 SIM_PRESET = "configs/sim/pa_trendrider_xau.json"
 
@@ -53,6 +57,12 @@ FORBIDDEN_EXEC = re.compile(
 )
 
 FORBIDDEN_LIVE = re.compile(r"\bACCOUNT_TRADE_MODE_REAL\b")
+
+#--- The journal watcher is Python; it must never reach a trading API at all.
+FORBIDDEN_WATCHER = re.compile(
+    r"\b(?:OrderSend|CPositionInfo|CTrade|MqlTradeRequest|MqlTradeResult|"
+    r"positions_get|order_send|trading_set_timeout|import\s+MetaTrader5)\b"
+)
 
 REASON_TOKENS = (
     "not_demo_account",
@@ -101,6 +111,7 @@ def check_files(root: Path) -> list[str]:
             DEMO_PRESET,
             SIM_PRESET,
             EXEC_PROBE,
+            JOURNAL_WATCHER,
         )
         if not (root / relative).is_file()
     ]
@@ -246,6 +257,57 @@ def check_probe(root: Path) -> list[str]:
     return issues
 
 
+def check_journal_watcher(root: Path) -> list[str]:
+    """The demo journal watcher must stay a read-only consumer of the EA journal."""
+    issues: list[str] = []
+    path = root / JOURNAL_WATCHER
+    if not path.is_file():
+        return [f"missing {JOURNAL_WATCHER}"]
+    text = path.read_text(encoding="utf-8")
+    if FORBIDDEN_WATCHER.search(text):
+        issues.append("journal watcher must not touch any trading API")
+
+    state_path = re.search(r'DEFAULT_STATE_PATH\s*=\s*REPO_ROOT\s*/\s*"reports"', text)
+    if state_path is None:
+        issues.append("journal watcher must keep its checkpoint under reports/")
+
+    spec = importlib.util.spec_from_file_location("watch_demo_journal", path)
+    if spec is None or spec.loader is None:
+        return issues + [f"cannot import {JOURNAL_WATCHER}"]
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    logger = _read(root, SIM_LOGGER)
+    declared = re.search(r'SIM_LOG_HEADER\s+"([^"]+)"', logger)
+    if declared is None:
+        issues.append("SimLogger.mqh must declare SIM_LOG_HEADER")
+    elif tuple(declared.group(1).split(",")) != tuple(module.EXPECTED_HEADER):
+        issues.append("watcher columns must equal the SimLogger CSV header")
+
+    ea_code = _code_only(_read(root, DEMO_EA))
+    for constant, input_name in (
+        ("JOURNAL_NAME", "InpLogFile"),
+        ("KILL_SWITCH_NAME", "InpKillSwitchFile"),
+    ):
+        want = _input_default(ea_code, input_name)
+        got = getattr(module, constant, None)
+        if want is None or got is None:
+            issues.append(f"watcher and DemoEA must both define {input_name}")
+        elif got != want.strip('"'):
+            issues.append(f"watcher {constant} must match the DemoEA {input_name}")
+
+    emitted = set(re.findall(r'Event\("([A-Z_]+)"', ea_code))
+    for event in module.ALERT_EVENTS:
+        if event not in emitted:
+            issues.append(f"watcher alerts on {event}, which the DemoEA never emits")
+    for event in ("ENTRY", "EXIT"):
+        if event not in module.ALERT_KINDS:
+            issues.append(f"watcher must alert on real {event} rows")
+    if set(module.ALERT_KINDS.values()) - {"ORDER", "FAULT"}:
+        issues.append("watcher alert kinds must be ORDER or FAULT")
+    return issues
+
+
 def check_presets(root: Path) -> list[str]:
     issues: list[str] = []
     demo = json.loads(_read(root, DEMO_PRESET))
@@ -339,6 +401,7 @@ def main(argv: list[str] | None = None) -> int:
     report("demo EA guardrails", check_demo_ea(root))
     report("exec sources", check_exec_sources(root))
     report("demo order probe", check_probe(root))
+    report("demo journal watcher", check_journal_watcher(root))
     report("demo and simulation presets", check_presets(root))
     report("demo guide", check_guide(root))
 

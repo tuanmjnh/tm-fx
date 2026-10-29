@@ -183,6 +183,52 @@ Lưu ý:
 - Một lệnh được chấp nhận **không** nghĩa là chiến lược sinh lời; nó chỉ đóng khoảng trống "server có
   khớp lệnh hay không".
 
+### 6.2 Giám sát journal và báo `ENTRY` thật — `watch_demo_journal.py`
+
+Goal còn lại là bắt được **`ENTRY` do chính DemoEA gửi**. `scripts\watch_demo_journal.py` đọc file
+`MQL5\Files\pa_trendrider_demo.csv`, ghi nhớ checkpoint byte và chỉ in các dòng mới. Nó **chỉ đọc**: không
+mở MT5, không gọi trading API, không ghi vào `MQL5\Files`; checkpoint nằm ở `reports\demo-watch\`.
+
+```powershell
+.venv\Scripts\python.exe scripts\watch_demo_journal.py            # tail: chỉ in dòng mới từ lần chạy trước
+.venv\Scripts\python.exe scripts\watch_demo_journal.py --reset --from-start   # quét toàn bộ lịch sử
+.venv\Scripts\python.exe scripts\watch_demo_journal.py --watch --interval 60 --timeout 3600 --stop-on-alert
+```
+
+| Cờ | Ý nghĩa |
+|---|---|
+| `--csv` | Đường dẫn CSV tường minh (mặc định tự tìm mọi `...\Terminal\*\MQL5\Files\pa_trendrider_demo.csv`; có 2 file là nó **dừng** và yêu cầu `--csv`, không đoán) |
+| `--from-start` / `--reset` | Lần đầu đọc từ đầu file / xóa checkpoint trước |
+| `--watch --interval N` | Poll mỗi N giây |
+| `--timeout N` | Dừng sau N giây; `--stop-on-alert` dừng ngay khi có lệnh/lỗi |
+| `--quiet` | Chỉ in dòng alert |
+
+Event báo alert: `ENTRY`, `EXIT`, `TRAIL`, `CLOSE_REQUEST`, `ADOPT`, `SYNC` (nhóm `ORDER`) và `KILL`,
+`ERROR`, `STATE_ERROR`, `RESET` (nhóm `FAULT`). `RISK|ENTRY_BLOCKED`, `BOS`, `REGIME`, `INIT`, `STATE`,
+`SUMMARY` chỉ vào tổng hợp, không phải alert.
+
+Exit code: `0` không alert, `1` có alert (dùng cho cron/thông báo), `2` không tìm thấy journal hoặc schema
+không đủ 18 cột. Ngoài ra watcher in `WATCH|FAULT|kill_switch_file_present` nếu
+`PA_TREND_RIDER_DEMO_STOP.txt` còn tồn tại, và `WATCH|NOTE|journal_stale` nếu file không được ghi hơn 2 giờ.
+
+Kết quả chạy thật ngày 2026-10-29 trên demo `464140826` (bốn bar mới từ checkpoint, chưa có `ENTRY`):
+
+```
+WATCH|RISK|2026.10.29 06:25:00|2026.10.29 06:20:00|ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE|state=WAITING_FOR_SETUP|spread_points=240.0|atr=4.36707143
+WATCH|SUMMARY|events=4|RISK=4
+WATCH|BLOCKED|reason=bias_unknown=4
+```
+
+`--watch --interval 60 --timeout 12` dừng đúng sau 12 giây và bắt được bar `06:45:00` vừa ghi.
+
+Lưu ý:
+
+- Timestamp trong journal là **giờ server (UTC)**; giờ local cộng thêm 7 giờ.
+- Watcher không làm cho EA dễ vào lệnh hơn. `reason=bias_unknown` / `regime_range` là bộ lọc của chiến
+  lược; khi nào regime chuyển `TREND` và bias xác định thì `ENTRY` mới xuất hiện.
+- Alert `ENTRY` cần được đối soát với tab **History** trước khi ghi nhận là bằng chứng — cùng nguyên tắc
+  với §6.1.
+
 ## 7. Cách đọc kết quả đúng
 
 - **Dry-run không có lệnh là đúng.** **Demo có 0 entry cũng có thể đúng** khi không có setup.

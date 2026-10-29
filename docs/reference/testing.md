@@ -428,6 +428,12 @@ không phải hiệu năng thị trường. Chi tiết: [`ml-baseline.md`](ml-ba
   §45). Probe từ chối chạy trong Strategy Tester và khi `MQL_TRADE_ALLOWED` tắt; bằng chứng này chứng minh
   *transport*, không chứng minh chiến lược có lãi và không có `ENTRY` nào do chính DemoEA gửi.
 
+- `python/tests/test_watch_demo_journal.py`: 13 test cho `scripts/watch_demo_journal.py` — parse đúng 18
+  cột và từ chối cột sai, checkpoint chỉ báo dòng appended, dòng EA đang viết dở không bị tiêu thụ, phát
+  hiện journal bị ghi đè lại, phân loại `ORDER`/`FAULT`, histogram block reason, exit `1` khi có
+  `ENTRY`/`ERROR`, exit `0` khi chỉ có `ENTRY_BLOCKED`, exit `2` khi thiếu journal, kill switch file luôn
+  alert, `--quiet` chỉ in dòng alert, và source không chứa trading API.
+
 Chạy gần nhất (bounded DCA/grid, 2026-10-28): **198 passed in 11.26s** trên repo chính. Trước đó:
 trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s**.
 

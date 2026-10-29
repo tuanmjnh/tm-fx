@@ -8,6 +8,8 @@
 - **Nguồn roadmap:** [`mt5-ea-ai-simulation-pack/ROADMAP_MT5_EA_LAB.md`](mt5-ea-ai-simulation-pack/ROADMAP_MT5_EA_LAB.md)
   và [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
 - **Ranh giới:** SIMULATION_ONLY. Không có `OrderSend`, `CTrade`, `MqlTradeRequest` hoặc API gửi lệnh thật.
+  *(Cập nhật 2026-10-29: ADR 0003 thay điều khoản này **riêng cho tài khoản demo / Strategy Tester** —
+  xem §43–§46. Live/real vẫn bị cấm, simulation EAs vẫn SIMULATION_ONLY.)*
 
 ## 1. Trạng thái tổng hợp
 
@@ -2075,7 +2077,89 @@ ledger theo tài khoản, nhưng cần biết khi đọc `drawdown_pct` ngay sau
   retcode từ chối theo giờ, freeze, hay requite vẫn có thể xảy ra.
 - Probe dùng `ORDER_TYPE_BUY` với SL dưới/TP trên; chiều SELL đi qua cùng `ExecOpenMarket` nhưng chưa
   có bằng chứng runtime trên server thật.
-- Vẫn **chưa có `ENTRY` thật từ chính DemoEA** trên demo — đó là việc của §45 trở đi và cần tín hiệu
+- Vẫn **chưa có `ENTRY` thật từ chính DemoEA** trên demo — đó là việc của §46 và cần tín hiệu
   hợp lệ, không phải cần thêm code.
 - Không có bằng chứng nào ở đây chứng minh chiến lược có lợi nhuận, và execution live/real vẫn bị
   ADR 0003 cấm cho tới khi có ADR mới.
+
+## 46. Automation giám sát journal demo — `watch_demo_journal.py` — 2026-10-29
+
+§45 đóng khoảng trống "server có khớp lệnh hay không", nhưng **`ENTRY` do chính DemoEA gửi vẫn chưa có**.
+Việc còn lại không phải sửa code tín hiệu mà là **có mặt khi tín hiệu xuất hiện**, nên thêm
+`scripts/watch_demo_journal.py`: một reader theo dõi `MQL5\Files\pa_trendrider_demo.csv` và báo ngay khi
+thấy dòng `ENTRY`.
+
+### 46.1 Thiết kế
+
+| Thành phần | Hành vi |
+|---|---|
+| Nguồn dữ liệu | Chỉ `pa_trendrider_demo.csv` (18 cột theo `SIM_LOG_HEADER`). Tự dò mọi `...\Terminal\*\MQL5\Files\`; nếu có **nhiều hơn một** file khớp thì **dừng** và yêu cầu `--csv` — không đoán bừa một terminal |
+| Checkpoint | `reports\demo-watch\journal_checkpoint.json` lưu offset byte. Lần đầu mặc định bắt đầu ở **cuối file** (`--from-start` để quét lịch sử), nên không báo lại sự kiện cũ |
+| Dòng chưa_complete | Chỉ tiêu thụ dòng kết thúc bằng `\r\n`; dòng EA đang viết dở bị giữ lại cho lần poll sau, offset không tiến |
+| Alert `ORDER` | `ENTRY`, `EXIT`, `TRAIL`, `CLOSE_REQUEST`, `ADOPT`, `SYNC` |
+| Alert `FAULT` | `KILL`, `ERROR`, `STATE_ERROR`, `RESET` |
+| Không alert | `RISK\|ENTRY_BLOCKED`, `BOS`, `REGIME`, `INIT`, `STATE`, `SUMMARY` — chỉ vào tổng hợp và histogram block reason |
+| Kill switch | `PA_TREND_RIDER_DEMO_STOP.txt` còn trong `MQL5\Files` → `WATCH\|FAULT\|kill_switch_file_present`, exit 1 |
+| stale | File không được ghi > 2 giờ → `WATCH\|NOTE\|journal_stale` |
+| Exit code | `0` không alert · `1` có alert (dùng cho chu kỳ giám sát) · `2` không có journal hoặc sai schema |
+| Chế độ | một lần (mặc định), `--watch --interval N`, `--timeout N`, `--stop-on-alert`, `--quiet`, `--reset` |
+
+Ranh giới: script là **Python thuần đọc file**. Không `OrderSend`, không `CPositionInfo`, không
+`import MetaTrader5`, không mở MT5, không ghi gì vào `MQL5\Files` hay `MQL5\Experts`, không đọc credential.
+
+### 46.2 Chạy thật trên demo `464140826`
+
+Lần quét toàn bộ đầu tiên (`--reset --from-start`) đọc đúng 79 sự kiện và **không** có `ENTRY`/`EXIT`:
+
+```
+WATCH|SUMMARY|events=79|BOS=7|INIT=7|KILL=1|REGIME=7|RISK=50|STATE=1|SUMMARY=6
+WATCH|BLOCKED|reason=bias_unknown=36|reason=regime_range=14
+```
+
+`KILL=1` là dòng lịch sử của phiên test kill switch 04:10:16 (đã reset ở §44), nên exit code là 1 —
+watcher báo đúng, kể cả sự kiện cũ.
+
+Chế độ tail sau đó chứng minh checkpoint hoạt động trên bar thật:
+
+```
+WATCH|RISK|2026.10.29 06:25:00|2026.10.29 06:20:00|ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE|state=WAITING_FOR_SETUP|spread_points=240.0|atr=4.36707143
+WATCH|RISK|2026.10.29 06:30:00|2026.10.29 06:25:00|ENTRY_BLOCKED|reason=bias_unknown|…
+WATCH|RISK|2026.10.29 06:35:00|2026.10.29 06:30:00|ENTRY_BLOCKED|reason=bias_unknown|…
+WATCH|RISK|2026.10.29 06:40:00|2026.10.29 06:35:00|ENTRY_BLOCKED|reason=bias_unknown|…
+WATCH|SUMMARY|events=4|RISK=4
+WATCH|BLOCKED|reason=bias_unknown=4
+```
+
+Chạy lần hai ngay sau đó in **không dòng nào** và exit 0 (không có bar mới).
+`--watch --interval 60 --timeout 12` dừng sau đúng 12,2 giây và bắt được bar `06:45:00` vừa được ghi.
+
+Ba nguồn đối chiếu vẫn khớp: journal CSV, `MQL5\Files\pa_trendrider_demo_state.csv`
+(`state=WAITING_FOR_SETUP;transitions=5;dd_locked=0`) và tab History của terminal (§45).
+
+### 46.3 Gate tĩnh và test
+
+| Gate | Kết quả |
+|---|---|
+| `scripts\validate_demo_execution.py` | `checks=8 fail=0`; check mới **"demo journal watcher"** |
+| Bất biến watcher | Cấm mọi trading API; `EXPECTED_HEADER` **phải bằng** `SIM_LOG_HEADER` trong `SimLogger.mqh`; `JOURNAL_NAME`/`KILL_SWITCH_NAME` phải khớp `InpLogFile`/`InpKillSwitchFile` của DemoEA; mọi event trong `ALERT_EVENTS` phải thực sự được DemoEA phát ra qua `Event("…")`; `ENTRY`/`EXIT` bắt buộc là alert; checkpoint phải nằm dưới `reports/` |
+| `scripts\validate-project.py` | `checks=14 fail=0` |
+| `pytest -q` | **371 passed** (358 + 13 test mới `python/tests/test_watch_demo_journal.py`) |
+| `python -m compileall -q scripts python/src python/tests` | exit 0 |
+| `pip check` | no broken requirements |
+
+13 test mới phủ: parse 18 cột, từ chối cột sai, checkpoint chỉ báo dòng appended, **dòng chưa complete
+không bị tiêu thụ**, phát hiện file bị ghi đè lại (`restarted`), phân loại `ORDER`/`FAULT`, histogram block
+reason, exit 1 khi có `ENTRY`/`ERROR`, exit 0 khi chỉ có `ENTRY_BLOCKED`, exit 2 khi thiếu journal, kill
+switch file luôn alert, `--quiet` giữ lại dòng alert, và source không chứa trading API.
+
+### 46.4 Giới hạn trung thực
+
+- Watcher **không** làm chiến lược dễ vào lệnh hơn. `reason=bias_unknown` và `regime_range` là bộ lọc của
+  chính TrendRider; `ENTRY` chỉ xuất hiện khi regime chuyển `TREND` và bias xác định.
+- Đây là reader một phía: nếu EA treo hoặc terminal tắt, journal ngừng ghi và watcher chỉ báo
+  `journal_stale` sau 2 giờ — nó không phát hiện "EA không chạy".
+- Exit 1 có nghĩa "có sự kiện đáng chú ý", **không** có nghĩa "có lệnh thắng". `EXIT` alert cũng sẽ bật
+  lên khi lệnh đóng với P&L âm.
+- Chưa bật lịch chạy tự động định kỳ (Task Scheduler / cron). Automation đang ở dạng lệnh chạy một lần
+  hoặc `--watch`; người dùng quyết định có muốn nó chạy nền thường xuyên hay không.
+- Không có kết luận lợi nhuận. DemoEA vẫn **0 `ENTRY`** tính tới 2026-10-29 06:45 UTC.
