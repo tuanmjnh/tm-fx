@@ -193,6 +193,11 @@
   terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản nhưng **không** đọc `MQL_TRADE_ALLOWED`, nên nếu cờ
   này tắt thì lỗi chỉ lộ ra lúc có tín hiệu chứ không fail ở `INIT`. `ExecDemoProbe` thì từ chối chạy khi
   `MQL_TRADE_ALLOWED` tắt — đó là lý do nó chứng minh được cả ba lớp bật cùng lúc.
+- **Gắn EA qua `[StartUp]` không tự chứng minh `MQL_TRADE_ALLOWED`:** khi terminal nạp EA bằng
+  `/config:` + `[StartUp] Expert=…`, quyền giao dịch của EA đến từ `[Experts] AllowLiveTrading=1`. Nếu
+  thiếu key này, `OnInit` vẫn `mode=DEMO_EXECUTION` (guard không đọc `MQL_TRADE_ALLOWED`) và lệnh đầu
+  tiên mới lộ `OrderSend` error 10027. Vì vậy sau mỗi lần gắn bằng startup config phải kiểm cả
+  `AllowLiveTrading=1` lẫn dòng `INIT`, và lần `ENTRY` đầu tiên vẫn là bằng chứng cuối cùng.
 - **Algo Trading của terminal nằm trong file cấu hình:** build 6292 lưu trạng thái ở
   `config\common.ini` → `[Experts] Enabled=`, kèm cờ tự tắt `Account=1, Profile=1, Chart=0, Api=0`. Khi
   `Enabled=0`, mọi EA có guard `terminal_trade_disabled` từ chối `OnInit` mã 1 (fail-closed đúng thiết kế).

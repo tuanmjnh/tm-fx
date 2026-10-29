@@ -79,6 +79,53 @@ mở, nhấn phải chuột vào node trong Navigator → **Refresh** để nạ
 Muốn đọc log CSV trong khi EA vẫn chạy, `SimLogger` mở file với `FILE_SHARE_READ`; nếu bỏ cờ đó thì tool
 bên ngoài không tail được file ("Device or resource busy").
 
+### 4.1 Khởi động EA bằng terminal startup config (không cần gắn tay)
+
+Khi không thao tác được chuột trên terminal (máy từ xa, phiên không người), MT5 vẫn gắn được EA ngay khi
+khởi động bằng section `[StartUp]` của file cấu hình truyền qua `/config:` — đây là cơ chế chính thức của
+terminal, không phải workaround:
+
+```ini
+[Experts]
+AllowDllImport=0
+AllowLiveTrading=1
+Enabled=1
+Account=0
+Profile=0
+Chart=0
+Api=0
+
+[StartUp]
+Expert=PATrendRiderXAUv1DemoEA
+ExpertParameters=pa_trendrider_demo_live.set
+Symbol=XAUUSDm
+Period=M5
+```
+
+- `Expert` là tên file trong `MQL5\Experts` (không cần đuôi `.ex5`); `ExpertParameters` là preset trong
+  `MQL5\Presets`. Preset phải sinh từ
+  [`../../configs/demo/pa_trendrider_xau_demo.json`](../../configs/demo/pa_trendrider_xau_demo.json) với
+  `InpEnableExecution=true`, `InpResetStateOnInit=false`; giữ nguyên `InpLogFile`/`InpStateFile` nếu muốn
+  nối tiếp journal và ledger đang có.
+- `Enabled=1` là nút **Algo Trading**; `AllowLiveTrading=1` là quyền giao dịch cấp cho EA được nạp lúc
+  khởi động. Thiếu `AllowLiveTrading=1` thì `OnInit` vẫn qua (DemoEA **không** đọc `MQL_TRADE_ALLOWED`)
+  nhưng lệnh đầu tiên sẽ bị terminal chặn với `OrderSend` error 10027 — xem
+  [`../reference/risk.md`](../reference/risk.md).
+- File cấu hình chỉ chứa input chiến lược và cờ quyền; **không** chứa login/password/server. Terminal vẫn
+  dùng phiên đăng nhập đã lưu; đăng nhập lại là thao tác tay, agent không điền hộ.
+
+Kiểm chứng sau khi khởi động (2026-10-29, build 6292):
+
+```text
+Startup  successfully initialized from start config "...\startup.ini"
+Experts  expert PATrendRiderXAUv1DemoEA (XAUUSDm,M5) loaded successfully
+MQL5     47 inputs read from expert 'PATrendRiderXAUv1DemoEA' set file "...\pa_trendrider_demo_live.set"
+```
+
+rồi dòng `INIT` trong `pa_trendrider_demo.csv` phải là `mode=DEMO_EXECUTION` với `config_hash=6B439450`
+và `restored=1` khi state file còn nguyên. Nếu thấy `mode=DRY_RUN` thì preset không được nạp — dừng lại,
+kiểm tra đường dẫn `MQL5\Presets` và tên key trong `.set`, không sửa mặc định của EA.
+
 ## 5. Kill switch và dừng khẩn cấp
 
 - Tạo file `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` (nội dung bất kỳ). Tick kế tiếp EA đóng vị thế của

@@ -2314,7 +2314,7 @@ Chạy headless bằng `reports/build/tester-run/lab_signal_ea_m5.ini`; artifact
   `pa_trendrider_demo_state.csv`, log `pa_trendrider_demo.csv`, `config_hash=6B439450`).
 - Trạng thái demo hiện tại: EA **chưa armed lại** sau sự cố; lần chạy cuối vẫn `state=WAITING_FOR_SETUP`,
   `entries=0`, balance `4999.76`, và **chưa từng có `ENTRY` do DemoEA gửi**. Không có kết quả mới nào được
-  ghi cho tới khi phiên đăng nhập được thực hiện.
+  ghi cho tới khi phiên đăng nhập được thực hiện. → Đã armed lại lúc 15:40 cùng ngày, xem §49.
 
 ### 48.7 Cổng kiểm tra lại sau thay đổi
 
@@ -2329,7 +2329,80 @@ Chạy headless bằng `reports/build/tester-run/lab_signal_ea_m5.ini`; artifact
 ### 48.8 Việc còn mở (trung thực)
 
 - DemoEA chưa được armed lại và chưa có `ENTRY` thật — phụ thuộc một lần đăng nhập thủ công + regime khác
-  `RANGE`.
+  `RANGE`. → Đã armed lại ở §49; `ENTRY` vẫn là hạng mục mở.
 - `LabOnnxInference` chưa chạy trong Strategy Tester (mới chạy trên chart); parity Pine ↔ MQL5 Track B vẫn
   `BLOCKED` vì thiếu CSV reference.
 - 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`.
+
+## 49. Armed lại DemoEA bằng terminal startup config — 2026-10-29
+
+### 49.1 Chặn đăng nhập được gỡ (thủ công, không tự động hóa)
+
+Sau sự cố `common.ini` ở §48.6, terminal không còn phiên đăng nhập tự động. Người dùng tự đăng nhập demo
+`464140826` (Exness-MT5Trial17) lúc 15:20:53; journal ghi:
+
+```text
+15:20:53.742 Network '464140826': authorized on Exness-MT5Trial17 through Access Point #3 (ping: 67.93 ms, build 6230)
+15:20:54.706 Network '464140826': terminal synchronized with Exness Technologies Ltd: 0 positions, 0 orders, 355 symbols, 0 spreads
+15:20:54.706 Network '464140826': trading has been enabled, demo account - hedging mode
+```
+
+Agent không điền hộp thoại `Login` ở bất kỳ bước nào. Không có mật khẩu/OTP nào được đọc, ghi hay ghi log.
+
+### 49.2 Gắn EA không cần chuột — `[StartUp]` của terminal
+
+MetaTrader cho phép gắn EA ngay khi khởi động qua section `[StartUp]` của file truyền vào `/config:`
+(cơ chế chính thức, mô tả ở `guides/demo-execution.md` §4.1). Đã dùng:
+
+- `MQL5\Presets\pa_trendrider_demo_live.set` sinh từ `configs/demo/pa_trendrider_xau_demo.json` với
+  `InpEnableExecution=true`, `InpResetStateOnInit=false`, giữ `pa_trendrider_demo.csv`/
+  `pa_trendrider_demo_state.csv`.
+- `startup.ini`: `[Experts] AllowLiveTrading=1 Enabled=1 AllowDllImport=0`; `[StartUp] Expert=
+  PATrendRiderXAUv1DemoEA`, `ExpertParameters=pa_trendrider_demo_live.set`, `Symbol=XAUUSDm`, `Period=M5`.
+- Terminal cũ đóng bằng `taskkill` (WM_CLOSE, thoát sạch: `Terminal exit with code 0` → `shutdown with 0`),
+  rồi khởi động lại bằng `terminal64.exe /config:<startup.ini>`.
+
+Bằng chứng khởi động (journal `logs\20261029.log`, local 15:40):
+
+```text
+15:40:54.655 Startup  successfully initialized from start config "...\reports\build\demo-arm\startup.ini"
+15:40:57.632 Network  '464140826': authorized on Exness-MT5Trial17 ... (previous 2026.10.29 08:20:53)
+15:40:57.801 MQL5     47 inputs read from expert 'PATrendRiderXAUv1DemoEA' set file "...\pa_trendrider_demo_live.set"
+15:40:57.814 Experts  expert PATrendRiderXAUv1DemoEA (XAUUSDm,M5) loaded successfully
+```
+
+### 49.3 Trạng thái EA sau khi armed
+
+Dòng `INIT` mới trong `MQL5\Files\pa_trendrider_demo.csv` (thời gian cột = giờ server, lệch 7 h so với
+local):
+
+```text
+2026.10.29 08:40:58 | INIT | 6B439450 | mode=DEMO_EXECUTION | state=WAITING_FOR_SETUP | restored=1
+| magic=25002001 | tp_r=3.00 | equity=4999.76 | config_hash=6B439450
+```
+
+- `restored=1` + ledger `day_key=20261029;day_start=5000.00000000` → state/ledger nối tiếp, **không** reset.
+- Cùng bar `08:35`: `BOS tf=M5 event=BOS_BEAR`, `REGIME regime=RANGE|bias=timeframe_conflict|h1=BEARISH|
+  m15=UNKNOWN`, `RISK ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE|spread_points=240.0|atr=4.04`.
+- Hai bar kế tiếp (`08:45`, `08:50`) tiếp tục `RISK ENTRY_BLOCKED reason=bias_unknown` với ATR 4.15/4.27 →
+  EA sống, xử lý từng bar M5 đóng, chặn đúng luật; **`entries=0` vẫn là kết quả hợp lệ** của bộ lọc regime.
+- Kill switch `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` không tồn tại; state `WAITING_FOR_SETUP;
+  transitions=5`.
+
+### 49.4 Giám sát
+
+`scripts\watch_demo_journal.py` (chỉ đọc): lần quét đầu bắt đúng 4 sự kiện của phiên mới (`INIT=1`, `BOS=1`,
+`REGIME=1`, `RISK=1`), `WATCH|BLOCKED|reason=bias_unknown=1`, exit `0`. Sau đó chạy nền
+`--watch --interval 30` ghi `reports\demo-watch\watch_20261029.log` (gitignored) và đã bắt các dòng
+`RISK` của bar `08:45`/`08:50`. Checkpoint: `reports\demo-watch\journal_checkpoint.json`.
+
+### 49.5 Điều chưa chứng minh (trung thực)
+
+- `INIT mode=DEMO_EXECUTION` chứng minh `ACCOUNT_TRADE_MODE_DEMO` + `ACCOUNT_TRADE_ALLOWED` +
+  `TERMINAL_TRADE_ALLOWED`, **không** chứng minh `MQL_TRADE_ALLOWED` vì guard của DemoEA không đọc cờ đó.
+  Quyền này đến từ `[Experts] AllowLiveTrading=1` lúc khởi động; nếu thiếu, lỗi chỉ lộ ở `OrderSend` đầu
+  tiên (error 10027). Đã ghi thành rủi ro riêng trong `reference/risk.md`.
+- **Chưa có `ENTRY` do DemoEA gửi trên demo.** Kỳ vọng ~3.1 lệnh/tháng; khoảng chờ dài nhất quan sát được
+  ~5.5 tuần. Không nới gate chiến lược để tạo lệnh.
+- `LabOnnxInference` chưa chạy Strategy Tester; parity Pine ↔ MQL5 Track B vẫn `BLOCKED`; 2 scenario
+  `plan_*` vẫn `BLOCKED_PERFORMANCE`.
