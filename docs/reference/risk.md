@@ -173,13 +173,24 @@
   `CLOSE_REQUEST` do EA chủ động), đối soát khớp với tab Backtest và Journal của chính tester, audit
   tĩnh `PROBLEMS=0` — [`../PROGRESS.md`](../PROGRESS.md) §44.
 - **Bằng chứng tester không phải bằng chứng broker chấp nhận lệnh:** `ExecContextAllowed` trả `true`
-  ngay khi `MQL_TESTER` bật, và khớp lệnh trong tester là mô phỏng. Vì vậy §44 chứng minh *mã đường
-  lệnh*, **không** chứng minh server Exness nhận lệnh demo. Một `ENTRY` thật trên tài khoản demo vẫn
-  chưa có — phiên demo ngày 2026-10-29 dừng ở `ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE`, tức
-  0 entry vì bộ lọc regime của chiến lược, không phải vì lỗi.
-- **Cờ "Allow Algo Trading" riêng của EA chưa được kiểm:** guard đọc `TERMINAL_TRADE_ALLOWED` của
-  terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản, không đọc `MQL_TRADE_ALLOWED` của chính EA. Nếu
-  cờ này tắt thì lỗi chỉ lộ ra lúc có tín hiệu (`OrderSend` fail) chứ không fail ở `INIT`.
+  ngay khi `MQL_TESTER` bật, và khớp lệnh trong tester là mô phỏng. Vì vậy §44 chỉ chứng minh *mã đường
+  lệnh*. Khoảng trống đó đã đóng ngày 2026-10-29 bằng `mt5/Scripts/ExecDemoProbe.mq5` — script từ chối
+  chạy trong tester, và một lệnh BUY 0.01 `XAUUSDm` có SL/TP đã được **server demo Exness khớp thật**
+  (`deal=2468899165` vào 4045.79 → `deal=2468899168` ra 4045.55, `pnl=-0.24` đúng bằng spread), đối soát
+  ba nguồn (log script, tab Trade, tab History của server) — [`../PROGRESS.md`](../PROGRESS.md) §45.
+- **Vẫn chưa có `ENTRY` do chính DemoEA gửi trên demo:** phiên `mode=DEMO_EXECUTION` vẫn
+  `ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE`. 0 entry là kết quả hợp lệ của bộ lọc regime
+  (§44.3: ~3.1 lệnh/tháng, khoảng chờ dài nhất quan sát được ~5.5 tuần), không phải lỗi và không phải
+  thành tích. Không được nới gate chiến lược chỉ để tạo ra lệnh.
+- **Probe dùng một chiều BUY:** `ExecOpenMarket(is_buy=false)` đi qua cùng mã nhưng chiều SELL chưa có
+  bằng chứng runtime trên server thật; retcode từ chối theo giờ, freeze hay requite cũng chưa được kiểm.
+- **Cờ "Allow Algo Trading" riêng của chương trình:** guard của DemoEA đọc `TERMINAL_TRADE_ALLOWED` của
+  terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản nhưng **không** đọc `MQL_TRADE_ALLOWED`, nên nếu cờ
+  này tắt thì lỗi chỉ lộ ra lúc có tín hiệu chứ không fail ở `INIT`. `ExecDemoProbe` thì từ chối chạy khi
+  `MQL_TRADE_ALLOWED` tắt — đó là lý do nó chứng minh được cả ba lớp bật cùng lúc.
+- **Probe làm dịch chuyển risk ledger của DemoEA:** `ExecRiskLedger` đọc balance tài khoản, nên −0.24 USD
+  do probe gây ra xuất hiện trong dòng `RISK|…|drawdown_pct=0.0048` của EA dù EA không có vị thế nào. Hành
+  vi đúng của ledger theo tài khoản, nhưng phải nhớ khi đọc `drawdown_pct` ngay sau khi chạy probe.
 - **Live/real vẫn là phạm vi mới:** muốn execution trên tài khoản thật phải lập ADR mới, review riêng và
   có tối thiểu: dry-run mặc định, một vị thế, SL/TP bắt buộc, giới hạn lot/risk, max daily loss, kill
   switch, không martingale/grid/DCA ở giai đoạn đầu, bằng chứng Strategy Tester + demo trước đó.

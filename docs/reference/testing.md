@@ -419,7 +419,14 @@ không phải hiệu năng thị trường. Chi tiết: [`ml-baseline.md`](ml-ba
   `validate_demo_execution.py` và `validate-project.py` trên repo.
 - `mt5/Scripts/ExecGuardTests.mq5`: 51 vector G1–G51 cho guard matrix (demo/real/contest, trade
   permission, symbol allow-list, TP math, broker stop level, volume normalization, risk budget và 12
-  reason token). Compile 0/0; chạy trong MetaEditor là hạng mục thủ công `NOT_RUN`.
+  reason token). Compile 0/0; **đã chạy thật trong MetaEditor ngày 2026-10-29**:
+  `TEST|RESULT|ALL_PASS|pass=51 fail=0|suite=execguard`. Script tổng hợp, không gọi `OrderSend`.
+- `mt5/Scripts/ExecDemoProbe.mq5`: đóng khoảng trống "script synthetic không chứng minh đường gửi lệnh".
+  Chạy trên tài khoản demo thật, `InpConfirm=false` mặc định nên không gửi lệnh; `InpConfirm=true` gửi
+  **một** lệnh 0.01 rồi đóng ngay qua `ExecOpenMarket`/`ExecClosePosition`. **PASS runtime 2026-10-29**:
+  `PROBE|DONE|position=2762481907|deals=2|pnl=-0.24|balance=4999.76` (xem [`../PROGRESS.md`](../PROGRESS.md)
+  §45). Probe từ chối chạy trong Strategy Tester và khi `MQL_TRADE_ALLOWED` tắt; bằng chứng này chứng minh
+  *transport*, không chứng minh chiến lược có lãi và không có `ENTRY` nào do chính DemoEA gửi.
 
 Chạy gần nhất (bounded DCA/grid, 2026-10-28): **198 passed in 11.26s** trên repo chính. Trước đó:
 trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s**.

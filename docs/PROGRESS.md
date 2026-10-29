@@ -2003,3 +2003,79 @@ terminal và symbol `XAUUSDm` đều đang mở**. Quy trình reset đã ghi l�
   hành vi**; ghi nhận ở đây để lần refactor sau thống nhất với dòng `ledger=`.
 - Không có bằng chứng nào ở §44 chứng minh chiến lược có lợi nhuận; +53.72/5 000 là một khoảng kiểm
   thử duy nhất, một symbol, một bộ tham số.
+
+## 45. Broker demo thật chấp nhận lệnh qua `ExecBroker.mqh` — 2026-10-29
+
+§44.6 để lại một khoảng trống duy nhất không thể đóng bằng Strategy Tester: chưa có bằng chứng
+**máy chủ demo của Exness** đồng ý khớp một lệnh đi qua [`ExecBroker.mqh`](../mt5/Include/Exec/ExecBroker.mqh).
+Lý do: `ExecContextAllowed` trả `true` ngay khi `state.tester` bật, nên tester chỉ chứng minh mã
+đường lệnh, không chứng minh phản hồi của broker. Khoảng trống đó đã đóng bằng
+`mt5/Scripts/ExecDemoProbe.mq5` — script một phát, dùng lại đúng guard chain của EA.
+
+### 45.1 Thiết kế probe (và vì sao nó không thể tự gian lận)
+
+| Cơ chế | Tác dụng |
+|---|---|
+| Từ chối chạy khi `MQLInfoInteger(MQL_TESTER)` | bằng chứng bắt buộc đến từ server thật, không từ bộ mô phỏng |
+| Đòi `MQLInfoInteger(MQL_TRADE_ALLOWED)` | lấp đúng lỗ hổng §44.6 — guard của EA chưa đọc cờ này |
+| `ExecContextAllowed` với `state.tester=false` | vẫn phải qua `ACCOUNT_TRADE_MODE_DEMO` + `ACCOUNT_TRADE_ALLOWED` + `TERMINAL_TRADE_ALLOWED` |
+| `ExecSymbolAllowed` / `ExecSymbolTradable` / kill switch `FileIsExist` | cùng bộ lọc với DemoEA |
+| `ExecTakeProfitValid` + `ExecStopsRespectBroker` + `ExecMarginRequired` trước khi gửi | không có lệnh nào ra khỏi mà thiếu SL/TP hợp lệ |
+| `InpConfirm=false` mặc định | không gửi lệnh chỉ vì script được attach nhầm |
+| magic `25002002` ≠ `25002001` | không đụng vị thế/state/journal của DemoEA |
+| tự đóng vị thế ngay trong lần chạy | không để lại trạng thái treo |
+
+Static gate đã siết các bất biến đó: `scripts/validate-project.py` và
+`scripts/validate_demo_execution.py` (check mới `demo order probe`) buộc `InpConfirm=false`, buộc
+probe gọi `ExecOpenMarket`/`ExecClosePosition` thay vì `OrderSend`, và buộc magic khác DemoEA.
+
+### 45.2 Chạy thật trên demo `464140826` — PASS
+
+Data folder `53785E099C927DB68A545C249CDBCE06`, chart `XAUUSDm,M5`, dịch trực tiếp trong data folder
+`Result: 0 errors, 0 warnings`. Log thật trong `MQL5\Logs\20261029.log`:
+
+```
+12:18:52.730  PROBE|READY|symbol=XAUUSDm|digits=3|volume=0.01|magic=25002002|stops_level=0|confirm=0
+12:18:52.730  PROBE|DRY|all_guards_pass|no_order_sent|set_InpConfirm_to_send
+12:20:10.183  PROBE|READY|symbol=XAUUSDm|digits=3|volume=0.01|magic=25002002|stops_level=0|confirm=1
+12:20:10.183  PROBE|MARGIN|required=20.23|free=5000.00
+12:20:10.305  PROBE|OPEN|order=2762481907|deal=2468899165|price=4045.79|volume=0.01|sl=4042.79|tp=4048.79|ok|done
+12:20:10.305  PROBE|POSITION|ticket=2762481907|open=4045.79|sl=4042.79|tp=4048.79|volume=0.01
+12:20:10.408  PROBE|CLOSE|order=2762481909|deal=2468899168|price=4045.55|ok|done
+12:20:10.408  PROBE|DONE|position=2762481907|deals=2|pnl=-0.24|balance=4999.76
+```
+
+Lần 1 (`InpConfirm=false`) đi hết chuỗi guard và **không gửi lệnh nào** — xác nhận dry-run vẫn là mặc
+định an toàn. Lần 2 khớp lệnh thật, có SL/TP gắn ngay trong request, rồi đóng trong 103 ms.
+
+Đối soát ba nguồn độc lập:
+
+| Nguồn | Nội dung |
+|---|---|
+| Log script | `deal=2468899165` vào 4045.79, `deal=2468899168` ra 4045.55, `pnl=-0.24` |
+| Tab Trade | `Balance: 4 999.76 USD`, danh sách vị thế trống → probe đã tự dọn |
+| Tab History (server) | `xauusdm buy 0.01 4045.787 S/L 4042.787 T/P 4048.787 → 4045.547, Profit -0.24`; tổng `Balance: 4 999.76` |
+
+−0.24 USD đúng bằng spread 240 points trên 0.01 lot (1 oz) — chi phí một vòng, không phải lỗi.
+Bằng chứng gốc (log UTF-16, `.ex5` đã chạy, log compile, `SHA256SUMS`) ở
+`reports/build/demo-exec-probe-20261029/` (gitignored).
+
+### 45.3 Tác dụng phụ đã kiểm chứng: DemoEA không bị nhiễm
+
+Journal `pa_trendrider_demo.csv` có **0 dòng** chứa magic `25002002`, state vẫn
+`WAITING_FOR_SETUP|transitions=5|dd_locked=0`. Dòng `RISK` lúc `05:25:00` ghi
+`balance=4999.76|drawdown_pct=0.0048` — tức ledger của EA **hạch toán cả phần lỗ −0.24 do probe gây
+ra** vì nó đọc balance tài khoản, không chỉ balance của chính EA. Đây là hành vi đúng của một risk
+ledger theo tài khoản, nhưng cần biết khi đọc `drawdown_pct` ngay sau khi chạy probe.
+
+### 45.4 Giới hạn trung thực
+
+- Một lệnh 0.01 được chấp nhận chứng minh **đường vận chuyển lệnh** (bảo mật phiên, symbol, khối
+  lượng, SL/TP, filling mode, hedge mode), không chứng minh DemoEA sẽ luôn khớp lệnh khi có tín hiệu:
+  retcode từ chối theo giờ, freeze, hay requite vẫn có thể xảy ra.
+- Probe dùng `ORDER_TYPE_BUY` với SL dưới/TP trên; chiều SELL đi qua cùng `ExecOpenMarket` nhưng chưa
+  có bằng chứng runtime trên server thật.
+- Vẫn **chưa có `ENTRY` thật từ chính DemoEA** trên demo — đó là việc của §45 trở đi và cần tín hiệu
+  hợp lệ, không phải cần thêm code.
+- Không có bằng chứng nào ở đây chứng minh chiến lược có lợi nhuận, và execution live/real vẫn bị
+  ADR 0003 cấm cho tới khi có ADR mới.

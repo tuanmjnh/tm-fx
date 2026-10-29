@@ -108,7 +108,8 @@ $files += @(
     [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\TrendRiderContractTests.mq5"; Target = "MQL5\Scripts\TrendRiderContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\ExecGuardTests.mq5"; Target = "MQL5\Scripts\ExecGuardTests.mq5" }
+    [pscustomobject]@{ Source = "mt5\Scripts\ExecGuardTests.mq5"; Target = "MQL5\Scripts\ExecGuardTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\ExecDemoProbe.mq5"; Target = "MQL5\Scripts\ExecDemoProbe.mq5" }
 )
 
 $compileTargets = @(
@@ -136,6 +137,7 @@ $compileTargets = @(
     "MQL5\Scripts\TrendRiderContractTests.mq5",
     "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5",
     "MQL5\Scripts\ExecGuardTests.mq5",
+    "MQL5\Scripts\ExecDemoProbe.mq5",
     "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5"
 )
 
@@ -322,4 +324,7 @@ Write-Host "     or: python scripts\audit_multi_signal_csv.py --csv <csv>"
 Write-Host "  7. Parity (needs a real Pine reference export): python scripts\compare_multi_signal_exports.py --reference <pine.csv> --mql5 <csv> --mql5-offset-minutes 180"
 Write-Host "  8. Scripts > ExecGuardTests must print ALL_PASS (pass=51 fail=0) before PATrendRiderXAUv1DemoEA"
 Write-Host "     is attached to a chart. See docs\guides\demo-execution.md: dry-run first, demo account only."
+Write-Host "  9. Scripts > ExecDemoProbe with InpConfirm=false must print PROBE|DRY|all_guards_pass."
+Write-Host "     Set InpConfirm=true only to prove the demo broker accepts one guarded order; the probe"
+Write-Host "     closes its own position immediately and never runs in the Strategy Tester."
 exit 0

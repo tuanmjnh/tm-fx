@@ -7,11 +7,12 @@
 - **Quy tắc:** không release nếu bất kỳ mục “Bắt buộc” nào chưa đạt. Mục “Thủ công” có thể để mở nhưng
   phải ghi rõ trạng thái trong báo cáo.
 
-> **Lưu ý (2026-10-29):** các con số trong checklist này là lần đóng gói **0.10.0** — 29 source `.mq5`
+> **Lưu ý (2026-10-29):** các con số trong checklist này là lần đóng gói **0.10.0** — 30 source `.mq5`
 > compile 0/0, `validate-project.py checks=14`, `validate_sim_configs.py checked=7` (6 preset, 17 scenario),
-> `validate_trendrider.py checks=7`, `validate_demo_execution.py checks=6`, pytest 358 passed. Bằng chứng
+> `validate_trendrider.py checks=7`, `validate_demo_execution.py checks=7`, pytest 358 passed. Bằng chứng
 > chi tiết và nhật ký phiên demo thật nằm ở [`../PROGRESS.md`](../PROGRESS.md) §42–§43; **bằng chứng đường
-> `OrderSend` trong Strategy Tester, kill switch bằng file thật và quy trình reset safe mode nằm ở §44**.
+> `OrderSend` trong Strategy Tester, kill switch bằng file thật và quy trình reset safe mode nằm ở §44;
+> bằng chứng máy chủ demo thật khớp lệnh qua `ExecDemoProbe` nằm ở §45**.
 > Chiến lược `WonderwhalesSimEA` và 12 scenario Strategy Tester cũ vẫn giữ nguyên kết quả.
 
 ## 1. Bắt buộc
@@ -21,7 +22,7 @@
 | 1 | Test Python xanh | `.\.venv\Scripts\python.exe -m pytest -q` | Đạt: 358 passed |
 | 2 | Không lỗi cú pháp | `python -m compileall -q python/src python/tests scripts` | Đạt: exit 0 |
 | 3 | Dependency nhất quán | `python -m pip check` | Đạt: no broken requirements |
-| 4 | Execution chỉ trong scope demo | `validate-project.py` + `validate_demo_execution.py`: trading API chỉ nằm trong `mt5/Include/Exec/*` và `PATrendRiderXAUv1DemoEA` | Đạt: 0 API ngoài scope; guard test compile 0/0 |
+| 4 | Execution chỉ trong scope demo | `validate-project.py` + `validate_demo_execution.py`: trading API chỉ nằm trong `mt5/Include/Exec/*`, `PATrendRiderXAUv1DemoEA`, `ExecGuardTests.mq5` và `ExecDemoProbe.mq5` | Đạt: 0 API ngoài scope; guard test compile 0/0 |
 | 5 | Không có secret/credential | Không có `.env`, token, password, `accounts.dat`, `servers.dat` trong repo | Đạt: kiểm tra thủ công |
 | 6 | Không kết nối broker | Không có login/`WebRequest`/socket; `AccountInfo*` chỉ đọc trade-mode trong guard demo | Đạt: mã nguồn |
 | 7 | Pipeline end-to-end chạy được | `scripts\run_pipeline.py --config configs\pipeline.example.yaml` | Đạt: exit 0, báo cáo demo |
@@ -34,9 +35,10 @@
 | 14 | Ranh giới execution được ghi nhận | `docs/decisions/0003-demo-execution-scope.md`, `docs/guides/demo-execution.md`, README, AGENTS.md | Đạt: ADR Accepted; guide nêu demo-only, dry-run, kill switch, 0 trade là đúng |
 | 15 | Không có credential/account ID trong docs/log | Review `git diff` và log MT5 trước commit | Đạt: log compile không chứa account/server |
 | 16 | Preset Track C fail-closed | `scripts\validate_sim_configs.py` | Đạt: checked=7 fail=0 (6 preset, 17 scenario); snapshot bất biến |
-| 16b | Preset demo fail-closed | `scripts\validate_demo_execution.py` | Đạt: checks=6 fail=0; DEMO_ONLY, `InpEnableExecution=false`, TP bắt buộc, magic tách khỏi bản mô phỏng |
+| 16b | Preset demo fail-closed | `scripts\validate_demo_execution.py` | Đạt: checks=7 fail=0; DEMO_ONLY, `InpEnableExecution=false`, TP bắt buộc, magic tách khỏi bản mô phỏng; check `demo order probe` buộc `ExecDemoProbe` giữ `InpConfirm=false`, gọi lệnh qua `ExecBroker` chứ không `OrderSend`, từ chối tester và đọc `MQL_TRADE_ALLOWED` |
 | 16c | Guard contract test | Compile + chạy `mt5\Scripts\ExecGuardTests.mq5` | Compile 0/0; **runtime PASS** 2026-10-29 (xem mục 10) |
-| 17 | Build MQL5 toàn bộ | `scripts\build-mql5.ps1` | Đạt: 29 source, 0 errors, 0 warnings (2026-10-29) |
+| 16d | Broker acceptance probe | Compile + chạy `mt5\Scripts\ExecDemoProbe.mq5` trên demo thật | Compile 0/0 (cả trong data folder); **runtime PASS** 2026-10-29 (xem mục 16) |
+| 17 | Build MQL5 toàn bộ | `scripts\build-mql5.ps1` | Đạt: 30 source, 0 errors, 0 warnings (2026-10-29) |
 | 18 | Static scan toàn project | `scripts\validate-project.py` | Đạt: checks=14 fail=0; 62 source không có API giao dịch ngoài scope/placeholder |
 | 19 | Package source loại artifact | `scripts\package-source.ps1 -Version <x.y.z>` | Đạt: không có `.venv`, `.ex5`, log, report trong zip; manifest SHA256 |
 
@@ -44,7 +46,7 @@
 
 | # | Kiểm tra | Trạng thái |
 |---|---|---|
-| 1 | Compile 29 file `.mq5` | Đạt 2026-10-29 bằng `scripts\build-mql5.ps1` với MetaEditor bản Exness: 0 errors/0 warnings; MetaEditor CLI trả exit 1 dù thành công (đọc log, không đọc exit code) |
+| 1 | Compile 30 file `.mq5` | Đạt 2026-10-29 bằng `scripts\build-mql5.ps1` với MetaEditor bản Exness: 0 errors/0 warnings; MetaEditor CLI trả exit 1 dù thành công (đọc log, không đọc exit code) |
 | 2 | MT5 Strategy Tester cho `LabSignalEA` | Chưa chạy; kỳ vọng 0 trade vì EA signal-only |
 | 3 | `LabSignalExport` + parity MQL5/Python | Chưa chạy MQL5 export |
 | 4 | `LabOnnxInference` + parity runtime ONNX | Chưa chạy; compile 0/0 |
@@ -60,7 +62,8 @@
 | 13 | Đường gửi lệnh `ExecBroker.mqh` có bằng chứng runtime | **PASS (Strategy Tester)** 2026-10-29: 31 `ENTRY` đều `ORDER_FILLED\|order=N\|deal=N\|ok\|done`, 34 `TRAIL`, 31 `EXIT` (30 `broker_close` + 1 `CLOSE_REQUEST\|deal=61`), `SUMMARY entries=31 exits=31 wins=11 losses=20 net=53.72 drawdown_pct=0.6530`, 61 189 dòng journal, đối soát khớp tab Backtest (`Total Trades 31`/`Total Deals 62`) và tab Journal (`final balance 5053.72 USD`). Xem §44 |
 | 14 | Audit tĩnh CSV của phiên execution | **PASS** `python audit_exec_csv.py pa_trendrider_demo.csv` → `PROBLEMS=0` (SL/TP đúng phía, TP = entry ± 3·risk trong 0.01, một vị thế, `TRAIL` chỉ siết SL, `config_hash` không đổi, ENTRY phải mang `ORDER_FILLED`) |
 | 15 | Kill switch bằng file thật | **PASS** 2026-10-29 trên demo thật: tạo `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` → trong 16 s journal ghi `KILL kill_switch_file\|entries_disabled` + `STATE to=ERROR_SAFE_MODE\|reason=kill_switch`. Phát hiện quan trọng: **xoá file là chưa đủ** — `OnDeinit` ghi `ERROR_SAFE_MODE` vào state file trước khi `OnInit` đọc lại; quy trình reset ở `guides/demo-execution.md` §5.1, đã xác nhận khôi phục về `state=WAITING_FOR_SETUP` |
-| 16 | Broker demo thật chấp nhận lệnh | **CHƯA CHẠY** — `ExecContextAllowed` trả `true` ngay khi `MQL_TESTER` bật nên bằng chứng mục 13 là của mã, không phải của server Exness. Cần một `ENTRY` thật trên demo để đóng mục này; không được nới gate chiến lược chỉ để tạo ra lệnh |
+| 16 | Broker demo thật chấp nhận lệnh | **PASS** 2026-10-29 qua `mt5\Scripts\ExecDemoProbe.mq5` trên demo `464140826`, chart `XAUUSDm,M5`: lần `InpConfirm=false` ghi `PROBE\|DRY\|all_guards_pass\|no_order_sent`; lần `InpConfirm=true` ghi `PROBE\|OPEN\|order=2762481907\|deal=2468899165\|price=4045.79\|sl=4042.79\|tp=4048.79\|ok\|done` → `PROBE\|CLOSE\|deal=2468899168\|price=4045.55` → `PROBE\|DONE\|deals=2\|pnl=-0.24\|balance=4999.76`. Đối soát ba nguồn (log script, tab Trade, tab History của server) khớp; −0.24 = đúng spread 240 points trên 0.01 lot. Probe từ chối chạy trong tester và đòi `MQL_TRADE_ALLOWED`, nên đây là bằng chứng **server**, không phải bằng chứng mã. Xem §45 |
+| 16a | DemoEA có `ENTRY` thật trên demo | **CHƯA XẢY RA** — phiên `mode=DEMO_EXECUTION` vẫn `ENTRY_BLOCKED reason=bias_unknown\|regime_range`; 0 entry là kết quả hợp lệ của bộ lọc regime (§44.3: ~3.1 lệnh/tháng, khoảng chờ dài nhất ~5.5 tuần). Không nới gate chiến lược chỉ để tạo ra lệnh |
 
 ## 3. Trước khi commit/tag
 

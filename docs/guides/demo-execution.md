@@ -144,6 +144,45 @@ Token chặn của chiến lược (`RISK|ENTRY_BLOCKED`) nằm ở một nhóm 
 `reversal_watch`, `bos_against_bias`, `no_pullback`, `bos_too_old`, `volatility_high`,
 `spread_blocked`, `risk_locked`, `lot_rejected`, `stop_rejected`.
 
+### 6.1 Kiểm chứng broker demo chấp nhận lệnh — `ExecDemoProbe`
+
+`ExecGuardTests` là test synthetic, còn Strategy Tester thì `ExecContextAllowed` trả `true` sớm
+(`state.tester`), nên **cả hai không chứng minh server Exness nhận lệnh**. Muốn có bằng chứng đó, chạy
+`mt5\Scripts\ExecDemoProbe.mq5` (deploy cùng `scripts\deploy_pineport.ps1`).
+
+Các bước:
+
+1. Bảo đảm chart đang mở là `XAUUSDm` trên **tài khoản demo**, không có
+   `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt`.
+2. Navigator → Scripts → double-click `ExecDemoProbe` với `InpConfirm=false` (mặc định). Tab Experts phải in:
+   ```
+   PROBE|READY|symbol=…|digits=…|volume=0.01|magic=25002002|stops_level=…|confirm=0
+   PROBE|DRY|all_guards_pass|no_order_sent|set_InpConfirm_to_send
+   ```
+   Không có dòng `DRY` nào nghĩa là một guard đã chặn — đọc `PROBE|FAIL|<stage>|<reason>` rồi sửa nguyên
+   nhân, đừng gửi lệnh.
+3. Chỉ khi muốn có bằng chứng khớp lệnh thật: mở lại script, bật `InpConfirm=true` ở tab Inputs rồi OK.
+   Probe gửi **đúng một** lệnh 0.01 có SL/TP, in `PROBE|OPEN`, `PROBE|POSITION`, rồi đóng ngay và in
+   `PROBE|CLOSE`, `PROBE|DONE`.
+4. Lưu bằng chứng: `MQL5\Logs\<date>.log` (UTF-16) và đối soát với tab **History** của chính terminal.
+
+Kết quả mẫu đã đạt ngày 2026-10-29 (demo `464140826`):
+
+```
+PROBE|OPEN|order=2762481907|deal=2468899165|price=4045.79|volume=0.01|sl=4042.79|tp=4048.79|ok|done
+PROBE|CLOSE|order=2762481909|deal=2468899168|price=4045.55|ok|done
+PROBE|DONE|position=2762481907|deals=2|pnl=-0.24|balance=4999.76
+```
+
+Lưu ý:
+
+- Probe dùng magic `25002002`, tách khỏi `25002001` của DemoEA, nên không tạo `ENTRY` giả trong
+  `pa_trendrider_demo.csv`. Nhưng ledger của EA đọc **balance tài khoản**, vì vậy `drawdown_pct` trong
+  dòng `RISK` sẽ phản ánh phần lỗ của probe trong vài tick kế tiếp — bình thường, không phải tín hiệu.
+- Probe từ chối chạy trong Strategy Tester và từ chối khi `MQL_TRADE_ALLOWED` tắt.
+- Một lệnh được chấp nhận **không** nghĩa là chiến lược sinh lời; nó chỉ đóng khoảng trống "server có
+  khớp lệnh hay không".
+
 ## 7. Cách đọc kết quả đúng
 
 - **Dry-run không có lệnh là đúng.** **Demo có 0 entry cũng có thể đúng** khi không có setup.

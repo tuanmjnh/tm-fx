@@ -46,6 +46,7 @@ EXEC_SOURCES = {
     "mt5/Include/Exec/ExecBroker.mqh",
     "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5",
     "mt5/Scripts/ExecGuardTests.mq5",
+    "mt5/Scripts/ExecDemoProbe.mq5",
 }
 
 EXEC_FORBIDDEN_API = re.compile(
@@ -114,6 +115,7 @@ REQUIRED_FILES = (
     "mt5/Include/Exec/ExecBroker.mqh",
     "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5",
     "mt5/Scripts/ExecGuardTests.mq5",
+    "mt5/Scripts/ExecDemoProbe.mq5",
     "configs/demo/pa_trendrider_xau_demo.json",
     "docs/decisions/0003-demo-execution-scope.md",
     "docs/guides/demo-execution.md",
@@ -233,8 +235,9 @@ def check_exec_structure(root: Path) -> list[str]:
     broker = root / "mt5" / "Include" / "Exec" / "ExecBroker.mqh"
     guard = root / "mt5" / "Include" / "Exec" / "ExecGuard.mqh"
     tests = root / "mt5" / "Scripts" / "ExecGuardTests.mq5"
+    probe = root / "mt5" / "Scripts" / "ExecDemoProbe.mq5"
 
-    for path in (demo_ea, broker, guard, tests):
+    for path in (demo_ea, broker, guard, tests, probe):
         if not path.is_file():
             issues.append(f"missing {path.relative_to(root).as_posix()}")
     if issues:
@@ -293,6 +296,32 @@ def check_exec_structure(root: Path) -> list[str]:
             issues.append(f"ExecGuardTests must assert reason token {token}")
     if "TEST|RESULT|ALL_PASS" not in test_text:
         issues.append("ExecGuardTests must print an ALL_PASS result line")
+
+    probe_text = _code_only(probe.read_text(encoding="utf-8"))
+    for token in (
+        "MQLInfoInteger(MQL_TESTER)",
+        "ExecContextAllowed",
+        "ExecSymbolAllowed",
+        "ExecSymbolTradable",
+        "ExecOpenMarket",
+        "ExecClosePosition",
+        "FileIsExist",
+        "void OnStart",
+    ):
+        if token not in probe_text:
+            issues.append(f"ExecDemoProbe missing guard token {token}")
+    if not re.search(r"InpConfirm\s*=\s*false", probe_text):
+        issues.append("ExecDemoProbe must default InpConfirm to false")
+    if "OrderSend" in probe_text:
+        issues.append("ExecDemoProbe must route orders through ExecBroker, not OrderSend")
+    if "ExecBroker.mqh" not in probe.read_text(encoding="utf-8"):
+        issues.append("ExecDemoProbe must include ExecBroker.mqh")
+    probe_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", probe_text)
+    demo_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", demo_text)
+    if probe_magic is None or demo_magic is None:
+        issues.append("Exec scope must declare an explicit magic in DemoEA and ExecDemoProbe")
+    elif probe_magic.group(1) == demo_magic.group(1):
+        issues.append("ExecDemoProbe magic must differ from the DemoEA magic")
     return issues
 
 

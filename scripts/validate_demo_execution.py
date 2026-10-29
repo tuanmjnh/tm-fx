@@ -6,8 +6,10 @@ Asserts the guardrails that separate demo execution from live trading:
 * dry-run is the default and enabling execution is an explicit flag;
 * every order carries a mandatory take profit and one position at most;
 * a kill-switch file exists and no grid/DCA path is exposed;
-* trading APIs live only in the three Exec sources; the simulation EAs and
-  presets are untouched and still refuse orders;
+* trading APIs live only in the Exec sources (guard, broker, demo EA, contract
+  tests, order probe); the simulation EAs and presets are untouched and still
+  refuse orders;
+* the order probe stays confirm-gated, tester-refusing and on its own magic;
 * no network, socket or credential API is used anywhere in the Exec scope.
 
 This script never compiles, never starts MetaTrader, never logs in and never
@@ -37,10 +39,11 @@ SIM_EA = "mt5/Experts/PATrendRiderXAUv1SimEA.mq5"
 EXEC_GUARD = "mt5/Include/Exec/ExecGuard.mqh"
 EXEC_BROKER = "mt5/Include/Exec/ExecBroker.mqh"
 EXEC_TESTS = "mt5/Scripts/ExecGuardTests.mq5"
+EXEC_PROBE = "mt5/Scripts/ExecDemoProbe.mq5"
 DEMO_PRESET = "configs/demo/pa_trendrider_xau_demo.json"
 SIM_PRESET = "configs/sim/pa_trendrider_xau.json"
 
-EXEC_SOURCES = (EXEC_GUARD, EXEC_BROKER, DEMO_EA, EXEC_TESTS)
+EXEC_SOURCES = (EXEC_GUARD, EXEC_BROKER, DEMO_EA, EXEC_TESTS, EXEC_PROBE)
 
 #--- Never allowed in the demo execution scope, even though trading APIs are.
 FORBIDDEN_EXEC = re.compile(
@@ -97,6 +100,7 @@ def check_files(root: Path) -> list[str]:
             EXEC_TESTS,
             DEMO_PRESET,
             SIM_PRESET,
+            EXEC_PROBE,
         )
         if not (root / relative).is_file()
     ]
@@ -196,6 +200,52 @@ def check_exec_sources(root: Path) -> list[str]:
     return issues
 
 
+def check_probe(root: Path) -> list[str]:
+    """The probe is the only code allowed to prove broker acceptance, so it
+    must stay demo-only, tester-refusing and confirm-gated."""
+    issues: list[str] = []
+    code = _code_only(_read(root, EXEC_PROBE))
+
+    if _input_default(code, "InpConfirm") != "false":
+        issues.append("InpConfirm must default to false (no order without a hand edit)")
+    for token in (
+        "MQLInfoInteger(MQL_TESTER)",
+        "MQLInfoInteger(MQL_TRADE_ALLOWED)",
+        "ExecContextAllowed",
+        "ExecSymbolAllowed",
+        "ExecSymbolTradable",
+        "ExecTakeProfitValid",
+        "ExecStopsRespectBroker",
+        "ExecMarginRequired",
+        "ExecOpenMarket",
+        "ExecClosePosition",
+        "FileIsExist",
+        "void OnStart",
+    ):
+        if token not in code:
+            issues.append(f"probe must call {token}")
+    if "OrderSend" in code:
+        issues.append("probe must reach the broker only through ExecBroker.mqh")
+    if "ExecBroker.mqh" not in _read(root, EXEC_PROBE):
+        issues.append("probe must include ExecBroker.mqh")
+
+    ea_code = _code_only(_read(root, DEMO_EA))
+    probe_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", code)
+    ea_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", ea_code)
+    if probe_magic is None or ea_magic is None:
+        issues.append("probe and DemoEA must declare an explicit magic default")
+    elif probe_magic.group(1) == ea_magic.group(1):
+        issues.append("probe magic must differ from the DemoEA magic")
+
+    ea_kill = _input_default(ea_code, "InpKillSwitchFile")
+    probe_kill = _input_default(code, "InpKillSwitchFile")
+    if probe_kill in (None, '""'):
+        issues.append("probe must name a kill-switch file")
+    elif probe_kill != ea_kill:
+        issues.append("probe and DemoEA must share one kill-switch file")
+    return issues
+
+
 def check_presets(root: Path) -> list[str]:
     issues: list[str] = []
     demo = json.loads(_read(root, DEMO_PRESET))
@@ -288,6 +338,7 @@ def main(argv: list[str] | None = None) -> int:
     report("ADR 0003 scope", check_adr(root))
     report("demo EA guardrails", check_demo_ea(root))
     report("exec sources", check_exec_sources(root))
+    report("demo order probe", check_probe(root))
     report("demo and simulation presets", check_presets(root))
     report("demo guide", check_guide(root))
 

@@ -1135,7 +1135,7 @@ Không suy ra lợi nhuận hay độ sẵn sàng live từ hai lượt chạy n
 ## Track C — PATrendRider XAU v1 demo execution (ADR 0003)
 
 - **Đối tượng:** `PATrendRiderXAUv1DemoEA`, `ExecGuard.mqh`, `ExecBroker.mqh`, `ExecGuardTests.mq5`,
-  preset `configs/demo/pa_trendrider_xau_demo.json`.
+  `ExecDemoProbe.mq5`, preset `configs/demo/pa_trendrider_xau_demo.json`.
 - **Nguyên tắc:** EA dùng chung engine tín hiệu TrendRider nhưng gửi lệnh **chỉ trên tài khoản demo hoặc
   Strategy Tester**. `ExecGuard` từ chối real/contest; `InpEnableExecution=false` là dry-run; mỗi lệnh có
   SL/TP bắt buộc, tối đa một vị thế, lot theo ngân sách rủi ro và kill switch trong `MQL5/Files`.
@@ -1151,6 +1151,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 `
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 `
   -MetaEditorPath "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe" `
   -Filter "Scripts\ExecGuardTests.mq5" -LogDir "reports\build-demo"
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 `
+  -MetaEditorPath "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe" `
+  -Filter "Scripts\ExecDemoProbe.mq5" -LogDir "reports\build-demo"
 ```
 
 `-MetaEditorPath` phải trỏ tới bản cài thật. Sau khi cài lại MT5 của Exness, path cũ
@@ -1171,19 +1174,30 @@ path hiện hành.
 3. Kỳ vọng: journal có `INIT` (demo, dry-run) và `DRY_RUN`; tab Trade/History **trống**.
 4. Khi dry-run sạch, mới đặt `InpEnableExecution=true` cho một phiên có giám sát.
 
-### 4. Kill switch
+### 4. Probe broker demo — `ExecDemoProbe`
+
+1. Chạy `Scripts\ExecDemoProbe` với `InpConfirm=false`. Kỳ vọng dòng cuối
+   `PROBE|DRY|all_guards_pass|no_order_sent|set_InpConfirm_to_send` — không lệnh nào được gửi.
+2. Đổi `InpConfirm=true` chạy lại một lần để chứng minh server demo nhận lệnh qua `ExecBroker.mqh`
+   (`PROBE|OPEN` → `PROBE|CLOSE` → `PROBE|DONE`), rồi đối soát tab History.
+3. Probe dùng magic `25002002`, tách khỏi magic `25002001` của EA; từ chối chạy trong Strategy Tester và
+   khi `MQL_TRADE_ALLOWED` tắt. Quy trình đầy đủ: [`demo-execution.md`](demo-execution.md) §6.1.
+
+### 5. Kill switch
 
 Tạo `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt`; tick kế tiếp EA đóng vị thế của mình, ghi `KILL_SWITCH`
 và chuyển `ERROR_SAFE_MODE`. Xoá file và restart EA để chạy lại.
 
-### 5. Trạng thái runtime
+### 6. Trạng thái runtime
 
 | Hạng mục | Kết quả |
 |---|---|
-| Compile DemoEA + ExecGuardTests | **0 errors, 0 warnings** |
-| `ExecGuardTests` trong MetaEditor | `NOT_RUN` |
-| Dry-run trên tài khoản demo | `NOT_RUN` |
-| Demo execution một phiên | `NOT_RUN` |
+| Compile DemoEA + ExecGuardTests + ExecDemoProbe | **0 errors, 0 warnings** |
+| `ExecGuardTests` trong MetaEditor | **PASS runtime** `TEST\|RESULT\|ALL_PASS\|pass=51 fail=0\|suite=execguard` (2026-10-29) |
+| Dry-run trên tài khoản demo | **Đã chạy** — journal có `INIT mode=DRY_RUN`, tab Trade/History trống |
+| Demo execution một phiên | **Đã chạy** — `ENTRY_BLOCKED\|reason=bias_unknown` nên 0 `ENTRY`; do bộ lọc regime, không phải lỗi |
+| `ExecDemoProbe` dry-run | **PASS** `PROBE\|DRY\|all_guards_pass\|no_order_sent` (2026-10-29) |
+| `ExecDemoProbe` gửi lệnh thật trên demo | **PASS** `PROBE\|DONE\|position=2762481907\|deals=2\|pnl=-0.24\|balance=4999.76` (2026-10-29) — xem [`../PROGRESS.md`](../PROGRESS.md) §45 |
 
 Chi tiết vận hành, reason token và xử lý sự cố: [`demo-execution.md`](demo-execution.md).
 Không suy ra lợi nhuận hay độ sẵn sàng live từ bất kỳ journal demo nào.
