@@ -3,7 +3,8 @@
 - **Ngày lập:** 2026-10-28
 - **Nguồn đã đọc:** toàn bộ `docs/MT5_AI_Roadmaps/` (10 file: 3 roadmap, 3 prompt, strategy spec,
   risk/validation, install/test, index) cùng `docs/PROGRESS.md`, `docs/indicators/README.md` và cây mã nguồn.
-- **Phạm vi:** chỉ nghiên cứu, mô phỏng, backtest và signal-only. Không execution, không broker, không
+- **Phạm vi:** nghiên cứu, mô phỏng, backtest và signal-only, cộng **demo execution có guardrail**
+  (`PATrendRiderXAUv1DemoEA`, ADR 0003). Không execution trên tài khoản real/live, không broker, không
   credential. Mọi trạng thái bên dưới phản ánh bằng chứng đã chạy thật; không suy diễn từ tài liệu.
 
 ## 1. Ba track và trạng thái thực tế

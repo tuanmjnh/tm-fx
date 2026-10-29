@@ -24,7 +24,7 @@ def test_scan_detects_order_and_trade_class(tmp_path: Path) -> None:
         "void OnStart()\n{\n   OrderSend(request, result);\n   CTrade trade;\n}\n",
         encoding="utf-8",
     )
-    issues = module.scan_forbidden_api(source)
+    issues = module.scan_forbidden_api(source, tmp_path)
     assert any("OrderSend" in issue for issue in issues)
     assert any("CTrade" in issue for issue in issues)
 
@@ -33,7 +33,7 @@ def test_scan_detects_trade_include(tmp_path: Path) -> None:
     module = _load_module()
     source = tmp_path / "BadInclude.mqh"
     source.write_text('#include <Trade\\Trade.mqh>\n', encoding="utf-8")
-    issues = module.scan_forbidden_api(source)
+    issues = module.scan_forbidden_api(source, tmp_path)
     assert any("forbidden include" in issue for issue in issues)
 
 
@@ -45,7 +45,32 @@ def test_scan_allows_market_data_api(tmp_path: Path) -> None:
         "double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);\n",
         encoding="utf-8",
     )
-    assert module.scan_forbidden_api(source) == []
+    assert module.scan_forbidden_api(source, tmp_path) == []
+
+
+def _write_exec_source(tmp_path: Path, module, body: str) -> Path:
+    relative = "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5"
+    assert relative in module.EXEC_SOURCES
+    source = tmp_path / Path(relative)
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(body, encoding="utf-8")
+    return source
+
+
+def test_scan_allows_order_send_only_in_exec_sources(tmp_path: Path) -> None:
+    module = _load_module()
+    source = _write_exec_source(
+        tmp_path, module, "// OrderSend in a comment is not code\n"
+        "bool sent = OrderSend(request, result);\n"
+    )
+    assert module.scan_forbidden_api(source, tmp_path) == []
+
+
+def test_scan_still_blocks_network_in_exec_sources(tmp_path: Path) -> None:
+    module = _load_module()
+    source = _write_exec_source(tmp_path, module, "int rc = WebRequest(\"GET\", url, 0, 1000, buf);\n")
+    issues = module.scan_forbidden_api(source, tmp_path)
+    assert any("WebRequest" in issue for issue in issues)
 
 
 def test_placeholder_scan(tmp_path: Path) -> None:

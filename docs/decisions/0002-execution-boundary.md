@@ -1,7 +1,12 @@
 # ADR 0002 — Ranh giới execution và chạy trên Exness MT5
 
+> **Cập nhật 2026-10-29:** ADR [0003](0003-demo-execution-scope.md) đã thay thế **mục 1, 2 và 6** của
+> ADR này: repository có execution **chỉ trên tài khoản demo/Strategy Tester**, qua
+> `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`. Các mục còn lại (không tài khoản live, không
+> credential, không hứa hẹn lợi nhuận) vẫn hiệu lực. Nội dung dưới đây giữ nguyên làm lịch sử.
+
 - **Ngày:** 2026-10-28
-- **Trạng thái:** Accepted
+- **Trạng thái:** Accepted, thay thế một phần bởi ADR 0003
 - **Bối cảnh:** người dùng yêu cầu một bot “chạy trực tiếp trên Exness MT5”. Repository hiện tại là
   signal-only theo ADR 0001: không có `OrderSend`, `CTrade`, không kết nối broker, không lưu credential.
   Các kết quả DCA/grid, trailing stop và ML mới chỉ là mô phỏng offline trên dữ liệu synthetic.

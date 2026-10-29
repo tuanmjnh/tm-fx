@@ -23,8 +23,11 @@ backtest có thể tái lập cho MetaTrader 5.
   indicator (547 check), `TrendRiderContractTests` (82 check) và 15/17 scenario Strategy Tester đã chạy
   thật. Parity runtime, ONNX runtime và 2 scenario `plan_*` vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`. Quy
   trình: [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
-- **Ranh giới execution:** repo này không hỗ trợ live execution. Quyết định và điều kiện cho một scope
-  demo-only riêng nằm ở [`docs/decisions/0002-execution-boundary.md`](docs/decisions/0002-execution-boundary.md).
+- **Ranh giới execution:** không hỗ trợ live/real execution. Repo có **một** đường chạy demo được
+  guardrail đầy đủ: `PATrendRiderXAUv1DemoEA` trên tài khoản demo hoặc Strategy Tester, mặc định dry-run,
+  bắt buộc SL/TP, một vị thế và kill switch. Xem
+  [`docs/decisions/0003-demo-execution-scope.md`](docs/decisions/0003-demo-execution-scope.md) và
+  [`docs/guides/demo-execution.md`](docs/guides/demo-execution.md).
 - **Tài liệu nguồn:** [`docs/ROADMAP_MT5_EA_AI_LAB.md`](docs/ROADMAP_MT5_EA_AI_LAB.md) và
   [`docs/PROMPT_AI_IMPLEMENT_ROADMAP.md`](docs/PROMPT_AI_IMPLEMENT_ROADMAP.md).
 
@@ -223,15 +226,18 @@ không mở/ghi được. Giả định mô phỏng và định nghĩa metric:
 
 ## An toàn và giới hạn
 
-- Không có `OrderSend`, `CTrade.Buy`, `CTrade.Sell` hoặc đường thực thi lệnh nào trong repository.
+- Không có `OrderSend`, `CTrade.Buy`, `CTrade.Sell` hoặc đường thực thi lệnh nào trong các EA mô phỏng.
+  Ngoại lệ duy nhất là scope demo ở `mt5/Include/Exec/*` + `PATrendRiderXAUv1DemoEA`, bị chặn bởi
+  `ExecGuard` và các static gate; tài khoản real bị từ chối tại `OnInit`.
 - Không commit `.env`, mật khẩu, token, `accounts.dat`, `servers.dat` hay dữ liệu tài khoản.
 - Không đặt secret trong config, `notes` hay artifact: SQLite store lưu `config_json`, `notes` và đường
   dẫn artifact.
 - Dữ liệu lớn, model artifact, log, SQLite database và output thí nghiệm bị loại khỏi Git (xem
   `.gitignore`).
 - Không kết nối Exness hay bất kỳ tài khoản môi giới nào. Không chạy live execution trong repo này;
-  `LabSignalEA` là signal-only và **0 trade là kết quả đúng**. Xem
-  [`docs/decisions/0002-execution-boundary.md`](docs/decisions/0002-execution-boundary.md).
+  `LabSignalEA` là signal-only và **0 trade là kết quả đúng**. Demo execution chỉ chạy khi người dùng tự
+  đăng nhập tài khoản demo và bật `InpEnableExecution`; xem
+  [`docs/decisions/0003-demo-execution-scope.md`](docs/decisions/0003-demo-execution-scope.md).
 - ML baseline chỉ dùng dữ liệu synthetic trong demo; metric phân loại và metric chiến lược mô phỏng được
   báo cáo riêng, không phải bằng chứng lợi nhuận.
 - Bounded DCA/grid có simulator Python và 5 EA MQL5 mô phỏng (runner/grid/DCA/plan/Wonderwhales); cả 5 EA
@@ -271,4 +277,5 @@ Mục lục tài liệu đầy đủ: [`docs/README.md`](docs/README.md).
 Release checklist: [`docs/reference/release.md`](docs/reference/release.md).
 Từ điển dữ liệu: [`docs/reference/data-dictionary.md`](docs/reference/data-dictionary.md).
 Hướng dẫn MT5: [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md), [`mt5/README.md`](mt5/README.md).
-Ranh giới execution: [`docs/decisions/0002-execution-boundary.md`](docs/decisions/0002-execution-boundary.md).
+Ranh giới execution: [`docs/decisions/0003-demo-execution-scope.md`](docs/decisions/0003-demo-execution-scope.md),
+hướng dẫn chạy demo: [`docs/guides/demo-execution.md`](docs/guides/demo-execution.md).

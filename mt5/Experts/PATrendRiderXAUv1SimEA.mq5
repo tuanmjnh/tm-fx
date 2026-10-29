@@ -5,8 +5,9 @@
 //| Virtual positions only. No order-send, position, account or       |
 //| broker API is used: the EA analyses closed H1/M15/M5 bars, sizes  |
 //| virtual volume from symbol tick metrics and logs every decision.  |
-//| Live/demo execution is out of scope for this repository; see      |
-//| docs/decisions/0002-execution-boundary.md.                        |
+//| This EA stays simulation-only; demo execution lives in            |
+//| PATrendRiderXAUv1DemoEA under docs/decisions/0003-demo-execution- |
+//| scope.md. Live execution is still out of scope.                   |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

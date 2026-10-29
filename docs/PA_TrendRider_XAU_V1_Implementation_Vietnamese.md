@@ -4,10 +4,12 @@ Tài liệu này mô tả bản triển khai **simulation-only** của đặc t�
 [`PA_TrendRider_XAU_V1_Specification_Vietnamese.md`](PA_TrendRider_XAU_V1_Specification_Vietnamese.md),
 cách chạy lại, kết quả kiểm thử thật trong MT5 và các khác biệt bắt buộc so với đặc tả.
 
-> **Ranh giới thực thi:** EA chỉ tạo **vị thế ảo trong bộ nhớ** (`CSimPortfolio`) và ghi CSV.
-> Không có `OrderSend`, `CTrade`, API position/order/account, không kết nối broker và không lưu
-> credential. Strategy Tester hiển thị **0 deal** là đúng theo thiết kế; kết quả mô phỏng nằm trong
-> CSV. Xem [`decisions/0002-execution-boundary.md`](decisions/0002-execution-boundary.md).
+> **Ranh giới thực thi:** `PATrendRiderXAUv1SimEA` chỉ tạo **vị thế ảo trong bộ nhớ** (`CSimPortfolio`) và
+> ghi CSV; không có `OrderSend`, `CTrade`, API position/order/account, không kết nối broker và không lưu
+> credential. Strategy Tester hiển thị **0 deal** là đúng theo thiết kế; kết quả mô phỏng nằm trong CSV.
+> Từ 2026-10-29, execution **chỉ trên tài khoản demo** có đường riêng: `PATrendRiderXAUv1DemoEA` +
+> `mt5/Include/Exec/*`, theo [`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md)
+> và [`guides/demo-execution.md`](guides/demo-execution.md). Tài khoản real/live vẫn bị cấm.
 
 ## 1. Phạm vi
 
@@ -19,8 +21,9 @@ cách chạy lại, kết quả kiểm thử thật trong MT5 và các khác bi�
 | Một vị thế ảo, SL cấu trúc, BE 1R, trailing ATR + cấu trúc | **PASS** (contract + chạy thật) |
 | State machine + persistence (ledger, vị thế) | **PASS** (compile + chạy thật ghi/đọc file) |
 | Strategy Tester baseline + cost stress trên `XAUUSDm` M5 | **PASS** (chạy thật, CSV lưu trong `reports/build/tester-reports/`) |
-| Gửi lệnh thật / demo forward test | **BLOCKED** theo `0002-execution-boundary.md` |
-| OrderCalcProfit/Margin, kiểm tra margin, netting/hedging thật | **BLOCKED** — API bị cấm trong repo |
+| Demo execution có guardrail (`PATrendRiderXAUv1DemoEA`) | **READY** — compile 0/0, guard contract compile 0/0; chạy trên tài khoản demo **NOT_RUN** |
+| Live/real execution | **BLOCKED** — bị từ chối tại `ExecGuard`; cần ADR mới |
+| OrderCalcProfit, netting/hedging thật | **BLOCKED** — `OrderCalcMargin` chỉ dùng để kiểm tra margin demo; không có hedging, grid, DCA |
 | Out-of-sample dài hạn, tối ưu tham số | **NOT_RUN** — ngoài phạm vi lượt này |
 
 ## 2. Kiến trúc mã nguồn

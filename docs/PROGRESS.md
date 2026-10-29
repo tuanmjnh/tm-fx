@@ -1791,3 +1791,103 @@ Lỗi thật phát hiện và sửa trong quá trình chạy:
 loại (report, `.ex5`, cache, credential), SHA256 `a90d633e…65e3b8`. Zip không chứa CSV/report tester;
 bằng chứng runtime nằm trong `reports/build/tester-reports/` (gitignored). Bản chạy 10 000 USD trước khi
 hạ vốn được giữ ở `pa_trendrider_baseline_10k/` và `pa_trendrider_cost_stress_priordeposit/`.
+
+## 43. ADR 0003 — demo execution có guardrail, cài lại MT5 và phiên demo thật đầu tiên — 2026-10-29
+
+### 43.1 Thay đổi phạm vi
+
+[`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md) thay mục 1/2/6 của
+ADR 0002: đường duy nhất được gửi lệnh là `mt5/Experts/PATrendRiderXAUv1DemoEA.mq5` qua
+`mt5/Include/Exec/*`, **chỉ** khi `ACCOUNT_TRADE_MODE_DEMO` (hoặc Strategy Tester) và
+`InpEnableExecution=true`. Tài khoản real/live vẫn cấm và cần ADR mới; năm EA mô phỏng giữ nguyên
+simulation-only. Policy được cập nhật đồng bộ ở `AGENTS.md`, `README.md`, `docs/README.md`,
+`docs/reference/risk.md`, `docs/ROADMAP_MT5_EA_AI_LAB.md` và `docs/PROMPT_AI_IMPLEMENT_ROADMAP.md`.
+
+### 43.2 Mã và validator mới
+
+| Thành phần | Vai trò |
+|---|---|
+| `mt5/Include/Exec/ExecGuard.mqh` | `ExecContextAllowed`: demo/tester + `ACCOUNT_TRADE_ALLOWED` + `TERMINAL_TRADE_ALLOWED`, symbol allow-list, kill switch |
+| `mt5/Include/Exec/ExecBroker.mqh` | Duyệt order/position theo magic, SL/TP bắt buộc, lot từ ngân sách rủi ro, sửa SL/TP một lần |
+| `mt5/Experts/PATrendRiderXAUv1DemoEA.mq5` | Cùng engine TrendRider với bản mô phỏng; dry-run mặc định; journal 18 cột |
+| `mt5/Scripts/ExecGuardTests.mq5` | Matrix guard (51 check) chạy trong MetaEditor |
+| `configs/demo/pa_trendrider_xau_demo.json` | Preset `DEMO_ONLY`, `InpEnableExecution=false`, magic `25002001` tách khỏi bản sim |
+| `scripts/validate_demo_execution.py` | Gate tĩnh: preset demo, cấu trúc EA, không có API ngoài scope |
+| `scripts/validate-project.py` | `EXEC_SOURCES` allow-list: OrderSend/CTrade chỉ hợp lệ trong 4 file exec; `WebRequest`/socket/`AccountInfoString` cấm ở mọi nơi |
+
+### 43.3 Cài lại MT5 và redeploy
+
+App được cài lại nên hai thứ đổi: MetaEditor chuyển sang `C:\Program Files\MetaTrader 5 EXNESS\` và Data
+Folder được tạo mới (`%APPDATA%\MetaQuotes\Terminal\53785E099C927DB68A545C249CDBCE06`) — cây `MQL5\` không
+còn nguồn của dự án. Repo không bị ảnh hưởng.
+
+`scripts/deploy_pineport.ps1` được mở rộng để một lệnh dựng lại toàn bộ: ngoài 22 file PinePort cũ, nó liệt
+kê cả cây `Include\Sim`, `Include\TrendRider`, `Include\Exec` (enum theo thư mục để module mới không bị bỏ
+sót) và thêm 12 target compile. Kết quả 2026-10-29: **56 file** được theo dõi, **25 target compile 0 errors
+0 warnings**, `DEPLOY_OK`. Dry-run hiện tại báo `identical` cho cả 56 file. Docs dùng path cũ
+(`docs/guides/demo-execution.md` §3, `docs/guides/install-and-test.md`) đã sửa sang bản Exness và ghi rõ
+hãy chạy `scripts/check-environment.ps1` (script này dò cả hai vị trí).
+
+Hai phát hiện runtime khi thao tác với terminal đang mở:
+
+- Navigator không tự nạp `.ex5` mới; phải chuột vào node → **Refresh**.
+- `SimLogger.Open` thiếu `FILE_SHARE_READ` khiến tool bên ngoài không đọc được CSV đang mở
+  ("Device or resource busy"). Đã thêm cờ này trong `mt5/Include/Sim/SimLogger.mqh`; đây là thay đổi code
+  duy nhất của giai đoạn, phục vụ giám sát phiên demo có người trông.
+
+### 43.4 Gate sau cài lại
+
+| Lệnh | Kết quả |
+|---|---|
+| `.venv\Scripts\python.exe -m pytest -q` | **358 passed** (15.15 s) |
+| `scripts\validate-project.py` | `SUMMARY: checks=14 fail=0` (forbidden API + placeholder scan trên 62 source) |
+| `scripts\validate_sim_configs.py --no-snapshot` | `SUMMARY: checked=7 fail=0`; 6 preset, 17 scenario |
+| `scripts\validate_trendrider.py` | `SUMMARY: checks=7 fail=0` |
+| `scripts\validate_demo_execution.py` | `SUMMARY: checks=6 fail=0` |
+| `scripts\build-mql5.ps1` | **29 source, 0 errors, 0 warnings**, `BUILD_OK` |
+| `scripts\deploy_pineport.ps1` | `DEPLOY_OK`; dry-run 56 file `identical`, 25 target 0/0 |
+
+Test mới trong `python/tests/test_validate_project.py` chứng minh allow-list đi đúng hai chiều: `OrderSend`
+chỉ được phép trong `EXEC_SOURCES`, còn `WebRequest` vẫn bị chặn ngay cả trong file exec.
+
+### 43.5 Phiên demo thật trên tài khoản 464140826
+
+Tài khoản là **demo** (`Exness-MT5Trial17: Demo Account - Hedge`, balance 5 000 USD), xác nhận qua tiêu đề
+cửa sổ terminal; không nhập hay lưu credential nào. Đây là bằng chứng runtime đầu tiên của đường demo —
+trước đây mọi mục ở phần này là `NOT_RUN`.
+
+1. **Dry-run** (`InpEnableExecution=false`, `config_hash=8A85E0D5`):
+   `INIT mode=DRY_RUN state=WAITING_FOR_SETUP symbol=XAUUSDm magic=25002001 tp_r=3.00 equity=5000.00` →
+   `REGIME regime=RANGE bias=timeframe_conflict h1=UNKNOWN m15=BEARISH` →
+   `RISK ENTRY_BLOCKED reason=bias_unknown spread_points=240.0 atr=6.20042857` →
+   `SUMMARY entries=0 exits=0 wins=0 losses=0 net=0.00 balance=5000.00 equity=5000.00 kill_switch=0`.
+   Tab Trade trống — đúng hành vi.
+2. **Guard fail-closed đã bắt thật**: lần gắn EA đầu tiên in
+   `LAB|ERROR|trendrider_demo|scope_rejected|terminal_trade_disabled|this EA runs on demo or tester accounts only`
+   và `initializing ... failed with code 1`, vì nút Algo Trading của terminal đang tắt. Bật nút đó thì EA
+   khởi tạo bình thường. Hệ quả thực tế: **dry-run cũng cần Algo Trading bật**, vì guard kiểm
+   `TERMINAL_TRADE_ALLOWED` trước khi xét chế độ dry-run.
+3. **Execution** (`InpEnableExecution=true`, `config_hash=6B439450`): `INIT mode=DEMO_EXECUTION restored=1`
+   rồi `REGIME regime=RANGE bias=range_both h1=UNKNOWN m15=UNKNOWN`. State file
+   `pa_trendrider_demo_state.csv`: `ledger day_start=5000.00000000 peak=5000.00000000 streak=0 dd_locked=0`.
+   Chưa có dòng `ENTRY`/`EXIT` nào.
+
+`RISK` chỉ ghi khi reason chặn đổi (`reason==g_last_block_reason` → return) và `REGIME` chỉ ghi khi regime
+đổi, nên CSV đứng yên nhiều phút là **bình thường**, không phải EA treo; H1/M15 đang `UNKNOWN`/`RANGE` nên
+chưa có setup hợp lệ.
+
+### 43.6 Giới hạn trung thực
+
+- Chưa có lệnh nào được gửi; phiên execution mới bắt đầu và **không** chứng minh chiến lược có lợi nhuận.
+  0 entry là kết quả hợp lệ, không phải thành tích.
+- `ExecGuardTests` mới compile 0/0, **chưa chạy** trong MetaEditor → guard matrix vẫn `NOT_RUN`.
+- Kill switch (`PA_TREND_RIDER_DEMO_STOP.txt`) chưa được thử trên tài khoản demo.
+- Chart gắn EA là `XAUUSDm,H1`; logic không phụ thuộc timeframe chart vì EA tự lấy H1/M15/M5 theo input và
+  phát hiện bar mới theo `InpEntryTF`.
+- Một phiên demo, một symbol, một bộ tham số; kết quả chỉ có giá trị dry-run/giám sát, không phải điều kiện
+  để chạy live.
+
+### 43.7 Package
+
+`package-source.ps1 -Version 0.10.0` → `mt5-ea-ai-lab-v0.10.0-20261029-091656.zip`, 250 file, 173 mục bị
+loại (report, `.ex5`, cache, credential), SHA256 `d1b132d0…0d6398`.

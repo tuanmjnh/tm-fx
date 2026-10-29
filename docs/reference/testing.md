@@ -412,6 +412,15 @@ không phải hiệu năng thị trường. Chi tiết: [`ml-baseline.md`](ml-ba
   sau gap; hard-limit report; 11 cấu hình không hợp lệ; dữ liệu rỗng; CLI artifact, config lỗi, cờ không
   phải bool và hai config mẫu validate được.
 
+- `python/tests/test_demo_execution.py`: preset demo `DEMO_ONLY` validate được; `SIMULATION_ONLY` bị từ
+  chối cho EA demo và ngược lại; `allow_live_trading=true`, thiếu/TP=0, `InpMaxPositions=2`,
+  `InpAllowedSymbols` rỗng bị từ chối; input của preset khớp đúng khai báo `input` trong DemoEA; magic
+  demo khác magic mô phỏng; project file mô phỏng không được liệt kê EA demo; chạy
+  `validate_demo_execution.py` và `validate-project.py` trên repo.
+- `mt5/Scripts/ExecGuardTests.mq5`: 51 vector G1–G51 cho guard matrix (demo/real/contest, trade
+  permission, symbol allow-list, TP math, broker stop level, volume normalization, risk budget và 12
+  reason token). Compile 0/0; chạy trong MetaEditor là hạng mục thủ công `NOT_RUN`.
+
 Chạy gần nhất (bounded DCA/grid, 2026-10-28): **198 passed in 11.26s** trên repo chính. Trước đó:
 trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s**.
 
@@ -439,6 +448,9 @@ trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s*
   margin/leverage/margin call và không nối experiment store. Loss cap là lỗ **ròng** nhưng gap qua stop
   vẫn có thể vượt cap; đọc `loss_cap_overshoot`. Metric là per-layer, không phải per-basket, và chưa có
   implementation MQL5/EA hay Strategy Tester cho cơ chế này.
+- Demo execution (`PATrendRiderXAUv1DemoEA`) chỉ được kiểm chứng tĩnh và bằng guard contract test; chưa
+  có bằng chứng chạy dry-run/entry trên tài khoản demo thật. Slippage, partial fill, requote và swap do
+  broker quyết định, không được mô hình hóa. Không suy ra hiệu năng chiến lược từ journal demo.
 
 ## Test plan — Wonderwhales PinePort
 

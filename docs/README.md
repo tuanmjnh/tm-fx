@@ -3,10 +3,12 @@
 Điểm vào duy nhất cho toàn bộ tài liệu của repository. Mọi tài liệu chi tiết đã được gộp theo nhóm;
 không còn file rời rạc ở thư mục `docs/`.
 
-> **Ranh giới:** repository chỉ phục vụ nghiên cứu offline và mô phỏng. Không có `OrderSend`,
-> `CTrade`, API position/order, kết nối broker hay lưu credential. EA mô phỏng chỉ tạo vị thế ảo
-> trong bộ nhớ và ghi CSV; Strategy Tester hiển thị **0 deal** là đúng.
-> Xem [`decisions/0002-execution-boundary.md`](decisions/0002-execution-boundary.md).
+> **Ranh giới:** repository phục vụ nghiên cứu offline, mô phỏng và **demo execution có guardrail**.
+> Các EA mô phỏng không có `OrderSend`/`CTrade` và chỉ tạo vị thế ảo; Strategy Tester hiển thị **0 deal**
+> là đúng. Đường gửi lệnh duy nhất là `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`, chỉ chấp nhận
+> tài khoản demo/Strategy Tester, mặc định dry-run. Không có tài khoản real/live, không credential, không
+> kết nối broker.
+> Xem [`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md).
 
 ## 1. Trạng thái tổng hợp (2026-10-28)
 
@@ -23,13 +25,14 @@ không còn file rời rạc ở thư mục `docs/`.
 | Track C W1–W7, W9, W10 | Simulation core, runner/grid/DCA, plan-driven EA, preset, toolchain | PASS offline (compile + static + Python) |
 | Track C — `WonderwhalesSimEA` | EA tín hiệu Wonderwhales trên `XAUUSDm`, 3 chế độ stop | Compile 0/0 (repo + Data Folder); **Strategy Tester PASS 3/3 scenario `ww_*`** (2026-10-28, không deal) |
 | Track C — `PATrendRiderXAUv1SimEA` | PA TrendRider XAU v1: H1/M15/M5, BOS/CHoCH, pullback, một vị thế ảo | Compile 0/0; contract **82/82 PASS**; Strategy Tester **2/2 scenario `pa_*`** chạy thật (2026-10-28, không deal); xem [`PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](PA_TrendRider_XAU_V1_Implementation_Vietnamese.md) |
+| Demo execution — `PATrendRiderXAUv1DemoEA` | Cùng engine tín hiệu, gửi lệnh **chỉ trên demo** với guard + kill switch | Compile 0/0; `ExecGuardTests` compile 0/0, runtime `NOT_RUN`; **dry-run thật trên demo `464140826` PASS** (0 lệnh) và phiên `mode=DEMO_EXECUTION` đang chạy có giám sát (2026-10-29, chưa có ENTRY); xem [`guides/demo-execution.md`](guides/demo-execution.md) |
 | Track C W8 | Strategy Tester thủ công | PASS 10/10 scenario runner/grid/DCA; 2 scenario `plan_*` `BLOCKED_PERFORMANCE` |
 
-- **MQL5:** 25 file `.mq5` và 19 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
-  `0 errors, 0 warnings` (2026-10-28). Compile chỉ chứng minh cú pháp, không chứng minh hành vi.
+- **MQL5:** 29 file `.mq5` và 33 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
+  `0 errors, 0 warnings` (2026-10-29). Compile chỉ chứng minh cú pháp, không chứng minh hành vi.
 - **Python:** test suite chạy bằng `scripts/run-python-tests.ps1`; con số chính xác lấy từ lần chạy
   gần nhất trong [`PROGRESS.md`](PROGRESS.md).
-- **Preset:** `scripts/validate_sim_configs.py` kiểm tra 5 preset và 15 scenario fail-closed.
+- **Preset:** `scripts/validate_sim_configs.py` kiểm tra 6 preset và 17 scenario fail-closed.
 - Không có kết luận hiệu năng, P&L hay “sẵn sàng live” ở bất kỳ tài liệu nào.
 
 ## 2. Bản đồ tài liệu
@@ -45,6 +48,7 @@ docs/
 ├── PA_TrendRider_XAU_V1_Implementation_Vietnamese.md  # bản triển khai mô phỏng + kết quả test
 ├── guides/
 │   ├── install-and-test.md    # cài Python/MT5, sync source, compile, chạy test/EA
+│   ├── demo-execution.md      # chạy PATrendRiderXAUv1DemoEA trên tài khoản demo
 │   ├── strategy-tester.md     # preset, ma trận scenario, template report
 │   └── toolchain.md           # check/build/test/validate/package
 ├── indicators/
@@ -71,7 +75,7 @@ docs/
 │   ├── ml-baseline.md
 │   ├── onnx.md
 │   └── pipeline.md
-├── decisions/                 # ADR (0001 data folder, 0002 execution boundary, …)
+├── decisions/                 # ADR (0001 baseline, 0002 execution boundary, 0003 demo execution, …)
 ├── phase-reports/             # báo cáo Phase 0–9
 ├── MT5_AI_Roadmaps/           # input pack gốc, giữ nguyên
 ├── mt5-ea-ai-simulation-pack/ # input pack gốc, giữ nguyên

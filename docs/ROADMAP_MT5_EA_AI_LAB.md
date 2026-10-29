@@ -7,6 +7,11 @@
 - **Nguyên tắc mặc định:** Nghiên cứu, backtest và mô phỏng. Không gửi lệnh giao dịch thật; không yêu cầu hoặc lưu thông tin đăng nhập tài khoản môi giới.
 
 > Tài liệu này là kế hoạch kỹ thuật để xây dựng môi trường nghiên cứu EA/AI. Kết quả backtest không đảm bảo lợi nhuận trong tương lai. Không được chuyển sang giao dịch tiền thật chỉ dựa trên kết quả mô phỏng.
+>
+> **Cập nhật 2026-10-29:** nguyên tắc "không gửi lệnh" được nới đúng một phạm vi — execution
+> **chỉ trên tài khoản demo**, qua `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`, dry-run mặc định,
+> theo [`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md). Live/real vẫn
+> bị cấm và cần ADR mới. Các phase mô tả EA signal-only bên dưới vẫn giữ nguyên hành vi đó.
 
 ---
 

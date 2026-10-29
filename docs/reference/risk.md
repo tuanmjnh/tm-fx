@@ -82,8 +82,9 @@
   terminal hoặc onnx có thể phá vỡ tương thích.
 - **Harness ≠ chiến lược:** EA chỉ đọc fixture tĩnh, không lấy feature từ bar hiện tại và không tạo tín
   hiệu. Không dùng log harness làm bằng chứng hiệu năng hay sẵn sàng live.
-- **Không có execution:** không có `OrderSend`/`CTrade`; mọi mở rộng sang execution là quyết định phạm vi
-  mới, không thuộc roadmap hiện tại.
+- **Execution chỉ trong scope demo:** `OrderSend`/`CTrade` chỉ được phép ở `mt5/Include/Exec/*` và
+  `PATrendRiderXAUv1DemoEA` (ADR 0003). Mọi EA/module khác vẫn bị static gate chặn; live/real vẫn cần ADR
+  mới.
 
 ### Rủi ro pipeline end-to-end (Phase 9)
 
@@ -141,8 +142,8 @@
 - **Kết quả tester không phải bằng chứng lợi nhuận:** P&L theo contract size 1 của model, spread giả định
   theo preset hoặc đo một thời điểm, một symbol/một timeframe/một giai đoạn demo. Không suy ra lot thật
   hay độ sẵn sàng live.
-- **Không có execution:** năm EA không có API gửi lệnh; Strategy Tester hiển thị 0 deal là đúng. Mọi nỗ
-  lực “chạy bot trên Exness” theo nghĩa đặt lệnh nằm ngoài repo này và cần ADR riêng.
+- **EA mô phỏng không gửi lệnh:** năm EA mô phỏng không có API gửi lệnh; Strategy Tester hiển thị 0 deal
+  là đúng. Demo execution nằm ở EA riêng (`PATrendRiderXAUv1DemoEA`); live vẫn cần ADR mới.
 - **Plan của indicator không phải lệnh thật:** `PinePlanSimEA` khớp tại ask/bid hiện tại, không khớp
   `plan.entry`; SL/target lấy nguyên từ plan và có thể đã lỗi thời so với giá khi EA đọc. `ref_entry`
   trong log chỉ để đối chiếu. Target fill không credit gap có lợi, nên kết quả có thể kém hơn kỳ vọng.
@@ -153,23 +154,28 @@
 
 ### Rủi ro execution và “chạy trên Exness MT5”
 
-- **Không có đường thực thi lệnh:** repository không chứa `OrderSend`, `CTrade.Buy/Sell`,
-  `OrderModify/Delete`, `PositionOpen/Close` hay bất kỳ lệnh môi giới nào. `LabSignalEA` chỉ ghi tín hiệu;
-  0 trade trong Strategy Tester là hành vi đúng, không phải lỗi. Xem `docs/decisions/0002-execution-boundary.md`.
-- **“Chạy trên MT5” hiện chỉ nghĩa là harness offline:** compile, self-check signal engine, export parity,
-  ONNX runtime harness và Strategy Tester với dữ liệu offline. Không có bước nào đặt lệnh.
-- **Không đăng nhập tài khoản:** không dùng login/password/investor password/OTP; nếu terminal hiện hộp
-  thoại đăng nhập thì Cancel. Không lưu credential trong config, log, report hay Git.
-- **Kết quả compile không phải kết quả runtime:** 24 file `.mq5` compile 0 errors/0 warnings ngày
-  2026-10-28; `SimCoreTests` và `SimPlanTests` đã PASS runtime, nhưng self-check, parity export, ONNX
-  runtime và Strategy Tester **chưa chạy**. Compile chỉ chứng minh cú pháp, không chứng minh hành vi.
-- **Bot live là phạm vi mới, không phải bước tiếp theo của roadmap:** muốn có execution phải lập ADR mới
-  với tối thiểu: chỉ tài khoản demo, dry-run mặc định, một vị thế, SL/TP bắt buộc, giới hạn lot/risk,
-  max daily loss, kill switch, không martingale/grid/DCA ở giai đoạn đầu, test Strategy Tester/demo trước.
-  Không có các safeguard này thì không được thêm execution.
-- **Rủi ro nếu bỏ qua ranh giới:** chạy EA có execution trên tài khoản thật khi chưa có parity runtime,
-  chưa có Strategy Tester và chưa có kill switch có thể gây lỗ ngoài kiểm soát, vi phạm giới hạn đòn bẩy
-  của broker và không thể tái lập. Đây là lý do ranh giới hiện tại là signal-only.
+- **Execution chỉ trong scope demo:** `OrderSend` chỉ tồn tại ở `mt5/Include/Exec/ExecBroker.mqh` và được
+  gọi từ `PATrendRiderXAUv1DemoEA` khi `InpEnableExecution=true`. Mọi EA khác (kể cả năm EA mô phỏng) không
+  có API gửi lệnh; 0 deal trong Strategy Tester của chúng là hành vi đúng. Xem
+  `docs/decisions/0003-demo-execution-scope.md`.
+- **Demo EA từ chối tài khoản thật:** `OnInit` gọi `ExecContextAllowed` và trả `INIT_FAILED` khi
+  `ACCOUNT_TRADE_MODE` khác `DEMO`, trừ khi `MQL_TESTER` bật. Đây là guardrail phần mềm, không phải bảo
+  đảm tuyệt đối: người dùng vẫn phải kiểm tra trade mode trong terminal trước khi attach.
+- **“Chạy trên MT5” gồm harness offline và demo execution:** compile, self-check signal engine, export
+  parity, ONNX runtime harness, Strategy Tester và — riêng DemoEA — chạy trên tài khoản demo. Không có
+  bước nào được phép đặt lệnh trên tài khoản live/real.
+- **Không đăng nhập tài khoản live:** không dùng login/password/investor password/OTP; nếu terminal hiện
+  hộp thoại đăng nhập thì Cancel. Không lưu credential trong config, log, report hay Git.
+- **Kết quả compile không phải kết quả runtime:** compile 0 errors/0 warnings chỉ chứng minh cú pháp.
+  `ExecGuardTests` vẫn là `NOT_RUN` (mới compile). Đường demo đã có log thật đầu tiên ngày 2026-10-29 —
+  dry-run `entries=0` và một phiên `mode=DEMO_EXECUTION` chưa có `ENTRY` — ghi ở
+  [`../PROGRESS.md`](../PROGRESS.md) §43.5; vẫn không suy diễn hành vi từ compile hay từ test vector.
+- **Live/real vẫn là phạm vi mới:** muốn execution trên tài khoản thật phải lập ADR mới, review riêng và
+  có tối thiểu: dry-run mặc định, một vị thế, SL/TP bắt buộc, giới hạn lot/risk, max daily loss, kill
+  switch, không martingale/grid/DCA ở giai đoạn đầu, bằng chứng Strategy Tester + demo trước đó.
+- **Rủi ro nếu bỏ qua ranh giới demo:** chạy DemoEA trên tài khoản thật (do nhầm terminal hoặc tắt guard)
+  có thể gửi lệnh ngoài ý muốn; chạy khi chưa có log demo có thể che lỗi logic sizing/SL. Vì vậy preset
+  demo là fail-closed, magic number tách khỏi sim và mọi kết quả demo phải được ghi bằng log thật.
 - **Copy file sang Data Folder là thủ công:** ADR 0001 loại bỏ script tự động ghi vào thư mục MT5. Lần
   sync ngày 2026-10-28 do người dùng yêu cầu và thực hiện một lần; không có script trong repo lặp lại
   thao tác này, và mọi lần copy sau vẫn phải thủ công, có kiểm tra đường dẫn.

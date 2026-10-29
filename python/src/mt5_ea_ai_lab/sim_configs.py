@@ -1,9 +1,10 @@
-"""Fail-closed validation for Track C simulation presets.
+"""Fail-closed validation for Track C simulation presets and the demo preset.
 
-Simulation only: this module reads local JSON presets and never connects to a
-broker, opens an account or sends an order. It mirrors the ``OnInit`` checks of
-``RunnerTrailingLabEA``, ``GridLabEA`` and ``DCALabEA`` so a bad preset is
-rejected before it reaches MetaTrader. The MQL5 EA remains authoritative.
+Simulation presets are validated for virtual positions only. The demo preset is
+validated separately for ``DEMO_ONLY`` execution (ADR 0003): it may describe a
+guarded demo account EA but must never allow live trading. This module reads
+local JSON presets and never connects to a broker, opens an account or sends an
+order. The MQL5 EA remains authoritative.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 EXECUTION_MODE = "SIMULATION_ONLY"
+DEMO_MODE = "DEMO_ONLY"
 
 _ALLOWED_TOP_LEVEL = {
     "schema_version",
@@ -58,6 +60,7 @@ class Enum:
 BOOL = "bool"
 STR = "str"
 STR_OPTIONAL = "str_optional"
+STR_LIST = "str_list"
 
 
 _COMMON: dict[str, Any] = {
@@ -246,9 +249,71 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpCommissionPerVolume": Num(minimum=0.0),
         "InpSlippagePoints": Num(minimum=0.0),
     },
+    "PATrendRiderXAUv1DemoEA": {
+        "InpEnableExecution": BOOL,
+        "InpAllowedSymbols": STR_LIST,
+        "InpMagicNumber": Num(minimum=1.0, integer=True),
+        "InpMaxSlippagePoints": Num(minimum=0.0, maximum=1000.0, integer=True),
+        "InpTakeProfitR": Num(minimum=0.0, maximum=50.0, min_exclusive=True),
+        "InpKillSwitchFile": STR,
+        "InpEnableLog": BOOL,
+        "InpLogFile": STR,
+        "InpPersistState": BOOL,
+        "InpStateFile": STR,
+        "InpResetStateOnInit": BOOL,
+        "InpDebug": BOOL,
+        "InpTrendTF": Enum(_TIMEFRAMES),
+        "InpStructureTF": Enum(_TIMEFRAMES),
+        "InpEntryTF": Enum(_TIMEFRAMES),
+        "InpTrendBars": Num(minimum=1.0, integer=True),
+        "InpStructureBars": Num(minimum=1.0, integer=True),
+        "InpEntryBars": Num(minimum=1.0, integer=True),
+        "InpSwingLeft": Num(minimum=1.0, maximum=10.0, integer=True),
+        "InpSwingRight": Num(minimum=1.0, maximum=10.0, integer=True),
+        "InpSpreadBufferMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpAtrBreakBufferMultiplier": Num(minimum=0.0),
+        "InpTrendMinDeltaAtr": Num(minimum=0.0),
+        "InpRetestZoneAtr": Num(minimum=0.0, min_exclusive=True),
+        "InpConfirmationBodyAtr": Num(minimum=0.0, maximum=3.0),
+        "InpConfirmationCloseZone": Num(minimum=0.0, maximum=0.5, min_exclusive=True),
+        "InpMaxSignalAgeBars": Num(minimum=1.0, maximum=500.0, integer=True),
+        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
+        "InpDailyLossLimitPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxConsecutiveLosses": Num(minimum=1.0, integer=True),
+        "InpCooldownMinutes": Num(minimum=0.0, integer=True),
+        "InpManualResetDrawdown": BOOL,
+        "InpBreakEvenAtR": Num(minimum=0.0, maximum=20.0, min_exclusive=True),
+        "InpTrailingStartR": Num(minimum=0.0, min_exclusive=True),
+        "InpAtrStopBuffer": Num(minimum=0.0),
+        "InpAtrTrailingMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpMinSlAtr": Num(minimum=0.0, min_exclusive=True),
+        "InpMaxSlAtr": Num(minimum=0.0, min_exclusive=True),
+        "InpUpdateOnClosedBarOnly": BOOL,
+        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
+        "InpAtrBaselineBars": Num(minimum=10.0, maximum=5000.0, integer=True),
+        "InpAbnormalAtrRatio": Num(minimum=1.0, min_exclusive=True),
+        "InpMaxSpreadPoints": Num(minimum=0.0),
+        "InpMaxSpreadAtrRatio": Num(minimum=0.0, maximum=1.0),
+        "InpCommissionPerVolume": Num(minimum=0.0),
+    },
+}
+
+#--- ADR 0003: the demo EA is the only preset allowed to request execution, and
+#--- only with DEMO_ONLY. Everything else stays SIMULATION_ONLY.
+EA_EXECUTION_MODE: dict[str, str] = {
+    name: (DEMO_MODE if name == "PATrendRiderXAUv1DemoEA" else EXECUTION_MODE)
+    for name in EA_INPUTS
 }
 
 EA_NAMES = tuple(EA_INPUTS)
+SIM_EA_NAMES = tuple(
+    name for name in EA_INPUTS if EA_EXECUTION_MODE[name] == EXECUTION_MODE
+)
+DEMO_EA_NAMES = tuple(
+    name for name in EA_INPUTS if EA_EXECUTION_MODE[name] == DEMO_MODE
+)
 
 
 def _is_number(value: Any) -> bool:
@@ -271,6 +336,13 @@ def _validate_value(name: str, spec: Any, value: Any) -> list[str]:
             return [f"{name}: must be a string"]
         if "," in value:
             return [f"{name}: must not contain a comma (CSV reason column)"]
+        return []
+    if spec is STR_LIST:
+        if not isinstance(value, str) or not value.strip():
+            return [f"{name}: must be a non-empty string"]
+        items = [item.strip() for item in value.split(",")]
+        if any(not item for item in items):
+            return [f"{name}: must not contain an empty list item"]
         return []
     if isinstance(spec, Enum):
         if not _is_number(value) or float(value) != int(value):
@@ -355,38 +427,53 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
         if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
             issues.append("InpMaxVirtualExposure: must cover InpVolume")
 
-    if ea == "PATrendRiderXAUv1SimEA":
-        trend = _TF_SECONDS.get(int(inputs["InpTrendTF"]))
-        structure = _TF_SECONDS.get(int(inputs["InpStructureTF"]))
-        entry = _TF_SECONDS.get(int(inputs["InpEntryTF"]))
-        if trend is None or structure is None or entry is None:
-            issues.append("timeframes: must use known MT5 period constants")
-        elif not (trend > structure > entry):
-            issues.append(
-                "timeframes: must be ordered trend > structure > entry"
-            )
-        if inputs["InpMaxPositions"] != 1:
-            issues.append("InpMaxPositions: must be 1 in v1")
-        minimum_bars = (
-            inputs["InpAtrPeriod"]
-            + inputs["InpAtrBaselineBars"]
-            + inputs["InpSwingLeft"]
-            + inputs["InpSwingRight"]
-            + 10
-        )
-        if inputs["InpEntryBars"] < minimum_bars:
-            issues.append(
-                "InpEntryBars: must leave room for ATR baseline and swings"
-            )
-        if inputs["InpTrailingStartR"] < inputs["InpBreakEvenAtR"]:
-            issues.append(
-                "InpTrailingStartR: must be at least InpBreakEvenAtR"
-            )
-        if inputs["InpMaxSlAtr"] <= inputs["InpMinSlAtr"]:
-            issues.append("InpMaxSlAtr: must exceed InpMinSlAtr")
-        if inputs["InpConfirmationCloseZone"] >= 0.5:
-            issues.append("InpConfirmationCloseZone: must be below 0.5")
+    if ea in ("PATrendRiderXAUv1SimEA", "PATrendRiderXAUv1DemoEA"):
+        issues.extend(_trendrider_cross_checks(inputs))
+        if ea == "PATrendRiderXAUv1DemoEA":
+            if float(inputs["InpTakeProfitR"]) <= 0.0:
+                issues.append("InpTakeProfitR: demo orders need a mandatory TP")
+            if float(inputs["InpMagicNumber"]) <= 0:
+                issues.append("InpMagicNumber: must be positive to isolate the EA")
+            if not inputs["InpAllowedSymbols"].strip():
+                issues.append("InpAllowedSymbols: must allow at least one symbol")
+            if not inputs["InpKillSwitchFile"].strip():
+                issues.append("InpKillSwitchFile: must name the kill-switch file")
 
+    return issues
+
+
+def _trendrider_cross_checks(inputs: dict[str, Any]) -> list[str]:
+    issues: list[str] = []
+    trend = _TF_SECONDS.get(int(inputs["InpTrendTF"]))
+    structure = _TF_SECONDS.get(int(inputs["InpStructureTF"]))
+    entry = _TF_SECONDS.get(int(inputs["InpEntryTF"]))
+    if trend is None or structure is None or entry is None:
+        issues.append("timeframes: must use known MT5 period constants")
+    elif not (trend > structure > entry):
+        issues.append(
+            "timeframes: must be ordered trend > structure > entry"
+        )
+    if inputs["InpMaxPositions"] != 1:
+        issues.append("InpMaxPositions: must be 1 in v1")
+    minimum_bars = (
+        inputs["InpAtrPeriod"]
+        + inputs["InpAtrBaselineBars"]
+        + inputs["InpSwingLeft"]
+        + inputs["InpSwingRight"]
+        + 10
+    )
+    if inputs["InpEntryBars"] < minimum_bars:
+        issues.append(
+            "InpEntryBars: must leave room for ATR baseline and swings"
+        )
+    if inputs["InpTrailingStartR"] < inputs["InpBreakEvenAtR"]:
+        issues.append(
+            "InpTrailingStartR: must be at least InpBreakEvenAtR"
+        )
+    if inputs["InpMaxSlAtr"] <= inputs["InpMinSlAtr"]:
+        issues.append("InpMaxSlAtr: must exceed InpMinSlAtr")
+    if inputs["InpConfirmationCloseZone"] >= 0.5:
+        issues.append("InpConfirmationCloseZone: must be below 0.5")
     return issues
 
 
@@ -412,8 +499,9 @@ def validate_preset(config: Any) -> list[str]:
     version = config.get("version")
     if not isinstance(version, str) or not version.strip():
         issues.append("version: must be a non-empty string")
-    if config.get("execution_mode") != EXECUTION_MODE:
-        issues.append(f"execution_mode: must be {EXECUTION_MODE}")
+    expected_mode = EA_EXECUTION_MODE[ea]
+    if config.get("execution_mode") != expected_mode:
+        issues.append(f"execution_mode: must be {expected_mode} for {ea}")
     if config.get("allow_live_trading") is not False:
         issues.append("allow_live_trading: must be false")
 
@@ -466,14 +554,14 @@ def validate_project(config: Any, root: Path) -> list[str]:
     if not isinstance(presets, dict):
         issues.append("presets: must be a JSON object")
         return issues
-    for ea in EA_NAMES:
+    for ea in SIM_EA_NAMES:
         if ea not in presets:
             issues.append(f"presets.{ea}: missing preset path")
         elif not isinstance(presets[ea], str):
             issues.append(f"presets.{ea}: path must be a string")
     for ea, path in presets.items():
-        if ea not in EA_INPUTS:
-            issues.append(f"presets.{ea}: unknown EA")
+        if ea not in SIM_EA_NAMES:
+            issues.append(f"presets.{ea}: unknown simulation EA")
             continue
         if not isinstance(path, str):
             continue
@@ -507,8 +595,8 @@ def validate_project(config: Any, root: Path) -> list[str]:
             seen.add(name)
 
         ea = scenario.get("ea")
-        if ea not in EA_INPUTS:
-            issues.append(f"{prefix}.ea: must be one of {list(EA_NAMES)}")
+        if ea not in SIM_EA_NAMES:
+            issues.append(f"{prefix}.ea: must be one of {list(SIM_EA_NAMES)}")
             continue
         path = scenario.get("preset")
         if path != presets.get(ea):

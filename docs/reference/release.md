@@ -1,26 +1,28 @@
 # Internal release checklist — MT5 EA & AI Lab
 
-- **Ngày:** 2026-10-28 (cập nhật sau Track C W1–W9)
-- **Phạm vi:** bản nghiên cứu offline (Phase 0–9 + trailing stop + bounded DCA/grid + 5 EA mô phỏng).
-  Không phải sản phẩm giao dịch và không có execution.
+- **Ngày:** 2026-10-29 (bổ sung scope demo execution theo ADR 0003)
+- **Phạm vi:** bản nghiên cứu offline (Phase 0–9 + trailing stop + bounded DCA/grid + 5 EA mô phỏng) và
+  **demo execution có guardrail** (`PATrendRiderXAUv1DemoEA`). Không phải sản phẩm giao dịch; không có
+  execution trên tài khoản real/live.
 - **Quy tắc:** không release nếu bất kỳ mục “Bắt buộc” nào chưa đạt. Mục “Thủ công” có thể để mở nhưng
   phải ghi rõ trạng thái trong báo cáo.
 
-> **Lưu ý (2026-10-28):** checklist này ghi lại lần đóng gói 0.8.1, **trước** khi thêm `WonderwhalesSimEA`
-> (bản hiện tại là 0.8.4). Gate hiện tại — pytest xanh, 25 source compile 0/0, `checked=6`, 5 preset,
-> 15 scenario — nằm ở [`../PROGRESS.md`](../PROGRESS.md) §41. Strategy Tester: 13/15 scenario đã chạy thật;
-> 2 scenario `plan_*` `BLOCKED_PERFORMANCE`; contract test 6 indicator PASS 547 check.
+> **Lưu ý (2026-10-29):** các con số trong checklist này là lần đóng gói **0.10.0** — 29 source `.mq5`
+> compile 0/0, `validate-project.py checks=14`, `validate_sim_configs.py checked=7` (6 preset, 17 scenario),
+> `validate_trendrider.py checks=7`, `validate_demo_execution.py checks=6`, pytest 358 passed. Bằng chứng
+> chi tiết và nhật ký phiên demo thật nằm ở [`../PROGRESS.md`](../PROGRESS.md) §42–§43. Chiến lược
+> `WonderwhalesSimEA` và 12 scenario Strategy Tester cũ vẫn giữ nguyên kết quả.
 
 ## 1. Bắt buộc
 
 | # | Kiểm tra | Cách xác minh | Trạng thái |
 |---|---|---|---|
-| 1 | Test Python xanh | `.\.venv\Scripts\python.exe -m pytest -q` | Đạt: 324 passed |
+| 1 | Test Python xanh | `.\.venv\Scripts\python.exe -m pytest -q` | Đạt: 358 passed |
 | 2 | Không lỗi cú pháp | `python -m compileall -q python/src python/tests scripts` | Đạt: exit 0 |
 | 3 | Dependency nhất quán | `python -m pip check` | Đạt: no broken requirements |
-| 4 | Không có execution | grep `OrderSend`, `CTrade`, `PositionOpen/Close`, `CExpert` | Đạt: không có match |
+| 4 | Execution chỉ trong scope demo | `validate-project.py` + `validate_demo_execution.py`: trading API chỉ nằm trong `mt5/Include/Exec/*` và `PATrendRiderXAUv1DemoEA` | Đạt: 0 API ngoài scope; guard test compile 0/0 |
 | 5 | Không có secret/credential | Không có `.env`, token, password, `accounts.dat`, `servers.dat` trong repo | Đạt: kiểm tra thủ công |
-| 6 | Không kết nối broker | Không có login/`AccountInfo*`/WebRequest tới broker | Đạt: mã nguồn |
+| 6 | Không kết nối broker | Không có login/`WebRequest`/socket; `AccountInfo*` chỉ đọc trade-mode trong guard demo | Đạt: mã nguồn |
 | 7 | Pipeline end-to-end chạy được | `scripts\run_pipeline.py --config configs\pipeline.example.yaml` | Đạt: exit 0, báo cáo demo |
 | 8 | Fail-safe dữ liệu/model | Test pipeline + ONNX missing model | Đạt: exit 1/2/4, không ghi đè |
 | 9 | Kết quả gắn nhãn demo/synthetic | `pipeline_report.md` có mục Demo + Limitations | Đạt |
@@ -28,18 +30,20 @@
 | 11 | Artifact không bị commit nhầm | `reports/`, `experiments/`, `models/candidates/`, `.ex5`, `.onnx` gitignored | Đạt |
 | 12 | Không quảng bá hiệu năng | Không có claim lợi nhuận/live trong README/docs | Đạt |
 | 13 | Bounded DCA/grid chạy và cap quan sát được | `scripts\run_basket_backtest.py` với hai config mẫu | Đạt: exit 0; DCA 57 basket/cap layer 4, grid loss cap 20 với `loss_cap_overshoot` 0 |
-| 14 | Ranh giới execution được ghi nhận | `docs/decisions/0002-execution-boundary.md`, `docs/guides/install-and-test.md`, README | Đạt: ADR Accepted; guide nêu signal-only, 0 trade là đúng |
+| 14 | Ranh giới execution được ghi nhận | `docs/decisions/0003-demo-execution-scope.md`, `docs/guides/demo-execution.md`, README, AGENTS.md | Đạt: ADR Accepted; guide nêu demo-only, dry-run, kill switch, 0 trade là đúng |
 | 15 | Không có credential/account ID trong docs/log | Review `git diff` và log MT5 trước commit | Đạt: log compile không chứa account/server |
-| 16 | Preset Track C fail-closed | `scripts\validate_sim_configs.py` | Đạt: checked=5 fail=0; snapshot bất biến |
-| 17 | Build MQL5 toàn bộ | `scripts\build-mql5.ps1` | Đạt: 24 source, 0 errors, 0 warnings |
-| 18 | Static scan toàn project | `scripts\validate-project.py` | Đạt: checks=10 fail=0; 43 source không có API giao dịch/placeholder |
+| 16 | Preset Track C fail-closed | `scripts\validate_sim_configs.py` | Đạt: checked=7 fail=0 (6 preset, 17 scenario); snapshot bất biến |
+| 16b | Preset demo fail-closed | `scripts\validate_demo_execution.py` | Đạt: checks=6 fail=0; DEMO_ONLY, `InpEnableExecution=false`, TP bắt buộc, magic tách khỏi bản mô phỏng |
+| 16c | Guard contract test | Compile + chạy `mt5\Scripts\ExecGuardTests.mq5` | Compile 0/0; chạy trong MetaEditor để xác nhận guard matrix (chưa chạy: `NOT_RUN`) |
+| 17 | Build MQL5 toàn bộ | `scripts\build-mql5.ps1` | Đạt: 29 source, 0 errors, 0 warnings (2026-10-29) |
+| 18 | Static scan toàn project | `scripts\validate-project.py` | Đạt: checks=14 fail=0; 62 source không có API giao dịch ngoài scope/placeholder |
 | 19 | Package source loại artifact | `scripts\package-source.ps1 -Version <x.y.z>` | Đạt: không có `.venv`, `.ex5`, log, report trong zip; manifest SHA256 |
 
 ## 2. Thủ công (ghi trạng thái, không chặn bản nghiên cứu)
 
 | # | Kiểm tra | Trạng thái |
 |---|---|---|
-| 1 | Compile 24 file `.mq5` | Đạt 2026-10-28 bằng `scripts\build-mql5.ps1`: 0 errors/0 warnings; MetaEditor CLI trả exit 1 dù thành công (đọc log, không đọc exit code) |
+| 1 | Compile 29 file `.mq5` | Đạt 2026-10-29 bằng `scripts\build-mql5.ps1` với MetaEditor bản Exness: 0 errors/0 warnings; MetaEditor CLI trả exit 1 dù thành công (đọc log, không đọc exit code) |
 | 2 | MT5 Strategy Tester cho `LabSignalEA` | Chưa chạy; kỳ vọng 0 trade vì EA signal-only |
 | 3 | `LabSignalExport` + parity MQL5/Python | Chưa chạy MQL5 export |
 | 4 | `LabOnnxInference` + parity runtime ONNX | Chưa chạy; compile 0/0 |
@@ -49,6 +53,9 @@
 | 7 | Strategy Tester cho 4 EA mô phỏng (12 scenario) | **PASS một phần** 2026-10-28: 10/10 scenario runner/grid/DCA có SUMMARY; 2 `plan_*` `BLOCKED_PERFORMANCE` (1 tháng chẩn đoán 197 s, 0 entry) |
 | 8 | CSV thật của runner/grid/DCA/plan | Có CSV thật cho 10 scenario (archived, gitignored); DCA `adds=0` là bug reporting, CSV chứng minh 2 add |
 | 9 | Contract test 6 indicator trong Strategy Tester | **PASS 6/6** (547 check) 2026-10-28; 3 bug implementation đã sửa |
+| 10 | `ExecGuardTests` trong MetaEditor | Chưa chạy: `NOT_RUN`; chỉ compile 0/0. Chạy script để xác nhận toàn bộ guard matrix |
+| 11 | Dry-run `PATrendRiderXAUv1DemoEA` trên demo | **PASS** 2026-10-29 trên demo `464140826` (Exness-MT5Trial17, hedge): `INIT mode=DRY_RUN`, một `RISK ENTRY_BLOCKED reason=bias_unknown`, `SUMMARY entries=0 exits=0 net=0.00`, tab Trade trống. Lưu ý: dry-run không khởi tạo được khi nút Algo Trading của terminal tắt (`scope_rejected|terminal_trade_disabled`) |
+| 12 | Demo execution một phiên có giám sát | **ĐANG CHẠY** 2026-10-29: `InpEnableExecution=true`, `INIT mode=DEMO_EXECUTION config_hash=6B439450`, `restored=1`. Chưa có `ENTRY`/`EXIT` nào; kill switch chưa thử. Kết luận phiên chỉ ghi khi có bằng chứng thật |
 
 ## 3. Trước khi commit/tag
 
@@ -63,10 +70,12 @@
 
 ## 4. Không được làm khi release
 
-- Không bật execution, không thêm `OrderSend`/`CTrade`, không tự mở/đóng lệnh.
-- Không kết nối Exness hoặc bất kỳ tài khoản broker nào; không đăng nhập, không lưu credential.
-- Không thêm bot live/grid/DCA chạy tài khoản thật dưới danh nghĩa “chạy trên MT5”. Execution là phạm vi
-  mới cần ADR riêng, chỉ demo và có safeguard (xem ADR 0002).
+- Không bật execution ngoài `PATrendRiderXAUv1DemoEA`; không thêm `OrderSend`/`CTrade` vào EA mô phỏng
+  hay module khác. Không mở đường live/real dưới bất kỳ tên nào.
+- Không kết nối broker, không đăng nhập, không lưu credential; `AccountInfo*` chỉ được đọc trade-mode
+  trong `ExecGuard` path.
+- Không thêm bot live/grid/DCA chạy tài khoản thật dưới danh nghĩa “chạy trên MT5”. Demo execution có
+  guardrail theo ADR 0003; live vẫn cần ADR mới.
 - Không thêm script tự động copy/sync file vào MT5 Data Folder; sync là thao tác thủ công có tài liệu.
 - Không commit mật khẩu, investor password, OTP, token hay file phiên.
 - Không tuyên bố compile/backtest/parity/ONNX runtime thành công nếu chưa có log/kết quả thật.

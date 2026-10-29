@@ -11,15 +11,19 @@ Nội dung:
 ---
 ## Chạy và kiểm chứng MT5 EA & AI Lab trên MetaTrader 5
 
-- **Ngày:** 2026-10-28
-- **Trạng thái:** signal-only, offline. Toàn bộ `.mq5` đã compile **0 errors, 0 warnings**; self-check
-  `SimCoreTests`/`SimPlanTests`, 6 contract suite (547 check) và 13/15 scenario Strategy Tester đã chạy
-  thật. Parity runtime, ONNX runtime và 2 scenario `plan_*` vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`.
+- **Ngày:** 2026-10-29 (bổ sung demo execution theo ADR 0003)
+- **Trạng thái:** EA mô phỏng offline/signal-only + **demo execution có guardrail**. Toàn bộ `.mq5` đã
+  compile **0 errors, 0 warnings**; self-check `SimCoreTests`/`SimPlanTests`, 6 contract suite (547 check)
+  và 13/15 scenario Strategy Tester đã chạy thật. Parity runtime, ONNX runtime và 2 scenario `plan_*`
+  vẫn `BLOCKED`/`BLOCKED_PERFORMANCE`. `PATrendRiderXAUv1DemoEA` đã compile nhưng chưa chạy trên tài
+  khoản demo (`NOT_RUN`).
 - **Cảnh báo:** không đăng nhập tài khoản live, không nhập mật khẩu/investor password/OTP/server, không
-  gửi thông tin tài khoản cho agent. EA trong repo không có `OrderSend`/`CTrade`, không mở/đóng lệnh.
-  **0 trade là kết quả đúng** khi chạy `LabSignalEA`.
+  gửi thông tin tài khoản cho agent. EA mô phỏng không có `OrderSend`/`CTrade`, không mở/đóng lệnh.
+  **0 trade là kết quả đúng** khi chạy `LabSignalEA` hay EA mô phỏng. Demo execution chỉ chạy khi người
+  dùng tự đăng nhập tài khoản demo và bật `InpEnableExecution`; xem
+  [`demo-execution.md`](demo-execution.md).
 
-Ranh giới thực thi: [`decisions/0002-execution-boundary.md`](../decisions/0002-execution-boundary.md).
+Ranh giới thực thi: [`decisions/0003-demo-execution-scope.md`](../decisions/0003-demo-execution-scope.md).
 
 ### 1. Điều kiện
 
@@ -1127,3 +1131,59 @@ python reports\build\tester-run\gen_trendrider_sets.py
 | Tester report | 0 deal (đúng thiết kế simulation-only) |
 
 Không suy ra lợi nhuận hay độ sẵn sàng live từ hai lượt chạy ngắn này.
+
+## Track C — PATrendRider XAU v1 demo execution (ADR 0003)
+
+- **Đối tượng:** `PATrendRiderXAUv1DemoEA`, `ExecGuard.mqh`, `ExecBroker.mqh`, `ExecGuardTests.mq5`,
+  preset `configs/demo/pa_trendrider_xau_demo.json`.
+- **Nguyên tắc:** EA dùng chung engine tín hiệu TrendRider nhưng gửi lệnh **chỉ trên tài khoản demo hoặc
+  Strategy Tester**. `ExecGuard` từ chối real/contest; `InpEnableExecution=false` là dry-run; mỗi lệnh có
+  SL/TP bắt buộc, tối đa một vị thế, lot theo ngân sách rủi ro và kill switch trong `MQL5/Files`.
+- **Không đổi EA mô phỏng:** `PATrendRiderXAUv1SimEA` vẫn là simulation-only; kết quả Strategy Tester cũ
+  giữ nguyên giá trị và không bị trộn với journal demo.
+
+### 1. Compile
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 `
+  -MetaEditorPath "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe" `
+  -Filter "Experts\PATrendRiderXAUv1DemoEA.mq5" -LogDir "reports\build-demo"
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 `
+  -MetaEditorPath "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe" `
+  -Filter "Scripts\ExecGuardTests.mq5" -LogDir "reports\build-demo"
+```
+
+`-MetaEditorPath` phải trỏ tới bản cài thật. Sau khi cài lại MT5 của Exness, path cũ
+`C:\Program Files\MetaTrader 5\MetaEditor64.exe` không còn; chạy `scripts\check-environment.ps1` để lấy
+path hiện hành.
+
+### 2. Chạy guard contract test
+
+1. Copy `mt5/Include/Exec/*.mqh`, `mt5/Include/TrendRider/*.mqh`, `mt5/Include/Sim/SimTypes.mqh`,
+   `SimLogger.mqh` và `ExecGuardTests.ex5` vào Data Folder.
+2. Chạy `ExecGuardTests` trong MetaEditor; đọc tab Experts.
+3. Kỳ vọng: `TEST|RESULT|ALL_PASS|pass=51 fail=0|suite=execguard`. Nếu fail, dừng trước khi gắn EA.
+
+### 3. Dry-run trên demo
+
+1. Đăng nhập tài khoản demo bằng tay; bật Algo Trading.
+2. Gắn EA lên `XAUUSDm` M5 với preset demo, giữ `InpEnableExecution=false`.
+3. Kỳ vọng: journal có `INIT` (demo, dry-run) và `DRY_RUN`; tab Trade/History **trống**.
+4. Khi dry-run sạch, mới đặt `InpEnableExecution=true` cho một phiên có giám sát.
+
+### 4. Kill switch
+
+Tạo `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt`; tick kế tiếp EA đóng vị thế của mình, ghi `KILL_SWITCH`
+và chuyển `ERROR_SAFE_MODE`. Xoá file và restart EA để chạy lại.
+
+### 5. Trạng thái runtime
+
+| Hạng mục | Kết quả |
+|---|---|
+| Compile DemoEA + ExecGuardTests | **0 errors, 0 warnings** |
+| `ExecGuardTests` trong MetaEditor | `NOT_RUN` |
+| Dry-run trên tài khoản demo | `NOT_RUN` |
+| Demo execution một phiên | `NOT_RUN` |
+
+Chi tiết vận hành, reason token và xử lý sự cố: [`demo-execution.md`](demo-execution.md).
+Không suy ra lợi nhuận hay độ sẵn sàng live từ bất kỳ journal demo nào.

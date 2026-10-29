@@ -116,7 +116,9 @@ public:
          return(false);
         }
 
-      m_handle=FileOpen(filename,FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI);
+      // FILE_SHARE_READ lets the audit tooling tail the CSV while an EA keeps the
+      // handle open, which is how a supervised demo session is monitored.
+      m_handle=FileOpen(filename,FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_SHARE_READ);
       if(m_handle==INVALID_HANDLE)
         {
          error=StringFormat("logger_open_failed error=%d",GetLastError());

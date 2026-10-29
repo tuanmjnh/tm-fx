@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-    Copy the PinePort sources into an MT5 data folder and compile them.
+    Copy the project MQL5 sources into an MT5 data folder and compile them.
 
 .DESCRIPTION
-    Dry run by default. With -Apply the script copies the PinePort sources
-    into <data folder>\MQL5 and compiles them with MetaEditor. Compile logs are
-    read as UTF-16 and must report "0 errors, 0 warnings".
+    Dry run by default. With -Apply the script copies the PinePort sources plus
+    the Track C simulation, TrendRider and demo-execution sources into
+    <data folder>\MQL5 and compiles them with MetaEditor. Compile logs are
+    read as UTF-16 and must report "0 errors, 0 warnings". Include trees are
+    copied wholesale so a fresh MT5 install gets the same source set.
 
     The script never starts the MT5 terminal, never connects to a broker and
     never reads or writes account files. Existing target files that differ are
@@ -78,6 +80,37 @@ $files = @(
     [pscustomobject]@{ Source = "mt5\Experts\PineMultiSignalLabEA.mq5"; Target = "MQL5\Experts\PineMultiSignalLabEA.mq5" }
 )
 
+# Track C simulation, TrendRider and demo-execution sources. The .mqh trees are
+# enumerated instead of listed so a new module cannot be left out of a redeploy.
+foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Exec")) {
+    $treeRoot = Join-Path $ProjectRoot $tree
+    if (-not (Test-Path -LiteralPath $treeRoot -PathType Container)) {
+        Write-Host "FAIL: include tree missing: $treeRoot" -ForegroundColor Red
+        exit 2
+    }
+    foreach ($mqh in @(Get-ChildItem -LiteralPath $treeRoot -File -Filter "*.mqh" | Sort-Object Name)) {
+        $relative = $mqh.FullName.Substring($ProjectRoot.Length + 1)
+        $files += [pscustomobject]@{
+            Source = $relative
+            Target = "MQL5\" + $relative.Substring("mt5\".Length)
+        }
+    }
+}
+
+$files += @(
+    [pscustomobject]@{ Source = "mt5\Experts\RunnerTrailingLabEA.mq5"; Target = "MQL5\Experts\RunnerTrailingLabEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\GridLabEA.mq5"; Target = "MQL5\Experts\GridLabEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\DCALabEA.mq5"; Target = "MQL5\Experts\DCALabEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\PinePlanSimEA.mq5"; Target = "MQL5\Experts\PinePlanSimEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesSimEA.mq5"; Target = "MQL5\Experts\WonderwhalesSimEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\PATrendRiderXAUv1SimEA.mq5"; Target = "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\PATrendRiderXAUv1DemoEA.mq5"; Target = "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\TrendRiderContractTests.mq5"; Target = "MQL5\Scripts\TrendRiderContractTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\ExecGuardTests.mq5"; Target = "MQL5\Scripts\ExecGuardTests.mq5" }
+)
+
 $compileTargets = @(
     "MQL5\Indicators\PinePort\Wonderwhales.mq5",
     "MQL5\Scripts\WonderwhalesContractTests.mq5",
@@ -92,7 +125,18 @@ $compileTargets = @(
     "MQL5\Indicators\PinePort\TMIndicator2.mq5",
     "MQL5\Scripts\TMIndicator2ContractTests.mq5",
     "MQL5\Experts\PineSignalLabEA.mq5",
-    "MQL5\Experts\PineMultiSignalLabEA.mq5"
+    "MQL5\Experts\PineMultiSignalLabEA.mq5",
+    "MQL5\Scripts\SimCoreTests.mq5",
+    "MQL5\Scripts\SimPlanTests.mq5",
+    "MQL5\Experts\RunnerTrailingLabEA.mq5",
+    "MQL5\Experts\GridLabEA.mq5",
+    "MQL5\Experts\DCALabEA.mq5",
+    "MQL5\Experts\PinePlanSimEA.mq5",
+    "MQL5\Experts\WonderwhalesSimEA.mq5",
+    "MQL5\Scripts\TrendRiderContractTests.mq5",
+    "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5",
+    "MQL5\Scripts\ExecGuardTests.mq5",
+    "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5"
 )
 
 function Get-TerminalCandidates {
@@ -276,4 +320,6 @@ Write-Host "     Attach Experts > PineMultiSignalLabEA; CSV is written to MQL5\F
 Write-Host "  6. Audit the CSV: python scripts\audit_signal_csv.py --csv <csv> --offset-minutes 180"
 Write-Host "     or: python scripts\audit_multi_signal_csv.py --csv <csv>"
 Write-Host "  7. Parity (needs a real Pine reference export): python scripts\compare_multi_signal_exports.py --reference <pine.csv> --mql5 <csv> --mql5-offset-minutes 180"
+Write-Host "  8. Scripts > ExecGuardTests must print ALL_PASS (pass=51 fail=0) before PATrendRiderXAUv1DemoEA"
+Write-Host "     is attached to a chart. See docs\guides\demo-execution.md: dry-run first, demo account only."
 exit 0

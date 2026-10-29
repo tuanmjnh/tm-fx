@@ -1,6 +1,11 @@
 # Prompt cho AI Coding Agent — triển khai MT5 EA & AI Lab theo roadmap
 
 > Cách dùng: đặt `ROADMAP_MT5_EA_AI_LAB.md` trong root repository, sau đó dán prompt bên dưới vào AI coding agent trong VS Code, Antigravity, OpenCode hoặc IDE tương đương. Prompt được thiết kế để AI triển khai tuần tự, không sinh toàn bộ hệ thống trong một lượt.
+>
+> **Cập nhật 2026-10-29 (ADR 0003):** quy tắc 5 về execution đã được thay bằng chính sách **demo-only**.
+> `OrderSend` chỉ được phép ở `mt5/Include/Exec/*` và `PATrendRiderXAUv1DemoEA`, dry-run mặc định, từ chối
+> tài khoản real. Live/real vẫn bị cấm. Xem `docs/decisions/0003-demo-execution-scope.md`. Quy tắc 6, 7
+> (không credential, không đăng nhập live) và 8 (không tuyên bố lợi nhuận) không đổi.
 
 ---
 

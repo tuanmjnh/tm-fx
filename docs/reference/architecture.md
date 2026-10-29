@@ -1,21 +1,23 @@
 # Kiến trúc — MT5 EA & AI Lab
 
-- **Phiên bản:** 1.9 (Phase 9 + trailing stop + bounded DCA/grid + execution boundary)
-- **Ngày:** 2026-10-28
+- **Phiên bản:** 2.0 (Phase 9 + trailing stop + bounded DCA/grid + demo execution boundary)
+- **Ngày:** 2026-10-29
 - **Trạng thái:** EA signal-only, signal engine MQL5, data pipeline/validation, Python backtester,
   bounded DCA/grid simulator, parity tooling MQL5/Python, experiment store/so sánh run, ML baseline,
   ONNX export/inference harness và pipeline end-to-end đã triển khai. ONNX runtime trong MT5 **chưa
   chạy**; Phase 8 ở trạng thái `READY_FOR_MANUAL_VALIDATION`. Phase 9 `DONE`; tái lập trên snapshot
-  commit sạch đã xác minh 2026-10-28, còn bước lặp lại sau commit chính thức. Bốn file MQL5 compile
-  0 errors/0 warnings trong Data Folder MT5 EXNESS ngày 2026-10-28. **Live execution không được hỗ trợ**
-  trong repo này; xem [`decisions/0002-execution-boundary.md`](../decisions/0002-execution-boundary.md).
+  commit sạch đã xác minh 2026-10-28, còn bước lặp lại sau commit chính thức. Các file MQL5 compile
+  0 errors/0 warnings trong Data Folder MT5. **Live execution không được hỗ trợ**; execution chỉ chạy
+  trên demo qua `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*` theo
+  [`decisions/0003-demo-execution-scope.md`](../decisions/0003-demo-execution-scope.md).
 
 ## 1. Bối cảnh
 
 Repository là môi trường nghiên cứu độc lập cho EA MQL5 và pipeline Python. Nó không import, không
 gọi và không phụ thuộc `tm-trading`, `tm-hub` hay bất kỳ dự án nào khác.
 
-MVP chỉ tạo tín hiệu và mô phỏng. Không có đường thực thi lệnh, không có kết nối tài khoản môi giới.
+MVP chỉ tạo tín hiệu và mô phỏng. Đường gửi lệnh duy nhất là EA demo có guardrail (ADR 0003); không có
+kết nối tài khoản real/live và không lưu credential.
 
 ## 2. Luồng dữ liệu mục tiêu
 
@@ -59,18 +61,18 @@ MQL5 indicators + signal engine   Python features + model
 | `python/src/mt5_ea_ai_lab/evaluation/` | Metric định nghĩa rõ ràng; so sánh signal MQL5/Python | 4–5, 7 |
 | `python/src/mt5_ea_ai_lab/reporting/` | Report JSON/CSV/HTML từ artifact đã lưu | 4, 6 |
 | `python/src/mt5_ea_ai_lab/experiment_store/` | SQLite metadata: run, fingerprint, trạng thái, artifact hash; so sánh run | 6 |
-| `mt5/Experts/` | EA signal-only và ONNX inference harness (không giao dịch) | 1, 8 |
-| `mt5/Include/` | `Indicators.mqh`, `SignalEngine.mqh`, `Logger.mqh` | 2 |
-| `mt5/Scripts/` | Self-check signal engine; CSV export cho parity | 2, 5 |
+| `mt5/Experts/` | EA signal-only, EA mô phỏng, ONNX inference harness và một EA demo execution (`PATrendRiderXAUv1DemoEA`) | 1, 8, demo |
+| `mt5/Include/` | `Indicators.mqh`, `SignalEngine.mqh`, `Logger.mqh`, `Sim/*`, `TrendRider/*`, `Exec/*` (guard + broker) | 2, C, demo |
+| `mt5/Scripts/` | Self-check signal engine/guard, CSV export cho parity | 2, 5, demo |
 | `scripts/` | CLI mỏng gọi package | 3–9 |
 
 Không đặt logic tính toán trong script CLI. Script chỉ parse tham số, gọi module và ghi output.
 
 ## 4. Nguyên tắc ràng buộc
 
-1. **Signal tách khỏi execution.** Không có execution trong repo này; `LabSignalEA` là signal-only và
-   0 trade là kết quả đúng. Live execution bị loại theo
-   [`decisions/0002-execution-boundary.md`](../decisions/0002-execution-boundary.md).
+1. **Signal tách khỏi execution.** Các EA mô phỏng và `LabSignalEA` là signal-only/virtual; 0 trade là
+   kết quả đúng. Execution chỉ tồn tại ở `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`, chỉ demo/tester,
+   theo [`decisions/0003-demo-execution-scope.md`](../decisions/0003-demo-execution-scope.md). Live bị loại.
 2. **Dữ liệu tách khỏi model.** Model chỉ nhận input đã qua validation.
 3. **Fail closed.** Thiếu dữ liệu/schema sai/model lỗi phải dừng với thông báo rõ; không tự suy diễn tín hiệu.
 4. **Không look-ahead.** Feature/label tại `t` chỉ dùng dữ liệu có sẵn đến `t` (trừ horizon đã khai báo của label).
