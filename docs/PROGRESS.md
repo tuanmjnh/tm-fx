@@ -2514,6 +2514,14 @@ EA chặn bằng `ENTRY_BLOCKED|reason=bos_too_old` — lần đầu tiên lý d
 pipeline H1→M15→M5 đã chạy tới bước kiểm tra BOS. Bar `09:40` quay lại `RANGE|bias=timeframe_conflict`.
 Không có `ENTRY`.
 
+Bar `09:55` (17:00 local) có `tf=M5|event=BOS_BULL` rồi `ENTRY_BLOCKED|reason=bias_unknown` — EA vẫn nhận
+tick và xử lý bar sau khi armed lại (xác nhận sống, không cần tick giả).
+
+**Đọc CSV đúng cách:** `REGIME` chỉ ghi khi regime đổi và `RISK|ENTRY_BLOCKED` chỉ ghi khi lý do chặn đổi
+(`mt5/Experts/PATrendRiderXAUv1DemoEA.mq5:1064`, `:747`). Vì vậy file đứng yên nhiều bar **không** có nghĩa
+EA ngừng chạy — 16:52→17:00 không có dòng nào dù EA xử lý đủ bar, đúng như thiết kế. Muốn biết EA còn sống
+thì xem bar đổi trạng thái (BOS/REGIME) hoặc `SUMMARY` sau `OnDeinit`.
+
 ### 50.6 Còn mở
 
 - **Chưa có `ENTRY` thật** từ DemoEA (kỳ vọng ~3.1 lệnh/tháng); `MQL_TRADE_ALLOWED` vẫn chưa được chứng
