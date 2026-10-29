@@ -70,8 +70,13 @@
 
 ### Rủi ro ONNX (Phase 8)
 
-- **Runtime chưa xác minh:** EA `LabOnnxInference.mq5` mới compile 0 errors/0 warnings; ONNX Runtime
-  trong MT5 build 5.0.0.6249 chưa chạy. Compile không chứng minh `OnnxCreate`/`OnnxRun` hoạt động.
+- **Runtime mới xác minh trên build 6292:** EA `LabOnnxInference.mq5` đã chạy thật 2026-10-29 trên cả
+  chart lẫn Strategy Tester, 24/24 hàng khớp Python. Chưa có bằng chứng cho build khác; `OnnxCreate`
+  phụ thuộc ONNX Runtime đi kèm terminal (api 1.30.0).
+- **Agent Strategy Tester xoá `MQL5\Files`:** sandbox của agent rỗng ở mỗi lần chạy test. EA đọc model
+  bằng tên tương đối sẽ fail-closed `error 5019` nếu thiếu `#property tester_file "model.onnx"`; đã gặp
+  đúng lỗi này hai lần ngày 2026-10-29 trước khi thêm property. Đừng "sửa" bằng cách copy tay vào thư
+  mục agent — file sẽ bị xoá ở lần chạy sau.
 - **Khác biệt float32/float64:** parity offline đạt max abs diff `4.673e-08` với tolerance `1e-5` trên
   fixture, nhưng không phải bitwise; dữ liệu khác có thể lệch nhiều hơn hoặc vượt tolerance.
 - **Thứ tự feature:** ONNX chỉ nhận vector số; hoán vị feature sẽ cho xác suất sai âm thầm. Thứ tự phải
@@ -228,7 +233,7 @@
 | Khác biệt indicator MQL5 và Python | Cửa sổ EMA đã thống nhất `slow+1` và có comparator; MQL5 export chưa chạy | Chạy export thủ công và so sánh toàn bộ fixture trước khi tuyên bố tương đương |
 | Parity bị suy rộng quá mức | Comparator chỉ so sánh đúng hai file; self-comparison không phải parity | Ghi rõ rows_compared, fixture và trạng thái MQL5 runtime trong báo cáo |
 | MQL5 CSV exporter chỉ hỗ trợ CSV đơn giản | Field có dấu phẩy/quote sẽ parse sai | Fixture parity không dùng quoted comma; kiểm tra header và fail closed |
-| ONNX/ONNX Runtime tương thích MT5 | Export + parity offline pass; EA compile 0/0; runtime **chưa chạy** | Giữ `READY_FOR_MANUAL_VALIDATION`; chạy `LabOnnxInference` và đối chiếu log trước khi kết luận |
+| ONNX/ONNX Runtime tương thích MT5 | Export + parity offline pass; EA compile 0/0; runtime chart + Strategy Tester **PASS** 24/24 build 6292 (2026-10-29) | Chỉ tuyên bố tương thích cho build 6292; build khác phải chạy lại `LabOnnxInference` |
 | Tên menu MT5 khác theo ngôn ngữ/build | Chưa kiểm tra GUI | Hướng dẫn thủ công ghi rõ điều kiện |
 | Dependency Python trôi phiên bản | Pin trong `requirements.txt` | Cập nhật có chủ đích, ghi lại lý do |
 | Tự nâng cấp pip không hoàn tất trên máy kiểm thử | Đã dừng; venv dùng pip 24.0 và cài dependency thành công | Không chặn các phase hiện tại; chỉ thử lại khi cần |

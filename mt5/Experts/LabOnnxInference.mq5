@@ -6,6 +6,10 @@
 #property strict
 #property version   "1.00"
 #property description "ONNX inference harness; no trading calls."
+// The Strategy Tester agent starts with an empty MQL5\Files sandbox, so the
+// model and fixture must be declared here to be copied to the agent.
+#property tester_file "model.onnx"
+#property tester_file "onnx_feature_fixture.csv"
 
 input string InpModelFile    = "model.onnx";                 // relative to MQL5/Files
 input string InpFeatureFile  = "onnx_feature_fixture.csv";   // relative to MQL5/Files

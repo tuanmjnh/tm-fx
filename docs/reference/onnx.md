@@ -1,8 +1,9 @@
 # ONNX inference — Phase 8
 
-- **Trạng thái:** `READY_FOR_MANUAL_VALIDATION` (2026-10-27).
-- **Đã chạy thật:** export ONNX, kiểm tra graph, parity Python–ONNX trên 24 hàng fixture, compile EA.
-- **Chưa chạy:** EA trong MT5 terminal/Strategy Tester; ONNX Runtime bên trong MT5 chưa được xác minh.
+- **Trạng thái:** `PASS` cho build 6292 (chart 2026-10-29, Strategy Tester cùng ngày).
+- **Đã chạy thật:** export ONNX, kiểm tra graph, parity Python–ONNX trên 24 hàng fixture, compile EA,
+  EA chạy trên chart trong terminal, EA chạy headless trong Strategy Tester.
+- **Chưa kiểm:** build terminal khác 6292; model phi tuyến; đọc feature từ bar hiện tại.
 - **Phạm vi:** model logistic Phase 7, một input `float32`, một output xác suất; không có execution.
 - **Mã nguồn:** `python/src/mt5_ea_ai_lab/models/onnx_export.py`,
   `scripts/export_onnx_model.py`, `mt5/Experts/LabOnnxInference.mq5`.
@@ -85,7 +86,47 @@ Kết quả compile thực tế:
 |---|---|
 | `MetaEditor64.exe /compile:"...\LabOnnxInference.mq5" /log:"...\onnx.compile.log"` | Log: **0 errors, 0 warnings**, 700 ms; tạo `LabOnnxInference.ex5` 12,284 bytes; CLI exit code `1` (hành vi đã biết của MetaEditor) |
 
-Compile **không** chứng minh ONNX Runtime trong MT5 chạy được. EA chưa được chạy trong terminal.
+Compile **không** chứng minh ONNX Runtime trong MT5 chạy được.
+
+### 3.1 Hai môi trường chạy và yêu cầu file
+
+| Môi trường | Thư mục `MQL5\Files` mà EA đọc | Cách đưa model/fixture vào |
+|---|---|---|
+| Chart trong terminal | `<MT5 Data Folder>\MQL5\Files` | Copy tay (bước §4) |
+| Strategy Tester (agent) | `%APPDATA%\MetaQuotes\Tester\<instance>\Agent-127.0.0.1-3000\MQL5\Files` | `#property tester_file` |
+
+Agent của Strategy Tester **xoá sạch sandbox `MQL5\Files` ở mỗi lần chạy test**. Copy tay vào thư mục
+agent không có tác dụng: lần chạy 2026-10-29 16:48 và 16:49 đều trả `OnnxCreate failed for model.onnx,
+error 5019` (`ERR_FILE_NOT_EXIST`) dù file có trong `MQL5\Files` của terminal, và sau mỗi lần chạy thư
+mục agent lại rỗng. Cơ chế chính thức là khai báo trong nguồn EA:
+
+```mql5
+#property tester_file "model.onnx"
+#property tester_file "onnx_feature_fixture.csv"
+```
+
+Terminal sẽ gửi hai file này từ `MQL5\Files` sang agent trước khi test; log tester ghi
+`file added: Files\model.onnx` và `file added: Files\onnx_feature_fixture.csv`. Thiếu property này thì
+EA fail-closed ở `OnInit` (mã 1), không chạy tiếp.
+
+Kết quả Strategy Tester 2026-10-29 16:52 (build 6292, `XAUUSDm,H1`, 2026.01.05–2026.01.06, deposit
+5 000 USD, model 1-minute OHLC):
+
+```text
+ONNX  api version 1.30.0 initialized
+ONNX: CPU selected
+onnx_row=0 probability=0.57783628
+...
+onnx_rows=24 model=model.onnx
+```
+
+24/24 hàng khớp cột `expected_probability` của `python/tests/fixtures/onnx_feature_fixture.csv`,
+max abs `4.927e-08`, mean `1.997e-08` (tolerance `1e-5`) — cùng giá trị với lần chạy trên chart, tức
+kết quả độc lập với môi trường chạy. Chạy headless:
+
+```powershell
+terminal64.exe /config:"D:\Applications\tm-fx\reports\build\tester-run\lab_onnx_inference.ini"
+```
 
 ## 4. Quy trình kiểm tra thủ công
 
@@ -100,6 +141,10 @@ Compile **không** chứng minh ONNX Runtime trong MT5 chạy được. EA chưa
 7. Nếu MT5 báo lỗi `OnnxCreate`, `OnnxSetInputShape` hoặc `OnnxRun`, ghi lại mã lỗi, build terminal và
    không kết luận tương thích. Không tạo workaround chưa được xác minh.
 
+Muốn lặp lại bằng Strategy Tester thay vì chart: dùng bước 1–4 rồi chạy
+`reports\build\tester-run\lab_onnx_inference.ini` (đọc §3.1 về `#property tester_file`). Terminal phải
+đóng trước khi chạy vì MT5 chỉ cho một instance; chạy xong phải armed lại EA demo nếu đang có phiên demo.
+
 ## 5. Tiêu chí nghiệm thu Phase 8
 
 | Tiêu chí | Trạng thái | Bằng chứng |
@@ -110,6 +155,7 @@ Compile **không** chứng minh ONNX Runtime trong MT5 chạy được. EA chưa
 | EA inference-only, không gửi lệnh | Đạt (mã nguồn) | `OnTick` rỗng; không có API order/trade |
 | Dùng `OnnxCreate`/`OnnxRun` nếu build hỗ trợ | **Đạt (runtime)** | Build 6292, `XAUUSDm,H1`, `onnx_rows=24`, log `MQL5\Logs\20261029.log` 15:06:37 |
 | Parity runtime EA ↔ Python trên fixture | **PASS** | 24/24 hàng, max abs `4.927e-08`, mean `1.997e-08`, tol `1e-5` (2026-10-29) |
+| Chạy được trong Strategy Tester (agent sandbox) | **PASS** | 2026-10-29 16:52, `onnx_rows=24`, cùng 24/24 probability; cần `#property tester_file` (xem §3.1) |
 | Sai schema/feature/model dừng an toàn | Đạt (Python + thiết kế EA) | `load_model`/`export` fail closed; `OnInit` trả lỗi |
 | Không có execution code | Đạt | Không có `OrderSend`/`CTrade` trong EA |
 
@@ -124,7 +170,8 @@ lỗi cấu hình. Không tuyên bố tương thích cho build khác 6292.
 - Input/output `float32`; sai lệch với Python `float64` được chấp nhận trong `1e-5`, không phải bitwise.
 - Đã ghi nhận ONNX Runtime `api version 1.30.0`, provider CPU (CUDA/TensorRT không dùng được trên máy này);
   chưa kiểm tra build khác 6292.
-- EA dùng đường dẫn tương đối trong `MQL5/Files`; chưa tự động copy model/fixture.
+- EA dùng đường dẫn tương đối trong `MQL5/Files`; chưa tự động copy model/fixture. Ở Strategy Tester
+  việc copy phải khai báo bằng `#property tester_file`, không copy tay được (§3.1).
 - EA chỉ đọc fixture tĩnh, chưa lấy feature từ bar hiện tại; đây là harness kiểm tra inference, không
   phải chiến lược live.
 - Không có execution, không có kết luận lợi nhuận, không có kết nối broker.

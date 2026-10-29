@@ -2331,7 +2331,7 @@ Chạy headless bằng `reports/build/tester-run/lab_signal_ea_m5.ini`; artifact
 - DemoEA chưa được armed lại và chưa có `ENTRY` thật — phụ thuộc một lần đăng nhập thủ công + regime khác
   `RANGE`. → Đã armed lại ở §49; `ENTRY` vẫn là hạng mục mở.
 - `LabOnnxInference` chưa chạy trong Strategy Tester (mới chạy trên chart); parity Pine ↔ MQL5 Track B vẫn
-  `BLOCKED` vì thiếu CSV reference.
+  `BLOCKED` vì thiếu CSV reference. → Tester đã chạy 2026-10-29, xem §50; parity Track B vẫn `BLOCKED`.
 - 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`.
 
 ## 49. Armed lại DemoEA bằng terminal startup config — 2026-10-29
@@ -2422,4 +2422,101 @@ commit, không giao dịch. Tắt bằng cách remove job này trong Automations
 - **Chưa có `ENTRY` do DemoEA gửi trên demo.** Kỳ vọng ~3.1 lệnh/tháng; khoảng chờ dài nhất quan sát được
   ~5.5 tuần. Không nới gate chiến lược để tạo lệnh.
 - `LabOnnxInference` chưa chạy Strategy Tester; parity Pine ↔ MQL5 Track B vẫn `BLOCKED`; 2 scenario
-  `plan_*` vẫn `BLOCKED_PERFORMANCE`.
+  `plan_*` vẫn `BLOCKED_PERFORMANCE`. → Tester đã chạy lúc 16:52, xem §50; hai hạng mục còn lại không đổi.
+
+## 50. `LabOnnxInference` trong Strategy Tester + armed lại DemoEA — 2026-10-29
+
+Mục tiêu: đóng hạng mục cuối cùng của Phase 8 còn `NOT_RUN` (EA ONNX chưa chạy trong Strategy Tester).
+MT5 chỉ cho một instance, nên phải đóng terminal đang chạy DemoEA, chạy tester headless, rồi armed lại EA
+ngay sau đó.
+
+### 50.1 Lần chạy đầu thất bại — `error 5019`, không phải lỗi model
+
+Tạo `reports\build\tester-run\lab_onnx_inference.ini` (`Expert=LabOnnxInference`, `XAUUSDm`, `H1`,
+2026.01.05–2026.01.06, deposit 5 000 USD, `ShutdownTerminal=1`). Hai lần chạy 16:48 và 16:49 đều dừng ở:
+
+```text
+2026.01.05 00:00:00   OnnxCreate failed for model.onnx, error 5019
+tester stopped because OnInit returns non-zero code 1
+```
+
+`5019` = `ERR_FILE_NOT_EXIST`. File **có** trong `<Data Folder>\MQL5\Files\model.onnx` (566 B) và đã
+được copy sang `%APPDATA%\MetaQuotes\Tester\<instance>\Agent-127.0.0.1-3000\MQL5\Files` trước lần chạy
+thứ hai — nhưng sau mỗi lần chạy thư mục agent lại rỗng. Kết luận từ quan sát, không suy đoán: **agent
+của Strategy Tester xoá sạch sandbox `MQL5\Files` ở mỗi lần test**, nên EA đọc model bằng tên tương đối
+không bao giờ thấy file nếu chỉ copy tay.
+
+### 50.2 Cách sửa chính thức — `#property tester_file`
+
+Thêm vào `mt5/Experts/LabOnnxInference.mq5`:
+
+```mql5
+#property tester_file "model.onnx"
+#property tester_file "onnx_feature_fixture.csv"
+```
+
+Terminal gửi hai file này từ `MQL5\Files` sang agent trước khi test. Compile lại trong data folder
+(`MetaEditor64.exe /compile`, log `0 errors, 0 warnings`, 791 ms, CLI exit 1 như đã biết). Lần chạy 16:52
+ghi đúng hai dòng chuyển file:
+
+```text
+file added: Files\model.onnx. 586 bytes loaded
+file added: Files\onnx_feature_fixture.csv. 6440 bytes loaded
+```
+
+### 50.3 Kết quả chạy tester
+
+```text
+ONNX  api version 1.30.0 initialized
+ONNX: update TensorRT failed ... nvinfer_11.dll missing   (provider không dùng được)
+ONNX: update CUDA failed 35: cudaGetDeviceCount
+ONNX: CPU selected
+onnx_row=0 probability=0.57783628
+...
+onnx_row=23 probability=0.57057130
+onnx_rows=24 model=model.onnx
+```
+
+Đối chiếu với `python/tests/fixtures/onnx_feature_fixture.csv` cột `expected_probability`:
+
+| Số hàng | max abs diff | mean abs diff | Vượt tolerance `1e-5` |
+|---|---|---|---|
+| 24/24 | `4.927e-08` | `1.997e-08` | 0 |
+
+Trùng khớp từng bit với lần chạy trên chart ⇒ kết quả inference không phụ thuộc môi trường chạy. CUDA/
+TensorRT lỗi là bình thường trên máy này (không có GPU NVIDIA), EA tự rơi về CPU — không phải lỗi cấu
+hình, và không ảnh hưởng kết quả. Artifact: `reports\build\tester-run\lab_onnx_inference.evidence.log`
+(gitignored, 35 dòng), báo cáo `lab_onnx_inference.htm`.
+
+Quan sát phụ: profile vẫn còn chart H1 gắn `LabOnnxInference`, nên mỗi lần khởi động terminal EA này
+chạy lại 24 hàng ở 16:52:59 — vô hại (chỉ `Print`, không order), nhưng làm nhiễu `MQL5\Logs`.
+
+### 50.4 Armed lại DemoEA ngay sau khi tester đóng
+
+```powershell
+terminal64.exe /config:"D:\Applications\tm-fx\reports\build\demo-arm\startup.ini"
+```
+
+Journal: `successfully initialized from start config ... demo-arm\startup.ini` →
+`expert PATrendRiderXAUv1DemoEA (XAUUSDm,M5) loaded successfully`. CSV dòng 114:
+
+```text
+2026.10.29 09:52:58,...,INIT,...,mode=DEMO_EXECUTION|state=WAITING_FOR_SETUP|restored=1|magic=25002001|equity=4999.76|config_hash=6B439450
+```
+
+`restored=1` xác nhận state/ledger sống qua lần đóng terminal (không reset ngày, không mất `peak`).
+Không có vị thế nào được mở/đóng trong lúc đóng terminal.
+
+### 50.5 Tín hiệu mới quan sát được trong ngày
+
+Bar `09:30` (server) đổi regime sang `TREND_DOWN` (`bias=aligned_bearish`, H1 và M15 cùng BEARISH) và
+EA chặn bằng `ENTRY_BLOCKED|reason=bos_too_old` — lần đầu tiên lý do chặn không phải `bias_unknown`, tức
+pipeline H1→M15→M5 đã chạy tới bước kiểm tra BOS. Bar `09:40` quay lại `RANGE|bias=timeframe_conflict`.
+Không có `ENTRY`.
+
+### 50.6 Còn mở
+
+- **Chưa có `ENTRY` thật** từ DemoEA (kỳ vọng ~3.1 lệnh/tháng); `MQL_TRADE_ALLOWED` vẫn chưa được chứng
+  minh cho tới lần `OrderSend` đầu tiên.
+- 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Pine ↔ MQL5 Track B vẫn `BLOCKED` (thiếu CSV
+  reference từ TradingView).

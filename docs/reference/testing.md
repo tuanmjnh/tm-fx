@@ -13,8 +13,8 @@ Nội dung:
   metadata run trong SQLite, so sánh hai run, ML baseline (label/feature/split/logistic/model card),
   export/kiểm chứng ONNX và pipeline end-to-end.
 - **Trạng thái:** backtester, bounded basket simulator, store, comparator, ML CLI, ONNX export/parity và
-  pipeline đã chạy thật; Strategy Tester của MT5 **chưa chạy**; EA `LabOnnxInference` mới compile, ONNX
-  runtime trong MT5 chưa xác minh (Phase 8 `READY_FOR_MANUAL_VALIDATION`).
+  pipeline đã chạy thật; Strategy Tester của MT5 đã chạy 2026-10-29; EA `LabOnnxInference` đã chạy cả
+  trên chart lẫn trong Strategy Tester, 24/24 hàng khớp Python (xem `onnx.md` §3.1).
 - **Cảnh báo:** mọi kết quả từ `datasets/samples/synthetic_ema_cross_demo.csv` và
   `datasets/samples/synthetic_ml_demo.csv` là synthetic, không phải lịch sử thị trường và không dùng để
   đánh giá lợi nhuận.
