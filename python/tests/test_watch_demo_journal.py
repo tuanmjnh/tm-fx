@@ -184,6 +184,19 @@ def test_kill_switch_file_always_raises_an_alert(tmp_path: Path) -> None:
     )
 
 
+def test_emit_flushes_so_piped_output_is_immediate(monkeypatch) -> None:
+    seen: dict[str, object] = {}
+
+    def fake_print(value: str, **kwargs) -> None:
+        seen["value"] = value
+        seen["flush"] = kwargs.get("flush")
+
+    monkeypatch.setattr(watcher, "print", fake_print, raising=False)
+    watcher.emit("WATCH|ENTRY|2026.10.29 06:00:00|2026.10.29 05:55:00|ok")
+    assert seen["flush"] is True
+    assert str(seen["value"]).startswith("WATCH|ENTRY|")
+
+
 def test_watcher_stays_read_only() -> None:
     text = WATCHER.read_text(encoding="utf-8")
     for forbidden in ("OrderSend", "CTrade", "MqlTradeRequest", "import MetaTrader5"):

@@ -13,6 +13,9 @@
 
 ## 1. Trạng thái tổng hợp
 
+> **Ghi chú (2026-10-29):** các ô `NOT_RUN` / `chưa chạy` trong bảng dưới là **snapshot tại thời điểm viết
+> dòng đó**, không phải trạng thái hiện tại. Ma trận runtime đầy đủ, có ngày chạy và số check, nằm ở **§47**.
+
 | Track | Phase | Trạng thái | Bằng chứng chính |
 |---|---|---|---|
 | A. MT5 EA Lab (Grid/DCA/Runner) | Phase 0 | PASS (có cảnh báo đã ghi) | Env check exit 0; validator exit 0; docs nền có sẵn |
@@ -106,7 +109,7 @@ Không đọc hoặc ghi thông tin tài khoản môi giới, credential hay d�
 | `powershell deploy_pineport.ps1 -Apply` | 0 | Copy 4 file mới + compile 3 file `0 errors, 0 warnings` vào data folder MT5; không mở terminal |
 | `powershell package_pineport.ps1` | 0 | 27 file; zip `wonderwhales-pineport-v1.0.0-20261028-105703.zip`; SHA256 `400945cb…` |
 | Link check Markdown (tracked files, local + tương đối) | 0 | `checked 164 local links in 59 files; missing=0` |
-| Chạy `WonderwhalesContractTests.ex5` | **chưa chạy** | Cần MT5 terminal và chart; không tuyên bố 36/36 PASS |
+| Chạy `WonderwhalesContractTests.ex5` | **chưa chạy** | Cần MT5 terminal và chart; không tuyên bố 36/36 PASS — **superseded 2026-10-28: 36/0 PASS qua wrapper Strategy Tester, xem §40 và §47** |
 | Strategy Tester / backtest | **chưa chạy** | Không có EA execution; Phase 7 `BLOCKED` |
 
 ## 4. Acceptance criteria — Track A (MT5 EA Lab)
@@ -2163,3 +2166,74 @@ switch file luôn alert, `--quiet` giữ lại dòng alert, và source không ch
 - Chưa bật lịch chạy tự động định kỳ (Task Scheduler / cron). Automation đang ở dạng lệnh chạy một lần
   hoặc `--watch`; người dùng quyết định có muốn nó chạy nền thường xuyên hay không.
 - Không có kết luận lợi nhuận. DemoEA vẫn **0 `ENTRY`** tính tới 2026-10-29 06:45 UTC.
+
+## 47. Kiểm tra test suite toàn project — 2026-10-29
+
+Lần chạy đầy đủ sau khi thêm `watch_demo_journal.py`. Mọi con số dưới đây lấy từ lần chạy thật trên
+`D:\Applications\tm-fx`, không phải suy ra từ lần trước.
+
+### 47.1 Python
+
+| Hạng mục | Lệnh | Kết quả |
+|---|---|---|
+| pytest | `.venv\Scripts\python.exe -m pytest -q` | **372 passed in 15.36s** |
+| Thu thập test | `pytest --collect-only -q` | 372 test trong **31 file** |
+| Cú pháp | `python -m compileall -q python/src python/tests scripts` | exit 0 |
+| Dependency | `python -m pip check` | no broken requirements |
+| Test chậm nhất | `--durations=8` | 1.14 s (`test_pipeline_cli::test_duplicate_pipeline_run_is_rejected_without_overwrite`) — toàn bộ suite không có test treo |
+
+File nhiều test nhất: `test_sim_configs.py` 31, `test_bounded_basket.py` 28, `test_pine_parity.py` 25,
+`test_multi_source_parity.py` 21, `test_experiment_store.py` 18, `test_validation.py` 16,
+`test_signals.py`/`test_parity.py`/`test_demo_execution.py` 15, `test_backtest.py` 15,
+`test_watch_demo_journal.py` 14.
+
+### 47.2 Static validator (10 script)
+
+| Script | Exit | Kết quả |
+|---|---|---|
+| `validate-project.py` | 0 | `checks=14 fail=0` |
+| `validate_demo_execution.py` | 0 | `checks=8 fail=0` |
+| `validate_sim_configs.py` | 0 | `checked=7 fail=0` (6 preset, 17 scenario) |
+| `validate_trendrider.py` | 0 | `checks=7 fail=0` |
+| `validate_longkaco.py` | 0 | pass |
+| `validate_pamtf.py` | 0 | pass |
+| `validate_tmfz.py` | 0 | pass |
+| `validate_tmind2.py` | 0 | pass |
+| `validate_tmxau2.py` | 0 | pass |
+| `validate_pineport.py` | 0 | pass |
+| `validate_dataset.py` | 0 | cần tham số CSV; chạy với `python/tests/fixtures/synthetic_eurusd_m5.csv`: `rows=6 errors=0 warnings=1 passed=True` (warning synthetic là đúng kỳ vọng) |
+
+### 47.3 MQL5
+
+`scripts\build-mql5.ps1 -MetaEditorPath "C:\Program Files\MetaTrader 5 EXNESS\MetaEditor64.exe"`:
+**BUILD_OK — 30 source(s), 0 errors, 0 warnings**.
+
+Ma trận runtime của 11 script test MQL5 (số liệu lấy từ §37–§45, không chạy lại trong lần này):
+
+| Script | Trạng thái runtime | Check | Ngày |
+|---|---|---|---|
+| `ExecGuardTests.mq5` | **PASS** | 51/51 | 2026-10-29 |
+| `TrendRiderContractTests.mq5` | **PASS** | 82/82 | 2026-10-28 |
+| `SimCoreTests.mq5` | **PASS** | 125/125 | 2026-10-28 |
+| `SimPlanTests.mq5` | **PASS** | 39/39 | 2026-10-28 |
+| `WonderwhalesContractTests.mq5` | **PASS** (wrapper ST) | 36/36 | 2026-10-28 |
+| `LongKacoVSAContractTests.mq5` | **PASS** (wrapper ST) | 47/47 | 2026-10-28 |
+| `TMFusionZonesContractTests.mq5` | **PASS** (wrapper ST) | 82/82 | 2026-10-28 |
+| `TMXAUSignals2ContractTests.mq5` | **PASS** (wrapper ST) | 107/107 | 2026-10-28 |
+| `PriceActionMTFContractTests.mq5` | **PASS** (wrapper ST) | 120/120 | 2026-10-28 |
+| `TMIndicator2ContractTests.mq5` | **PASS** (wrapper ST) | 155/155 | 2026-10-28 |
+| `LabSignalEngineTests.mq5` | **`NOT_RUN`** | 40+ assertion | — |
+
+Tổng: **844 check MQL5 PASS** trên 10/11 script. Script còn lại `LabSignalEngineTests.mq5` mới chỉ compile
+(0/0) và chưa từng được chạy trong terminal — đây là **hạng mục mở thật sự**, không phải đã PASS.
+
+### 47.4 Những gì vẫn chưa được kiểm
+
+- `LabSignalEngineTests.mq5` — chưa chạy (cần MT5 mở chart và kéo script).
+- Parity MQL5 ↔ Python cho `LabSignalExport` và multi-source vẫn `BLOCKED` (chưa có CSV reference).
+- Parity runtime ONNX của `LabOnnxInference` chưa chạy.
+- Strategy Tester cho `LabSignalEA` chưa chạy (kỳ vọng 0 trade vì signal-only).
+- `ENTRY` thật do DemoEA gửi trên demo vẫn **chưa xảy ra** (§46.4).
+
+Kết luận ngắn: phần **Python + static validator + compile** đang xanh toàn bộ; phần **runtime MQL5** thiếu
+đúng một script (`LabSignalEngineTests`) và các hạng mục parity/backtest đã ghi rõ là mở từ trước.

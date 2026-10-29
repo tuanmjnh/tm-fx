@@ -73,6 +73,11 @@ class JournalError(RuntimeError):
     """Raised when the journal is missing or structurally wrong."""
 
 
+def emit(line: str) -> None:
+    """Print one line and flush, so ``| tee``/redirects see alerts immediately."""
+    print(line, flush=True)
+
+
 def terminal_data_roots() -> list[Path]:
     """Candidate MT5 data roots: every terminal profile under ``%APPDATA%``."""
     appdata = os.environ.get("APPDATA")
@@ -204,27 +209,27 @@ def report(journal: Path, records: list[dict[str, str]], *, quiet: bool) -> int:
     alerts = [record for record in records if classify(record)]
     if not quiet:
         for record in records:
-            print(format_record(record))
+            emit(format_record(record))
         counts: dict[str, int] = {}
         for record in records:
             counts[record["event"]] = counts.get(record["event"], 0) + 1
         summary = "|".join(f"{key}={counts[key]}" for key in sorted(counts))
-        print(f"WATCH|SUMMARY|events={len(records)}|{summary or 'none'}")
+        emit(f"WATCH|SUMMARY|events={len(records)}|{summary or 'none'}")
         blocked = block_reasons(records)
         if blocked:
-            print(
+            emit(
                 "WATCH|BLOCKED|"
                 + "|".join(f"{key}={blocked[key]}" for key in sorted(blocked))
             )
     for record in alerts:
         if quiet:
-            print(format_record(record))
+            emit(format_record(record))
     if kill_switch_present(journal):
-        print(f"WATCH|FAULT|kill_switch_file_present|{KILL_SWITCH_NAME}")
+        emit(f"WATCH|FAULT|kill_switch_file_present|{KILL_SWITCH_NAME}")
         alerts.append({"event": "KILL", "reason": KILL_SWITCH_NAME})
     age = journal_age_seconds(journal)
     if age > 2 * 3600:
-        print(f"WATCH|NOTE|journal_stale|age_seconds={int(age)}")
+        emit(f"WATCH|NOTE|journal_stale|age_seconds={int(age)}")
     return 1 if alerts else 0
 
 
@@ -269,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         journal = find_journal(args.csv)
     except JournalError as error:
-        print(f"WATCH|ERROR|{error}")
+        emit(f"WATCH|ERROR|{error}")
         return 2
 
     state_path = Path(args.state) if args.state else DEFAULT_STATE_PATH
@@ -281,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
     checkpoint = load_checkpoint(state_path)
     if checkpoint < 0:
         checkpoint = 0 if args.from_start else journal.stat().st_size
-        print(
+        emit(
             f"WATCH|INIT|journal={journal}|checkpoint={checkpoint}"
             f"|{'full_scan' if checkpoint == 0 else 'tailing_from_end'}"
         )
@@ -292,10 +297,10 @@ def main(argv: list[str] | None = None) -> int:
         try:
             records, offset, restarted = read_records(journal, checkpoint)
         except JournalError as error:
-            print(f"WATCH|ERROR|{error}")
+            emit(f"WATCH|ERROR|{error}")
             return 2
         if restarted:
-            print("WATCH|NOTE|journal_recreated|restarting_checkpoint")
+            emit("WATCH|NOTE|journal_recreated|restarting_checkpoint")
         if records:
             code = report(journal, records, quiet=args.quiet)
             exit_code = max(exit_code, code)
@@ -309,7 +314,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.timeout:
             elapsed = time.time() - started
             if elapsed >= args.timeout:
-                print(f"WATCH|TIMEOUT|seconds={int(elapsed)}")
+                emit(f"WATCH|TIMEOUT|seconds={int(elapsed)}")
                 return exit_code
             wait = min(wait, args.timeout - elapsed)
         time.sleep(wait)
