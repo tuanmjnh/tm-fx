@@ -82,28 +82,67 @@ bên ngoài không tail được file ("Device or resource busy").
 ## 5. Kill switch và dừng khẩn cấp
 
 - Tạo file `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` (nội dung bất kỳ). Tick kế tiếp EA đóng vị thế của
-  mình, ghi `KILL_SWITCH`, chuyển `ERROR_SAFE_MODE` và không vào lệnh mới.
-- Xoá file rồi khởi động lại EA để chạy lại.
+  mình, ghi `KILL`, chuyển `ERROR_SAFE_MODE` và không vào lệnh mới. Đã kiểm bằng file thật trên tài
+  khoản demo ngày 2026-10-29 — journal trả `KILL` + `STATE to=ERROR_SAFE_MODE` trong 16 giây
+  (xem [`../PROGRESS.md`](../PROGRESS.md) §44.4).
 - Có thể gỡ EA khỏi chart hoặc tắt Algo Trading; EA chỉ quản lý vị thế có magic của nó.
+
+### 5.1 Chạy lại sau kill switch — quy trình reset
+
+**Xoá file là chưa đủ.** Hai lớp chốt phải gỡ theo thứ tự:
+
+1. `g_kill_switch` chốt cứng đến khi `OnInit` chạy lại (`if(g_kill_switch) return;`).
+2. `OnDeinit` luôn gọi `WriteStateFile()` *trước* khi `OnInit` đọc lại, nên `ERROR_SAFE_MODE` sống sót
+   qua `pa_trendrider_demo_state.csv` và bản nạp lại vẫn ra `state=ERROR_SAFE_MODE|restored=1`.
+
+Cách chuẩn (đây là input cố ý dành cho operator):
+
+1. Xoá `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt`.
+2. Mở hộp thoại input của EA trên chart, đặt `InpResetStateOnInit=true` (chỉ đổi input cũng làm EA
+   `OnDeinit`/`OnInit` lại — không cần thao tác gì thêm).
+3. Xác nhận `INIT ... state=WAITING_FOR_SETUP|restored=0` trong `pa_trendrider_demo.csv`.
+4. Đặt `InpResetStateOnInit=false` để giữ daily lock / drawdown lock qua các lần khởi động sau.
+
+Bước 4 quan trọng: `InpResetStateOnInit=true` làm mất `day_start`, `peak`, `cooldown_until` và
+`dd_locked` của ngày hiện tại, tức xoá luôn các khoá rủi ro trong ngày.
+
+Nếu không có quyền mở hộp thoại input (giám sát từ xa), con đường tương đương ở mức file là chặn
+`WriteStateFile` trong đúng một lần nạp lại: thay state file bằng một file rỗng có thuộc tính
+*read-only*, đổi timeframe để EA nạp lại (`FileOpen(FILE_WRITE)` fail — EA chỉ in
+`LAB|ERROR|trendrider_demo|state_write_failed`, không chuyển sang safe mode), rồi bỏ read-only và
+xoá file rỗng để EA tự viết lại state đúng. Đã dùng cách này ngày 2026-10-29 và ghi lại ở
+§44.5. Ưu tiên cách input; cách file chỉ là phương án dự phòng và để lại một khoảng thời gian
+không persist state.
 
 ## 6. Nhật ký và kiểm chứng
 
-CSV `pa_trendrider_demo.csv` dùng schema 18 cột của `SimLogger`. Các event chính:
+CSV `pa_trendrider_demo.csv` dùng schema 18 cột của `SimLogger`. Tên event **đúng như mã phát ra**:
 
 | Event | Ý nghĩa |
 |---|---|
-| `INIT` | Chế độ (dry-run/live-disabled), symbol, magic, TP R |
-| `DRY_RUN` | Tín hiệu hợp lệ nhưng chưa bật gửi lệnh |
-| `ENTRY` | Lệnh demo đã khớp: order, deal, ticket, entry/SL/TP |
-| `BLOCKED` | Lý do từ chối vào lệnh (reason token) |
-| `TRAIL` / `BREAKEVEN` | Dời SL theo cấu trúc/ATR |
-| `EXIT` | Đóng vị thế kèm P&L và lý do |
-| `KILL_SWITCH` | Kill switch được kích hoạt |
-| `SUMMARY` | Tổng hợp cuối phiên |
+| `INIT` | Chế độ (`DRY_RUN`/`DEMO_EXECUTION`), `state`, `restored`, symbol, magic, TP R, `config_hash` |
+| `REGIME` | Chỉ ghi khi regime đổi: `regime`, `bias`, `h1`, `m15`, `vol`, `spread_block`, `risk_lock` |
+| `RISK` | `side`, `price`, `atr` khi vào lệnh; `ENTRY_BLOCKED|reason=…` khi bị chặn (chỉ ghi khi reason đổi) |
+| `BOS` | Break-of-structure trên `M5`/`M15` |
+| `ENTRY` | Lệnh khớp: `ORDER_FILLED|order=N|deal=N|ok|done`, entry/SL/TP, `risk_money` |
+| `DRY_RUN` | Tín hiệu hợp lệ nhưng `InpEnableExecution=false` — không gửi lệnh |
+| `TRAIL` | Dời SL (break-even + trailing); chỉ được siết, không được nới |
+| `EXIT` | Đóng vị thế kèm P&L và lý do (`broker_close`, `reversal_*`, `kill_switch`) |
+| `CLOSE_REQUEST` | EA chủ động gửi lệnh đóng (kèm `deal=N|ok|done`) |
+| `STATE` | `to=…|reason=…|transitions=N` |
+| `STATE_ERROR` | Transition bị từ chối — state không đổi |
+| `KILL` | Kill switch kích hoạt, `entries_disabled` |
+| `ERROR` | Lỗi runtime (quote không hợp lệ, gửi lệnh fail, …) |
+| `ADOPT` / `SYNC` | Nhận vị thế đang mở của magic vào sổ kế toán EA / ticket đổi |
+| `RESET` | `InpManualResetDrawdown` mở khoá drawdown |
+| `SUMMARY` | Tổng hợp cuối phiên: entries/exits/wins/losses/net/drawdown/ledger/kill_switch |
 
 Reason token cố định: `not_demo_account`, `account_trade_disabled`, `terminal_trade_disabled`,
 `symbol_not_allowed`, `symbol_trade_disabled`, `symbol_close_only`, `kill_switch_active`, `dry_run`,
 `take_profit_invalid`, `stop_below_broker_level`, `risk_budget_exceeded`, `free_margin_insufficient`.
+Token chặn của chiến lược (`RISK|ENTRY_BLOCKED`) nằm ở một nhóm khác: `bias_unknown`, `regime_range`,
+`reversal_watch`, `bos_against_bias`, `no_pullback`, `bos_too_old`, `volatility_high`,
+`spread_blocked`, `risk_locked`, `lot_rejected`, `stop_rejected`.
 
 ## 7. Cách đọc kết quả đúng
 
@@ -126,6 +165,9 @@ Reason token cố định: `not_demo_account`, `account_trade_disabled`, `termin
 | `free_margin_insufficient` | Không đủ margin | Giảm risk hoặc nạp thêm vốn demo |
 | `stop_below_broker_level` | SL/TP quá sát giá | Kiểm tra `SYMBOL_TRADE_STOPS_LEVEL` |
 | `take_profit_invalid` | TP tính ra sai phía giá | Kiểm tra entry/SL và `InpTakeProfitR` |
+| `INIT ... state=ERROR_SAFE_MODE` lặp lại dù đã xoá file kill switch | State file còn khoá an toàn và `OnDeinit` ghi lại trước `OnInit` đọc | Làm theo §5.1 (`InpResetStateOnInit=true` rồi trả về `false`) |
+| EA chạy bình thường, journal đều, nhưng không bao giờ có `ENTRY` | H1/M15 chưa cùng hướng — `bias_unknown`/`regime_range` chiếm ~90% bar | Đúng thiết kế. Trong dữ liệu tester chỉ ~24% số bar ở regime trend, trung bình ~3.1 lệnh/tháng |
+| `LAB|ERROR|trendrider_demo|state_write_failed` | State file không ghi được (read-only / đĩa đầy) | EA vẫn chạy và chỉ mất persist; bỏ read-only hoặc kiểm tra đĩa, vì lần nạp lại sau sẽ khởi động sạch |
 
 ## 9. Gỡ bỏ / quay lại mô phỏng
 

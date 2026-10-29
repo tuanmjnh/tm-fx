@@ -1900,3 +1900,106 @@ chưa có setup hợp lệ.
 
 `package-source.ps1 -Version 0.10.0` → `mt5-ea-ai-lab-v0.10.0-20261029-091656.zip`, 250 file, 173 mục bị
 loại (report, `.ex5`, cache, credential), SHA256 `d1b132d0…0d6398`.
+
+---
+
+## 44. Bằng chứng đường `OrderSend` thật + kill switch bằng file thật — 2026-10-29
+
+§43 để lại hai khoảng trống: (a) `ExecGuardTests` synthetic nên đường gửi lệnh của
+`mt5/Include/Exec/ExecBroker.mqh` chưa có bằng chứng runtime, và (b) kill switch mới thử ở mức token
+(`G46`). Cả hai đã đóng bằng chạy thật.
+
+### 44.1 Strategy Tester với `InpEnableExecution=true`
+
+Bằng chứng lưu ở `reports/build/tester-reports/demo_exec_gui_20261029/` (`pa_trendrider_demo.csv`
+18 281 641 byte, `pa_trendrider_demo_state.csv`, `audit_exec_csv.py`). Cấu hình: `XAUUSDm`, deposit
+5 000, `config_hash=6B439450`, khoảng kiểm thử `2026.01.01 00:00` → `2026.10.27 23:59`,
+**61 189 dòng journal**.
+
+| Event | Số dòng | Ghi chú |
+|---|---:|---|
+| `INIT` / `SUMMARY` | 1 / 1 | một phiên khép kín |
+| `REGIME` / `RISK` / `BOS` | 1 458 / 51 287 / 8 242 | chỉ ghi khi trạng thái/reason đổi |
+| `ENTRY` | **31** | cả 31 đều `ORDER_FILLED\|order=N\|deal=N\|ok\|done` |
+| `TRAIL` | 34 | chỉ siết SL (break-even + trailing) |
+| `EXIT` | **31** | 30 `broker_close` (SL/TP broker khớp) + 1 `reversal_BEARISH` |
+| `CLOSE_REQUEST` | 1 | EA chủ động đóng, `deal=61\|ok\|done` |
+| `STATE` | 103 | chuỗi transition hợp lệ |
+
+`SUMMARY`: `entries=31 exits=31 wins=11 losses=20 net=53.72 balance=5053.72 drawdown_pct=0.6530`.
+14 BUY / 17 SELL, volume lớn nhất quan sát được 0.02, 31 order ticket duy nhất (không trùng).
+
+Đối soát độc lập với chính tester: tab **Backtest** báo `Total Trades 31`, `Total Deals 62`,
+`Total Net Profit 53.72`; **Journal** có `market buy 0.01 XAUUSDm sl: … tp: …`,
+`deal #42 … done (based on order #42)`, `position modified [...]`, `stop loss triggered …`,
+`final balance 5053.72 USD`, `Test passed in 0:34:57.563`. Ba nguồn (journal CSV, tab Backtest,
+tab Journal) khớp nhau.
+
+### 44.2 Audit tĩnh
+
+`python audit_exec_csv.py pa_trendrider_demo.csv` → **`PROBLEMS=0`**. Kiểm tra: số ENTRY/EXIT khớp
+`SUMMARY`; `config_hash` không đổi trong phiên; luôn ≤ 1 vị thế; `BUY: sl<entry<tp` và
+`SELL: sl>entry>tp`; `tp == entry ± 3·risk` trong dung sai 0.01; `TRAIL` chỉ siết SL chứ không nới;
+mọi `ENTRY` phải mang `ORDER_FILLED`.
+
+### 44.3 Phân bố lý do chặn — vì sao demo thật chưa có lệnh
+
+| reason | dòng | % |
+|---|---:|---:|
+| `bias_unknown` | 24 467 | 47.71 |
+| `reversal_watch` | 15 161 | 29.56 |
+| `regime_range` | 6 775 | 13.21 |
+| `bos_against_bias` | 1 982 | 3.86 |
+| (tín hiệu hợp lệ → `ENTRY`) | 1 478 | 2.88 |
+| `volatility_high` | 777 | 1.52 |
+| `no_pullback` / `bos_too_old` | 288 / 228 | 0.56 / 0.44 |
+| `lot_rejected` / `stop_rejected` | 51 / 37 | 0.10 / 0.07 |
+| `spread_blocked` / `risk_locked` | 22 / 21 | 0.04 |
+
+Chỉ ~24% số bar ở regime `TREND_UP`/`TREND_DOWN` (171 + 176 / 1 458 dòng `REGIME`). Trung bình
+**3.1 lệnh/tháng**, kỳ vọng chờ dài nhất trong dữ liệu là `2026.01.28 → 2026.03.06` (~5.5 tuần).
+Đây là bộ lọc cố ý của spec ("không vào lệnh khi H1/M15 không cùng hướng"), không phải lỗi.
+
+### 44.4 Kill switch bằng file thật — PASS
+
+Tạo `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` trên **chart demo thật**, journal ghi trong 16 giây:
+
+```
+2026.10.29 04:10:16 KILL  kill_switch_file|entries_disabled|file=PA_TREND_RIDER_DEMO_STOP.txt
+2026.10.29 04:10:16 STATE to=ERROR_SAFE_MODE|reason=kill_switch|transitions=3
+```
+
+Hành vi cần biết: `g_kill_switch` chốt cứng đến khi `OnInit` chạy lại (`if(g_kill_switch) return;`),
+và `OnDeinit` luôn ghi state ra đĩa trước `OnInit` đọc lại — nên **xoá file là chưa đủ**, EA vẫn
+khởi động với `state=ERROR_SAFE_MODE` phục hồi từ `pa_trendrider_demo_state.csv`.
+
+### 44.5 Khôi phục về trạng thái armed — PASS
+
+Live demo `464140826`, chart `XAUUSDm,M5`, `InpEnableExecution=true`:
+
+```
+2026.10.29 04:28:00 INIT  mode=DEMO_EXECUTION|state=WAITING_FOR_SETUP|restored=1|symbol=XAUUSDm|allowed=XAUUSD|magic=25002001|tp_r=3.00|config_hash=6B439450
+2026.10.29 04:28:00 RISK  ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE|state=WAITING_FOR_SETUP|spread_points=240.0|atr=3.12142857
+```
+
+`OnInit` chỉ trả về thành công khi `ExecContextAllowed` pass toàn bộ (`ACCOUNT_TRADE_MODE_DEMO` +
+`ACCOUNT_TRADE_ALLOWED` + `TERMINAL_TRADE_ALLOWED`) rồi `ExecSymbolAllowed` và `ExecSymbolTradable`
+pass — tức **INIT này là bằng chứng tài khoản demo, quyền giao dịch của tài khoản, Algo Trading của
+terminal và symbol `XAUUSDm` đều đang mở**. Quy trình reset đã ghi lại ở
+[`guides/demo-execution.md`](guides/demo-execution.md) §5.
+
+### 44.6 Giới hạn trung thực
+
+- **Tester không chứng minh broker demo chấp nhận lệnh.** `ExecContextAllowed` trả `true` ngay khi
+  `state.tester` ([`ExecGuard.mqh`](../mt5/Include/Exec/ExecGuard.mqh) dòng 64-67) và khớp lệnh
+  trong tester là mô phỏng. Bằng chứng 44.1 chứng minh *mã đường lệnh* chạy đúng, không phải *trả lời
+  của broker Exness*. Một `ENTRY` thật trên demo vẫn chưa có.
+- Phiên demo thật hiện tại 0 entry là **kết quả hợp lệ** của bộ lọc regime, không phải thành tích hay lỗi.
+- Chưa xác nhận cờ "Allow Algo Trading" riêng của EA trên chart (`MQL_TRADE_ALLOWED`) — guard hiện không
+  đọc cờ này; nếu nó tắt thì `OrderSend` sẽ fail lúc có tín hiệu chứ không fail lúc `INIT`.
+- `WriteStateFile` viết dòng state thành `state=state=ERROR_SAFE_MODE;transitions=3` vì `Serialize()`
+  đã tự thêm tiền tố `state=` ([`TRState.mqh`](../mt5/Include/TrendRider/TRState.mqh) dòng
+  107-111) còn `FileWriteString` thêm một lần nữa. `RestoreStateFile` vẫn parse đúng nên **không đổi
+  hành vi**; ghi nhận ở đây để lần refactor sau thống nhất với dòng `ledger=`.
+- Không có bằng chứng nào ở §44 chứng minh chiến lược có lợi nhuận; +53.72/5 000 là một khoảng kiểm
+  thử duy nhất, một symbol, một bộ tham số.

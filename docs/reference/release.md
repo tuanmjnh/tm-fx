@@ -10,8 +10,9 @@
 > **Lưu ý (2026-10-29):** các con số trong checklist này là lần đóng gói **0.10.0** — 29 source `.mq5`
 > compile 0/0, `validate-project.py checks=14`, `validate_sim_configs.py checked=7` (6 preset, 17 scenario),
 > `validate_trendrider.py checks=7`, `validate_demo_execution.py checks=6`, pytest 358 passed. Bằng chứng
-> chi tiết và nhật ký phiên demo thật nằm ở [`../PROGRESS.md`](../PROGRESS.md) §42–§43. Chiến lược
-> `WonderwhalesSimEA` và 12 scenario Strategy Tester cũ vẫn giữ nguyên kết quả.
+> chi tiết và nhật ký phiên demo thật nằm ở [`../PROGRESS.md`](../PROGRESS.md) §42–§43; **bằng chứng đường
+> `OrderSend` trong Strategy Tester, kill switch bằng file thật và quy trình reset safe mode nằm ở §44**.
+> Chiến lược `WonderwhalesSimEA` và 12 scenario Strategy Tester cũ vẫn giữ nguyên kết quả.
 
 ## 1. Bắt buộc
 
@@ -55,7 +56,11 @@
 | 9 | Contract test 6 indicator trong Strategy Tester | **PASS 6/6** (547 check) 2026-10-28; 3 bug implementation đã sửa |
 | 10 | `ExecGuardTests` trong MetaEditor | **PASS** 2026-10-29: `TEST\|BEGIN\|suite=execguard` → `TEST\|G1..G51\|PASS` → `TEST\|RESULT\|ALL_PASS\|pass=51 fail=0\|suite=execguard` (log `MQL5\Logs\20261029.log`, chạy như script trên chart XAUUSDm,M5). Script là synthetic: không gọi `OrderSend`, không đọc thông tin tài khoản — nên PASS này chứng minh **ma trận guard**, không chứng minh đường gửi lệnh thật của `ExecBroker.mqh` |
 | 11 | Dry-run `PATrendRiderXAUv1DemoEA` trên demo | **PASS** 2026-10-29 trên demo `464140826` (Exness-MT5Trial17, hedge): `INIT mode=DRY_RUN`, một `RISK ENTRY_BLOCKED reason=bias_unknown`, `SUMMARY entries=0 exits=0 net=0.00`, tab Trade trống. Lưu ý: dry-run không khởi tạo được khi nút Algo Trading của terminal tắt (`scope_rejected|terminal_trade_disabled`) |
-| 12 | Demo execution một phiên có giám sát | **ĐANG CHẠY** 2026-10-29: `InpEnableExecution=true`, `INIT mode=DEMO_EXECUTION config_hash=6B439450`, `restored=1`. CSV `pa_trendrider_demo.csv` có sự kiện cấu trúc thật (`BOS tf=M5 event=BOS_BEAR`) và hai `RISK ENTRY_BLOCKED reason=regime_range` — EA sống, chặn đúng luật, chưa có `ENTRY`/`EXIT`. Kill switch mới được kiểm ở mức token (`G46`: `ExecBlockName(EXEC_BLOCK_KILL_SWITCH)=="kill_switch_active"`), chưa thử bằng file `PA_TREND_RIDER_DEMO_STOP.txt` thật. Kết luận phiên chỉ ghi khi có bằng chứng thật |
+| 12 | Demo execution một phiên có giám sát | **PASS (armed, 0 entry)** 2026-10-29: `InpEnableExecution=true`, `INIT mode=DEMO_EXECUTION config_hash=6B439450` trên chart `XAUUSDm,M5`. `OnInit` chỉ thành công khi `ExecContextAllowed` pass (`ACCOUNT_TRADE_MODE_DEMO` + `ACCOUNT_TRADE_ALLOWED` + `TERMINAL_TRADE_ALLOWED`) rồi `ExecSymbolAllowed`/`ExecSymbolTradable` pass — nên INIT là bằng chứng tài khoản demo và quyền giao dịch đang mở. EA ghi `BOS tf=M5 event=BOS_BEAR` rồi `RISK ENTRY_BLOCKED reason=bias_unknown\|regime=RANGE` mỗi bar M5 đóng: **sống, chặn đúng luật, chưa có `ENTRY`**. Không suy diễn gì từ 0 entry |
+| 13 | Đường gửi lệnh `ExecBroker.mqh` có bằng chứng runtime | **PASS (Strategy Tester)** 2026-10-29: 31 `ENTRY` đều `ORDER_FILLED\|order=N\|deal=N\|ok\|done`, 34 `TRAIL`, 31 `EXIT` (30 `broker_close` + 1 `CLOSE_REQUEST\|deal=61`), `SUMMARY entries=31 exits=31 wins=11 losses=20 net=53.72 drawdown_pct=0.6530`, 61 189 dòng journal, đối soát khớp tab Backtest (`Total Trades 31`/`Total Deals 62`) và tab Journal (`final balance 5053.72 USD`). Xem §44 |
+| 14 | Audit tĩnh CSV của phiên execution | **PASS** `python audit_exec_csv.py pa_trendrider_demo.csv` → `PROBLEMS=0` (SL/TP đúng phía, TP = entry ± 3·risk trong 0.01, một vị thế, `TRAIL` chỉ siết SL, `config_hash` không đổi, ENTRY phải mang `ORDER_FILLED`) |
+| 15 | Kill switch bằng file thật | **PASS** 2026-10-29 trên demo thật: tạo `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` → trong 16 s journal ghi `KILL kill_switch_file\|entries_disabled` + `STATE to=ERROR_SAFE_MODE\|reason=kill_switch`. Phát hiện quan trọng: **xoá file là chưa đủ** — `OnDeinit` ghi `ERROR_SAFE_MODE` vào state file trước khi `OnInit` đọc lại; quy trình reset ở `guides/demo-execution.md` §5.1, đã xác nhận khôi phục về `state=WAITING_FOR_SETUP` |
+| 16 | Broker demo thật chấp nhận lệnh | **CHƯA CHẠY** — `ExecContextAllowed` trả `true` ngay khi `MQL_TESTER` bật nên bằng chứng mục 13 là của mã, không phải của server Exness. Cần một `ENTRY` thật trên demo để đóng mục này; không được nới gate chiến lược chỉ để tạo ra lệnh |
 
 ## 3. Trước khi commit/tag
 

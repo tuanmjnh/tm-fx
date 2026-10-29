@@ -168,10 +168,18 @@
   hộp thoại đăng nhập thì Cancel. Không lưu credential trong config, log, report hay Git.
 - **Kết quả compile không phải kết quả runtime:** compile 0 errors/0 warnings chỉ chứng minh cú pháp.
   `ExecGuardTests` đã chạy thật 2026-10-29 với `pass=51 fail=0`, nhưng đó là test synthetic không gọi
-  `OrderSend` — đường gửi lệnh thật của `ExecBroker.mqh` vẫn chưa có bằng chứng runtime. Đường demo đã có
-  log thật đầu tiên ngày 2026-10-29 —
-  dry-run `entries=0` và một phiên `mode=DEMO_EXECUTION` chưa có `ENTRY` — ghi ở
-  [`../PROGRESS.md`](../PROGRESS.md) §43.5; vẫn không suy diễn hành vi từ compile hay từ test vector.
+  `OrderSend`. Đường gửi lệnh nay đã có bằng chứng runtime **trong Strategy Tester**: 31 `ENTRY` đều
+  mang `ORDER_FILLED|order=N|deal=N|ok|done`, 34 `TRAIL`, 31 `EXIT` (30 `broker_close` + 1
+  `CLOSE_REQUEST` do EA chủ động), đối soát khớp với tab Backtest và Journal của chính tester, audit
+  tĩnh `PROBLEMS=0` — [`../PROGRESS.md`](../PROGRESS.md) §44.
+- **Bằng chứng tester không phải bằng chứng broker chấp nhận lệnh:** `ExecContextAllowed` trả `true`
+  ngay khi `MQL_TESTER` bật, và khớp lệnh trong tester là mô phỏng. Vì vậy §44 chứng minh *mã đường
+  lệnh*, **không** chứng minh server Exness nhận lệnh demo. Một `ENTRY` thật trên tài khoản demo vẫn
+  chưa có — phiên demo ngày 2026-10-29 dừng ở `ENTRY_BLOCKED|reason=bias_unknown|regime=RANGE`, tức
+  0 entry vì bộ lọc regime của chiến lược, không phải vì lỗi.
+- **Cờ "Allow Algo Trading" riêng của EA chưa được kiểm:** guard đọc `TERMINAL_TRADE_ALLOWED` của
+  terminal và `ACCOUNT_TRADE_ALLOWED` của tài khoản, không đọc `MQL_TRADE_ALLOWED` của chính EA. Nếu
+  cờ này tắt thì lỗi chỉ lộ ra lúc có tín hiệu (`OrderSend` fail) chứ không fail ở `INIT`.
 - **Live/real vẫn là phạm vi mới:** muốn execution trên tài khoản thật phải lập ADR mới, review riêng và
   có tối thiểu: dry-run mặc định, một vị thế, SL/TP bắt buộc, giới hạn lot/risk, max daily loss, kill
   switch, không martingale/grid/DCA ở giai đoạn đầu, bằng chứng Strategy Tester + demo trước đó.
