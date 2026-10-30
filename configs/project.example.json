@@ -127,6 +127,15 @@
       }
     },
     {
+      "name": "plan_rr2",
+      "ea": "PinePlanSimEA",
+      "preset": "configs/sim/pine_plan_lab.json",
+      "overrides": {
+        "InpPaRr1": 2.0,
+        "InpPaRrMin": 1.5
+      }
+    },
+    {
       "name": "ww_baseline",
       "ea": "WonderwhalesSimEA",
       "preset": "configs/sim/wonderwhales_xauusdm.json",

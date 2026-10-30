@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "ea": "DCADemoEA",
+  "version": "1.00",
+  "execution_mode": "DEMO_ONLY",
+  "allow_live_trading": false,
+  "description": "DCA demo execution (ADR 0004, defaults per ADR 0006): execution enabled by default so bounded additions (InpMaxDcaAdds) run on demo immediately. Per-add volume cap, basket loss budget and a mandatory basket SL/TP. No unbounded martingale. Demo account or Strategy Tester only; real accounts rejected at OnInit. Set InpEnableExecution=false for a dry-run comparison.",
+  "strategy": "dca",
+  "symbol": "XAUUSDm",
+  "timeframe": "M15",
+  "inputs": {
+    "InpEnableExecution": true,
+    "InpAllowedSymbols": "XAUUSD",
+    "InpMagicNumber": 25005001,
+    "InpMaxSlippagePoints": 30,
+    "InpKillSwitchFile": "DCA_DEMO_STOP.txt",
+    "InpCloseOnKillSwitch": true,
+    "InpEnableLog": true,
+    "InpLogFile": "dca_demo.csv",
+    "InpDebug": false,
+    "InpDcaSide": 1,
+    "InpBaseVolume": 0.01,
+    "InpTriggerMode": 0,
+    "InpDcaDistancePoints": 300.0,
+    "InpBarsBetweenAdds": 5,
+    "InpMaxDcaAdds": 3,
+    "InpAddVolumeMultiplier": 1.5,
+    "InpMaxAddVolume": 0.04,
+    "InpBasketTargetPoints": 600.0,
+    "InpBasketStopPoints": 900.0,
+    "InpMaxSpreadPoints": 600.0,
+    "InpMaxExposure": 0.1,
+    "InpMaxBasketLossPct": 1.0,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpMaxConsecutiveLosses": 3,
+    "InpHaltOnBreach": true
+  },
+  "enum_map": {
+    "InpDcaSide": {
+      "1": "DCA_DEMO_LONG"
+    },
+    "InpTriggerMode": {
+      "0": "SIM_DCA_PRICE_DISTANCE"
+    }
+  },
+  "assumptions": {
+    "account": "demo or Strategy Tester only; real/contest accounts are rejected at OnInit",
+    "position_model": "one basket of up to InpMaxDcaAdds+1 broker positions filtered by symbol and InpMagicNumber; one direction only",
+    "volume": "add n volume = InpBaseVolume * InpAddVolumeMultiplier^n, floored to the broker volume step and capped by InpMaxAddVolume and InpMaxExposure",
+    "adds": "at most one addition per bar; InpMaxDcaAdds=0 disables additions entirely",
+    "stops": "basket SL/TP are absolute prices derived from the live average entry; every leg carries them and they are re-asserted after each add",
+    "risk_budget": "at any time the loss of the whole basket at its stop must stay under InpMaxBasketLossPct of equity, otherwise the add is rejected",
+    "locks": "daily loss and drawdown halts flatten the basket and stop new entries; InpMaxConsecutiveLosses blocks the next basket",
+    "kill_switch": "create InpKillSwitchFile in MQL5/Files to close the basket and stop entries until restart",
+    "results": "demo execution is an operational check, not a performance or live-readiness claim"
+  }
+}

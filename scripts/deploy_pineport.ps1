@@ -88,7 +88,7 @@ $files = @(
 
 # Track C simulation, TrendRider and demo-execution sources. The .mqh trees are
 # enumerated instead of listed so a new module cannot be left out of a redeploy.
-foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Exec")) {
+foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Exec", "mt5\Include\InfiniteRunner")) {
     $treeRoot = Join-Path $ProjectRoot $tree
     if (-not (Test-Path -LiteralPath $treeRoot -PathType Container)) {
         Write-Host "FAIL: include tree missing: $treeRoot" -ForegroundColor Red
@@ -111,6 +111,9 @@ $files += @(
     [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesSimEA.mq5"; Target = "MQL5\Experts\WonderwhalesSimEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Experts\PATrendRiderXAUv1SimEA.mq5"; Target = "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Experts\PATrendRiderXAUv1DemoEA.mq5"; Target = "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\GridDemoEA.mq5"; Target = "MQL5\Experts\GridDemoEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\DCADemoEA.mq5"; Target = "MQL5\Experts\DCADemoEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\InfiniteRunnerXAUV2DemoEA.mq5"; Target = "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\TrendRiderContractTests.mq5"; Target = "MQL5\Scripts\TrendRiderContractTests.mq5" },
@@ -148,7 +151,10 @@ $compileTargets = @(
     "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5",
     "MQL5\Scripts\ExecGuardTests.mq5",
     "MQL5\Scripts\ExecDemoProbe.mq5",
-    "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5"
+    "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5",
+    "MQL5\Experts\GridDemoEA.mq5",
+    "MQL5\Experts\DCADemoEA.mq5",
+    "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5"
 )
 
 function Get-TerminalCandidates {

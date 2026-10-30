@@ -1,122 +1,102 @@
 # Bộ tài liệu MT5 EA & AI Lab
 
-Điểm vào duy nhất cho toàn bộ tài liệu của repository. Mọi tài liệu chi tiết đã được gộp theo nhóm;
-không còn file rời rạc ở thư mục `docs/`.
+**Phiên bản:** 2.0 · **Cập nhật:** 2026-10-29
+**Điểm vào duy nhất:** file này. Bộ tài liệu mới nằm ở [`v2/`](v2/README.md); tài liệu v1 đã chuyển
+vào [`archive/v1/`](archive/v1/) để backup, chỉ đọc.
 
 > **Ranh giới:** repository phục vụ nghiên cứu offline, mô phỏng và **demo execution có guardrail**.
-> Các EA mô phỏng không có `OrderSend`/`CTrade` và chỉ tạo vị thế ảo; Strategy Tester hiển thị **0 deal**
-> là đúng. Đường gửi lệnh duy nhất là `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`, chỉ chấp nhận
-> tài khoản demo/Strategy Tester, mặc định dry-run. Không có tài khoản real/live, không credential, không
-> kết nối broker.
+> Các EA mô phỏng không có `OrderSend`/`CTrade` và chỉ tạo vị thế ảo. Đường gửi lệnh duy nhất là
+> `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`, chỉ chấp nhận tài khoản demo hoặc Strategy Tester,
+> mặc định dry-run. Tài khoản real/live bị cấm; không credential; không kết nối broker.
 > Xem [`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md).
 
-## 1. Trạng thái tổng hợp (2026-10-29)
-
-| Mảng | Phạm vi | Trạng thái |
-|---|---|---|
-| Phase 0 | Kiểm kê môi trường, an toàn, Git | DONE |
-| Phase 1–2 | `LabSignalEA`, signal engine, indicator Wonderwhales | Compile 0/0; `LabSignalEngineTests` runtime **PASS** `pass=53 fail=0`; `LabSignalEA` Strategy Tester **PASS** (0 trade, 2026-10-29) |
-| Phase 3–4 | Data pipeline, validation, backtester Python | DONE |
-| Phase 5 | Parity MQL5/Python, multi-source export | `READY_FOR_MANUAL_VALIDATION`; parity `BLOCKED` vì thiếu CSV reference |
-| Phase 6–7 | Experiment store, ML baseline | DONE |
-| Phase 8 | ONNX export + `LabOnnxInference` | Export/parity Python PASS; **runtime MT5 PASS** 24/24 hàng, max abs `4.927e-08` (2026-10-29, build 6292, CPU provider) |
-| Phase 9 | Pipeline end-to-end | DONE |
-| Track B | 6 indicator PinePort + contract headless + EA tín hiệu đa nguồn | Compile 0/0; **contract runtime 6/6 PASS** (547 check) |
-| Track C W1–W7, W9, W10 | Simulation core, runner/grid/DCA, plan-driven EA, preset, toolchain | PASS offline (compile + static + Python) |
-| Track C — `WonderwhalesSimEA` | EA tín hiệu Wonderwhales trên `XAUUSDm`, 3 chế độ stop | Compile 0/0 (repo + Data Folder); **Strategy Tester PASS 3/3 scenario `ww_*`** (2026-10-28, không deal) |
-| Track C — `PATrendRiderXAUv1SimEA` | PA TrendRider XAU v1: H1/M15/M5, BOS/CHoCH, pullback, một vị thế ảo | Compile 0/0; contract **82/82 PASS**; Strategy Tester **2/2 scenario `pa_*`** chạy thật (2026-10-28, không deal); xem [`PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](PA_TrendRider_XAU_V1_Implementation_Vietnamese.md) |
-| Demo execution — `PATrendRiderXAUv1DemoEA` | Cùng engine tín hiệu, gửi lệnh **chỉ trên demo** với guard + kill switch | Compile 0/0; `ExecGuardTests` runtime PASS (`pass=51 fail=0`, synthetic); **đường `OrderSend` đã có bằng chứng runtime trong Strategy Tester** — 31 `ENTRY` khớp lệnh, 34 `TRAIL`, 31 `EXIT`, net +53.72/5 000, audit `PROBLEMS=0` (§44); **kill switch PASS bằng file thật trên demo**; **server demo Exness đã khớp thật một lệnh guard qua `ExecDemoProbe`** (§45: `deal=2468899165` vào 4045.79 có SL/TP, đóng ở 4045.55, `pnl=-0.24` bằng đúng spread, đối soát ba nguồn); EA đang armed trên demo `464140826` (`mode=DEMO_EXECUTION`, `state=WAITING_FOR_SETUP`) nhưng **0 `ENTRY` do chính EA gửi** vì regime `RANGE`; giám sát bằng `scripts/watch_demo_journal.py` — reader chỉ đọc, báo `ENTRY`/`EXIT`/`FAULT` mới kèm exit code cho chu kỳ tự động (§46); xem [`guides/demo-execution.md`](guides/demo-execution.md) |
-| Track C W8 | Strategy Tester thủ công | PASS 10/10 scenario runner/grid/DCA; 2 scenario `plan_*` `BLOCKED_PERFORMANCE` |
-
-- **MQL5:** 30 file `.mq5` và 33 file `.mqh` compile bằng `scripts/build-mql5.ps1` với
-  `0 errors, 0 warnings` (2026-10-29). Compile chỉ chứng minh cú pháp, không chứng minh hành vi.
-- **Python:** test suite chạy bằng `scripts/run-python-tests.ps1`; con số chính xác lấy từ lần chạy
-  gần nhất trong [`PROGRESS.md`](PROGRESS.md).
-- **Preset:** `scripts/validate_sim_configs.py` kiểm tra 6 preset và 17 scenario fail-closed.
-- Không có kết luận hiệu năng, P&L hay “sẵn sàng live” ở bất kỳ tài liệu nào.
-
-## 2. Bản đồ tài liệu
-
-```text
-docs/
-├── README.md                  # file này — điểm vào duy nhất
-├── PROGRESS.md                # nhật ký từng phase/W, bằng chứng và trạng thái thật
-├── MASTER_ROADMAP.md          # lộ trình tổng (Phase 0–9, Track B, Track C W1–W12)
-├── ROADMAP_MT5_EA_AI_LAB.md   # roadmap nguồn ban đầu
-├── PROMPT_AI_IMPLEMENT_ROADMAP.md
-├── PA_TrendRider_XAU_V1_Specification_Vietnamese.md   # đặc tả chiến lược
-├── PA_TrendRider_XAU_V1_Implementation_Vietnamese.md  # bản triển khai mô phỏng + kết quả test
-├── guides/
-│   ├── install-and-test.md    # cài Python/MT5, sync source, compile, chạy test/EA
-│   ├── demo-execution.md      # chạy PATrendRiderXAUv1DemoEA trên tài khoản demo
-│   ├── strategy-tester.md     # preset, ma trận scenario, template report
-│   └── toolchain.md           # check/build/test/validate/package
-├── indicators/
-│   ├── README.md              # inventory Pine + compatibility
-│   ├── parity.md              # contract, buffer map, trạng thái parity
-│   ├── wonderwhales.md
-│   ├── longkaco-vsa.md
-│   ├── tm-fusion-zones.md
-│   ├── price-action-mtf.md
-│   ├── tm-xau-signals-2.md
-│   └── tm-indicator-2.md
-├── reference/
-│   ├── architecture.md        # kiến trúc repo và luồng dữ liệu
-│   ├── strategy-signal-spec.md
-│   ├── simulation.md          # simulation core, runner, grid, DCA, PinePlanSimEA, preset
-│   ├── trailing-stop.md
-│   ├── bounded-basket.md
-│   ├── testing.md             # test plan, metric, giả định mô phỏng
-│   ├── parity.md
-│   ├── risk.md                # rủi ro và giới hạn đầy đủ
-│   ├── release.md             # checklist release nội bộ
-│   ├── data-dictionary.md
-│   ├── experiment-store.md
-│   ├── ml-baseline.md
-│   ├── onnx.md
-│   └── pipeline.md
-├── decisions/                 # ADR (0001 baseline, 0002 execution boundary, 0003 demo execution, …)
-├── phase-reports/             # báo cáo Phase 0–9
-├── MT5_AI_Roadmaps/           # input pack gốc, giữ nguyên
-├── mt5-ea-ai-simulation-pack/ # input pack gốc, giữ nguyên
-└── pine-to-mt5-pack/          # input pack gốc, giữ nguyên
-```
-
-## 3. Đọc theo mục tiêu
+## 1. Bắt đầu ở đâu
 
 | Bạn muốn… | Đọc |
 |---|---|
-| Cài đặt và chạy thử toàn bộ | [`guides/install-and-test.md`](guides/install-and-test.md) |
-| Chạy Strategy Tester và ghi report | [`guides/strategy-tester.md`](guides/strategy-tester.md) |
-| Hiểu simulation core và các EA mô phỏng | [`reference/simulation.md`](reference/simulation.md) |
-| Hiểu và chạy PA TrendRider XAU v1 | [`PA_TrendRider_XAU_V1_Specification_Vietnamese.md`](PA_TrendRider_XAU_V1_Specification_Vietnamese.md), [`PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](PA_TrendRider_XAU_V1_Implementation_Vietnamese.md) |
-| Hiểu trailing stop / bounded DCA-grid (Python) | [`reference/trailing-stop.md`](reference/trailing-stop.md), [`reference/bounded-basket.md`](reference/bounded-basket.md) |
-| Hiểu indicator PinePort và buffer contract | [`indicators/README.md`](indicators/README.md), [`indicators/parity.md`](indicators/parity.md) |
-| Kiểm tra test, metric và giả định | [`reference/testing.md`](reference/testing.md) |
-| Xem rủi ro và giới hạn | [`reference/risk.md`](reference/risk.md) |
-| Kiểm tra trước khi release/commit | [`reference/release.md`](reference/release.md) |
-| Biết việc gì đã chạy thật, việc gì `NOT_RUN` | [`PROGRESS.md`](PROGRESS.md) |
-| Xem lộ trình và quyết định phạm vi | [`MASTER_ROADMAP.md`](MASTER_ROADMAP.md), [`decisions/`](decisions/) |
+| **Chưa dùng MT5 bao giờ — chạy bot đầu tiên và xem bot vận hành** | [`guides/beginner-first-run.md`](guides/beginner-first-run.md) |
+| **Hiểu từng khối của một con bot + bảng tham số đầy đủ + ghép AI** | [`guides/ea-anatomy-and-ai.md`](guides/ea-anatomy-and-ai.md) |
+| Hiểu toàn bộ bộ tài liệu v2 | [`v2/README.md`](v2/README.md) |
+| Xem trạng thái và lộ trình thật | [`MASTER_ROADMAP.md`](MASTER_ROADMAP.md), [`v2/ROADMAP.md`](v2/ROADMAP.md) |
+| Cài đặt, compile, chạy test | [`v2/INSTALL_AND_TEST.md`](v2/INSTALL_AND_TEST.md) |
+| Cấu hình input/preset | [`v2/CONFIGURATION.md`](v2/CONFIGURATION.md) |
+| Hiểu rủi ro, sizing, trailing | [`v2/RISK_MODEL.md`](v2/RISK_MODEL.md) |
+| Kiểm tra ranh giới demo/live | [`v2/EXECUTION_AND_SAFETY.md`](v2/EXECUTION_AND_SAFETY.md) |
+| Xem test nào đã chạy thật | [`v2/TEST_REPORT.md`](v2/TEST_REPORT.md), [`v2/EVIDENCE.md`](v2/EVIDENCE.md) |
+| Hiểu PATrendRider XAU v1 | [`v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md`](v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md) |
+| Hiểu Grid / DCA | [`v2/STRATEGIES/GRID_EA.md`](v2/STRATEGIES/GRID_EA.md), [`v2/STRATEGIES/DCA_EA.md`](v2/STRATEGIES/DCA_EA.md) |
+| Sửa lỗi thường gặp | [`v2/TROUBLESHOOTING.md`](v2/TROUBLESHOOTING.md) |
+| Biết việc gì cần chủ dự án quyết | [`v2/DECISIONS_REQUIRED.md`](v2/DECISIONS_REQUIRED.md) |
+| Xem nhật ký bằng chứng chi tiết | [`PROGRESS.md`](PROGRESS.md) |
+| Xem tài liệu cũ | [`archive/README.md`](archive/README.md) |
+
+## 2. Cấu trúc
+
+```text
+docs/
+├── README.md                  # file này
+├── MASTER_ROADMAP.md          # lộ trình tổng, trạng thái, việc tiếp theo
+├── PROGRESS.md                # nhật ký từng phase với bằng chứng gốc
+├── v2/                        # bộ tài liệu hiện hành (xem v2/README.md)
+│   ├── README.md, ROADMAP.md, PROMPT_AI_IMPLEMENT.md
+│   ├── ENVIRONMENT.md, INSTALL_AND_TEST.md, CONFIGURATION.md
+│   ├── RISK_MODEL.md, EXECUTION_AND_SAFETY.md
+│   ├── TEST_REPORT.md, EVIDENCE.md, GITHUB_AUDIT.md
+│   ├── TROUBLESHOOTING.md, BACKLOG_AI.md, DECISIONS_REQUIRED.md
+│   └── STRATEGIES/{PA_TRENDRIDER_XAU_V1,GRID_EA,DCA_EA}.md
+├── guides/                    # hướng dẫn vận hành theo Track
+│   ├── beginner-first-run.md, ea-anatomy-and-ai.md, install-and-test.md, demo-execution.md
+│   ├── strategy-tester.md, toolchain.md
+├── indicators/                # PinePort: inventory, parity, từng indicator
+├── reference/                 # kiến trúc, simulation, risk, testing, release, ML/ONNX
+├── decisions/                 # ADR 0001–0003
+└── archive/
+    ├── README.md              # chỉ mục tài liệu lưu trữ
+    ├── v1/                    # roadmap, prompt, đặc tả, phase report, input pack v1
+    └── planning-inputs/       # pack kế hoạch ban đầu của v2
+```
+
+## 3. Trạng thái tổng hợp
+
+Số liệu chi tiết và đường dẫn bằng chứng nằm ở [`v2/TEST_REPORT.md`](v2/TEST_REPORT.md) và
+[`v2/EVIDENCE.md`](v2/EVIDENCE.md). Tóm tắt:
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Compile MQL5 toàn bộ source | PASS `0 errors, 0 warnings` (MetaEditor build 6292) |
+| Contract test TrendRider | PASS `82/82` |
+| Unit test ExecGuard | PASS `51/0` |
+| Python test suite | `412 passed` (2026-10-30) |
+| Static gate (`validate-project.py`, `validate_demo_execution.py`) | PASS `14/14` và `8/8` (2026-10-29) |
+| PATrendRider SimEA — Strategy Tester | PASS, có CSV/HTML |
+| DemoEA — đường gửi lệnh trong Strategy Tester | PASS: 31 ENTRY / 31 EXIT, audit `PROBLEMS=0` |
+| Broker demo chấp nhận lệnh thật | PASS qua `ExecDemoProbe` (0.01 XAUUSDm, 103 ms) |
+| DemoEA trên tài khoản demo | armed, state `WAITING_FOR_SETUP`, 0 ENTRY do chiến lược |
+| Grid / DCA demo execution | `ALLOWED` (ADR 0004); phiên demo thật `NOT_RUN` |
+| Lợi nhuận của mọi chiến lược | `UNPROVEN` |
+
+Compile chỉ chứng minh cú pháp; tester chỉ chứng minh hành vi trong mô phỏng; không có kết quả nào là
+cam kết lợi nhuận hay bằng chứng sẵn sàng cho tài khoản thật.
 
 ## 4. Quy ước trạng thái
 
 | Nhãn | Nghĩa |
 |---|---|
-| `DONE` | Deliverable + acceptance criteria đạt, test/CLI đã chạy thật và có bằng chứng |
-| `PASS` | Kiểm tra cụ thể đã chạy và đạt (compile, static scan, Python test) |
-| `READY_FOR_MANUAL_VALIDATION` | Code compile, test offline đạt; hành vi runtime chưa được xác minh |
-| `NOT_RUN` | Chưa chạy trong MT5/Strategy Tester; không được thay bằng suy luận |
-| `BLOCKED` | Thiếu dữ liệu/input bên ngoài; không thay bằng dữ liệu synthetic |
-| `FAIL` | Đã chạy và không đạt; phải ghi ID/lỗi thực |
+| `DONE` | Deliverable và acceptance criteria đạt, đã chạy thật, có bằng chứng |
+| `PASS` | Kiểm tra cụ thể đã chạy và đạt |
+| `PARTIAL` | Đã làm một phần, phạm vi chưa đủ để kết luận |
+| `READY_FOR_MANUAL_VALIDATION` | Code compile, test offline đạt, runtime chưa xác minh |
+| `NOT_RUN` | Chưa chạy; không được thay bằng suy luận |
+| `BLOCKED` / `BLOCKED_PENDING_ADR` | Thiếu đầu vào hoặc bị chặn bởi quyết định phạm vi |
+| `UNPROVEN` | Đã chạy nhưng chưa chứng minh được kết luận mong muốn |
+| `FAIL` | Đã chạy và không đạt; phải ghi ID/lỗi thật |
 
-Không đổi `NOT_RUN`/`BLOCKED` thành PASS nếu chưa có log, CSV hoặc report thật. Không dùng kết quả
-compile, static scan hay Python test để suy ra hành vi của EA trong terminal.
+Không đổi `NOT_RUN`/`BLOCKED`/`PARTIAL` thành PASS nếu chưa có log, CSV hoặc report thật.
 
 ## 5. Quy ước nội dung
 
 - **Tiếng Việt** là ngôn ngữ chính; thuật ngữ kỹ thuật và token lỗi giữ nguyên tiếng Anh.
-- **Token lỗi** (`plan_invalid`, `stop_too_close`, …) là hợp đồng ổn định, không đổi tùy tiện.
-- **Preset JSON** là nguồn chuẩn cho input; EA không đọc JSON trực tiếp, người dùng nhập tay.
-- **Số liệu** phải ghi rõ nguồn: dữ liệu synthetic hay thật, khoảng thời gian, giả định chi phí.
-- **Input packs** trong `MT5_AI_Roadmaps/`, `mt5-ea-ai-simulation-pack/`, `pine-to-mt5-pack/` là
-  tài liệu gốc chỉ đọc, không sửa và không trộn với tài liệu vận hành.
+- **Token lỗi** (`plan_invalid`, `max_virtual_exposure_reached`, …) là hợp đồng ổn định.
+- **Preset JSON** là nguồn chuẩn cho input; EA không đọc JSON trực tiếp.
+- **Số liệu** phải ghi nguồn: synthetic hay thật, khoảng thời gian, giả định chi phí.
+- **Input pack** trong `archive/` là tài liệu gốc chỉ đọc, không sửa và không trộn với tài liệu vận hành.

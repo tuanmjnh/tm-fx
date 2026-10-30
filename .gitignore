@@ -15,6 +15,7 @@ dist/
 .coverage
 coverage.xml
 htmlcov/
+github-demo
 
 # Secrets / machine-local configuration
 .env

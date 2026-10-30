@@ -1,0 +1,193 @@
+; ==============================================================================
+; CẤU HÌNH STRATEGY TESTER & DEMO CHO INFINITE RUNNER XAU V2 (V1 PARITY)
+; Tên file: infinite_runner_v2.set
+; Áp dụng cho Expert: InfiniteRunnerXAUV2DemoEA.mq5
+; Cặp giao dịch: XAUUSD / XAUUSDm | Khung thời gian: M5
+; Quy ước: 1.0 USD biến động giá Vàng = 1000 points (Exness 3 số thập phân)
+; ==============================================================================
+
+[TesterInputs]
+
+; ------------------------------------------------------------------------------
+; 1. QUYỀN THỰC THI & AN TOÀN TÀI KHOẢN (Demo Execution Boundary)
+; ------------------------------------------------------------------------------
+InpEnableExecution=true
+; Bật gửi lệnh thật trên tài khoản Demo hoặc Strategy Tester
+; true = Bật giao dịch tự động | false = Dry-run (chỉ ghi log, không vào lệnh)
+
+InpAllowedSymbols=XAUUSD
+; Danh sách tiền tố cặp tiền được phép chạy bot (chống chạy nhầm cặp khác)
+
+InpMagicNumber=25006001
+; Mã Magic nhận diện riêng của bot InfiniteRunner (không đụng với bot khác)
+
+InpMaxSlippagePoints=30
+; Độ trượt giá tối đa chấp nhận khi khớp lệnh thị trường (30 points = 0.03 giá)
+
+InpKillSwitchFile=INFINITE_RUNNER_DEMO_STOP.txt
+; Tên file ngắt khẩn cấp. Nếu file này xuất hiện trong thư mục MQL5\Files, bot sẽ đóng hết vị thế và dừng
+
+InpCloseOnKillSwitch=true
+; true = Tự động đóng lệnh đang mở khi công tắc ngắt khẩn cấp được kích hoạt
+
+; ------------------------------------------------------------------------------
+; 2. NHẬT KÝ & LƯU TRẠNG THÁI PHỤC HỒI (Persistence & Audit)
+; ------------------------------------------------------------------------------
+InpEnableLog=true
+; Bật ghi nhật ký chi tiết ra file CSV phục vụ kiểm toán từng nến
+
+InpLogFile=infinite_runner_demo.csv
+; Tên file CSV lưu chi tiết quyết định của từng nến và lịch sử khớp lệnh
+
+InpPersistState=true
+; true = Ghi nhớ số lệnh trong ngày, mức lỗ ngày, drawdown xuống đĩa để không bị mất khi khởi động lại MT5
+
+InpStateFile=infinite_runner_demo_state.csv
+; Tên file lưu trạng thái vị thế và rủi ro
+
+InpResetStateOnInit=false
+; true = Xóa file trạng thái cũ để bắt đầu chu kỳ mới sạch sẽ (hữu ích khi backtest lại)
+; false = Tiếp tục sử dụng trạng thái đã lưu trước đó
+
+InpDebug=false
+; In thông tin gỡ lỗi chi tiết ra tab Experts của MT5 (nên để false khi chạy thực tế)
+
+; ------------------------------------------------------------------------------
+; 3. BỘ XÁC ĐỊNH XU HƯỚNG & CHỈ BÁO (Direction & Filters)
+; ------------------------------------------------------------------------------
+InpDirectionMode=0
+; 0 = IR_DIR_LEGACY_EMA (Chế độ nhạy bén giống V1: EMA 21 >= EMA 50 là BUY, ngược lại là SELL)
+; 1 = IR_DIR_EMA_MTF (Chế độ lọc xu hướng đa khung thời gian H1 + M15 + M5)
+
+InpH1TF=16385
+; Khung thời gian xu hướng lớn (PERIOD_H1 = 16385)
+
+InpM15TF=15
+; Khung thời gian xác nhận xu hướng (PERIOD_M15 = 15)
+
+InpEntryTF=5
+; Khung thời gian ra quyết định vào lệnh (PERIOD_M5 = 5)
+
+InpEmaFast=21
+; Chu kỳ đường trung bình động nhanh EMA 21
+
+InpEmaSlow=50
+; Chu kỳ đường trung bình động chậm EMA 50
+
+InpSlopeBars=5
+; Số nến dùng để đo độ dốc của đường EMA (chỉ dùng khi InpDirectionMode=1)
+
+InpSlowSlopeTolPoints=100
+; Dung sai độ dốc đường EMA chậm (points)
+
+InpPullbackTolPoints=100
+; Khoảng cách tối đa cho phép giá hồi về gần đường EMA để mở lệnh ở chế độ MTF
+
+; ------------------------------------------------------------------------------
+; 4. KIỂM SOÁT TẦN SUẤT & VỊ THẾ (Position & Entry Control)
+; ------------------------------------------------------------------------------
+InpMaxPositions=1
+; Số vị thế mở tối đa cùng một thời điểm (Infinite Runner luôn giữ đúng 1 lệnh)
+
+InpCooldownMinutes=0
+; Thời gian nghỉ giữa 2 lệnh liên tiếp (0 = vào lệnh ngay khi đủ điều kiện, 30 = nghỉ 30 phút)
+
+InpMinBarsBetweenEntries=1
+; Khoảng cách số nến M5 tối thiểu giữa 2 lần vào lệnh liên tiếp
+
+InpMaxTradesPerDay=50
+; Giới hạn số lệnh tối đa mở trong 1 ngày giao dịch để tránh overtrade
+
+; ------------------------------------------------------------------------------
+; 5. QUẢN LÝ VỐN & GIỚI HẠN RỦI RO (Risk Management & Guardrails)
+; ------------------------------------------------------------------------------
+InpLotMode=0
+; 0 = IR_LOT_FIXED (Khối lượng cố định theo InpLots)
+; 1 = IR_LOT_RISK (Khối lượng tính tự động theo % rủi ro tài khoản tại điểm SL)
+
+InpLots=0.01
+; Số lot mở cho mỗi lệnh khi InpLotMode=0
+
+InpRiskPercent=0.25
+; Phần trăm rủi ro trên vốn (equity) cho mỗi lệnh khi InpLotMode=1 (0.25%)
+
+InpMaxLots=0.20
+; Trần khối lượng tối đa cho phép vào lệnh
+
+InpMaxSpreadPoints=600
+; Spread tối đa cho phép vào lệnh (600 points = 0.6 giá Vàng)
+
+InpMaxSpreadAtrRatio=0.0
+; Tỷ lệ Spread so với biến động ATR (0.0 = tắt kiểm tra tỷ lệ này)
+
+InpAbnormalAtrRatio=2.5
+; Lọc tin tức biến động mạnh (tạm dừng vào lệnh nếu ATR nến cao gấp 2.5 lần bình thường)
+
+InpAtrPeriod=14
+; Chu kỳ tính biến động thị trường ATR
+
+InpAtrBaselineBars=100
+; Số nến cơ sở để tính mức biến động ATR trung bình dài hạn
+
+InpMaxDailyLossPct=1.0
+; Mức lỗ tối đa trong ngày (1.0% vốn). Nếu chạm ngưỡng này, bot sẽ dừng giao dịch hết ngày
+
+InpMaxDrawdownPct=8.0
+; Mức sụt giảm tài khoản tối đa (8.0% vốn). Chạm ngưỡng này bot sẽ tự khóa an toàn
+
+InpMaxConsecutiveLosses=3
+; Số lệnh lỗ liên tiếp tối đa cho phép trước khi kích hoạt tạm dừng
+
+InpHaltOnBreach=true
+; true = Tự động đóng lệnh và ngừng chạy ngay khi chạm một trong các giới hạn rủi ro trên
+
+InpManualResetDrawdown=false
+; true = Cờ mở khóa lại trạng thái Drawdown bằng tay sau khi đã kiểm tra tài khoản
+
+; ------------------------------------------------------------------------------
+; 6. ĐIỂM DỪNG LỖ BAN ĐẦU (Initial Stop Loss)
+; ------------------------------------------------------------------------------
+InpSlMode=0
+; 0 = IR_SL_FIXED (Dừng lỗ cố định theo số points)
+; 1 = IR_SL_ATR (Dừng lỗ linh hoạt theo biến động ATR)
+
+InpInitialSlPoints=5000
+; Khoảng cách dừng lỗ ban đầu (5000 points = 5.0 giá Vàng)
+
+InpSlAtrMultiplier=3.0
+; Hệ số nhân ATR để tính SL nếu InpSlMode=1
+
+InpMinStopPoints=500
+; Khoảng cách dừng lỗ tối thiểu hợp lệ (500 points = 0.5 giá Vàng)
+
+InpMaxStopPoints=20000
+; Khoảng cách dừng lỗ tối đa hợp lệ (20000 points = 20 giá Vàng)
+
+; ------------------------------------------------------------------------------
+; 7. GỒNG LÃI & DỜI DỪNG LỖ THEO GIÁ (Trailing Stop & Profit Locking)
+; ------------------------------------------------------------------------------
+InpTrailMode=0
+; 0 = IR_TRAIL_FIXED (Dời SL đuổi theo giá theo khoảng cách cố định)
+; 1 = IR_TRAIL_ATR (Dời SL đuổi theo giá dựa theo độ giãn ATR)
+
+InpTrailStartPts=3000
+; Mức lợi nhuận tối thiểu để bắt đầu kích hoạt Trailing Stop (3000 points = lãi 3.0 giá Vàng)
+
+InpTrailDistancePts=2500
+; Khoảng cách duy trì giữa Stop Loss và giá thị trường (2500 points = 2.5 giá Vàng)
+
+InpTrailStepPts=500
+; Bước nhảy tối thiểu mỗi lần dời SL (500 points = 0.5 giá Vàng, tránh gửi lệnh liên tục)
+
+InpTrailAtrMultiplier=2.0
+; Hệ số nhân ATR nếu dùng InpTrailMode=1
+
+InpBreakEvenTriggerR=0.0
+; Điểm kích hoạt hòa vốn (Break-even). Đặt 0.0 để dời SL bám sát giá theo Trailing thuần túy
+
+InpBreakEvenBufferPts=100
+; Khoảng cộng thêm khi dời về hòa vốn để bù phí spread/commission (100 points = 0.1 giá)
+
+InpSafetyTpPoints=100000
+; Mức Take Profit an toàn tối đa (100000 points = 100 giá Vàng) đề phòng rớt mạng
+; Infinite Runner chủ yếu chốt lời tự động bằng Trailing Stop khi thị trường quay đầu

@@ -282,12 +282,12 @@ Kiểm tra thêm trên bản dist:
 - **Tài liệu:** [`INDICATOR_SPEC_PriceActionMTF.md`](price-action-mtf.md),
   [`REPAINT_AUDIT_PriceActionMTF.md`](price-action-mtf.md),
   [`BUFFER_CONTRACT_PriceActionMTF.md`](price-action-mtf.md).
-- **Contract:** 115 input + 4 input thời gian; 107 buffer = 12 render (plot 0–11) + 95 contract (12–106);
-  119 test vector.
+- **Contract:** 117 input (115 Pine-parity + 2 bridge `InpRr1Ea`/`InpRrMinEa` ở đầu danh sách);
+  107 buffer = 12 render (plot 0–11) + 95 contract (12–106); 119 test vector.
 - **Code:** `mt5/Include/PinePort/PriceActionMTFContract.mqh`, `mt5/Indicators/PinePort/PriceActionMTF.mq5`,
   `mt5/Scripts/PriceActionMTFContractTests.mq5`; compile 0 error/0 warning (111.728 và 114.290 byte).
-- **Validator:** `scripts/validate_pamtf.py` pass=34 fail=0.
-- **Trạng thái port:** `PORTABLE_WITH_DIFFERENCES` (D1–D10 + Q1–Q10 trong contract); tín hiệu chỉ trên nến
+- **Validator:** `scripts/validate_pamtf.py` pass=36 fail=0 (thêm 2 check cho bridge + sửa regex J9).
+- **Trạng thái port:** `PORTABLE_WITH_DIFFERENCES` (D1–D10 + Q1–Q11 trong contract); tín hiệu chỉ trên nến
   đã đóng.
 - **Đã chạy:** contract test 120/120 PASS (2026-10-28). **Chưa làm:** EA `NOT_IMPLEMENTED`; parity
   `BLOCKED`; indicator gắn chart chưa xác minh.
@@ -353,7 +353,7 @@ Kiểm tra thêm trên bản dist:
   `parity=BLOCKED` khi thiếu CSV reference thay vì tạo dữ liệu giả.
 - **Chưa làm:** chưa có CSV reference thật từ Pine; comparator `NOT_RUN` trên dữ liệu thật.
 
-Tham chiếu roadmap: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
+Tham chiếu roadmap: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../archive/v1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
 
 ## Pine ↔ MQL5 compatibility — Wonderwhales
 

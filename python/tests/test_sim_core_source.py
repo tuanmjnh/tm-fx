@@ -176,3 +176,16 @@ def test_dca_ea_keeps_zero_adds_disabled() -> None:
     assert "if(InpMaxDcaAdds<=0)" in text
     assert "g_last_fill_bar==bar_time" in text
     assert "SimRiskGuard" in text or "SimRiskGuard.mqh" in text
+
+
+def test_dca_summary_reports_cumulative_adds() -> None:
+    text = (REPO_ROOT / "mt5" / "Experts" / "DCALabEA.mq5").read_text(
+        encoding="utf-8"
+    )
+    assert "g_total_adds++;" in text
+    start = text.index('LogEvent("SUMMARY"')
+    summary = text[start : start + 800]
+    assert "g_total_adds" in summary
+    assert "basket_adds=%d" in summary
+    # The per-basket counter still drives add logic; only reporting changed.
+    assert "g_dca_adds=plan.add_index;" in text

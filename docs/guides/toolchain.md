@@ -62,6 +62,10 @@ phase cũ là ảnh chụp lịch sử, không phải invariant. Điều kiện 
 ## Chưa làm được ở môi trường này
 
 - Chạy `SimCoreTests` (123/0) và `SimPlanTests` (39/0) trong MT5: đã PASS ngày 2026-10-28.
-- Strategy Tester: 13/15 scenario đã chạy (3 `ww_*`, 10 runner/grid/DCA); 2 `plan_*`
-  `BLOCKED_PERFORMANCE`; contract test 6 indicator đã chạy **6/6 PASS** (547 check) ngày 2026-10-28.
+- Strategy Tester: 18/18 registry scenario đã chạy và có SUMMARY (`presets=6 scenarios=18`;
+  3 `ww_*`, 3 runner, 3 grid, 4 dca, 3 `plan_*`, 2 `pa_trendrider_*`); `plan_baseline`
+  và `plan_edge_tp3_stop_only` 0 trade là quirk `rr1 < rrMin` của source, không phải lỗi port;
+  `plan_rr2` (bridge `rr1=2.0`) cho 93 trade ảo, CSV kiểm toán PASS — xem [`../PROGRESS.md`](../PROGRESS.md) §58;
+  contract test 6 indicator **6/6 PASS**
+  (547 check) ngày 2026-10-28, `PriceActionMTF` chạy lại `pass=125 fail=0` ngày 2026-10-29.
 - Compile/test thành công không chứng minh hành vi runtime hay P&L; W8 vẫn là bước bắt buộc.

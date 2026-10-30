@@ -1150,13 +1150,22 @@ double PaRollingMax(const double &src[],const int total,const int end,const int 
 int PaMapHtfIndex(const datetime &htfCloseTime[],const int count,
                   const datetime chartOpenTime)
   {
+//--- htfCloseTime is chronological, so the answer is the last index <= time.
+   if(count<=0 || ArraySize(htfCloseTime)<count)
+      return(-1);
    int found=-1;
-   for(int k=0; k<count; k++)
+   int lo=0;
+   int hi=count-1;
+   while(lo<=hi)
      {
-      if(htfCloseTime[k]<=chartOpenTime)
-         found=k;
+      const int mid=lo+(hi-lo)/2;
+      if(htfCloseTime[mid]<=chartOpenTime)
+        {
+         found=mid;
+         lo=mid+1;
+        }
       else
-         break;
+         hi=mid-1;
      }
    return(found);
   }

@@ -1,7 +1,8 @@
 # ADR 0003 — Phạm vi execution chỉ tài khoản demo
 
 - **Ngày:** 2026-10-29
-- **Trạng thái:** Accepted
+- **Trạng thái:** Accepted; mục 1 và câu "không grid/DCA" ở mục 3 đã được thay bởi
+  [ADR 0004](0004-all-bots-demo-execution.md) (2026-10-30): mọi bot được execution đầy đủ trên demo.
 - **Thay thế một phần:** [ADR 0002](0002-execution-boundary.md) mục 1, 2 và 6. Các mục còn lại của
   ADR 0002 (không tài khoản live, không credential, không hứa hẹn lợi nhuận) vẫn hiệu lực.
 - **Bối cảnh:** chủ dự án yêu cầu bỏ quy tắc "chỉ tạo vị thế ảo, không gửi lệnh thật" và cho phép chạy

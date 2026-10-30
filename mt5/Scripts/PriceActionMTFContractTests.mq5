@@ -1136,6 +1136,38 @@ void RunJ()
    PaEngineStep(cfg,st,bar,10,out);
    Record("J8",out.mtfCtxDir==0 && out.mtfSetupDir==0
           && out.sigLong && out.block==PA_BLOCK_NONE,"neutral htf passes");
+
+   Record("J9",PaMapHtfIndex(htf,0,D'2024.01.02 12:00')==-1,"empty history");
+   Record("J10",PaMapHtfIndex(htf,3,D'2024.01.02 07:59')==-1,"before first close");
+   Record("J11",PaMapHtfIndex(htf,3,D'2024.01.02 23:59')==2,"after last close");
+
+   datetime dup[4];
+   dup[0]=D'2024.01.02 08:00';
+   dup[1]=D'2024.01.02 12:00';
+   dup[2]=D'2024.01.02 12:00';
+   dup[3]=D'2024.01.02 16:00';
+   Record("J12",PaMapHtfIndex(dup,4,D'2024.01.02 12:00')==2,"last duplicate wins");
+
+//--- Binary search must match the reference linear scan on sorted input.
+   datetime grid[64];
+   for(int k=0; k<64; k++)
+      grid[k]=D'2024.01.02 00:00'+(datetime)(k*37*60);
+   bool same=true;
+   for(int q=0; q<80; q++)
+     {
+      const datetime probe=D'2024.01.02 00:00'+(datetime)((q*29%68)*37*60);
+      int want=-1;
+      for(int k=0; k<64; k++)
+        {
+         if(grid[k]<=probe)
+            want=k;
+         else
+            break;
+        }
+      if(PaMapHtfIndex(grid,64,probe)!=want)
+         same=false;
+     }
+   Record("J13",same,"binary search equals linear scan");
   }
 
 //+------------------------------------------------------------------+

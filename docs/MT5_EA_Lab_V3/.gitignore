@@ -1,0 +1,26 @@
+# MetaTrader generated binaries and transient files
+*.ex5
+*.log
+*.opt
+*.tst
+*.dat
+*.hcc
+*.fxt
+
+# Test reports and runtime state (keep templates only)
+reports/runs/**
+!reports/templates/**
+MQL5/Files/**
+
+# Python tooling if added later
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+*.key
+*credentials*
+*password*

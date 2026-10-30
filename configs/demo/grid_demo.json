@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "ea": "GridDemoEA",
+  "version": "1.00",
+  "execution_mode": "DEMO_ONLY",
+  "allow_live_trading": false,
+  "description": "Grid demo execution (ADR 0004, defaults per ADR 0006): execution enabled by default so the bounded grid runs on demo immediately (InpMaxGridLevels), per-level volume cap, basket loss budget and a mandatory basket SL/TP. Demo account or Strategy Tester only; real/contest accounts are rejected at OnInit. Set InpEnableExecution=false for a dry-run comparison.",
+  "strategy": "grid",
+  "symbol": "XAUUSDm",
+  "timeframe": "M15",
+  "inputs": {
+    "InpEnableExecution": true,
+    "InpAllowedSymbols": "XAUUSD",
+    "InpMagicNumber": 25004001,
+    "InpMaxSlippagePoints": 30,
+    "InpKillSwitchFile": "GRID_DEMO_STOP.txt",
+    "InpCloseOnKillSwitch": true,
+    "InpEnableLog": true,
+    "InpLogFile": "grid_demo.csv",
+    "InpDebug": false,
+    "InpGridSide": 1,
+    "InpSpacingMode": 0,
+    "InpSpacingPoints": 300.0,
+    "InpAtrPeriod": 14,
+    "InpAtrMultiplier": 1.0,
+    "InpMaxGridLevels": 5,
+    "InpBaseVolume": 0.01,
+    "InpVolumeMultiplier": 1.5,
+    "InpMaxLevelVolume": 0.04,
+    "InpExitMode": 1,
+    "InpLevelTargetPoints": 300.0,
+    "InpBasketTargetPoints": 600.0,
+    "InpBasketStopPoints": 900.0,
+    "InpMaxSpreadPoints": 600.0,
+    "InpMaxExposure": 0.1,
+    "InpMaxBasketLossPct": 1.0,
+    "InpMaxDailyLossPct": 2.0,
+    "InpMaxDrawdownPct": 5.0,
+    "InpMaxConsecutiveLosses": 3,
+    "InpHaltOnBreach": true
+  },
+  "enum_map": {
+    "InpGridSide": {
+      "1": "GRID_DEMO_LONG"
+    },
+    "InpSpacingMode": {
+      "0": "SIM_GRID_FIXED_POINTS"
+    },
+    "InpExitMode": {
+      "1": "GRID_DEMO_EXIT_BASKET"
+    }
+  },
+  "assumptions": {
+    "account": "demo or Strategy Tester only; real/contest accounts are rejected at OnInit",
+    "position_model": "up to InpMaxGridLevels broker positions filtered by symbol and InpMagicNumber; one direction only, no hedging",
+    "volume": "level n volume = InpBaseVolume * InpVolumeMultiplier^(n-1), floored to the broker volume step and capped by InpMaxLevelVolume and InpMaxExposure",
+    "stops": "basket SL/TP are absolute prices derived from the live average entry; every leg carries them and they are re-asserted after each add",
+    "risk_budget": "at any time the loss of the whole basket at its stop must stay under InpMaxBasketLossPct of equity, otherwise the add is rejected",
+    "locks": "daily loss and drawdown halts flatten the basket and stop new entries; InpMaxConsecutiveLosses blocks the next basket",
+    "kill_switch": "create InpKillSwitchFile in MQL5/Files to close the basket and stop entries until restart",
+    "results": "demo execution is an operational check, not a performance or live-readiness claim"
+  }
+}

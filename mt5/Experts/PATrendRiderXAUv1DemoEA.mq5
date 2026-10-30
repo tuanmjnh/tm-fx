@@ -4,14 +4,15 @@
 //|                                                                  |
 //| Scope: docs/decisions/0003-demo-execution-scope.md.               |
 //| Demo or Strategy Tester accounts only; live/real accounts are     |
-//| rejected at OnInit. Dry-run is the default: orders are sent only  |
-//| when InpEnableExecution=true. One position, mandatory SL and TP,   |
+//| rejected at OnInit. Execution is enabled by default on demo        |
+//| (ADR 0006); set InpEnableExecution=false for a dry-run comparison. |
+//| One position, mandatory SL and TP,   |
 //| risk-budgeted volume, daily/drawdown locks and a kill-switch file. |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"
 #property description "Demo-only PA TrendRider XAU v1: guarded order execution, one position, SL/TP mandatory."
-#property description "Dry-run by default. Live accounts are rejected. See docs/decisions/0003-demo-execution-scope.md."
+#property description "Execution enabled by default (ADR 0006; set InpEnableExecution=false for dry-run). Demo/tester only, real accounts rejected. See docs/decisions/0004-all-bots-demo-execution.md."
 
 #include "../Include/Sim/SimLogger.mqh"
 #include "../Include/TrendRider/TRTypes.mqh"
@@ -30,7 +31,7 @@
 #include "../Include/Exec/ExecBroker.mqh"
 
 input group "Demo execution"
-input bool   InpEnableExecution        = false;               // false = dry-run, no orders
+input bool   InpEnableExecution        = true;                // false = dry-run, no orders (ADR 0006: true by default)
 input string InpAllowedSymbols         = "XAUUSD";            // prefix allow-list, comma separated
 input long   InpMagicNumber            = 25002001;
 input int    InpMaxSlippagePoints      = 30;                  // deviation for market orders
@@ -430,7 +431,7 @@ bool WriteStateFile(void)
       return(false);
      }
    FileWriteString(handle,"version=1\r\n");
-   FileWriteString(handle,"state="+g_state.Serialize()+"\r\n");
+   FileWriteString(handle,g_state.Serialize()+"\r\n");
    FileWriteString(handle,"ledger="+g_ledger.Serialize()+"\r\n");
    FileClose(handle);
    g_persist_dirty=false;

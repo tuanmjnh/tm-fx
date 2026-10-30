@@ -5,9 +5,11 @@ web-request, account and credential APIs, checks for placeholder markers and
 verifies the Track C layout and presets with the same fail-closed rules used by
 ``scripts/validate_sim_configs.py``.
 
-ADR 0003 allows trading APIs in exactly three demo-execution sources. Those
-files are still scanned for network, socket and credential APIs, and the demo
-guardrails are asserted separately by ``scripts/validate_demo_execution.py``.
+ADR 0004 allows trading APIs in the demo-execution sources only: the shared
+``mt5/Include/Exec`` modules plus one demo EA per strategy
+(``PATrendRiderXAUv1DemoEA``, ``GridDemoEA``, ``DCADemoEA``). Those files are
+still scanned for network, socket and credential APIs, and the demo guardrails
+are asserted separately by ``scripts/validate_demo_execution.py``.
 
 This script never compiles, never starts MetaTrader, never touches an account
 and never connects to a broker.
@@ -44,9 +46,23 @@ FORBIDDEN_API = re.compile(
 EXEC_SOURCES = {
     "mt5/Include/Exec/ExecGuard.mqh",
     "mt5/Include/Exec/ExecBroker.mqh",
+    "mt5/Include/Exec/ExecDemoCommon.mqh",
     "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5",
+    "mt5/Experts/GridDemoEA.mq5",
+    "mt5/Experts/DCADemoEA.mq5",
+    "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5",
     "mt5/Scripts/ExecGuardTests.mq5",
     "mt5/Scripts/ExecDemoProbe.mq5",
+    "mt5/Scripts/CloseDemoPosition.mq5",
+}
+
+#--- ADR 0004 + 0005: one demo EA per strategy. Each is checked for the guard
+#--- tokens that must survive a refactor.
+DEMO_EAS = {
+    "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5": "single_position",
+    "mt5/Experts/GridDemoEA.mq5": "bounded_grid",
+    "mt5/Experts/DCADemoEA.mq5": "bounded_dca",
+    "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5": "runner_trailing",
 }
 
 EXEC_FORBIDDEN_API = re.compile(
@@ -113,11 +129,17 @@ REQUIRED_FILES = (
     "mt5/Scripts/TrendRiderContractTests.mq5",
     "mt5/Include/Exec/ExecGuard.mqh",
     "mt5/Include/Exec/ExecBroker.mqh",
+    "mt5/Include/Exec/ExecDemoCommon.mqh",
     "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5",
+    "mt5/Experts/GridDemoEA.mq5",
+    "mt5/Experts/DCADemoEA.mq5",
     "mt5/Scripts/ExecGuardTests.mq5",
     "mt5/Scripts/ExecDemoProbe.mq5",
     "configs/demo/pa_trendrider_xau_demo.json",
+    "configs/demo/grid_demo.json",
+    "configs/demo/dca_demo.json",
     "docs/decisions/0003-demo-execution-scope.md",
+    "docs/decisions/0004-all-bots-demo-execution.md",
     "docs/guides/demo-execution.md",
     "scripts/validate_demo_execution.py",
 )
@@ -234,41 +256,108 @@ def check_exec_structure(root: Path) -> list[str]:
     demo_ea = root / "mt5" / "Experts" / "PATrendRiderXAUv1DemoEA.mq5"
     broker = root / "mt5" / "Include" / "Exec" / "ExecBroker.mqh"
     guard = root / "mt5" / "Include" / "Exec" / "ExecGuard.mqh"
+    common = root / "mt5" / "Include" / "Exec" / "ExecDemoCommon.mqh"
     tests = root / "mt5" / "Scripts" / "ExecGuardTests.mq5"
     probe = root / "mt5" / "Scripts" / "ExecDemoProbe.mq5"
 
-    for path in (demo_ea, broker, guard, tests, probe):
+    demo_eas = {relative: root / relative for relative in DEMO_EAS}
+    for path in (demo_ea, broker, guard, common, tests, probe, *demo_eas.values()):
         if not path.is_file():
             issues.append(f"missing {path.relative_to(root).as_posix()}")
     if issues:
         return issues
 
-    demo_text = demo_ea.read_text(encoding="utf-8")
-    required_demo = (
+    #--- Guard tokens every demo EA must keep: demo-only context gate, the
+    #--- execution switch (ADR 0006: default true), kill switch, symbol
+    #--- allow-list and ExecBroker routing.
+    required_all = (
         "ACCOUNT_TRADE_MODE",
         "MQLInfoInteger(MQL_TESTER)",
+        "TerminalInfoInteger(TERMINAL_TRADE_ALLOWED)",
         "ExecContextAllowed",
-        "ExecFindOwnPosition",
+        "ExecSymbolAllowed",
         "ExecOpenMarket",
-        "ExecModifyStops",
         "InpEnableExecution",
-        "InpTakeProfitR",
         "InpKillSwitchFile",
         "InpAllowedSymbols",
+        "AccountInfoDouble(ACCOUNT_EQUITY)",
     )
-    for token in required_demo:
-        if token not in demo_text:
-            issues.append(f"DemoEA missing guard token {token}")
-    if not re.search(r"InpEnableExecution\s*=\s*false", demo_text):
-        issues.append("DemoEA must default InpEnableExecution to false (dry-run)")
-    for token in (
-        "InpMaxGridLevels",
-        "InpMaxDcaAdds",
-        "InpVolumeMultiplier",
-        "InpAddVolumeMultiplier",
-    ):
-        if token in demo_text:
-            issues.append(f"DemoEA must not expose {token} (no grid/DCA in v1)")
+    #--- Strategy-specific bounded-basket guard tokens.
+    required_by_kind = {
+        "single_position": (
+            "ExecFindOwnPosition",
+            "ExecModifyStops",
+            "InpTakeProfitR",
+            "InpRiskPercent",
+            "InpMaxPositions",
+        ),
+        "bounded_grid": (
+            "ExecDemoBasketClose",
+            "ExecDemoBasketSetStops",
+            "ExecDemoBasketLossMoney",
+            "InpMaxGridLevels",
+            "InpMaxLevelVolume",
+            "InpMaxExposure",
+            "InpBasketStopPoints",
+            "InpMaxBasketLossPct",
+            "InpMaxConsecutiveLosses",
+        ),
+        "bounded_dca": (
+            "ExecDemoBasketClose",
+            "ExecDemoBasketSetStops",
+            "ExecDemoBasketLossMoney",
+            "InpMaxDcaAdds",
+            "InpMaxAddVolume",
+            "InpMaxExposure",
+            "InpBasketStopPoints",
+            "InpMaxBasketLossPct",
+            "InpMaxConsecutiveLosses",
+        ),
+        #--- ADR 0005: one runner position with a mandatory far safety TP and a
+        #--- monotonic trail anchored to the stored initial R.
+        "runner_trailing": (
+            "ExecFindOwnPosition",
+            "ExecModifyStops",
+            "InpSafetyTpPoints",
+            "InpBreakEvenTriggerR",
+            "InpRiskPercent",
+            "InpMaxDrawdownPct",
+            "InpMaxConsecutiveLosses",
+        ),
+    }
+    for relative, kind in DEMO_EAS.items():
+        text = (root / relative).read_text(encoding="utf-8")
+        for token in required_all + required_by_kind[kind]:
+            if token not in text:
+                issues.append(f"{relative}: missing guard token {token}")
+        if not re.search(r"InpEnableExecution\s*=\s*true", text):
+            issues.append(
+                f"{relative}: must default InpEnableExecution to true (ADR 0006)"
+            )
+        if not re.search(r"^\s*#include\s+\"[^\"]*ExecGuard\.mqh\"", text, re.M) and \
+           not re.search(r"^\s*#include\s+\"[^\"]*ExecBroker\.mqh\"", text, re.M) and \
+           not re.search(r"^\s*#include\s+\"[^\"]*ExecDemoCommon\.mqh\"", text, re.M):
+            issues.append(f"{relative}: must include the Exec guard/broker modules")
+        code = _code_only(text)
+        if "OrderSend" in code:
+            issues.append(f"{relative}: must route orders through ExecBroker, not OrderSend")
+        if "WebRequest" in code or "SocketCreate" in code:
+            issues.append(f"{relative}: must not open connections")
+
+    #--- The TrendRider EA keeps its single-position shape: no grid/DCA inputs.
+    tr_text = demo_ea.read_text(encoding="utf-8")
+    for token in ("InpMaxGridLevels", "InpMaxDcaAdds", "InpVolumeMultiplier",
+                  "InpAddVolumeMultiplier"):
+        if token in tr_text:
+            issues.append(f"PATrendRiderXAUv1DemoEA must not expose {token} (single position)")
+
+    #--- The basket helpers must stay a thin layer over ExecBroker.
+    common_code = _code_only(common.read_text(encoding="utf-8"))
+    if "OrderSend" in common_code:
+        issues.append("ExecDemoCommon must not call OrderSend directly")
+    for token in ("ExecClosePosition", "ExecModifyStops"):
+        if token not in common_code:
+            issues.append(f"ExecDemoCommon must route through {token}")
 
     if "OrderSend" not in broker.read_text(encoding="utf-8"):
         issues.append("ExecBroker must contain the guarded OrderSend call")
@@ -317,11 +406,17 @@ def check_exec_structure(root: Path) -> list[str]:
     if "ExecBroker.mqh" not in probe.read_text(encoding="utf-8"):
         issues.append("ExecDemoProbe must include ExecBroker.mqh")
     probe_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", probe_text)
-    demo_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", demo_text)
-    if probe_magic is None or demo_magic is None:
-        issues.append("Exec scope must declare an explicit magic in DemoEA and ExecDemoProbe")
-    elif probe_magic.group(1) == demo_magic.group(1):
-        issues.append("ExecDemoProbe magic must differ from the DemoEA magic")
+    demo_magics = {
+        relative: (re.search(r"InpMagicNumber\s*=\s*(\d+)",
+                             (root / relative).read_text(encoding="utf-8")) or [None, None])[1]
+        for relative in DEMO_EAS
+    }
+    if probe_magic is None:
+        issues.append("Exec scope must declare an explicit magic in ExecDemoProbe")
+    elif probe_magic.group(1) in set(demo_magics.values()):
+        issues.append("ExecDemoProbe magic must differ from every demo EA magic")
+    if len(set(demo_magics.values())) != len(demo_magics):
+        issues.append("each demo EA must use a distinct InpMagicNumber")
     return issues
 
 
@@ -353,16 +448,59 @@ def check_demo_presets(root: Path) -> list[str]:
         inputs = config.get("inputs")
         if not isinstance(inputs, dict):
             continue
-        if config.get("ea") != "PATrendRiderXAUv1DemoEA":
-            issues.append(f"{path.name}: demo presets must target PATrendRiderXAUv1DemoEA")
-        if inputs.get("InpEnableExecution") is not False:
-            issues.append(f"{path.name}: InpEnableExecution must default to false")
-        if float(inputs.get("InpTakeProfitR", 0.0)) <= 0.0:
-            issues.append(f"{path.name}: InpTakeProfitR must be positive")
-        if inputs.get("InpMaxPositions") != 1:
-            issues.append(f"{path.name}: InpMaxPositions must be 1")
+        ea = config.get("ea")
+        #--- ADR 0004: one demo EA per strategy; a simulation EA is never a
+        #--- demo preset target.
+        demo_eas = ("PATrendRiderXAUv1DemoEA", "GridDemoEA", "DCADemoEA",
+                    "InfiniteRunnerXAUV2DemoEA")
+        if ea not in demo_eas:
+            issues.append(
+                f"{path.name}: demo presets must target one of {list(demo_eas)}"
+            )
+        #--- ADR 0006: presets ship with execution enabled; a dry-run is an
+        #--- explicit InpEnableExecution=false override, not the default.
+        if inputs.get("InpEnableExecution") is not True:
+            issues.append(f"{path.name}: InpEnableExecution must default to true")
         if "XAUUSD" not in str(inputs.get("InpAllowedSymbols", "")):
             issues.append(f"{path.name}: InpAllowedSymbols must allow XAUUSD")
+        if float(inputs.get("InpMaxSpreadPoints", 0.0)) <= 0.0:
+            issues.append(f"{path.name}: InpMaxSpreadPoints must be positive")
+
+        if ea == "PATrendRiderXAUv1DemoEA":
+            if float(inputs.get("InpTakeProfitR", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpTakeProfitR must be positive")
+            if inputs.get("InpMaxPositions") != 1:
+                issues.append(f"{path.name}: InpMaxPositions must be 1")
+
+        if ea in ("GridDemoEA", "DCADemoEA"):
+            if float(inputs.get("InpBasketStopPoints", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpBasketStopPoints must be positive")
+            if float(inputs.get("InpMaxExposure", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpMaxExposure must be positive")
+            if float(inputs.get("InpMaxBasketLossPct", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpMaxBasketLossPct must be positive")
+            if inputs.get("InpHaltOnBreach") is not True:
+                issues.append(f"{path.name}: InpHaltOnBreach must be true")
+
+        if ea == "GridDemoEA":
+            levels = inputs.get("InpMaxGridLevels")
+            if not isinstance(levels, int) or not 1 <= levels <= 50:
+                issues.append(f"{path.name}: InpMaxGridLevels must be 1..50")
+
+        if ea == "DCADemoEA":
+            adds = inputs.get("InpMaxDcaAdds")
+            if not isinstance(adds, int) or not 0 <= adds <= 50:
+                issues.append(f"{path.name}: InpMaxDcaAdds must be 0..50")
+
+        #--- ADR 0005: the runner keeps a mandatory far safety TP and exactly
+        #--- one position.
+        if ea == "InfiniteRunnerXAUV2DemoEA":
+            if float(inputs.get("InpSafetyTpPoints", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpSafetyTpPoints must be positive")
+            if inputs.get("InpMaxPositions") != 1:
+                issues.append(f"{path.name}: InpMaxPositions must be 1")
+            if float(inputs.get("InpMinStopPoints", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpMinStopPoints must be positive")
     return issues
 
 

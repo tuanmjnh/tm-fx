@@ -1,0 +1,115 @@
+; ====================================================================
+; CAU HINH TESTER CHO DCADemoEA (XAUUSD / Vang)
+; Du an: MT5 EA & AI Lab (tm-fx)
+; File: docs/configurations/dca_demo.set
+; Chien luoc: Binh quan gia co gioi han va giap bao ve rui ro (Bounded DCA)
+; Quy uoc: Chi ho tro tai khoan DEMO va Strategy Tester (ADR 0003, ADR 0004)
+; ====================================================================
+
+; --------------------------------------------------------------------
+; 1. CAU HINH THUC THI VA AN TOAN TAI KHOAN (Demo Execution)
+; --------------------------------------------------------------------
+; InpEnableExecution: true = Kich hoat vao lenh that tren tai khoan Demo/Tester.
+;                     false = Chay che do Dry-run (chi ghi nhat ky log, khong vao lenh).
+InpEnableExecution=true
+
+; InpAllowedSymbols: Danh sach tien to cap tien/san pham cho phep (phan cach bang dau phay).
+;                    XAUUSD chap nhan ca XAUUSDm, XAUUSD.a, XAUUSD_i... tren cac san khac nhau.
+InpAllowedSymbols=XAUUSD
+
+; InpMagicNumber: Ma so nhan dien lenh duy nhat cua bot DCA nay.
+InpMagicNumber=25005001
+
+; InpMaxSlippagePoints: Do truot gia toi da chap nhan khi khop lenh (don vi: points).
+InpMaxSlippagePoints=30
+
+; InpKillSwitchFile: Ten file ngat khan cap trong thu muc MQL5/Files. Neu tao file nay, bot se dong basket va dung.
+InpKillSwitchFile=DCA_DEMO_STOP.txt
+
+; InpCloseOnKillSwitch: true = Dong toan bo cac vi the DCA khi xuat hien file Kill-switch.
+InpCloseOnKillSwitch=true
+
+; --------------------------------------------------------------------
+; 2. NHAT KY GIAO DICH (Journal)
+; --------------------------------------------------------------------
+; InpEnableLog: true = Ghi nhat ky chi tiet ra file CSV trong thu muc MQL5/Files.
+InpEnableLog=true
+
+; InpLogFile: Ten file luu nhat ky giao dich.
+InpLogFile=dca_demo.csv
+
+; InpDebug: true = In them thong tin debug chi tiet ra tab Experts trong terminal.
+InpDebug=false
+
+; --------------------------------------------------------------------
+; 3. THIET LAP CHIEN LUOC DCA (DCA Settings)
+; --------------------------------------------------------------------
+; InpDcaSide: Huong giao dich cua chien luoc DCA:
+;             1 = DCA_DEMO_LONG (Chi thuc hien DCA vi the Mua - BUY)
+;            -1 = DCA_DEMO_SHORT (Chi thuc hien DCA vi the Ban - SELL)
+InpDcaSide=1
+
+; InpBaseVolume: Khoi luong lot cho lenh vao ban dau (Real lots).
+InpBaseVolume=0.01
+
+; InpTriggerMode: Co che kich hoat nhoi them lenh DCA:
+;                 0 = SIM_DCA_PRICE_DISTANCE (Kich hoat khi gia di nguoc mot khoang points)
+;                 1 = SIM_DCA_BAR_COUNT (Kich hoat sau mot so cay nen nhat dinh)
+InpTriggerMode=0
+
+; InpDcaDistancePoints: Khoang cach gia di nguoc toi thieu de nhoi them lenh (points).
+;                       Tren Exness XAUUSDm (3 chu so thap phan): 300 points = 0.30 USD vang.
+;                       Co the nang len 1000 - 1500 points neu danh khung lon.
+InpDcaDistancePoints=300.0
+
+; InpBarsBetweenAdds: So cay nen toi thieu giua cac lan nhoi lenh (ap dung khi InpTriggerMode=1).
+InpBarsBetweenAdds=5
+
+; InpMaxDcaAdds: So lan nhoi them lenh toi da (0 = chi danh 1 lenh ban dau, khong nhoi).
+;                DAY LA GIOI HAN CUNG, TUYET DOI KHONG NHOI VO TOI VA (khong phai martingale vo han).
+InpMaxDcaAdds=3
+
+; InpAddVolumeMultiplier: He so nhan khoi luong cho cac lan nhoi (1.0 = lot bang nhau, 1.5 = nhan 1.5).
+InpAddVolumeMultiplier=1.5
+
+; InpMaxAddVolume: Tran khoi luong toi da cho mot lenh nhoi (chong phong to lot).
+InpMaxAddVolume=0.04
+
+; --------------------------------------------------------------------
+; 4. THOAT LENH VA CHOT LOI / CAT LO GIO LENH (Exit Settings)
+; --------------------------------------------------------------------
+; InpBasketTargetPoints: Muc chot loi cho toan bo gio lenh tinh tu gia trung binh (points).
+;                        600 points tren XAUUSDm = 0.60 USD vang.
+InpBasketTargetPoints=600.0
+
+; InpBasketStopPoints: MUC CAT LO BAT BUOC (Mandatory Basket Stop) tinh tu gia trung binh (points).
+;                      900 points tren XAUUSDm = 0.90 USD vang.
+;                      Moi gio lenh DCA bat buoc phai co muc dung lo de bao ve tai khoan.
+InpBasketStopPoints=900.0
+
+; --------------------------------------------------------------------
+; 5. GIAP BAO VE RUI RO (RiskGuard Settings)
+; --------------------------------------------------------------------
+; InpMaxSpreadPoints: Do gian spread toi da cho phep nhoi them lenh (points).
+;                     Khuyen nghi: 600 points tren Exness XAUUSDm.
+InpMaxSpreadPoints=600.0
+
+; InpMaxExposure: Tong khoi luong lot toi da cua tat ca cac lenh DCA cong lai.
+;                 Vi du: 0.10 lot (neu vuot qua se bi chan khong cho nhoi them).
+InpMaxExposure=0.10
+
+; InpMaxBasketLossPct: Muc lo toi da cho phep cua gio lenh tinh theo % von tai khoan (Equity %).
+;                      1.0% = Neu gio lenh cham muc lo 1% tai khoan thi lap tuc dong gio cat lo.
+InpMaxBasketLossPct=1.0
+
+; InpMaxDailyLossPct: Gioi han thua lo toi da trong ngay (%). 0 = tat.
+InpMaxDailyLossPct=2.0
+
+; InpMaxDrawdownPct: Muc sut giam tai khoan toi da cho phep (% Drawdown). 0 = tat.
+InpMaxDrawdownPct=5.0
+
+; InpMaxConsecutiveLosses: So lan dong gio lenh bi lo lien tiep toi da truoc khi dung bot.
+InpMaxConsecutiveLosses=3
+
+; InpHaltOnBreach: true = Dung toan bo bot neu vi pham bat ky quy tac rui ro nao o tren.
+InpHaltOnBreach=true

@@ -5,8 +5,9 @@
   Phase 1–4 Track B cho LongKaco VSA, TM Fusion Zones và Price Action MTF (spec, audit, contract, indicator,
   test script). Đã compile cả chín file MQL5 và chạy Python tests. **Chưa chạy** test script MQL5,
   indicator/EA runtime, Strategy Tester hoặc parity thật.
-- **Nguồn roadmap:** [`mt5-ea-ai-simulation-pack/ROADMAP_MT5_EA_LAB.md`](mt5-ea-ai-simulation-pack/ROADMAP_MT5_EA_LAB.md)
-  và [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
+- **Nguồn roadmap:** [`archive/v1/mt5-ea-ai-simulation-pack/ROADMAP_MT5_EA_LAB.md`](archive/v1/mt5-ea-ai-simulation-pack/ROADMAP_MT5_EA_LAB.md)
+  và [`archive/v1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](archive/v1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
+  *(2026-10-29: bộ tài liệu v1 đã chuyển vào `docs/archive/v1/`; bộ hiện hành ở [`v2/`](v2/README.md).)*
 - **Ranh giới:** SIMULATION_ONLY. Không có `OrderSend`, `CTrade`, `MqlTradeRequest` hoặc API gửi lệnh thật.
   *(Cập nhật 2026-10-29: ADR 0003 thay điều khoản này **riêng cho tài khoản demo / Strategy Tester** —
   xem §43–§46. Live/real vẫn bị cấm, simulation EAs vẫn SIMULATION_ONLY.)*
@@ -100,7 +101,7 @@ Không đọc hoặc ghi thông tin tài khoản môi giới, credential hay d�
 | MetaEditor compile `Indicators/PinePort/Wonderwhales.mq5` | 1 (exit code) | Log UTF-16: `Result: 0 errors, 0 warnings, 981 ms elapsed`; `.ex5` 22.256 byte |
 | MetaEditor compile `Scripts/WonderwhalesContractTests.mq5` | 1 (exit code) | Log UTF-16: `Result: 0 errors, 0 warnings, 780 ms elapsed`; `.ex5` 12.846 byte |
 | MetaEditor compile `Experts/PineSignalLabEA.mq5` | 1 (exit code) | Log UTF-16: `Result: 0 errors, 0 warnings, 1024 ms elapsed`; `.ex5` 29.950 byte; tự thêm `tester_indicator "PinePort\Wonderwhales"` |
-| Quét `OrderSend|CTrade|MqlTradeRequest|PositionOpen|WebRequest|Socket|Password` trong 4 file nguồn mới | 1 (không match) | `forbidden-api-scan: no matches` |
+| Quét `OrderSend\|CTrade\|MqlTradeRequest\|PositionOpen\|WebRequest\|Socket\|Password` trong 4 file nguồn mới | 1 (không match) | `forbidden-api-scan: no matches` |
 | `pytest python/tests/test_pine_parity.py -q` | 0 | `25 passed in 4.17s` |
 | `pytest python/tests/test_signal_audit.py -q` | 0 | `10 passed in 3.51s` |
 | `pytest -q` (toàn repo) | 0 | `233 passed in 12.70s` |
@@ -1330,7 +1331,7 @@ công, không có tuyên bố runtime sai.
 | Compile 22 `.mq5` | Tự động, PASS | `build-mql5.ps1` 0 errors/0 warnings |
 | Static scan API/placeholder | Tự động, PASS | `validate-project.py` checks=9 fail=0 |
 | Python tests | Tự động, PASS | 314 passed |
-| `SimCoreTests` trong MT5 | **Thủ công, `NOT_RUN`** | Chưa có dòng `TEST|RESULT|ALL_PASS` thật |
+| `SimCoreTests` trong MT5 | **Thủ công, `NOT_RUN`** | Chưa có dòng `TEST\|RESULT\|ALL_PASS` thật |
 | Strategy Tester 10 scenario | **Thủ công, `NOT_RUN`** | Chưa có report trong `reports/strategy-tester/` |
 | Audit CSV thật | **Thủ công, `NOT_RUN`** | Chưa có CSV runtime |
 
@@ -1404,7 +1405,7 @@ Zones dùng `POS_SIDE`/adoption. Gộp hai nguồn này vào EA plan chung sẽ 
 | Preset/validator | PASS | `validate_sim_configs.py` → `checked=5 fail=0`; snapshot PinePlan + project ghi mới |
 | Static project scan | PASS | `validate-project.py` → `checks=10 fail=0` (43 source) |
 | Python tests | PASS | `pytest -q` → `324 passed` |
-| `SimPlanTests` trong MT5 | **PASS runtime** | `TEST|RESULT|ALL_PASS|pass=39 fail=0|suite=sim_plan` ngày 2026-10-28 18:41 (xem mục 37) |
+| `SimPlanTests` trong MT5 | **PASS runtime** | `TEST\|RESULT\|ALL_PASS\|pass=39 fail=0\|suite=sim_plan` ngày 2026-10-28 18:41 (xem mục 37) |
 | `PinePlanSimEA` trong Strategy Tester | **NOT_RUN** | Chưa có report/CSV runtime |
 
 **Giới hạn:** iCustom dùng default input của indicator; plan có thể lỗi thời so với giá; không mô phỏng
@@ -2647,3 +2648,1052 @@ tick thật từ server; hai thứ độc lập và Strategy Tester không ảnh
 - `mql_trade_allowed=1` chứng minh quyền phía terminal; phía server (fill/requote/slippage) đã có bằng
   chứng probe ngày 2026-10-29 (`reference/release.md` mục 16), lần `ENTRY` thật vẫn là bằng chứng cuối.
 - 2 scenario `plan_*` vẫn `BLOCKED_PERFORMANCE`; parity Track B vẫn `BLOCKED` (thiếu CSV reference).
+
+## 53. Tái cấu trúc tài liệu v1 → v2 — 2026-10-29
+
+### 53.1 Yêu cầu
+
+Đọc pack `docs/MT5_EA_Lab_v2/`, cập nhật thông tin PA_TrendRider (pack viết khi source còn `UNKNOWN`),
+xây dựng lại bộ tài liệu hoàn chỉnh và chuyển tài liệu v1 vào thư mục backup.
+
+### 53.2 Thay đổi
+
+- Chuyển vào archive: `MASTER_ROADMAP.md`, `ROADMAP_MT5_EA_AI_LAB.md`, `PROMPT_AI_IMPLEMENT_ROADMAP.md`,
+  hai tài liệu PA_TrendRider tiếng Việt, `phase-reports/`, `MT5_AI_Roadmaps/`,
+  `mt5-ea-ai-simulation-pack/`, `pine-to-mt5-pack/` → `docs/archive/v1/`; pack kế hoạch v2 →
+  `docs/archive/planning-inputs/MT5_EA_Lab_v2/`. Nội dung giữ nguyên, chỉ đổi vị trí.
+- Tạo `docs/archive/README.md` mô tả từng nhóm tài liệu lưu trữ.
+- Tạo bộ `docs/v2/` gồm 17 file: README, ROADMAP, PROMPT_AI_IMPLEMENT, ENVIRONMENT, INSTALL_AND_TEST,
+  CONFIGURATION, RISK_MODEL, EXECUTION_AND_SAFETY, TEST_REPORT, EVIDENCE, GITHUB_AUDIT, TROUBLESHOOTING,
+  BACKLOG_AI, DECISIONS_REQUIRED và 3 tài liệu chiến lược trong `STRATEGIES/`.
+- Viết lại `docs/README.md` thành chỉ mục tổng; tạo `docs/MASTER_ROADMAP.md` mới (bản v2), bản v1
+  nằm ở archive.
+- Sửa toàn bộ liên kết trỏ tới tài liệu đã chuyển: `guides/install-and-test.md`,
+  `reference/architecture.md`, `reference/pipeline.md`, `reference/simulation.md`,
+  `indicators/README.md`, `indicators/wonderwhales.md`, `README.md` gốc, `PROGRESS.md`.
+- Sửa đường dẫn sai trong `docs/v2/STRATEGIES/*` (thiếu một cấp `../` khi trỏ ra khỏi `v2/`).
+
+### 53.3 Bằng chứng
+
+- `validate-project.py`: `SUMMARY: checks=14 fail=0` (exit 0).
+- `validate_demo_execution.py`: `SUMMARY: checks=8 fail=0` (exit 0).
+- `pytest -q`: `372 passed in 15.13s`.
+- Kiểm tra link tương đối trong `docs/` (trừ archive) + README gốc: 0 liên kết hỏng; các link
+  `file:///.../tm-trading/...` trỏ đúng file Pine bên ngoài repo.
+- Không chạy compile MQL5, không chạy Strategy Tester, không mở terminal trong mục này — thay đổi chỉ là
+  tài liệu. Các số liệu tester/demo trích từ bằng chứng đã có, giữ nguyên ngày và đường dẫn gốc.
+
+### 53.4 Còn mở
+
+- GitHub audit vẫn `PARTIAL`: chỉ có shortlist 7 repo, chưa ghi commit SHA/đọc license gốc.
+- DCA/Grid demo execution vẫn `BLOCKED_PENDING_ADR` (ADR 0003 điểm 3 và 7).
+- DemoEA live vẫn chưa có `ENTRY` do chiến lược; trạng thái giữ `WAITING_FOR_SETUP`.
+
+## 54. P3 — Sửa lỗi báo cáo DCA `adds=0` và `state=state=` — 2026-10-29
+
+### 54.1 Thay đổi
+
+- `mt5/Experts/DCALabEA.mq5`: thêm `g_total_adds` cộng dồn toàn run. SUMMARY có thêm trường
+  `basket_adds=`; `adds=` giờ là tổng add. Logic add/risk và counter theo-basket `g_dca_adds` giữ
+  nguyên, nên hành vi giao dịch không đổi.
+- `mt5/Experts/PATrendRiderXAUv1DemoEA.mq5`: `WriteStateFile` ghi thẳng `g_state.Serialize()`,
+  bỏ tiền tố `state=` bị ghép hai lần. Đường `RestoreStateFile` giữ nguyên nên file cũ vẫn đọc được.
+- Thêm test hồi quy tĩnh: `python/tests/test_sim_core_source.py::test_dca_summary_reports_cumulative_adds`
+  và `python/tests/test_demo_execution.py::test_demo_state_file_has_single_state_prefix`.
+- Cập nhật `docs/v2/STRATEGIES/DCA_EA.md`, `docs/v2/TROUBLESHOOTING.md`, `docs/v2/DECISIONS_REQUIRED.md`,
+  `docs/v2/TEST_REPORT.md`, `docs/v2/ROADMAP.md`, `docs/MASTER_ROADMAP.md`,
+  `docs/reference/simulation.md`.
+
+### 54.2 Bằng chứng
+
+- Compile `DCALabEA.mq5`: `Result: 0 errors, 0 warnings` (`reports/build/DCALabEA_fix.log`), `.ex5` 47,916 bytes.
+- Compile `PATrendRiderXAUv1DemoEA.mq5`: `Result: 0 errors, 0 warnings`
+  (`reports/build/PATrendRiderXAUv1DemoEA_fix.log`), `.ex5` 122,288 bytes.
+- `pytest -q python/tests/test_sim_core_source.py python/tests/test_demo_execution.py`: `29 passed`.
+- `pytest -q` toàn bộ: `374 passed in 14.76s` (2026-10-29).
+- `.ex5` DCA mới đã copy vào `<Data Folder/MQL5/Experts>` (sha256 khớp file build).
+- Runtime Strategy Tester: `NOT_RUN` — terminal demo đang mở phiên (tài khoản demo, XAUUSDm M5);
+  chạy tester với `ShutdownTerminal=1` sẽ đóng phiên của người dùng. Không tuyên bố runtime PASS.
+- CSV DCA cũ vẫn ghi `adds=0`; đó là bằng chứng lịch sử, không ghi lại.
+
+### 54.3 Còn mở
+
+- Chạy lại 4 scenario `dca_*` khi terminal demo đóng để xác nhận SUMMARY mới; khi đó cập nhật
+  `TEST_REPORT` từ `NOT_RUN` sang số liệu thật.
+- Kiểm tra file state mới sau một phiên DemoEA thật (hiện chỉ có test tĩnh).
+
+## 55. v2 P0/P1/P2 — kiểm tra demo, GitHub audit, chặn tối ưu plan_* — 2026-10-29
+
+### 55.1 P0 — trạng thái demo (read-only)
+
+- Terminal demo đang chạy build 6292, tài khoản `464140826`, chart `XAUUSDm,M5`, EA
+  `PATrendRiderXAUv1DemoEA` nạp lúc 18:23 từ `reports/build/demo-arm/startup.ini` +
+  `pa_trendrider_demo_live.set`.
+- Journal `MQL5/Files/pa_trendrider_demo.csv`: 172 dòng đến bar 2026-10-29 12:10 (giờ server).
+  Sự kiện: `RISK` 103, `REGIME` 20, `BOS` 18, `INIT` 15, `SUMMARY` 14, `KILL` 1, `STATE` 1;
+  **0 `ENTRY`, 0 `EXIT`**. Block chính: `bias_unknown|regime=RANGE`, `bos_against_bias`.
+- State file vẫn ở dạng cũ `state=state=WAITING_FOR_SETUP;transitions=5` do binary nạp lúc 18:23.
+  `.ex5` mới đã deploy 19:07 nhưng EA đang chạy không tự nạp lại; không gỡ EA của người dùng.
+- Kết luận P0: chưa có bằng chứng `ENTRY` chiến lược. Không thay đổi gate, không gửi lệnh.
+
+### 55.2 P1 — GitHub audit
+
+- Hoàn tất ở mức metadata cho 7/7 repo: HEAD SHA default branch + license file + SPDX + dòng đầu
+  license. Dữ liệu thô `reports/build/github_audit_meta.json`.
+- 6 repo `REFERENCE_ONLY` (1 GPL-3.0, 5 MIT); `AlexKu111/GridBot-Mql5` không có license → `REJECT`.
+  Không repo nào `USE`; không copy dòng code nào.
+- Source review + build/test của repo ngoài: `NOT_RUN`, chỉ bắt buộc nếu đổi sang `USE`.
+- Cập nhật `docs/v2/GITHUB_AUDIT.md`, `ROADMAP.md`, `MASTER_ROADMAP.md`, `DECISIONS_REQUIRED.md`,
+  `docs/v2/README.md`, `EVIDENCE.md`.
+
+### 55.3 P2 — tối ưu `PriceActionMTF` cho `plan_*`: `BLOCKED_RUNTIME`
+
+- Không chạy được Strategy Tester vì terminal demo đang giữ phiên; chạy `/config` sẽ đóng phiên
+  (`ShutdownTerminal=1`). Không có bản MT5 thứ hai để chạy song song.
+- Đã xác định hotspot bằng đọc code (không phải profile thật):
+  `PriceActionMTF.mq5:701` full replay mỗi bar; `PaMapHtfIndex` quét tuyến tính 0..3000 mỗi lần map
+  (`PriceActionMTFContract.mqh:1150`).
+- **Không sửa code** trong mục này: thay đổi chỉ có thể chứng minh bằng contract test + tester, cả hai
+  đều cần terminal. Sửa rồi tuyên bố "nhanh hơn" sẽ vi phạm quy tắc bằng chứng.
+- Điều kiện mở lại: terminal rảnh → chạy `PriceActionMTFContractTests` baseline → tối ưu → chạy lại
+  contract test → chạy 2 scenario `plan_*` và ghi SUMMARY.
+
+### 55.4 Gate
+
+- `validate-project.py`: `checks=14 fail=0`.
+- `validate_demo_execution.py`: `checks=8 fail=0`.
+- `pytest -q`: `374 passed in 13.62s`.
+- Không compile lại trong mục 55 (code không đổi); compile của P3 đã ghi ở §54.
+
+## 56. Runtime P3 sau khi đóng terminal demo — 2026-10-29
+
+### 56.1 Bối cảnh
+
+- Người dùng yêu cầu đóng terminal demo rồi chạy lại. Terminal đóng bằng `CloseMainWindow()`
+  (không kill process, không đụng file người dùng); sau đó không còn `terminal64.exe`/`metatester64.exe`.
+- Phát hiện thêm một lỗi thao tác: `ExpertParameters=<name>.set` được resolve từ
+  `MQL5\Profiles\Tester\`, không phải `reports/build/tester-sets/`. Sau lần cài lại MT5, thư mục này
+  trống nên lần chạy DCA đầu tiên dùng input mặc định (`config_hash=5AEA1AD2`, 0 entry,
+  `spread_exceeded`). Đã copy preset vào đúng chỗ và ghi vào `TROUBLESHOOTING.md` §6.
+
+### 56.2 DCA `dca_baseline` — PASS
+
+- Preset `dca_baseline.set` (sha256 trùng `reports/build/tester-sets/`), `XAUUSDm` M15,
+  2026.01.05 → 2026.10.01, model 1-min OHLC.
+- CSV 28 610 dòng, mọi dòng `config_hash=3F1C96B9`.
+- SUMMARY: `entries=11012|adds=2|basket_adds=0|closed=11014|baskets=11012|open=0|realized=-497.06|max_dd=5.0023|blocks=6581|halted=HALTED`.
+- Hai dòng `DCA_ADD`: 2026.02.25 18:15 (`add=1`, vol 0.15, trigger 5207.013) và 18:30 (`add=2`,
+  vol 0.225, trigger 5206.930). Số basket/net/DD/block trùng run 2026-10-28 → xác nhận thay đổi chỉ ở
+  báo cáo, không đổi hành vi.
+- Bằng chứng: `reports/build/tester-reports/dca_baseline/sim_dca_baseline.csv` + `tester_dca_baseline.htm`.
+
+### 56.3 DemoEA state file — PASS
+
+- Scenario `pa_trendrider_demo_exec` (`InpEnableExecution=true`, `InpPersistState=true`,
+  `InpResetStateOnInit=true`, magic 25002001), `XAUUSDm` M5, 2026.01.05 → 2026.10.01.
+- State file tester: `version=1` / `state=WAITING_FOR_SETUP;transitions=92` — **một** tiền tố `state=`,
+  hết `state=state=`.
+- Log 55 489 dòng, `config_hash=6B439450`: `RISK` 46 561, `BOS` 7 436, `REGIME` 1 310, `STATE` 90,
+  `TRAIL` 33, `ENTRY` 28, `EXIT` 28. SUMMARY:
+  `net=74.77|balance=5074.77|drawdown_pct=0.3123|state=WAITING_FOR_SETUP|transitions=92|kill_switch=0`.
+- Đây là dữ liệu tester, **không** phải live; không dùng để kết luận lợi nhuận.
+- Bằng chứng: `reports/build/tester-reports/pa_trendrider_demo_exec/` (CSV, state, htm, png).
+
+### 56.4 Docs và gate
+
+- Cập nhật `TEST_REPORT.md` §8 (bảng P3 + số liệu), `DCA_EA.md` §5/§6, `TROUBLESHOOTING.md` §6
+  (thêm mục preset và single-instance), `DECISIONS_REQUIRED.md` §6/§7, `ROADMAP.md` P3,
+  `MASTER_ROADMAP.md`, `reference/simulation.md` §8.
+- Code không đổi trong mục này; không compile lại. Gate chạy lại ở §56.5.
+
+### 56.5 Trạng thái mở
+
+- P2 `plan_*`/`PriceActionMTF`: terminal đã rảnh nhưng **chưa** chạy đo lại; vẫn `BLOCKED_RUNTIME`
+  cho tới khi có lần đo mới. Bước tiếp theo: chạy `diag_plan_1m` lấy thời gian nền, rồi mới quyết
+  định sửa `PaMapHtfIndex`/replay.
+- P0 `ENTRY` live trên demo: vẫn chưa có; phiên live 2026-10-29 chỉ có block `bias_unknown`.
+- Grid/DCA demo execution: vẫn `BLOCKED_PENDING_ADR` (ADR 0003).
+
+## 57. v2 P2 — tối ưu `PriceActionMTF`, mở `plan_*` trong tester — 2026-10-29
+
+### 57.1 Bối cảnh
+
+- Roadmap v2 P2 yêu cầu tối ưu `PriceActionMTF` để 2 scenario `plan_*` chạy hết 9 tháng trong
+  Strategy Tester. Trước đó trạng thái là `BLOCKED_PERFORMANCE`/`BLOCKED_RUNTIME` vì terminal demo
+  đang mở.
+- Terminal đã đóng sau §56 nên lần này chạy được headless. Ràng buộc: **không** đổi hành vi tín hiệu;
+  mọi thay đổi hiệu năng phải chứng minh tương đương số học và chạy lại contract test.
+
+### 57.2 Đo nền (trước tối ưu)
+
+- Scenario `diag_plan_1m` (XAUUSDm M15, 2026.01.05 → 2026.02.04, 2 000 lần gọi, 25 715 nến).
+- Log `PAMTF|PROF`: `pass1=36181ms prep=21743ms replay=95390ms total=153313ms`, wall ~165 s.
+- Hotspot: full replay engine mỗi nến + `PaMapHtfIndex` quét tuyến tính + `CopyRates(0,3000)` trượt
+  cửa sổ buộc tính lại EMA.
+
+### 57.3 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Include/PinePort/PriceActionMTFContract.mqh` | `PaMapHtfIndex`: quét tuyến tính → binary search trên `closeTime` đã sắp xếp |
+| `mt5/Indicators/PinePort/PriceActionMTF.mq5` | `PA_REPLAY_INCREMENTAL 1`: giữ `PaEngineState` của nến đóng cuối, chỉ replay nến mới; guard hợp lệ = cùng `bar time` **và** cùng `close`, nếu lệch thì full replay |
+| `mt5/Indicators/PinePort/PriceActionMTF.mq5` | Cache HTF append-only (`g_ctxCloseT/g_setupCloseT`, `PaAppendHtfCache`) + `PA_HTF_WINDOW 3000`: chỉ thêm nến HTF mới đóng, EMA luôn trên đúng 3000 nến gần nhất (giữ nguyên cửa sổ cũ) |
+
+- Cả hai `#define` giữ nhánh `0` để A/B; không có dead code đo đạc nào còn lại trong source.
+
+### 57.4 Đo lại và chứng minh tương đương
+
+- Cùng `diag_plan_1m`: `pass1=31243ms prep=25ms replay=67ms total=31335ms`, wall ~41 s
+  (153 313 ms → 31 335 ms, ~4.9×; phần replay 95 390 ms → 67 ms).
+- Checksum nội bộ trên 18 buffer (500 nến cuối, in mỗi 200 lần gọi) **giống nhau** giữa full replay và
+  incremental ở cả ba mốc: 1600 → `3815744811.104`, 1800 → `3964751555.199`,
+  2000 → `3760455708.970`.
+- A/B `PA_HTF_WINDOW 3000` vs EMA toàn bộ lịch sử: checksum giống nhau ở cả ba mốc; chọn 3000 để giữ
+  đúng ngữ nghĩa `CopyRates(0,3000)` cũ.
+- Sau khi gỡ instrumentation: compile `0 errors, 0 warnings` (`deploy_pineport.ps1 -Apply -Force`),
+  `PriceActionMTFContractTests` → `TEST|RESULT|ALL_PASS|pass=125 fail=0|contract=1.0.0` (21:40:27).
+
+### 57.5 `plan_*` toàn kỳ 9 tháng — PASS, 0 trade
+
+| Scenario | Wall | `config_hash` | SUMMARY |
+|---|---:|---|---|
+| `plan_baseline` | 389.9 s | `A529A48A` | `entries=0\|rejected=0\|trades=0\|wins=0\|losses=0\|flats=0\|net=0.00\|realized=0.00\|max_dd=0.0000\|blocks=0\|halted=ACTIVE` |
+| `plan_edge_tp3_stop_only` | 409.8 s | `7DA9E7C9` | giống hệt |
+
+- Cả hai chạy đủ 2026.01.05 → 2026.10.01; dòng `SUMMARY` ở bar `2026.09.30 23:45`. CSV chỉ có
+  `INIT` + `SUMMARY`, không có dòng trade.
+- Bằng chứng: `reports/build/tester-reports/plan_baseline/` và
+  `reports/build/tester-reports/plan_edge_tp3_stop_only/` (CSV, `tester_*.htm`, png). Chạy lại bằng
+  `reports/build/tester-run/run_tester.ps1 -Scenario <name>` (script mới, archive ngay sau mỗi run để
+  không mất CSV khi agent dọn `MQL5\Files`).
+
+### 57.6 Vì sao 0 trade — xác nhận runtime, không sửa
+
+- Chẩn đoán tạm thời trong indicator (đã gỡ): `plan_invalid=25 714/25 715` nến, trong khi
+  `dir_up=15 763`, `dir_dn=9 950`, `atr_ok=25 701`, `sl_ok=25 700`, `score=14..87`. Mọi gate khác đạt;
+  chỉ `rrOk` chặn.
+- Nguyên nhân: source Pine mặc định `pa_rr1 = 1.0`, `pa_rrMin = 1.5` → `rrOk = (rr1 >= rrMin)` luôn
+  false → `plan.valid = false` → không bao giờ có signal. Đây là quirk của source, đã ghi ở
+  [`indicators/price-action-mtf.md`](indicators/price-action-mtf.md) §9 và decision P9.
+- **Không** sửa `rr1`/`rrMin` trong code: làm vậy là đổi chiến lược. Muốn có trade phải đổi cấu hình
+  (`rr1 >= rrMin`, ví dụ `rr1=2.0`, hoặc `rrMin=0`) và chạy scenario mới.
+
+### 57.7 Gate
+
+- `validate-project.py`: `SUMMARY: checks=14 fail=0`.
+- `validate_demo_execution.py`: `SUMMARY: checks=8 fail=0`.
+- `pytest -q`: `374 passed in 15.31s`.
+- Compile: 30 file `.mq5`, tất cả `0 errors, 0 warnings`.
+
+### 57.8 Docs
+
+- `docs/v2/TEST_REPORT.md`: thêm §7.2b `plan_*` + dòng tổng hợp.
+- `docs/v2/EVIDENCE.md`: thêm 5 dòng bằng chứng và §2.7.
+- `docs/v2/ROADMAP.md`: P2 → DONE kèm số đo.
+- `docs/v2/README.md`: bảng trạng thái có dòng `plan_*`/`PriceActionMTF`.
+- `docs/guides/strategy-tester.md`: §8 + §9.2 viết lại (PASS 0 trade), bỏ `BLOCKED_PERFORMANCE`.
+- `docs/guides/install-and-test.md`, `docs/guides/toolchain.md`: 15/15 scenario.
+- `docs/indicators/price-action-mtf.md`: §7 (bar policy) + §7.3 (bảng đo, checksum, cache HTF).
+
+### 57.9 Trạng thái mở
+
+- P0 `ENTRY` live trên demo: vẫn chưa có (regime `RANGE`/`bias_unknown`).
+- Grid/DCA demo execution: vẫn `BLOCKED_PENDING_ADR` (ADR 0003).
+- Parity Pine ↔ MQL5 Track B: vẫn `BLOCKED` (thiếu CSV reference từ TradingView).
+- Muốn `plan_*` có trade: tạo scenario cấu hình `rr1 >= rrMin`, không sửa code. **Đã đóng ở §58**
+  (`plan_rr2`, 93 trade ảo, CSV kiểm toán PASS).
+
+## 58. v2 P2 follow-up — `plan_rr2`: `plan_*` có trade thật + kiểm toán CSV — 2026-10-29
+
+### 58.1 Mục tiêu
+
+Đóng mục mở cuối của §57.9: chạy một scenario `plan_*` đặt `rr1 > rrMin` **bằng cấu hình bridge**,
+không sửa default Pine, để chứng minh đường `PLAN_ENTRY → EXIT → SUMMARY` hoạt động hết kỳ và
+kiểm toán tính nhất quán của CSV.
+
+### 58.2 Cấu hình và lần chạy
+
+- Scenario `plan_rr2`: `reports/build/tester-run/plan_rr2.ini` + `reports/build/tester-sets/plan_rr2.set`.
+- Bridge PA: `InpPaRr1=2.0`, `InpPaRrMin=1.5` (journal in `PAMTF|INFO|bridge|rr1=2.00|rrMin=1.50`).
+- `PinePlanSimEA` `config_hash=D6CEF886`; indicator `hash=E231116A`.
+- `XAUUSDm` M15, `Model=1`, 2026.01.05 → 2026.10.01, deposit 10 000 USD, leverage 1:100,
+  build 6292, tài khoản demo `Exness-MT5Trial17` (file config không chứa credential).
+- Report: History Quality 100%, `Bars: 17595`, `Ticks: 1053473`.
+- Wall time ≈ 336 s (journal `INIT` 23:17:58.456 → CSV ghi 23:23:34.549); đo bằng dấu vết file,
+  không phải số MT5 in ra.
+
+### 58.3 Kết quả thật
+
+`SUMMARY` tại bar `2026.09.30 23:45`:
+
+```text
+source=PriceActionMTF|entries=93|rejected=0|trades=93|wins=26|losses=67|flats=0|net=-333.11|realized=-333.11|max_dd=5.0210|blocks=99|halted=HALTED
+```
+
+- Equity cuối `9 666.89`, drawdown đỉnh `5.0210 %` → RiskGuard `max_drawdown_reached`, HALTED.
+- 287 dòng CSV: 1 `INIT`, 93 `ENTRY`, 93 `EXIT`, 99 `RISK`, 1 `SUMMARY`.
+- `EXIT`: 26 `TARGET_HIT|mode=TP1` (tổng `pnl=+1553.61`) và 67 `SL_GAP` (tổng `pnl=-1886.71`);
+  hai số này cộng lại khớp `net=-333.11`. Bars held: min 0, median 17, max 320.
+- 99 dòng `RISK` là `ENTRY_BLOCKED|reason=max_drawdown_reached|state=HALTED`, dồn ở 2026.09.22–23.
+- `Net` là **đơn vị mô hình** (contract size 1, volume 1.0, không commission/slippage/swap/margin);
+  không phải lợi nhuận và không suy ra được lot hay P&L broker.
+
+### 58.4 Kiểm toán CSV
+
+| Kiểm tra | Kết quả |
+|---|---|
+| `config_hash` đồng nhất toàn file | PASS — 287/287 dòng `D6CEF886` |
+| Cặp ENTRY/EXIT | PASS — 93/93, không vị thế mở ở nến cuối |
+| SL/TP đúng phía entry theo `side` | PASS — 0 vi phạm |
+| `volume` mỗi entry | PASS — tất cả `1.0000` (đúng `InpMaxVirtualExposure=1.0`) |
+| Sự kiện giao dịch thật (broker) | Không có — EA simulation-only, log chỉ ghi vị thế ảo |
+
+Tool hiện có `scripts/audit_signal_csv.py` ràng buộc định dạng `PineSignalLabEA` (cột `bar_open_time`,
+`signal_id`…), không dùng được cho journal 18 cột của `PinePlanSimEA`; kiểm toán trên làm bằng
+truy vấn CSV trực tiếp. Chưa có script audit định dạng plan — mục mở này đã đóng ở §59 với
+`scripts/audit_plan_csv.py`.
+
+### 58.5 Phát hiện: 93/93 lệnh là BUY
+
+- CSV có **0 dòng SELL** trong toàn kỳ 9 tháng, dù diagnostic §57.6 đếm `dir_dn=9 950` nến.
+- Nguyên nhân nằm ở cổng score, không ở dữ liệu:
+  `score100 = round(50 + rawScore*50)` với `rawScore ∈ [-1, 1]`, `dir = sign(rawScore)`,
+  trong khi `okScore = score100 > scrNoTrade` và default `scrNoTrade = 49`
+  (`InpScrNoTrade`, [price-action-mtf.md §10.5](indicators/price-action-mtf.md)).
+  `score100 ≥ 50` ⇔ `rawScore ≥ -0.01`, còn `dir == -1` đòi `rawScore < 0`; hai tập chỉ giao nhau
+  trong dải `rawScore ∈ [-0.01, 0)` → `okScore` sai ở gần như mọi nến giảm → `signal` sai →
+  `sigShort` hầu như không bao giờ bật. Ngược lại `dir == 1` có nguyên dải `50..100`.
+- Đây là hành vi **của cổng được port nguyên**, không phải lỗi copy sai cú pháp; chưa đối chiếu
+  từng dòng với source Pine (Track B vẫn `BLOCKED`), nên chưa kết luận Pine gốc có cùng hệ quả.
+- **Không sửa** `scrNoTrade` hay công thức score: đổi ngưỡng là đổi chiến lược. Muốn test phía
+  short phải bằng cấu hình và có bằng chứng buffer, xem mục mở.
+
+### 58.6 Đăng ký scenario và hợp nhất input bridge
+
+`plan_rr2` ban đầu chỉ có `ini`/`set` trong `reports/build/`, chưa nằm trong registry nên
+`validate_sim_configs.py` không biết tới. Sau khi đăng ký, validator báo:
+
+```text
+PASS: project.example.json (presets=6 scenarios=18)
+SUMMARY: checked=7 fail=0
+```
+
+Thay đổi cấu hình (không đụng logic tín hiệu):
+
+| File | Thay đổi |
+|---|---|
+| `configs/project.example.json` | thêm scenario `plan_rr2` (`overrides` `InpPaRr1=2.0`, `InpPaRrMin=1.5`) → 18 scenario |
+| `python/src/mt5_ea_ai_lab/sim_configs.py` | contract `PinePlanSimEA` nhận `InpPaRr1` (`>0`) và `InpPaRrMin` (`>=0`) — khớp ràng buộc `OnInit` của EA (dòng 157, 162) |
+| `configs/sim/pine_plan_lab.json` | thêm hai input với đúng default EA (`1.0`, `1.5`) vì validator bắt buộc đủ bộ input; `assumptions.indicator` viết lại cho khớp thực tế bridge |
+| `reports/config-snapshots/` | snapshot mới `PinePlanSimEA-2D8AD770.json`, `track-c-simulation-presets-AA3EC6F4.json` (immutable, snapshot cũ giữ nguyên) |
+
+Trước khi thêm input vào contract, validator fail-closed đúng như thiết kế:
+`scenarios[12].overrides.InpPaRr1: unknown input for PinePlanSimEA`.
+
+### 58.7 Gate chạy lại
+
+- `scripts/validate-project.py` → `SUMMARY: checks=14 fail=0`.
+- `scripts/validate_demo_execution.py` → `SUMMARY: checks=8 fail=0`.
+- `scripts/validate_pamtf.py` → `VALIDATION_OK: pass=36 fail=0`.
+- `scripts/validate_sim_configs.py` → `SUMMARY: checked=7 fail=0`, `presets=6 scenarios=18`.
+- `pytest -q` → `374 passed`.
+- MQL5 không đổi trong bước này nên kết quả compile và contract test ở §57.4 giữ nguyên;
+  không có tuyên bố compile/backtest mới nào ngoài các số thật ở §58.2–§58.3.
+
+### 58.8 Trạng thái mở sau §58
+
+- Q11 (cửa short bị `okScore` chặn; trước đây ghi nhầm là "Q8" — xem §60.1): mới có bằng chứng gián
+  tiếp `plan_rr2` 0 SELL + suy luận công thức; chưa đếm buffer `PA_BUF_BLOCK` theo `dir`, và chưa đối
+  chiếu source Pine (Track B `BLOCKED`). **Không** đổi `scrNoTrade` trước khi có hai thứ đó.
+  **Buffer đã đếm ở §60 (2026-10-30); parity Pine vẫn `BLOCKED`.**
+- Chưa có script audit tự động cho journal 18 cột của `PinePlanSimEA` (kiểm toán §58.4 làm thủ công).
+  **Đã đóng ở §59.**
+- `net` và `max_dd` là đơn vị mô hình; không dùng để kết luận hiệu quả chiến lược.
+
+## 59. v2 P3 — script audit journal 18 cột của `PinePlanSimEA` — 2026-10-30
+
+### 59.1 Mục tiêu
+
+Kiểm toán §58.4 được làm bằng lệnh Python ad-hoc, không tái sử dụng được. ROADMAP P3 yêu cầu một
+tool tự động trong `scripts/` + test pytest, tái hiện đúng những bất biến đã kiểm tra thủ công,
+không sửa EA và không thay đổi kết quả run nào.
+
+### 59.2 File mới
+
+| File | Vai trò |
+|---|---|
+| [`python/src/mt5_ea_ai_lab/evaluation/plan_audit.py`](../python/src/mt5_ea_ai_lab/evaluation/plan_audit.py) | `audit_plan_csv()`, `PlanAuditReport`, `write_audit_report()` → `plan_audit.json`; cùng khuôn với `signal_audit.py`/`multi_signal_audit.py` |
+| [`scripts/audit_plan_csv.py`](../scripts/audit_plan_csv.py) | CLI `--csv`, `--out-dir`, `--offset-minutes`; exit 0/1/2 |
+| [`python/tests/test_plan_audit.py`](../python/tests/test_plan_audit.py) | 38 test: fixture INIT/ENTRY/EXIT/RISK/SUMMARY, mỗi issue kind có test dương và test sạch |
+
+`scripts/audit_signal_csv.py` vẫn ràng buộc định dạng `PineSignalLabEA` (§58.4) nên không dùng chung;
+tool mới parse header 18 cột của simulation core và từ chối file thừa/thiếu cột (exit 2).
+
+### 59.3 Bất biến được kiểm
+
+- Danh tính run: đúng 18 cột, `ea=PinePlanSimEA`, một `config_hash`/symbol/timeframe mỗi file, `INIT`
+  ở dòng đầu mang `SIMULATION_ONLY` với `config_hash` khớp cột, `SUMMARY` ở dòng cuối.
+- Vòng đời: `ENTRY` không lồng nhau, `EXIT` không mồ côi, `side` `EXIT` khớp vị thế đang mở,
+  không còn vị thế ở `SUMMARY` (`max_concurrent_positions` được báo cáo).
+- Hình học giá: BUY `sl < entry < tp`, SELL `sl > entry > tp` trên cả `ENTRY` lẫn `EXIT`,
+  `entry > 0`, `volume > 0`.
+- Bộ đếm `SUMMARY` đếm lại từ dòng thật: `entries`, `trades`, `rejected` (`PLAN_REJECTED`),
+  `blocks` (`ENTRY_BLOCKED`), `wins+losses+flats = trades`, và `net`/`realized` so với tổng token
+  `pnl=` của các `EXIT` với ngưỡng 0.05 (bù làm tròn 2 chữ số in ra).
+- Thời gian/số: `bar_time` không giảm dần trên `ENTRY/EXIT/RISK/SUMMARY`, căn timeframe
+  (`PERIOD_M15` → 900 s), mọi cột số parse được, `equity >= 0`, `drawdown_pct` trong 0..100.
+  `INIT` loại khỏi chuỗi thời gian vì logger ghi epoch `1970.01.01`.
+
+### 59.4 Chạy trên dữ liệu thật (báo cáo thật, không suy luận)
+
+| Journal | Kết quả |
+|---|---|
+| `reports/build/tester-reports/plan_rr2/sim_plan_rr2.csv` | `status=ok rows=287 hash=D6CEF886 events=ENTRY=93,EXIT=93,INIT=1,RISK=99,SUMMARY=1 entry_sides=BUY=93 exit_reasons=SL_GAP=67,TARGET_HIT=26 open_at_end=0 net=-333.11 issues=0` |
+| `.../plan_baseline/sim_plan_baseline.csv` | `status=ok rows=2 events=INIT=1,SUMMARY=1 net=0.00 issues=0` |
+| `.../plan_edge_tp3_stop_only/sim_plan_edge_tp3_stop_only.csv` | `status=ok rows=2 events=INIT=1,SUMMARY=1 net=0.00 issues=0` |
+
+Ba journal khớp toàn bộ con số đã ghi ở §58.3–§58.4 (`entries=93`, `trades=93`, `wins=26`,
+`losses=67`, `flats=0`, tổng `pnl` = -333.1096 so với `net=-333.11`). Công cụ không phát hiện thêm
+vấn đề nào, kể cả 99 dòng `ENTRY_BLOCKED` — đó là RiskGuard hoạt động đúng, không phải lỗi cấu trúc.
+
+### 59.5 Docs cập nhật
+
+- `docs/guides/install-and-test.md`: mục mới **4.1 "Audit tự động journal plan"** trong phần
+  "Track C — PinePlanSimEA (W10)" — lệnh chạy, bảng nhóm kiểm tra, giải thích `--offset-minutes`,
+  nhắc `net` là đơn vị mô hình.
+- `docs/v2/ROADMAP.md`: dòng P3 chuyển sang DONE.
+
+### 59.6 Gate
+
+- `pytest -q` → `412 passed` (374 trước + 38 test mới).
+- `scripts/validate-project.py` → `SUMMARY: checks=14 fail=0`.
+- `scripts/validate_sim_configs.py` → `SUMMARY: checked=7 fail=0` (không đổi; chỉ thêm file Python).
+- MQL5 không sửa: không có tuyên bố compile hay backtest mới trong §59.
+
+---
+
+## 60. v2 P2 — xác minh thực nghiệm cổng `okScore` chặn cửa short (đổi id thành Q11) — 2026-10-30
+
+### 60.1 Mục tiêu và một sửa đổi về nhãn
+
+§58.8 để lại một câu hỏi mở: suy luận "cổng `okScore` gần như loại toàn bộ cửa short" mới dựa trên
+công thức và hệ quả gián tiếp (`plan_rr2` 0 SELL). ROADMAP P2 yêu cầu **đếm buffer
+`PA_BUF_BLOCK` theo `dir`** trên một kỳ tester trước khi bàn bất kỳ việc đổi ngưỡng nào.
+
+Cũng trong bước này phát hiện một xung đột id: [`docs/indicators/price-action-mtf.md`](../docs/indicators/price-action-mtf.md)
+dùng "Q8" cho cả hành vi cổng score (§10.5) lẫn quirk timeout `xExit = tp1` (§11.5 và bảng §16).
+Bảng §16 mới là danh sách quirk chuẩn, nên hành vi cổng score được cấp id **Q11**; các tham chiếu
+ROADMAP/EVIDENCE/TEST_REPORT/§58.8 trỏ tới cổng score đều đổi sang Q11.
+
+### 60.2 Cách đo
+
+| Đối tượng | Chi tiết |
+|---|---|
+| Expert chẩn đoán tạm | `reports/build/q8-diag/ZZPlanBlockCount.mq5` (không nằm trong build của repo; chỉ deploy vào `MQL5\Experts` của Data Folder) |
+| Compile | `Result: 0 errors, 0 warnings, 932 ms elapsed, cpu='X64 Regular'`; `.ex5` 18 656 byte, log tester ghi `18688 bytes loaded` |
+| Đọc dữ liệu | `iCustom(... "PinePort\PriceActionMTF", rr1=2.0, rrMin=1.5)` rồi `CopyBuffer(..., index, 1, 1, ...)` cho 6 buffer `PA_BUF_SCORE100`, `PA_BUF_DIR`, `PA_BUF_PLAN_VALID`, `PA_BUF_SIG_LONG`, `PA_BUF_SIG_SHORT`, `PA_BUF_BLOCK` — một mẫu mỗi nến đã đóng, warmup 200 nến |
+| Quyền hạn | chỉ đọc buffer; không portfolio, không hàm lệnh. Báo cáo tester: `Deals: 0`, `Total Net Profit: 0.00` |
+| Kỳ chạy | `q8_block_count.ini`: XAUUSDm M15, 2026.01.05→2026.10.01, Model=1 — **đúng kỳ của `plan_rr2`** (`Bars: 17595`, `Ticks: 1053473`, Quality 100 %) |
+| Thời gian thật | 10:25:36.851 → 10:32:18.600 cho thread test (≈ 402 s); `run_tester.ps1` ghi `terminal64 exited after 415.8s (code 0)` |
+| Xuất | `reports/build/tester-reports/q8_block_count/` (sha256 12 ký tự đầu): `q8_block_counts.csv` 527 B `1AFA5488662D`, `tester_q8_block_count.htm` 23 972 B `EC859E821BDA`, `.png` 4 901 B `47B01D45E19F`, `q8_agent_journal.txt` 1 082 B `7E10A391F575` — 8 dòng log `DIAG\|...` khớp từng chữ với CSV |
+
+### 60.3 Số đo được (không suy luận)
+
+| `dir` | nến | `score100 > 49` | `plan_valid` | signal | `score100` min..max | block 0 `NONE` | 1 `PLAN_INVALID` | 2 `MTF_FILTER` | 3 `HTF_VETO` | 4 `COOLDOWN` | 5 `DAY_LIMIT` | 6 `SCORE` | 7 `DIR` | 8 `CONFLUENCE` | 9 `REGIME` |
+|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| −1 (down) | 8 414 | **188** | 8 414 | **0** | 15 .. **50** | 0 | 0 | 1 346 | 4 069 | 1 | 0 | **2 961** | 0 | 35 | 2 |
+| 0 (flat) | 0 | 0 | 0 | 0 | không có mẫu | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| +1 (up) | 9 181 | **9 181** | 9 181 | **302** | 50 .. 87 | 302 | 0 | 1 734 | 1 806 | 782 | 63 | **0** | 0 | 3 880 | 614 |
+
+`bars_considered = 17595`, `bars_skipped = 0`; mỗi hàng cộng đúng về số nến của `dir` đó.
+
+Bốn kết luận trực tiếp từ bảng:
+
+1. Cổng `SCORE` là gate **bất đối xứng**: chặn trước tiên 2 961/8 414 nến down (35,2 %) và **0/9 181**
+   nến up.
+2. Phía down chỉ có **188/8 414 (2,23 %)** nến qua được `okScore`, và giá trị `score100` lớn nhất quan
+   sát được ở phía down đúng bằng **50** — tức miền qua cổng là `{50}`, khớp dải giải tích
+   `rawScore ∈ [-0.01, 0)` của §10.5. Phía up: 100 % qua cổng.
+3. Trong 17 595 nến, `PA_BUF_DIR` **không bao giờ bằng 0**, và `signal` phía down **bằng 0** — kể cả
+   188 nến qua cổng score đều bị gate khác chặn trước, nên `PA_BUF_SIG_SHORT` không bật lần nào.
+4. `plan_valid` = 100 % cả hai phía nên `block_1` bằng 0 ở cả hai hàng: cầu `rr1=2.0 ≥ rrMin=1.5`
+   đã mở (đúng bridge của `plan_rr2`), phần còn lại là gate.
+
+Đối chiếu journal: `plan_rr2` có 93 `ENTRY` + 99 `RISK|ENTRY_BLOCKED`, toàn BUY; buffer đếm 302 nến
+signal phía up. Hai đại lượng không kỳ vọng bằng nhau — EA chỉ xét tín hiệu khi đang phẳng và có
+RiskGuard riêng — nhưng cùng xác nhận **không có bất kỳ tín hiệu short nào** trong kỳ.
+
+### 60.4 Những gì bước này **không** làm
+
+- Không sửa `InpScrNoTrade`, không sửa công thức score, không sửa `PriceActionMTF*`, không sửa EA.
+  `find mt5 -newermt "2026-10-30 00:00"` trả về 0 file — không có file MQL5 nào bị chạm trong ngày;
+  7 file `mt5/` đang `M` trong `git status` là thay đổi của §54–§58 từ 2026-10-29.
+- Không kết luận "cần hạ ngưỡng": đổi ngưỡng là đổi chiến lược, và cổng vẫn phải đối chiếu nguồn Pine.
+- Parity với Pine vẫn `BLOCKED` (Track B, chưa có CSV Pine), nên số đo này là bằng chứng **buffer của
+  port**, không phải bằng chứng rằng Pine cũng hành xử y hệt.
+- Trạng thái môi trường: `ZZPlanBlockCount.mq5` + `.ex5` vẫn nằm trong `MQL5\Experts` của Data Folder
+  để chạy lại được (kèm `ZZContract_*` của 2026-10-29). Bản sao lưu ở `reports/build/q8-diag/`
+  (gitignored, cùng `compile.log`). Muốn dọn: xoá hai file trong Data Folder; repo không tham chiếu
+  chúng trong build.
+
+### 60.5 Docs cập nhật
+
+- `docs/indicators/price-action-mtf.md`: §10.5 đổi id Q8 → Q11 kèm ghi chú trùng id, bổ sung số đo
+  thật; bảng §16 thành Q1–Q11 và thêm dòng Q11.
+- `docs/indicators/README.md`: trạng thái port PriceActionMTF ghi `Q1–Q11`.
+- `docs/v2/EVIDENCE.md`: dòng bảng tra cho thư mục `q8_block_count/` + mục §2.10.
+- `docs/v2/ROADMAP.md`: dòng P2 (xác minh cổng `okScore`) chuyển sang DONE một phần — buffer đã đo,
+  parity Pine còn `BLOCKED`.
+- `docs/v2/TEST_REPORT.md` + `docs/PROGRESS.md` §58.8: đổi tham chiếu Q8 → Q11.
+
+### 60.6 Gate (chạy lại 2026-10-30 sau khi sửa docs)
+
+- `pytest -q` → `412 passed in 15.02s` (không đổi; bước này không thêm code Python).
+- `scripts/validate-project.py` → `SUMMARY: checks=14 fail=0` — gồm kiểm tra link docs, nên việc đổi
+  id Q8 → Q11 và thêm tham chiếu §60 không phá link.
+- `scripts/validate_sim_configs.py` → `SUMMARY: checked=7 fail=0` (presets=6, scenarios=18).
+- `scripts/validate_pamtf.py` → `VALIDATION_OK: pass=36 fail=0`.
+- Không có compile mới: MQL5 không sửa. Báo cáo tester của chính bước này có `Deals: 0`.
+
+## 61. Docs — hướng dẫn chạy bot cho người chưa từng dùng MT5 — 2026-10-30
+
+### 61.1 Mục tiêu và phạm vi
+
+Người dùng yêu cầu: *"mình là người mới chưa sử dụng MT5 và Bot EA bao giờ, hãy cho file docs hướng dẫn
+chi tiết từng bước để chạy được một con bot và kiểm tra trực tiếp xem cách bot vận hành"*. Kết quả là
+[`guides/beginner-first-run.md`](guides/beginner-first-run.md) (435 dòng, 10 phần, sha256
+`17a5371ae33c4f0022ff1bf9fb3f593a85414b8daaeb1146559fa8f169674e99`).
+
+Phạm vi: **chỉ tài liệu + kiểm chứng số liệu bằng lệnh thật**. Không sửa MQL5, không chạy tester mới,
+không thêm code Python, không đụng đường gửi lệnh. Bot được hướng dẫn là `PinePlanSimEA` (mô phỏng,
+không `OrderSend`/`CTrade`); đường demo execution chỉ được *giới thiệu* ở Phần 6 và trỏ sang
+[`guides/demo-execution.md`](guides/demo-execution.md).
+
+### 61.2 Cấu trúc guide
+
+| Phần | Nội dung | Vì sao ở đó |
+|---|---|---|
+| 1 | 5 khái niệm + sơ đồ cửa sổ | người mới chưa có từ vựng |
+| 2 | Chuẩn bị một lần: demo login, `XAUUSDm`, `deploy_pineport.ps1 -Apply`, compile, F5 | mọi bước sau phụ thuộc |
+| 3 | Strategy Tester có hình, 12 bước UI, khuyến nghị 1 tháng (2026.09) M15 | cách nhanh nhất để *nhìn* bot chạy |
+| 4 | Journal 18 cột: đường dẫn, từ điển cột, 3 dòng thật + `SUMMARY`, quirk `Q11`, auditor | bằng chứng thật nằm ở đây |
+| 5 | Gắn EA lên chart thật, log khởi động, `InpDebug`, cách dừng | "ngồi cạnh bot" |
+| 6 | Ranh giới demo/live (bảng Được/Cấm, ADR 0003, ADR 0004 chưa có) | ngăn hiểu nhầm "bot đã trade" |
+| 7–10 | 12 lỗi thường gặp, checklist 11 mục, thuật ngữ, đọc tiếp | tự xử lý khi kẹt |
+
+### 61.3 Những gì đã kiểm chứng bằng lệnh thật (không suy luận)
+
+- `audit_plan_csv.py` chạy trên bản CSV lưu trong repo, output nguyên văn ghi vào §4.5:
+  `status=ok rows=287 hash=D6CEF886 … events=ENTRY=93,EXIT=93,INIT=1,RISK=99,SUMMARY=1
+  entry_sides=BUY=93 exit_reasons=SL_GAP=67,TARGET_HIT=26 open_at_end=0 net=-333.11 issues=0`
+  (exit code 0). Trạng thái là `ok`/`issues`, **không có** `fail`; exit code 1 khi `issues`, 2 khi
+  `audit_error:` — đọc trực tiếp từ `scripts/audit_plan_csv.py:57-85` và các `kind=` trong
+  `python/src/mt5_ea_ai_lab/evaluation/plan_audit.py` (24 loại, ví dụ `stop_on_wrong_side`,
+  `off_grid`, `orphan_exit`, `mixed_config_hash`).
+- Số học `rows=287 = 1 INIT + 93 ENTRY + 93 EXIT + 99 RISK + 1 SUMMARY` và
+  `67 + 26 = 93` khớp `losses`/`wins` trong dòng `SUMMARY`.
+- Ba dòng log khởi động EA lấy từ chuỗi format thật ở `mt5/Experts/PinePlanSimEA.mq5:778`
+  (`initialized`), `:782` (`pa_bridge`), `:784` (`simulation_only`) — guide ghi rõ nguồn dòng để người
+  đọc phân biệt "log sẽ thấy" với "log đã lưu trong repo".
+- `plan_rr2.set` (`InpPaRr1=2.0`, `InpMaxSpreadPoints=600.0`, `InpLogFile=sim_plan_rr2.csv`) đối chiếu
+  default trong EA để viết mục "Hai cái bẫy" — hai lý do khiến người mới thấy 0 lệnh.
+
+**Hạn chế ghi lại:** `reports/build/tester-reports/plan_rr2/plan_rr2.journal.txt` chỉ có 3 dòng
+(2 dòng `PAMTF|…` của indicator + 1 dòng `LAB|INFO|plan|initialized|…`), nên dòng `pa_bridge` và
+`simulation_only` chưa có trong artifact đã lưu; chúng là dự đoán theo source, không phải trích từ log.
+Guide không được thử nghiệm bởi một người mới thật — trạng thái "người khác làm theo từ đầu đến cuối" là
+`NOT_RUN`.
+
+### 61.4 Dọn lỗi render bảng trên toàn bộ docs
+
+Lint tế bào bảng (số cột mỗi dòng so với header, tách theo `|` không đứng sau `\`) tìm thấy **35 dòng hỏng**
+ở 12 file, hầu hết do `|` trần nằm trong inline code (GFM vẫn tách cell trong trường hợp này). Phân bố:
+27 dòng escape trong code span, 1 dòng bị xuống dòng giữa cell, 7 dòng `|` trần kiểu giá trị tuyệt đối
+(`|diff|`). Đã sửa:
+
+- 27 dòng escape `\|` trong code span — `docs/guides/demo-execution.md` (5), `docs/reference/release.md` (3),
+  `docs/reference/simulation.md` (2), `docs/reference/risk.md` (1), `docs/PROGRESS.md` (3),
+  `docs/v2/ROADMAP.md` (2), `docs/v2/EVIDENCE.md` (1), `docs/v2/EXECUTION_AND_SAFETY.md` (1),
+  `docs/indicators/tm-indicator-2.md` (4), `docs/indicators/tm-xau-signals-2.md` (3),
+  `docs/indicators/price-action-mtf.md` (2).
+- `docs/guides/strategy-tester.md`: dòng "Hướng lệnh" bị xuống dòng giữa cell → gom về một dòng, đồng thời
+  trỏ `Q11` thay cho `§58.5` đơn thuần.
+- `docs/indicators/price-action-mtf.md` 6 dòng + `docs/indicators/tm-xau-signals-2.md` 1 dòng: `|diff|`,
+  `|emaF−emaM|`, `|lastHigh−lastLow|`… bọc lại thành code span có `\|`. Riêng dòng `I9` của PAMTF có ô
+  "Kỳ vọng" chứa `|` trần khiến hàng 4 cột: viết lại theo đúng test vector
+  `mt5/Scripts/PriceActionMTFContractTests.mq5:1031-1049` (hai trường hợp — `a`: `score100==100, dir==1`;
+  `b`: `score100==58, dir==1`) thay vì giữ con số `0.15` không có trong test.
+- `docs/guides/beginner-first-run.md`: `RISK\|ENTRY_BLOCKED` trong bảng §7, `status=fail` → `status=issues`,
+  bỏ tham chiếu `§3.9` đã đổi thành mục "Hai cái bẫy", bảng `config_hash`/`XAUUSDm` sửa typo, icon chart viết
+  lại theo hướng không khẳng định vị trí chính xác trên UI.
+- `docs/README.md` thêm dòng đầu tiên trong bảng "Bắt đầu ở đâu" + cây cấu trúc; `docs/v2/README.md` thêm
+  dòng dẫn guide mới trước `install-and-test.md`.
+
+Kết quả lint: `done problems=0`. Check link nội bộ (URL-decode, bỏ `archive/`): `checked=402 broken=0`.
+
+### 61.5 Gate (2026-10-30)
+
+- `pytest -q` → `412 passed in 14.09s`.
+- `scripts/validate-project.py` → `SUMMARY: checks=14 fail=0`.
+- `scripts/validate_sim_configs.py` → `SUMMARY: checked=7 fail=0` (snapshot preset `AA3EC6F4` unchanged).
+- `scripts/validate_pamtf.py` → `VALIDATION_OK: pass=36 fail=0`.
+- Audit mẫu → exit 0, `issues=0`.
+- Không compile MQL5, không chạy tester: guide chỉ dùng artifact đã có (báo cáo `plan_rr2` với
+  `Deals: 0`, đúng vì EA mô phỏng không gửi lệnh).
+
+### 61.6 Báo cáo
+
+**PASS** (phạm vi tài liệu). Deliverable: `docs/guides/beginner-first-run.md` + `docs/README.md` đã trỏ vào
+đó ngay dòng đầu bảng "Bắt đầu ở đâu"; 35 dòng bảng hỏng đã về 0. **BLOCKED** (không thuộc bước này):
+cần chính người dùng mở MT5 làm Phần 2→5 để xác nhận guide dễ theo; `ENTRY` demo đầu tiên từ `DemoEA` và
+ADR 0004 cho Grid/DCA vẫn chờ quyết định.
+
+## 62. Docs — giải phẫu bot EA, bảng tham số đầy đủ và đường ghép AI — 2026-10-30
+
+### 62.1 Mục tiêu và phạm vi
+
+Hai yêu cầu liên tiếp của người dùng: *"giúp mình miêu tả chi tiết 1 con bot ea sẽ có cấu trúc như thế nào,
+cách cài đặt ra sao, cách cấu hình thế nào, thao tác trên app MT5 desktop GUI thế nào, cách sử dụng bot EA
+kết hợp AI và cấu hình thế nào"* rồi *"tạo tài liệu hướng dẫn hoàn chỉnh với sơ đồ và bảng tham số"*.
+Deliverable: [`guides/ea-anatomy-and-ai.md`](guides/ea-anatomy-and-ai.md) — 553 dòng, 13 mục, sha256
+`4dc22c1cddde111d965cadeb7ace2a116d53bbcdf204b31697daa981aff626ed`. Đây là tầng tài liệu "hiểu sâu" đặt
+ngay sau `beginner-first-run.md` (§61); không thay thế `v2/CONFIGURATION.md` mà là bảng tra theo từng bot.
+
+### 62.2 Bố cục
+
+5 sơ đồ ASCII (bản đồ hệ thống repo→Data Folder, luồng `OnInit`/`OnTick`/`OnDeinit`, thang 4 tầng cấu hình,
+vòng đời vị thế, pipeline train→ONNX→EA) + 8 bảng tra: nguyên tắc kiến trúc, 6 khối của file EA, thư viện
+dùng chung (13 module), danh mục 11 EA, hợp đồng log 18 cột, bảng tham số §7.1–7.6, token RiskGuard,
+trạng thái bằng chứng.
+
+### 62.3 Số liệu kiểm chứng lại từng dòng (và lỗi bản nháp đã sửa)
+
+Mọi ô trong bảng đều đối chiếu source/artifact trước khi chốt. Bản nháp đầu có 7 chỗ sai, đã sửa:
+
+- Dòng source: `PinePlanSimEA.mq5` là **829** dòng (`wc -l`), không phải 806; handler thật là
+  `OnInit` 696 · `OnDeinit` 788 · `OnTick` **798** (`grep`), các mốc trích dẫn `808-811`, `816-822`,
+  `CheckExits` 512, `UpdateTrailing` 536, `TryEntry` 582 giữ nguyên vì đã khớp.
+- §3 viết "unit test bằng `SimCoreTests`/`ExecGuard` … 51 test" — sai chỗ dựa. `ExecGuard.mqh` được ma trận
+  guard kiểm bởi `mt5/Scripts/ExecGuardTests.mq5`, **51 test guard** theo `docs/v2/EVIDENCE.md:26`;
+  `SimCoreTests` là suite khác (`pass=123 fail=0`, `install-and-test.md:619`). Đã viết lại đúng nguồn.
+- §11.3: khoá trong `reports/ml/demo-phase7-ml/model.json` là `decision_threshold = 0.5` (đọc bằng
+  `json.load`, các khoá thật: `coefficients/intercept/preprocessing{mean,scale,type}`), không phải
+  `threshold`. Feature list 12 tên khớp `feature_names` trong model. Chuỗi graph `Sub→Div→MatMul→Add→Sigmoid`,
+  opset 13, IR 8 lấy từ `docs/reference/onnx.md:21-29`; SHA-256 model ONNX `a7ae4a25…64f9d3`.
+- Tham số CLI export đã mở `scripts/export_onnx_model.py:35-61` xác nhận: `--model`, `--out-dir`, `--fixture`,
+  `--opset` (default 13), `--tolerance` (default 1e-5). Artifact `models/candidates/demo-phase7-ml/` gồm
+  `model.onnx`, `model_metadata.json`, `onnx_parity.csv/json`.
+- §11.2 sửa một dấu backtick thừa ở cuối dòng lệnh export; `OnnxCreate` dòng 30 và `OnnxRun` dòng 113 của
+  `LabOnnxInference.mq5` đã
+  kiểm; `matrixf features(1, InpFeatureCount)` (dòng 91) nên ô "Lệch thì" ghi đúng triệu chứng
+  `OnnxRun failed at row …` thay vì "fail" chung chung.
+- §2.3: hợp đồng `event` chỉ đúng 5 nhãn với EA mô phỏng; `grep 'LogEvent("'` trên `DemoEA` cho thấy còn
+  `REGIME` · `BOS` · `TRAIL` · `STATE` · `KILL` · `DRY_RUN` · `ADOPT` · `SYNC` · `ERROR` · `RESET` ·
+  `CLOSE_REQUEST` · `STATE_ERROR`. Đã ghi rõ trong bảng.
+- Token exit đã xác nhận nguyên văn trong source: `SL_HIT` (518), `SL_GAP|gap_points=` (522),
+  `TARGET_HIT|mode=` (531), `TRAIL_REJECTED|reason=` (578), `MAX_HOLDING_BARS` (821). `INIT` dùng
+  `bar_time=1970.01.01` — thấy ở dòng 2 CSV mẫu `plan_rr2`.
+- Số đếm cấu hình: `reports/build/tester-sets/*.set` = **20**, preset `configs/sim/*.json` = 6 (+ example,
+  validator `checked=7`), `Include/TrendRider/*.mqh` = **12**, `Include/Sim/*.mqh` = 10 (EA chỉ include 6).
+  Input đếm được loại trừ dòng `input group`: `PinePlanSimEA` 27/6 nhóm, `DemoEA` 47/7.
+- Lỗi chữ: typo CJK `任意` ở dòng Visualize, nhãn dính `Kill switchDemoEA`, thiếu dấu cách
+  `…Contract.mqh`.EA`, và `LAB|DEBUG|…` chưa thoát `\|` trong bảng §7.1 (đã escape).
+
+### 62.4 Chỉ mục và dọn dẹp còn tồn
+
+- `docs/README.md`: thêm dòng "**Hiểu từng khối của một con bot + bảng tham số đầy đủ + ghép AI**" ngay sau
+  dòng beginner trong §1, và thêm file vào cây §2 (`guides/`).
+- `docs/v2/README.md`: thêm bullet dẫn tài liệu mới trong danh sách "tài liệu vận hành ngoài `v2/`".
+- `docs/guides/beginner-first-run.md` §10: thêm dòng "Đọc tiếp" đầu bảng trỏ sang tài liệu giải phẫu.
+- Nhân tiện quét link toàn `docs/` (kể cả `archive/`, trước đây loại trừ), sửa **7 link hỏng** trong
+  `docs/archive/v1/` do chưa hiệu chỉnh độ sâu tương đối khi move vào archive:
+  `PA_TrendRider_XAU_V1_Implementation_Vietnamese.md` (3 link → `../../decisions/`, `../../guides/`,
+  `../../../configs/…json`), `ROADMAP_MT5_EA_AI_LAB_v1.md` (1), `phase-reports/phase-5.md` (2 →
+  `../../../reference/parity.md`), `mt5-ea-ai-simulation-pack/docs/PROGRESS.md` (1 → `../../../../PROGRESS.md`).
+  Nội dung archive giữ nguyên, chỉ đổi đường dẫn; `git diff` 6 file = 10 dòng.
+- Escape `\|` trong code span ở 3 dòng bảng thuộc archive (`PA_TrendRider…:141`, `phase-1.md:39`,
+  `phase-2.md:40`) — cùng lớp lỗi đã sửa ở §61 cho docs đang dùng.
+
+### 62.5 Gate (chạy 2026-10-30 sau khi sửa)
+
+- Table linter (code span chưa escape + số cột lệch, bỏ qua trong code fence): `files=99 problems=0`;
+  riêng docs live (không `archive/`): `files=51 problems=0`.
+- Link checker (URL-decode, phân giải cả `file:///…` sang pine nguồn): `checked=447 broken_live=0 broken_archive=0`.
+- `scripts/validate-project.py` → `SUMMARY: checks=14 fail=0`.
+- `pytest -q` → `412 passed in 15.98s`; `validate_sim_configs.py` → `checked=7 fail=0` (snapshot `AA3EC6F4`
+  unchanged); `validate_pamtf.py` → `pass=36 fail=0`; `validate_demo_execution.py` → `checks=8 fail=0`.
+- Audit mẫu `reports/build/tester-reports/plan_rr2/sim_plan_rr2.csv` → exit 0, `status=ok rows=287 issues=0`.
+- Không compile MQL5, không khởi động terminal, không kết nối broker, không gửi lệnh: toàn bộ bước này là
+  tài liệu; số liệu MT5 lấy từ artifact đã có.
+
+### 62.6 Báo cáo
+
+**PASS** (phạm vi tài liệu): `docs/guides/ea-anatomy-and-ai.md` hoàn chỉnh 13 mục, mọi ô bảng có nguồn,
+chỉ mục 3 nơi đã cập nhật, gate xanh, lỗi bảng/link archive đã về 0.
+
+**Hạn chế cần đọc kèm** (không phải FAIL, ghi để không bị hiểu nhầm là đã kiểm):
+mức tích hợp AI "C — model quyết hướng/sizing" và mục "build ONNX terminal khác build 6292" là `NOT_RUN` /
+`CHƯA KIỂM`; parity với Pine vẫn `BLOCKED` (thiếu CSV Pine, xem §60); `DemoEA` trên tài khoản demo đang
+`WAITING_FOR_SETUP`, 0 `ENTRY` do chiến lược — quyết định chạy demo tiếp theo thuộc chủ dự án, cùng ADR 0004
+cho Grid/DCA. **Lợi nhuận mọi chiến lược: `UNPROVEN`.**
+
+## 63. Phiên demo execution có giám sát — bot EA chạy thật trên MT5 demo + scenario visual — 2026-10-30
+
+### 63.1 Yêu cầu và phạm vi
+
+Người dùng yêu cầu: *"làm lần lượt để mình có thể nhìn thấy được bot EA thực hiện giao dịch trên MT5 Demo"*,
+sau đó chọn phạm vi "tất cả, tới bậc 4" và giao agent thao tác GUI ("bạn click giúp mình, mình chỉ xem thôi").
+Toàn bộ nằm trong ADR 0003: chỉ tài khoản demo `464140826` trên `Exness-MT5Trial17`, chỉ
+`PATrendRiderXAUv1DemoEA` + `mt5\Include\Exec\*`. Không đụng Grid/DCA (vẫn `BLOCKED_PENDING_ADR`), không
+nới gate chiến lược/rủi ro để "tạo ra lệnh", không credential.
+
+### 63.2 Bốn bậc đã chạy
+
+- **Bậc 1 — dry-run trên chart (PASS).** Agent điều khiển MT5 (Computer Use), mở node Expert Advisors,
+  nạp `PATrendRiderXAUv1DemoEA` lên chart `XAUUSDm,M5`, kiểm hộp thoại Inputs thấy `false = dry-run, no
+  orders` = `false`. Journal: `INIT mode=DRY_RUN|state=WAITING_FOR_SETUP|restored=1|magic=25002001|
+  config_hash=8A85E0D5|mql_trade_allowed=1` lúc 04:37:26, theo sau `BOS tf=H1 event=BOS_BEAR`,
+  `BOS tf=M15 event=BOS_BEAR`, `REGIME regime=TREND_DOWN|bias=aligned_bearish`. OnDeinit lúc 04:45:05 ghi
+  `SUMMARY mode=DRY_RUN|entries=0`. Tab Trade trống — đúng hợp đồng dry-run.
+- **Bậc 2 — Tester visual (PASS, có artifact mới).** Scenario mới `demo_exec_visual`: ini
+  `reports/build/tester-run/demo_exec_visual.ini` (`Model=1`, `Period=M5`, `FromDate=2026.01.05`,
+  `ToDate=2026.02.20`, `Deposit=5000`, `Visual=1`, `ShutdownTerminal=1`, `Report=tester_demo_exec_visual`)
+  + set `reports/build/tester-sets/demo_exec_visual.set` (bản sao `pa_trendrider_demo_exec.set`, chỉ đổi
+  `InpLogFile=sim_demo_exec_visual.csv`) đã copy vào `MQL5\Profiles\Tester\`.
+  `run_tester.ps1 -Scenario demo_exec_visual` → exit 0, `terminal64 exited after 110.6s`.
+  Artifact `reports/build/tester-reports/demo_exec_visual/`: `sim_demo_exec_visual.csv` 2 920 721 B
+  (sha256 `F4475489796A`), `tester_demo_exec_visual.htm` 46 672 B (`5355E9571E28`),
+  `tester_demo_exec_visual.png` 5 531 B (`511559DD1103`).
+  Đếm event từ CSV: `INIT 1|ENTRY 4|EXIT 4|TRAIL 1|BOS 1329|REGIME 247|STATE 14|RISK 8187|SUMMARY 1`.
+  SUMMARY: `entries=4|exits=4|wins=0|losses=3|net=-31.04|drawdown_pct=0.8162`. pnl từng lệnh:
+  `0.00, -8.75, -10.32, -11.97`. Bốn dòng ENTRY mang `ORDER_FILLED|order=<n>|deal=<n>|ok|done|
+  risk_money=12.45..12.50|lot=0.01|tp_r=3.00|spread_points=160.0` — tức sizing 0.25% vốn bị kẹp ở
+  `volume_min=0.01`, `expected_loss` luôn dưới ngân sách. **Không phải lợi nhuận kỳ vọng**: cửa sổ 6,5 tuần
+  này lỗ 31.04 đơn vị mô hình.
+- **Bậc 3 — `ExecDemoProbe` (BLOCKED, không phải lỗi code).** Script cần Navigator để chạy; sau vài cú click
+  vào dock, cây Navigator của terminal này không render nữa (rỗng hoàn toàn, giữ nguyên qua 2 lần khởi động
+  lại). Cách sửa duy nhất còn lại là đụng `config\terminal.ini` (file layout dạng binary, có thể liên quan
+  phiên đăng nhập) → không làm. Bằng chứng đường guard → broker đã có từ 2026-10-29: deal 2468899165
+  @4045.79 mở, deal 2468899168 @4045.55 đóng, pnl −0.24, vòng 103 ms (§7.3 TEST_REPORT).
+- **Bậc 4 — execution trên tài khoản demo (ĐANG CHẠY).** Hai lần khởi động bằng
+  `terminal64.exe /config:"D:\Applications\tm-fx\reports\build\demo-arm\startup.ini"`; log terminal ghi
+  `successfully initialized from start config`, `47 inputs read from expert 'PATrendRiderXAUv1DemoEA' set
+  file ...pa_trendrider_demo_live.set`, `expert PATrendRiderXAUv1DemoEA (XAUUSDm,M5) loaded successfully`.
+  Journal `INIT mode=DEMO_EXECUTION|...|config_hash=6B439450|mql_trade_allowed=1` (04:45:41, rồi 04:56:50
+  sau khi chạy Bậc 2). Kill switch `PA_TREND_RIDER_DEMO_STOP.txt` **không tồn tại** (đã kiểm bằng `ls`),
+  `InpMaxPositions=1`, `InpRiskPercent=0.25`, `InpDailyLossLimitPct=1.0`, `InpMaxDrawdownPct=8.0`.
+  Tính đến 04:58 vẫn 0 `ENTRY` — `state=WAITING_FOR_SETUP`, block `reversal_watch`/`bias_unknown` là kết quả
+  hợp lệ của bộ lọc regime.
+
+### 63.3 Bằng chứng phụ thu được
+
+- `pa_trendrider_demo_state.csv` sau phiên này là `state=WAITING_FOR_SETUP;transitions=2` — **một tiền tố**,
+  `day_key=20261030;day_start=4999.76`. Bản cũ (29/10) còn `state=state=` do binary cũ ghi; lần nạp lại bằng
+  `.ex5` mới đã tự sửa → xác nhận runtime cho mục P3 §58 mà không cần thao tác gì thêm.
+- `scripts/watch_demo_journal.py --watch --interval 20 --stop-on-alert` đang chạy nền, checkpoint
+  `reports/demo-watch/journal_checkpoint.json` (`offset=62337`, cập nhật 11:58). Nó sẽ thoát với exit 1 và
+  in dòng `WATCH|ENTRY|…` ngay khi bot gửi lệnh thật.
+
+### 63.4 Hạn chế của phiên này (ghi để không hiểu nhầm)
+
+- Agent tự bấm UI nên đã làm hỏng layout dock của terminal (Navigator trống, panel tester collapse, một số
+  tab Toolbox không đổi). Đây là lỗi thao tác, không phải lỗi EA/MT5; hệ quả: Bậc 3 không chạy được hôm nay.
+- Bậc 2 chạy `Visual=1` nhưng chỉ hết 110,6 s nên cửa sổ replay lướt rất nhanh; muốn xem chậm phải mở
+  `tester_demo_exec_visual.htm` hoặc chạy lại với `ShutdownTerminal=0` để giữ cửa sổ.
+- Số liệu Bậc 2 là backtest, **không** phải kết quả của phiên demo thật; phiên demo thật hiện vẫn
+  `entries=0`.
+
+### 63.5 Gate
+
+- `pytest -q` → `412 passed` (không có thay đổi code Python ở bước này).
+- `scripts/validate-project.py` → `SUMMARY: checks=14 fail=0`; `validate_demo_execution.py` →
+  `checks=8 fail=0`; `validate_sim_configs.py` → `checked=7 fail=0`.
+- Table linter docs → `problems=0`; link checker → `broken_live=0 broken_archive=0`.
+- Không compile MQL5 mới (dùng `.ex5` đã build 29/10 23:09), không gửi lệnh thật nào ngoài các lệnh do
+  chính EA trong Tester tạo ra; không có thao tác nào lên tài khoản real.
+
+### 63.6 Báo cáo
+
+**PASS**: Bậc 1 và Bậc 2 có bằng chứng file; Bậc 4 đang chạy trên tài khoản demo với execution bật, có
+giám sát và kill switch sẵn sàng. **BLOCKED**: Bậc 3 (`ExecDemoProbe`) cần Navigator hoạt động bình thường —
+cần bạn mở lại MT5 sau khi đăng nhập lại hoặc để mình chờ `ENTRY` đầu tiên từ chính chiến lược. **Chưa có**:
+`ENTRY` demo do chiến lược — watcher sẽ báo. **Lợi nhuận: `UNPROVEN`** (cửa sổ visual 6,5 tuần gần nhất còn
+âm 31.04).
+
+## 64. ADR 0004 — mọi bot được execution đầy đủ trên tài khoản demo (Grid + DCA demo EA) — 2026-10-30
+
+### 64.1 Yêu cầu
+
+Người dùng yêu cầu *"giúp mình chạy test bot dca trên tài khoản demo"*, rồi chốt lại phạm vi:
+*"cập nhật lại tính ràng buộc cho toàn dự án, tất cả các bot đều có thể chạy toàn quyền trên tài khoản
+demo"*. Trước đó DCA/Grid demo là `BLOCKED_PENDING_ADR` vì ADR 0003 điểm 3 cấm grid/DCA trong phạm vi demo
+đầu tiên, và điểm 1 chỉ cho đúng một EA (`PATrendRiderXAUv1DemoEA`) gọi order API.
+
+### 64.2 Quyết định — `docs/decisions/0004-all-bots-demo-execution.md`
+
+- **Ba chiến lược, ba EA demo riêng:** `PATrendRiderXAUv1DemoEA`, `GridDemoEA`, `DCADemoEA`. Vẫn giữ
+  nguyên lý ADR 0003: **không** trộn cờ execution vào EA mô phỏng.
+- ADR 0004 thay ADR 0003 mục 1 và đúng một câu "không martingale, không grid, không DCA" ở mục 3. Mục 2
+  (cấm tài khoản real/contest), mục 4 (không credential), mục 5 (EA mô phỏng không đổi), mục 6 (không
+  quảng bá hiệu năng) và ADR 0002 vẫn hiệu lực.
+- **"Toàn quyền trên demo" được định nghĩa tường minh:** không còn rào cản phạm vi nào (không giới hạn số
+  bot, không cấm grid/DCA, mỗi bot một `magic`); điều kiện duy nhất còn lại là `InpEnableExecution=true`.
+- **Đường đỏ hard-enforced trong code, không chỉ trong tài liệu:** demo/tester-only (`ExecContextAllowed`,
+  real/contest → `INIT_FAILED`), SL/TP bắt buộc trên mọi lệnh, trần rủi ro cứng, kill switch, một điểm gửi
+  lệnh duy nhất `ExecBroker.mqh`, không credential/`WebRequest`/socket.
+- **Dry-run fail-closed ở cả code lẫn preset.** Static validator bắt buộc `InpEnableExecution=false` trong
+  mọi preset demo; bật execution là thao tác tường minh của operator.
+
+### 64.3 Code mới
+
+- `mt5/Include/Exec/ExecDemoCommon.mqh` — lớp chung cho bot dạng giỏ: đọc giỏ thật theo `magic`
+  (số chân, volume, entry bình quân, min/max entry, SL/TP), đóng giỏ, ghi SL/TP tuyệt đối lên **mọi** chân,
+  `ExecDemoValuePerPoint`, `ExecDemoBasketLossMoney`, dựng giá SL/TP từ entry bình quân, kiểm stop level của
+  broker, kill switch, tổng P&L đã thực hiện theo `magic`. **Không** gọi `OrderSend` — chỉ gọi
+  `ExecClosePosition`/`ExecModifyStops` của `ExecBroker`, nên vẫn đúng một điểm gửi lệnh.
+- `mt5/Experts/GridDemoEA.mq5` — execution demo cho Grid: tái dùng phần toán thuần đã có
+  (`SimGrid*`, `CSimRiskGuard`, `CSimLogger`) nên **cùng luật** với `GridLabEA`, nhưng chân lệnh là vị thế
+  broker thật. Trần: `InpMaxGridLevels` (1..50), `InpMaxLevelVolume`, `InpMaxExposure`,
+  `InpMaxBasketLossPct` (lỗ cả giỏ tại stop so với equity), `InpMaxConsecutiveLosses`, `InpMaxDailyLossPct`,
+  `InpMaxDrawdownPct`. SL/TP giỏ = giá tuyệt đối tính từ entry bình quân, cập nhật lại sau mỗi tầng.
+  Chạm daily loss/drawdown/kill switch → **đóng giỏ** rồi chốt (`CloseBasket("RISK_HALT")` /
+  `CloseBasket("KILL_SWITCH")`).
+- `mt5/Experts/DCADemoEA.mq5` — tương tự cho DCA (`SimDca*`): `InpMaxDcaAdds`, `InpMaxAddVolume`,
+  `InpAddVolumeMultiplier`, tối đa một lần add mỗi bar, cùng bộ trần rủi ro và SL/TP giỏ bắt buộc.
+- `volume` mỗi chân luôn `ExecNormalizeVolume` theo volume step; dưới lot tối thiểu thì **từ chối**, không
+  làm tròn lên.
+- `scripts/deploy_pineport.ps1` thêm hai EA vào danh sách copy/compile (`Include\Exec` vốn được enumerate
+  theo cây nên `ExecDemoCommon.mqh` tự vào).
+
+### 64.4 Preset, schema Python và test
+
+- `configs/demo/grid_demo.json`, `configs/demo/dca_demo.json` (`DEMO_ONLY`, `allow_live_trading=false`,
+  `InpEnableExecution=false`, magic `25004001`/`25005001`, kill switch riêng).
+- `python/src/mt5_ea_ai_lab/sim_configs.py`: thêm `_DEMO_EXECUTION_COMMON`, `EA_INPUTS["GridDemoEA"]` và
+  `EA_INPUTS["DCADemoEA"]`, `DEMO_EA_NAMES` (ba EA), `EA_EXECUTION_MODE` suy ra `DEMO_ONLY` cho cả ba, và
+  cross-check riêng (trần tầng/add, SL giỏ bắt buộc, price/bar trigger hợp lệ).
+- `python/tests/test_demo_execution.py`: thêm test tham số hoá cho cả ba EA — preset hợp lệ & fail-closed,
+  input preset khớp **chính xác** input khai báo trong `.mq5`, magic khác nhau, trần grid/DCA hữu hạn, và
+  không EA demo nào gọi `OrderSend` trực tiếp.
+
+### 64.5 Validator
+
+| Script | Thay đổi | Kết quả |
+|---|---|---|
+| `scripts/validate-project.py` | `EXEC_SOURCES` + `DEMO_EAS` cho ba EA; token guard theo từng dạng (single_position / bounded_grid / bounded_dca); `ExecDemoCommon` phải route qua `ExecBroker`; `REQUIRED_FILES` thêm ADR 0004 + 2 EA + 2 preset; `check_demo_presets` theo từng EA | `checks=14 fail=0` |
+| `scripts/validate_demo_execution.py` | ADR 0004 thay ADR 0003; thêm check cho `GridDemoEA`/`DCADemoEA` và check "bounded grid/DCA baskets" (trần, SL giỏ, flatten khi halt/kill switch) | `checks=11 fail=0` |
+| `scripts/validate_pamtf.py` | (từ §58) 117 input, không `input group`, hai input đầu là bridge; sửa regex thiếu `J9` | `pass=36 fail=0` |
+
+### 64.6 Compile
+
+- `powershell -ExecutionPolicy Bypass -File scripts\deploy_pineport.ps1 -Apply -Force` →
+  `DEPLOY_OK: files copied and compiled with 0 errors and 0 warnings` (32 source).
+- `GridDemoEA.mq5` → `0 errors, 0 warnings`; `DCADemoEA.mq5` → `0 errors, 0 warnings`
+  (`reports\build\deploy\GridDemoEA.log`, `reports\build\deploy\DCADemoEA.log`).
+- `.ex5` trong data folder: `GridDemoEA.ex5` 70 032 B, `DCADemoEA.ex5` 67 548 B;
+  `ExecDemoCommon.mqh` copy vào terminal khớp sha256 với bản repo
+  (`EAB4789E5158F5A27520693978937C032E0E2FF86A439D91DC6EE6CB48B16496`).
+
+### 64.7 Chưa làm (mở, ghi rõ để không hiểu nhầm)
+
+- **Tester run của hai EA demo: chưa chạy.** `reports\build\tester-run\grid_demo_exec.ini` và
+  `dca_demo_exec.ini` (+ `.set`, `InpEnableExecution=true`) đã tạo và copy vào `MQL5\Profiles\Tester\`,
+  nhưng `run_tester.ps1` từ chối khởi động vì `terminal64` đang mở (pid 14064, tài khoản demo
+  `464140826` trên `Exness-MT5Trial17`) — script cố ý không đóng terminal của người dùng.
+- **Phiên demo thật của Grid/DCA: `NOT_RUN`** (chưa attach, chưa có journal). Trạng thái ghi trong docs là
+  `ALLOWED` (phạm vi + code) chứ không phải "đã chạy".
+- Không đụng `PATrendRiderXAUv1DemoEA`, `GridLabEA`, `DCALabEA`, `ExecGuard.mqh`, `ExecBroker.mqh` →
+  bằng chứng cũ (§63, 4 scenario `dca_*`, `grid_*`) vẫn nguyên giá trị.
+
+### 64.8 Gate
+
+- `python -m pytest -q` → `412 passed`.
+- `scripts/validate-project.py` → `checks=14 fail=0`.
+- `scripts/validate_demo_execution.py` → `checks=11 fail=0`.
+- `scripts/validate_pamtf.py` → `pass=36 fail=0`.
+- Không gửi lệnh thật nào trong bước này; không credential; không thao tác trên tài khoản real.
+
+### 64.9 Báo cáo
+
+**PASS**: ràng buộc dự án đã đổi theo ADR 0004 (ba bot được execution demo), code + preset + validator +
+test đều khớp và xanh, compile 0/0. **NOT_RUN**: tester run của `GridDemoEA`/`DCADemoEA` và mọi phiên demo
+thật cho Grid/DCA. **Lợi nhuận: `UNPROVEN`** — không có kết quả giao dịch nào trong mục này.
+
+## 65. InfiniteRunner_XAU — hai luồng song song, ADR 0005 Proposed, alt A lưu trữ — 2026-10-30
+
+### 65.1 Diễn biến trung thực
+
+- Nhiệm vụ mở đầu phiên: đọc docs/v2/STRATEGIES/InfiniteRunner_XAU_Upgrade_Pack/ (README + spec +
+  prompt, 3 file) và github-demo/InfiniteRunner_XAU/InfiniteRunner_XAU.mq5 (143 dòng, V1.00).
+- V1 đọc được đúng như spec §1: quyết định trên nến đang chạy (astMA[0]), vào lại lệnh tức thời,
+  lot cố định 0.01, SL 5000 points, TP=0 kéo SL, không retcode check, không kho rủi ro.
+- Trong khi phiên chính triển khai luồng alt B (IRTypes/IRDirection/IRTrailing +
+  InfiniteRunnerXAUV2DemoEA.mq5), một luồng agent song song (15:27–15:31, alt A) đã tạo
+  InfiniteRunnerXAUDemoEA.mq5 + IRMarket.mqh + IRRisk.mqh + InfiniteRunnerContractTests.mq5
+  + infinite_runner.py + 	est_infinite_runner.py — cùng magic 25006001.
+- Hai luồng dùng chung 2 file include; lần ghi sau đè lần trước. Alt A phụ thuộc
+  ENUM_IR_DIR_MODE/IR_LOT_RISK_PERCENT/IREmaSnap — hiện không còn trong IRTypes.mqh,
+  nên alt A **không thể compile** và không thể khôi phục (repo chưa có commit git nào).
+
+### 65.2 Quyết định của chủ dự án (2026-10-30)
+
+- Canonical: **alt B** — mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5 (~1800 dòng;
+  MTF H1/M15/M5 closed-bar, legacy baseline, sizing qua ExecCalcProfit, BE/trailing từ initial R
+  lưu state, kho ngày/drawdown/streak, state file, kill switch riêng INFINITE_RUNNER_DEMO_STOP.txt,
+  dry-run mặc định).
+- Alt A **lưu trữ nguyên trạng** tại rchive/2026-10-30_InfiniteRunner_XAU_alt_A/ (6 file + README
+  giải thích), không xóa.
+- Yêu cầu soạn **ADR 0005** (bot demo thứ tư) và dừng mọi sửa code cho tới khi chủ dự án Accepted.
+
+### 65.3 Tài liệu tạo/sửa
+
+- MỚI docs/decisions/0005-infiniterunner-xau-demo-bot.md — **Proposed** (chưa Accepted; liệt kê
+  7 việc phải làm sau Accepted: đăng ký validator/EXEC_SOURCES/DEMO_EAS, preset fail-closed,
+  sim_configs.py, deploy script + compile, pytest preset check, docs 4-bot, nhãn NOT_RUN).
+- MỚI rchive/2026-10-30_InfiniteRunner_XAU_alt_A/README.md (lịch sử hai luồng + lý do lưu trữ).
+- docs/PROGRESS.md — mục này.
+
+### 65.4 Trạng thái cgate tại thời điểm dừng
+
+- scripts/validate-project.py → checks=14 fail=1: FAIL orbidden API scan (70 sources) — đúng như
+  dự kiến vì InfiniteRunnerXAUV2DemoEA.mq5 gọi AccountInfoDouble/Integer trong Experts/ mà chưa
+  được đăng ký trong EXEC_SOURCES/DEMO_EAS (ADR 0005 chưa Accepted). Cùng gốc nhân: 2 pytest
+  	est_project_validator_passes, 	est_repository_passes_static_checks FAIL.
+- scripts/validate_demo_execution.py → checks=11 fail=0.
+- python -m pytest -q → 421 passed, 2 failed (2 test "validator phải pass" — do fail trên).
+- Chưa compile, chưa deploy, chưa tạo preset, chưa chạy tester cho bot mới.
+- GridDemoEA/DCADemoEA tester scenarios (§64.7): vẫn NOT_RUN — 	erminal64 (pid 14064) vẫn đang
+  chạy, chờ chủ dự án đóng terminal hoặc cho phép xử lý.
+
+### 65.5 Báo cáo
+
+**PASS**: lưu trữ alt A đúng nguyên trạng + README; ADR 0005 soạn đầy đủ thông tin cho chủ dự án.
+**Proposed**: ADR 0005 — chờ Accepted. **NOT_RUN**: mọi phiên demo/tester của
+InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đóng).
+**Lợi nhuận: UNPROVEN** — không có kết quả giao dịch nào trong mục này.
+
+## 66. InfiniteRunner_XAU demo — ADR 0005 Accepted, đăng ký hoàn tất, gates xanh — 2026-10-30
+
+### 66.1 Chấp thuận của chủ dự án (2026-10-30)
+
+- Chủ dự án phát biểu **"mở khóa toàn bộ project cho toàn bộ bot EA"** → ADR 0005 chuyển
+  **Proposed → Accepted** (docs/decisions/0005-infiniterunner-xau-demo-bot.md): bot demo thứ tư
+  InfiniteRunnerXAUV2DemoEA (magic 25006001) được đăng ký chính thức cho backtest + tài khoản demo.
+- Yêu cầu "cho phép tài khoản real" **không được thực hiện trong phiên này**: tối thiểu theo
+  lộ trình 4 bước đã thống nhất — (1) hoàn tất ADR 0005, (2) phiên demo có giám sát mỗi bot,
+  (3) forward-test demo 2–4 tuần, (4) ADR 0006 "Real execution" dạng Proposed với kiến trúc
+  hai chìa khóa (`InpAllowRealAccount` + `InpConfirmRealRisk`) — guard không bị xóa, được nâng cấp.
+  AGENTS.md cập nhật Execution Boundary lên **4 demo EA** (bản ghi công khai, cùng commit thay đổi).
+
+### 66.2 Đăng ký bot thứ tư (đã hoàn tất)
+
+- python/src/mt5_ea_ai_lab/sim_configs.py — `EA_INPUTS["InfiniteRunnerXAUV2DemoEA"]` đầy đủ 50 input,
+  `DEMO_EA_NAMES` 4 tên, cross-check IR (EMA slow>fast, thứ tự H1>M15>entry qua `_TF_SECONDS`,
+  band SL, TP bắt buộc, SL/trail/lot theo mode).
+- configs/demo/infinite_runner_demo.json — preset fail-closed: `InpEnableExecution=false`,
+  magic 25006001, band SL 500–20000, `InpSafetyTpPoints=100000`, `InpMaxPositions=1`.
+  Lần chạy đầu `validate_preset` báo `InpMaxLots: missing required input` → đã bổ sung
+  `InpMaxLots=0.20` khớp khai báo EA.
+- scripts/validate-project.py — `EXEC_SOURCES` + `DEMO_EAS` (guard token **`runner_trailing`**),
+  check preset IR trong `check_demo_presets`.
+- scripts/validate_demo_execution.py — hằng số `IR_DEMO_EA`/`IR_DEMO_PRESET`, nhánh
+  `check_demo_ea` riêng cho runner (bắt buộc `ExecFindOwnPosition`/`ExecModifyStops`/
+  `ExecCalcProfit`/`ExecMarginRequired`/`ExecClosedPnl`/`IRMonotonicBetter`, cấm token giỏ),
+  block preset trong `check_presets`, report "infinite runner demo EA guardrails".
+- python/tests/test_demo_execution.py — `DEMO_EA_PRESETS` 4 cặp + `test_runner_demo_keeps_runner_guards`.
+- reports/build/tester-sets/infinite_runner_demo_exec.set (execution **bật**, log
+  `sim_ir_demo_exec.csv`, đã copy vào `MQL5\Profiles\Tester\`) +
+  reports/build/tester-run/infinite_runner_demo_exec.ini (XAUUSDm M5, 2026.01.05→2026.10.01).
+
+### 66.3 Trạng thái gate sau đăng ký
+
+- scripts/validate-project.py → **checks=14 fail=0**; scripts/validate_demo_execution.py →
+  **checks=12 fail=0**; python -m pytest python/tests -q → **427 passed** (423 cũ + preset-test
+  mở rộng + test guard runner).
+- docs/guides/demo-execution.md — nâng bảng 4 bot, bảng ranh giới an toàn 4 bot, mục §4.4
+  chạy InfiniteRunner demo (chẩn đoán `DECISION|NO_TRADE`/`BLOCKED`, spread mặc định 600 pts
+  vs Exness ~150–300), tham chiếu scenario tester. Guide check vẫn xanh.
+
+### 66.4 Bằng chứng giao dịch
+
+- **NOT_RUN**: mọi phiên demo/tester của cả bốn bot trong mục này (Grid/DCA scenarios chờ
+  terminal64 đóng; PA demo trước đó đã có phiên §44 — không làm lại). Tester runner lần đầu
+  (user chạy tay): **0 trades** — do `InpEnableExecution=false` mặc định dry-run + tính chọn
+  lọc MTF; `.set` mới đã bật `true` cho backtest tiếp theo.
+- **Lợi nhuận: UNPROVEN** — không có kết quả giao dịch nào của bot runner được ghi nhận.
+
+## 67. ADR 0006 — mặc định bật execution + sửa bug halt cấm-mọi-entry — 2026-10-30
+
+### 67.1 Chẩn đoán "chạy tester không có lệnh" (user report)
+
+- Log agent tester (`Agent-127.0.0.1-3000/logs/20261030.log`) cho thấy 2 lớp nhân:
+  1. **Nhầm EA**: 15:17 user đã chạy `InfiniteRunner_XAU.ex5` (V1 tham chiếu, có lệnh,
+     `tp: 0.000`) — không phải bot demo; V2 thật là `InfiniteRunnerXAUV2DemoEA.ex5`.
+  2. **Bug thật trong V2**: mọi run V2 từ 16:05 đều `mode=DRY_RUN` (`.set` chưa được
+     nạp) **và** ngay setup đầu tiên 2026.10.01 16:40:
+     `LAB|WARN|ir_v2|halted|reason=volume_to_add_invalid`. Gốc: hàm entry gọi
+     `EvaluateRisk(0.0, bar_time)` **trước** khi sizing → shared `SimRiskGuard` thấy
+     `volume_to_add<=0` → Block `volume_to_add_invalid`; mà `halt_on_breach=true`
+     khiến **mọi Block đều lên thành HALTED vĩnh viễn** → phiên chết kể cả bật cờ.
+
+### 67.2 ADR 0006 (chủ dự án yêu cầu "mặc định luôn InpEnableExecution=true")
+
+- docs/decisions/0006-demo-default-execution-enabled.md — **Accepted**: cả 4 EA demo
+  mặc định `InpEnableExecution=true` ở code + preset; dry-run là chế độ có chủ đích
+  (đặt `false` tay), thay từ gốc kịch bản "bật cờ tay" trước đó. ADR 0004/0005 gắn
+  dòng "được sửa đổi bởi ADR 0006". Ghi chú đánh số: ADR real-execution sau này là
+  **0007** (hai chìa khóa, chưa soạn).
+
+### 67.3 Thay đổi theo ADR 0006
+
+- **4 EA**: `input bool InpEnableExecution=true` (comment chỉ dry-run là `false`);
+  PA EA `#property description` + header comment cập nhật.
+- **Bug halt (cùng lớp trong 3 EA dùng SimRiskGuard)**: `limits.halt_on_breach=false`
+  — guard Block thường không còn giết phiên; guard vẫn `Halt()` cho vi phạm equity
+  thật (daily loss/drawdown/kill) và EA thăng cấp qua `InpHaltOnBreach`. Riêng IR EA:
+  sizing **trước** guard rồi gọi `EvaluateRisk(volume, bar_time)` với volume thật.
+- **4 preset JSON** `configs/demo/*.json`: `InpEnableExecution: true` + mô tả mới.
+- **Validators**: `validate-project.py` (EA default phải `true` — regex + preset check),
+  `validate_demo_execution.py` (4 điểm ép `false` → `true`, docstring) — cả hai ép
+  "mặc định rõ ràng = true". **pytest**: test demo-preset flips giả định false → true.
+- **Tài liệu**: AGENTS.md (ack công khai quyết định chủ dự án), guide demo-execution
+  (cảnh báo đầu trang, bảng §1, §4 quy trình đổi mục tiêu "dry-run có chủ đích",
+  §4.3/4.4, tham chiếu `.set`), ADR liên kết.
+
+### 67.4 Trạng thái gate khi kết thúc mục này
+
+- validate-project.py → **checks=14 fail=0**; validate_demo_execution.py →
+  **checks=12 fail=0**; pytest → **427 passed** (không tăng số test: flip không thêm).
+- Build/deploy chạy lại nền (4 EA compile 0/0 kỳ vọng; xác nhận ở Output sau khi job xong).
+- **NOT_RUN**: mọi phiên demo có lệnh của cả bốn bot mới kể từ thay đổi; backtest lại
+  V2 với `.set` mới là việc tiếp theo của chủ dự án.
+- **Lợi nhuận: UNPROVEN** — không thay đổi.
+
+## 68. Tester headless từ chối EA — fix nhận diện Strategy Tester — 2026-10-30
+
+### 68.1 Chẩn đoán (log 20261030.log)
+
+- 17:12–17:15 chạy `terminal64.exe /config:infinite_runner_demo_exec.ini` (MT5 đã đóng).
+- EA khởi tạo được (state file viết xong) nhưng `LAB|ERROR|ir_v2|context_denied|reason=terminal_trade_disabled`
+  → `INIT_FAILED` → tester không tạo report, không có lệnh nào.
+- Gốc: `ExecContextAllowed` cho phép tester bằng `state.tester`, set từ
+  `MQLInfoInteger(MQL_TESTER)`. **Trong tester headless (terminal64 /config:<ini>),
+  MQL_TESTER trả về 0** → guard coi không phải tester → kiểm tra tiếp
+  `terminal_trade_allowed` → tester headless để trade bị tắt → từ chối.
+- Đây là hành vi fail-closed đúng theo ADR 0004 nhưng làm tester headless không thể chạy.
+
+### 68.2 Sửa đổi (kiến trúc nhỏ, không thay đổi guard)
+
+- 4 EA demo: `state.tester` nhận diện thêm bằng **tên tài khoản**:
+  `state.tester = (MQL_TESTER!=0) || (AccountInfoString(ACCOUNT_NAME) contains "Strategy Tester")`.
+  Guard `ExecContextAllowed` không đổi — chỉ cần tester được nhận diện đúng.
+- Build/deploy chạy lại nền (4 EA compile 0/0 kỳ vọng).
+
+### 68.3 Trạng thái gate khi kết thúc mục này
+
+- validate-project.py → **checks=14 fail=0**; validate_demo_execution.py →
+  **checks=12 fail=0**; pytest → **427 passed** (không thay đổi).
+- **Chưa chạy lại tester** — chờ build xong. Khi tester chạy được, báo cáo sẽ có
+  `ENTRY`/`EXIT`/`TRAIL` trong `sim_ir_demo_exec.csv`; nếu vẫn `NO_TRADE`/`BLOCKED`
+  → đọc reason token trong CSV.
+- **Lợi nhuận: UNPROVEN** — không thay đổi.

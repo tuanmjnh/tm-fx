@@ -19,7 +19,7 @@ Nội dung:
   lệnh, không đọc tài khoản.
 - **Trạng thái:** compile `0 errors, 0 warnings`; `SimCoreTests` **PASS runtime 123/0** trong MT5 ngày
   2026-10-28; `SimPlanTests` **PASS runtime 39/0** cùng ngày.
-- **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W1–W5.
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W1–W5.
 
 ### 1. File
 
@@ -314,17 +314,17 @@ Nếu thiếu dòng `TEST|RESULT|ALL_PASS` → coi như `NOT_RUN`, không suy lu
 | Hạng mục | Trạng thái |
 |---|---|
 | Compile `SimCoreTests.mq5` | PASS — 0 errors, 0 warnings; `SimCoreTests.ex5` 73,646 bytes (byte size depends on the MetaEditor build; the log is authoritative) |
-| Chạy test vector trong MT5 | **PASS** — `TEST|RESULT|ALL_PASS|pass=123 fail=0|suite=sim_core` ngày 2026-10-28 18:36 |
+| Chạy test vector trong MT5 | **PASS** — `TEST\|RESULT\|ALL_PASS\|pass=123 fail=0\|suite=sim_core` ngày 2026-10-28 18:36 |
 | Kiểm tra CSV logger trên file thật | PASS — CSV 18 cột của `WonderwhalesSimEA` (3 scenario) và `RunnerTrailingLabEA`/`GridLabEA`/`DCALabEA` (10 scenario) ngày 2026-10-28 |
-| EA sử dụng core | `RunnerTrailingLabEA` 3/3, `GridLabEA` 3/3, `DCALabEA` 4/4 scenario chạy thật; `WonderwhalesSimEA` 3/3; `PinePlanSimEA` `BLOCKED_PERFORMANCE` (full kỳ không xong, diagnostic 1 tháng 0 entry) |
+| EA sử dụng core | `RunnerTrailingLabEA` 3/3, `GridLabEA` 3/3, `DCALabEA` 4/4 scenario chạy thật; `WonderwhalesSimEA` 3/3; `PinePlanSimEA` 2/2 (0 trade do quirk `rr1 < rrMin` của source) |
 
 ## RunnerTrailingLabEA (simulation-only, W3)
 
 - **Mục tiêu:** nghiên cứu hành vi một vị thế ảo duy nhất khi giữ lệnh theo xu hướng và nâng SL theo
   breakeven + trailing, dùng nền tảng `mt5/Include/Sim/` của W1–W3.
 - **Trạng thái:** compile `0 errors, 0 warnings`; chưa chạy trong MT5 (`NOT_RUN`).
-- **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W3; đặc tả:
-  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W3; đặc tả:
+  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../archive/v1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
   mục C.
 
 ### 1. An toàn
@@ -423,8 +423,8 @@ Schema 18 cột dùng chung mục **Simulation core** ở đầu tài liệu nà
 - **Mục tiêu:** nghiên cứu lưới vị thế ảo có giới hạn cứng: số tầng, volume mỗi tầng và tổng exposure.
   Không mô phỏng lưới vô hạn, không gồng không giới hạn.
 - **Trạng thái:** compile `0 errors, 0 warnings`; chưa chạy trong MT5 (`NOT_RUN`).
-- **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W4; đặc tả:
-  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W4; đặc tả:
+  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../archive/v1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
   mục A.
 
 ### 1. An toàn
@@ -535,8 +535,8 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 - **Mục tiêu:** nghiên cứu các lần bổ sung vị thế ảo theo khoảng giá hoặc khoảng thời gian, với giới hạn
   cứng về số lần add, volume mỗi lần và tổng exposure. Không bình quân vô hạn.
 - **Trạng thái:** compile `0 errors, 0 warnings`; chưa chạy trong MT5 (`NOT_RUN`).
-- **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W5; đặc tả:
-  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W5; đặc tả:
+  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../archive/v1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
   mục B.
 
 ### 1. An toàn
@@ -616,7 +616,7 @@ Schema 18 cột dùng chung mục **Simulation core** ở đầu tài liệu nà
 | `ENTRY` | `DCA_ENTRY\|adds=0` hoặc `DCA_ADD\|add=n\|mode=...\|trigger=...\|bars_since=...\|distance=...` |
 | `RISK` | `DCA_BLOCKED\|reason=...\|add=...\|mode=...` hoặc `...\|state=...` (tối đa một lần/bar cho cap) |
 | `EXIT` | `BASKET_STOP` / `BASKET_TARGET` + `levels=`, `adds=`, `pnl=`, `commission=`, `realized=` |
-| `SUMMARY` | `entries=`, `adds=`, `closed=`, `baskets=`, `open=`, `realized=`, `max_dd=`, `blocks=`, `halted=` |
+| `SUMMARY` | `entries=`, `adds=` (tổng cộng dồn), `basket_adds=` (basket hiện tại), `closed=`, `baskets=`, `open=`, `realized=`, `max_dd=`, `blocks=`, `halted=` |
 
 ### 7. Build và chạy tay
 
@@ -634,7 +634,7 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 | Hạng mục | Trạng thái |
 |---|---|
 | Compile | PASS — 0 errors, 0 warnings; `DCALabEA.ex5` 47,606 bytes (byte size depends on the MetaEditor build) |
-| Chạy trong MT5 | **PASS** — 4/4 scenario `dca_*` ngày 2026-10-28; tất cả `HALTED` bởi RiskGuard; `SUMMARY adds=0` là lỗi báo cáo, CSV có 2 add ở `dca_baseline` |
+| Chạy trong MT5 | **PASS** — 4/4 scenario `dca_*` ngày 2026-10-28; tất cả `HALTED` bởi RiskGuard. `dca_baseline` chạy lại 2026-10-29 xác nhận SUMMARY mới: `entries=11012\|adds=2\|basket_adds=0\|...\|realized=-497.06\|max_dd=5.0023\|halted=HALTED`, khớp 2 dòng `DCA_ADD`; số còn lại trùng run cũ |
 | CSV thực tế | `reports/build/tester-reports/dca_*/` |
 | Cross-check P&L Python | PASS — `python/tests/test_dca_vectors.py` (cùng vector D16–D19) |
 
@@ -651,9 +651,9 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 
 - **Mục tiêu:** preset kiểm thử cho năm EA Track C và một cổng kiểm tra tĩnh từ chối cấu hình không phải
   mô phỏng hoặc có dấu hiệu tài khoản/broker trước khi nạp vào MT5.
-- **Trạng thái:** validator exit 0 trên 6 file cấu hình (5 preset + project); pytest PASS; 13/15 scenario
-  đã chạy thật, 2 scenario `plan_*` `BLOCKED_PERFORMANCE`.
-- **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W6.
+- **Trạng thái:** validator exit 0 trên 6 file cấu hình (5 preset + project); pytest PASS; 15/15 scenario
+  đã chạy thật, 2 scenario `plan_*` có SUMMARY với 0 trade (quirk `rr1 < rrMin`).
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W6.
 
 ### 1. File
 
@@ -761,7 +761,7 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 | Snapshot | PASS — 6 file, chạy lại `unchanged` |
 | pytest toàn bộ | PASS — xem số test trong [`PROGRESS.md`](../PROGRESS.md) |
 | Nạp preset vào EA trong MT5 | PASS — toàn bộ 12 `sim_*` `.set` nạp headless qua `MQL5\Profiles\Tester` ngày 2026-10-28 |
-| Strategy Tester | PASS 13/15 scenario — `ww_*` 3/3, `runner_*` 3/3, `grid_*` 3/3, `dca_*` 4/4; `plan_*` 2 `BLOCKED_PERFORMANCE` (mục 9.2 của guide) |
+| Strategy Tester | PASS 15/15 scenario — `ww_*` 3/3, `runner_*` 3/3, `grid_*` 3/3, `dca_*` 4/4, `plan_*` 2/2 (0 trade do quirk `rr1 < rrMin`; mục 9.2 của guide) |
 
 ### 8. Giới hạn
 
@@ -775,9 +775,9 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 - **Mục tiêu:** một EA mô phỏng duy nhất đọc **trade plan** của ba indicator PinePort
   (`PriceActionMTF`, `TMXAUSignals2`, `TMIndicator2`) và mở một vị thế ảo cho mỗi tín hiệu biên hợp lệ.
 - **Trạng thái:** compile `0 errors, 0 warnings`; `SimPlanTests` **PASS runtime 39/0** (MT5, 2026-10-28);
-  Strategy Tester `BLOCKED_PERFORMANCE` — full kỳ 9 tháng không xong sau ~13 phút do PriceActionMTF
-  tính lại quá đắt; diagnostic 1 tháng xong 197 s với `entries=0`. Preset kiểm tra fail-closed PASS.
-- **Nguồn lộ trình:** [`MASTER_ROADMAP.md`](../MASTER_ROADMAP.md) mục W10.
+  Strategy Tester **PASS 2/2** — `plan_baseline` 389.9 s và `plan_edge_tp3_stop_only` 409.8 s, đủ 9 tháng
+  với SUMMARY, 0 trade do quirk `rr1=1.0 < rrMin=1.5` của source. Preset kiểm tra fail-closed PASS.
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W10.
 
 ### 1. Vì sao chỉ ba nguồn
 
@@ -805,8 +805,16 @@ Không có `OrderSend`, `CTrade`, `MqlTradeRequest` hay bất kỳ API position/
 
 ### 3. Buffer map
 
-EA gọi `iCustom(_Symbol,_Period,"PinePort\\"+SourceName())` **không truyền input** (dùng default của
-indicator) và đọc nến `shift=1` (nến đã đóng).
+EA đọc nến `shift=1` (nến đã đóng). Cách gọi `iCustom`:
+
+- `InpSource = PLAN_SOURCE_PA` → `iCustom(_Symbol,_Period,"PinePort\\PriceActionMTF",
+  InpPaRr1, InpPaRrMin)`. Hai tham số này là **bridge** của indicator (`InpRr1Ea`/`InpRrMinEa`,
+  §3.0 của [`price-action-mtf.md`](../indicators/price-action-mtf.md)) và **phải** nằm đầu
+  danh sách input; default `1.0`/`1.5` trùng default indicator nên hành vi không đổi.
+- `TM XAU Signals 2` / `TM Indicator 2` → `iCustom` **0 tham số**, dùng default của indicator.
+
+Bridge là lối duy nhất để vượt quirk `rr1 < rrMin` của nguồn Pine mà không sửa default Pine; đặt
+`InpPaRr1` > `InpPaRrMin` (ví dụ `2.0` > `1.5`) thì `PLAN_VALID` mới có thể bật.
 
 | Nguồn | `DIR` | `PLAN_VALID` | `ENTRY` | `SL` | `TP1` | `TP2` | `TP3` | Tín hiệu |
 |---|---:|---:|---:|---:|---:|---:|---:|---|

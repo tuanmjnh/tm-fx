@@ -16,7 +16,7 @@
 Repository là môi trường nghiên cứu độc lập cho EA MQL5 và pipeline Python. Nó không import, không
 gọi và không phụ thuộc `tm-trading`, `tm-hub` hay bất kỳ dự án nào khác.
 
-MVP chỉ tạo tín hiệu và mô phỏng. Đường gửi lệnh duy nhất là EA demo có guardrail (ADR 0003); không có
+MVP chỉ tạo tín hiệu và mô phỏng. Đường gửi lệnh duy nhất là các EA demo có guardrail (`mt5/Include/Exec/*`, ADR 0004); không có
 kết nối tài khoản real/live và không lưu credential.
 
 ## 2. Luồng dữ liệu mục tiêu
@@ -113,44 +113,44 @@ Chi tiết: [`environment.md`](../guides/install-and-test.md), quyết định: 
 ## 8. Trạng thái triển khai
 
 - Phase 0: skeleton, tài liệu, cấu hình mẫu và smoke test import. Xem
-  [`phase-reports/phase-0.md`](../phase-reports/phase-0.md).
+  [`phase-reports/phase-0.md`](../archive/v1/phase-reports/phase-0.md).
 - Phase 1: EA signal-only `LabSignalEA.mq5` + logger. Compile 0 errors/0 warnings; Strategy Tester chưa
-  chạy. Xem [`phase-reports/phase-1.md`](../phase-reports/phase-1.md).
+  chạy. Xem [`phase-reports/phase-1.md`](../archive/v1/phase-reports/phase-1.md).
 - Phase 2: `Indicators.mqh`, `SignalEngine.mqh`, baseline EMA crossover chỉ dùng nến đóng và self-check
   script. Compile 0 errors/0 warnings; script chưa chạy. Xem
-  [`strategy-signal-spec.md`](strategy-signal-spec.md) và [`phase-reports/phase-2.md`](../phase-reports/phase-2.md).
+  [`strategy-signal-spec.md`](strategy-signal-spec.md) và [`phase-reports/phase-2.md`](../archive/v1/phase-reports/phase-2.md).
 - Phase 3: loader CSV/Parquet, chuẩn hóa schema, validation OHLCV, report JSON/CSV, CLI
   `scripts/validate_dataset.py`; 38 Python test pass. Xem [`data-dictionary.md`](data-dictionary.md) và
-  [`phase-reports/phase-3.md`](../phase-reports/phase-3.md).
+  [`phase-reports/phase-3.md`](../archive/v1/phase-reports/phase-3.md).
 - Phase 4: signal EMA crossover thuần Python, deterministic backtester, cost model tường minh, SL/TP tĩnh
   và trailing stop tùy chọn, trades ledger/equity/summary, benchmark buy-and-hold và CLI
   `scripts/run_backtest.py`; 62 Python test pass (con số lịch sử của Phase 4).
   Xem [`testing-guide.md`](testing.md), [`trailing-stop.md`](trailing-stop.md) và
-  [`phase-reports/phase-4.md`](../phase-reports/phase-4.md).
+  [`phase-reports/phase-4.md`](../archive/v1/phase-reports/phase-4.md).
 - Phase 5: thống nhất cửa sổ EMA `slow+1`; fixture chung `parity_ema_cross.csv`;
   `LabSignalExport.mq5` (compile 0 errors/0 warnings, chưa chạy); `export_python_signals.py`;
   comparator `compare_signals.py` + `evaluation/parity.py`; 79 Python test pass. Parity thực tế chờ chạy
   export MQL5 thủ công. Xem [`parity.md`](parity.md) và
-  [`phase-reports/phase-5.md`](../phase-reports/phase-5.md).
+  [`phase-reports/phase-5.md`](../archive/v1/phase-reports/phase-5.md).
 - Phase 6: SQLite experiment store với trạng thái `running/completed/failed/invalid_data/cancelled/
   interrupted`, config hash, data fingerprint, git commit/dirty, artifact hash; `run_backtest.py --store`;
   `compare_experiments.py` xuất JSON/CSV/Markdown; 119 Python test pass. Xem
-  [`experiment-store.md`](experiment-store.md) và [`phase-reports/phase-6.md`](../phase-reports/phase-6.md).
+  [`experiment-store.md`](experiment-store.md) và [`phase-reports/phase-6.md`](../archive/v1/phase-reports/phase-6.md).
 - Phase 7: feature causal, label hướng giá có horizon/dead zone, chia thời gian 60/20/20 có purge,
   walk-forward expanding-window 3 fold, logistic regression artifact JSON, metric phân loại + mô phỏng
   chiến lược, benchmark majority/momentum/buy & hold, model card, CLI `scripts/train_ml_baseline.py`;
   143 Python test pass. Kết quả demo synthetic yếu và lỗ sau chi phí; không phải kết quả thị trường. Xem
-  [`ml-baseline.md`](ml-baseline.md) và [`phase-reports/phase-7.md`](../phase-reports/phase-7.md).
+  [`ml-baseline.md`](ml-baseline.md) và [`phase-reports/phase-7.md`](../archive/v1/phase-reports/phase-7.md).
 - Phase 8: ONNX export tự dựng graph từ artifact JSON (opset 13, IR 8, float32, batch động),
   metadata/hash, kiểm tra parity Python–ONNX trên fixture 24 hàng (max abs diff 4.673e-08, tolerance
   1e-5) và EA `LabOnnxInference.mq5` chỉ suy luận, không giao dịch (compile 0 errors/0 warnings).
   ONNX runtime trong MT5 **chưa chạy** → `READY_FOR_MANUAL_VALIDATION`. Xem
-  [`onnx-inference.md`](onnx.md) và [`phase-reports/phase-8.md`](../phase-reports/phase-8.md).
+  [`onnx-inference.md`](onnx.md) và [`phase-reports/phase-8.md`](../archive/v1/phase-reports/phase-8.md).
 - Phase 9: pipeline end-to-end `scripts/run_pipeline.py` chạy validate → backtest EMA → ML baseline →
   experiment store → báo cáo tổng hợp trên cùng dataset; fail-safe dữ liệu/model/ID trùng; 155 Python
   test pass. Tái lập đã xác minh trên snapshot commit sạch (116 file, commit tạm `d3a9ea39…`): metric,
   data SHA-256, model SHA-256 và ONNX parity khớp; cần lặp lại sau commit chính thức. Xem
-  [`end-to-end.md`](pipeline.md) và [`phase-reports/phase-9.md`](../phase-reports/phase-9.md).
+  [`end-to-end.md`](pipeline.md) và [`phase-reports/phase-9.md`](../archive/v1/phase-reports/phase-9.md).
 - Trailing stop extension (sau Phase 9): trailing stop + activation tùy chọn trong backtester Python,
   cập nhật theo bar đã đóng và có hiệu lực bar kế tiếp; 170 Python test pass. Chưa có implementation
   MQL5/EA, không execution. Xem [`trailing-stop.md`](trailing-stop.md).

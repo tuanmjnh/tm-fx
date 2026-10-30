@@ -1,0 +1,126 @@
+; ====================================================================
+; CAU HINH TESTER CHO GridDemoEA (XAUUSD / Vang)
+; Du an: MT5 EA & AI Lab (tm-fx)
+; File: docs/configurations/grid_demo.set
+; Chien luoc: Luoi gia gioi han co kiem soat rui ro (Bounded Grid)
+; Quy uoc: Chi ho tro tai khoan DEMO va Strategy Tester (ADR 0003, ADR 0004)
+; ====================================================================
+
+; --------------------------------------------------------------------
+; 1. CAU HINH THUC THI VA AN TOAN TAI KHOAN (Demo Execution)
+; --------------------------------------------------------------------
+; InpEnableExecution: true = Kich hoat vao lenh that tren tai khoan Demo/Tester.
+;                     false = Chay che do Dry-run (chi ghi nhat ky log, khong vao lenh).
+InpEnableExecution=true
+
+; InpAllowedSymbols: Danh sach tien to cap tien/san pham cho phep (phan cach bang dau phay).
+;                    XAUUSD chap nhan ca XAUUSDm, XAUUSD.a, XAUUSD_i... tren cac san khac nhau.
+InpAllowedSymbols=XAUUSD
+
+; InpMagicNumber: Ma so nhan dien lenh duy nhat cua bot Grid nay.
+InpMagicNumber=25004001
+
+; InpMaxSlippagePoints: Do truot gia toi da chap nhan khi vao lenh thi truong (don vi: points).
+InpMaxSlippagePoints=30
+
+; InpKillSwitchFile: Ten file ngat khan cap trong thu muc MQL5/Files. Neu tao file nay, bot se dong basket va dung lai.
+InpKillSwitchFile=GRID_DEMO_STOP.txt
+
+; InpCloseOnKillSwitch: true = Dong toan bo cac vi the dang mo khi phat hien co file Kill-switch.
+InpCloseOnKillSwitch=true
+
+; --------------------------------------------------------------------
+; 2. NHAT KY GIAO DICH (Journal)
+; --------------------------------------------------------------------
+; InpEnableLog: true = Ghi nhat ky chi tiet ra file CSV trong thu muc MQL5/Files.
+InpEnableLog=true
+
+; InpLogFile: Ten file luu nhat ky giao dich.
+InpLogFile=grid_demo.csv
+
+; InpDebug: true = In thong tin debug chi tiet ra tab Experts trong terminal.
+InpDebug=false
+
+; --------------------------------------------------------------------
+; 3. THIET LAP LUOI GIA (Grid Settings)
+; --------------------------------------------------------------------
+; InpGridSide: Huong giao dich cua luoi gia:
+;              1 = GRID_DEMO_LONG (Chi danh luoi Mua - BUY)
+;             -1 = GRID_DEMO_SHORT (Chi danh luoi Ban - SELL)
+InpGridSide=1
+
+; InpSpacingMode: Che do tinh khoang cach giua cac tang luoi:
+;                 0 = SIM_GRID_FIXED_POINTS (Khoang cach co dinh theo points)
+;                 1 = SIM_GRID_ATR (Khoang cach dong theo bien dong chi bao ATR)
+InpSpacingMode=0
+
+; InpSpacingPoints: Khoang cach co dinh giua cac tang luoi (points). Ap dung khi InpSpacingMode=0.
+;                   Tren Exness XAUUSDm (3 chu so thap phan): 300 points = 0.30 USD vang.
+;                   Neu danh khung dai hon co the nang len 1000 - 2000 points.
+InpSpacingPoints=300.0
+
+; InpAtrPeriod: Chu ky tinh toan chi bao ATR (ap dung khi InpSpacingMode=1).
+InpAtrPeriod=14
+
+; InpAtrMultiplier: He so nhan ATR de tinh khoang cach luoi dong (ap dung khi InpSpacingMode=1).
+InpAtrMultiplier=1.0
+
+; InpMaxGridLevels: So tang luoi toi da duoc phep mo (bao gom ca tang dau tien).
+;                   DAY LA GIOI HAN CUNG, TUYET DOI KHONG MO THEM KHI DAT TOI DA (chong chay tai khoan).
+InpMaxGridLevels=5
+
+; InpBaseVolume: Khoi luong lot cho tang dau tien (Real lots).
+InpBaseVolume=0.01
+
+; InpVolumeMultiplier: He so nhan khoi luong giua cac tang luoi (1.0 = lot bang nhau, 1.5 = nhan 1.5).
+InpVolumeMultiplier=1.5
+
+; InpMaxLevelVolume: Tran khoi luong toi da cho mot tang bat ky (chong phong to lot qua muc).
+InpMaxLevelVolume=0.04
+
+; --------------------------------------------------------------------
+; 4. THOAT LENH VA CHOT LOI / CAT LO GIO LENH (Exit Settings)
+; --------------------------------------------------------------------
+; InpExitMode: Che do thoat lenh:
+;              0 = GRID_DEMO_EXIT_LEVEL (Chot loi rieng le tung tang)
+;              1 = GRID_DEMO_EXIT_BASKET (Chot loi dong bo toan bo gio lenh theo gia trung binh)
+InpExitMode=1
+
+; InpLevelTargetPoints: Muc chot loi cho tung tang don le (points). Ap dung khi InpExitMode=0.
+InpLevelTargetPoints=300.0
+
+; InpBasketTargetPoints: Muc chot loi cho toan bo gio lenh tinh tu gia trung binh (points).
+;                        600 points tren XAUUSDm = 0.60 USD vang.
+InpBasketTargetPoints=600.0
+
+; InpBasketStopPoints: MUC CAT LO BAT BUOC (Mandatory Basket Stop) tinh tu gia trung binh (points).
+;                      900 points tren XAUUSDm = 0.90 USD vang.
+;                      Tat ca bot phai co muc cat lo nay de dam bao quan ly rui ro.
+InpBasketStopPoints=900.0
+
+; --------------------------------------------------------------------
+; 5. GIAP BAO VE RUI RO (RiskGuard Settings)
+; --------------------------------------------------------------------
+; InpMaxSpreadPoints: Do gian spread toi da cho phep mo them tang moi (points).
+;                     Khuyen nghi: 600 points tren Exness XAUUSDm.
+InpMaxSpreadPoints=600.0
+
+; InpMaxExposure: Tong khoi luong lot toi da cua toan bo gio lenh duoc phep nam giu dong thoi.
+;                 Vi du: 0.10 lot tong (neu vuot qua se bi chan khong cho mo them tang).
+InpMaxExposure=0.10
+
+; InpMaxBasketLossPct: Muc lo toi da cho phep cua gio lenh tinh theo % von tai khoan (Equity %).
+;                      1.0% = Neu gio lenh cham muc lo 1% tai khoan thi lap tuc dong gio.
+InpMaxBasketLossPct=1.0
+
+; InpMaxDailyLossPct: Gioi han thua lo toi da trong ngay (%). 0 = tat tinh nang nay.
+InpMaxDailyLossPct=2.0
+
+; InpMaxDrawdownPct: Muc sut giam tai khoan toi da cho phep (% Drawdown). 0 = tat.
+InpMaxDrawdownPct=5.0
+
+; InpMaxConsecutiveLosses: So lan dong gio lenh bi lo lien tiep toi da truoc khi dung bot.
+InpMaxConsecutiveLosses=3
+
+; InpHaltOnBreach: true = Dung toan bo bot neu vi pham bat ky quy tac rui ro nao o tren.
+InpHaltOnBreach=true

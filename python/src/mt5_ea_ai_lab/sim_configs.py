@@ -103,6 +103,20 @@ _TF_SECONDS: dict[int, int] = {
 }
 _TIMEFRAMES = tuple(_TF_SECONDS)
 
+#--- Inputs shared by the demo-execution EAs (ADR 0004). Execution defaults to
+#--- dry-run; the strategy-specific caps stay per EA.
+_DEMO_EXECUTION_COMMON: dict[str, Any] = {
+    "InpEnableExecution": BOOL,
+    "InpAllowedSymbols": STR_LIST,
+    "InpMagicNumber": Num(minimum=1.0, integer=True),
+    "InpMaxSlippagePoints": Num(minimum=0.0, maximum=1000.0, integer=True),
+    "InpKillSwitchFile": STR,
+    "InpEnableLog": BOOL,
+    "InpLogFile": STR,
+    "InpDebug": BOOL,
+    "InpMaxSpreadPoints": Num(minimum=0.0),
+}
+
 EA_INPUTS: dict[str, dict[str, Any]] = {
     "RunnerTrailingLabEA": {
         **_COMMON,
@@ -163,6 +177,8 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpMinStopPoints": Num(minimum=0.0),
         "InpMinTargetPoints": Num(minimum=0.0),
         "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
+        "InpPaRr1": Num(minimum=0.0, min_exclusive=True),
+        "InpPaRrMin": Num(minimum=0.0),
         "InpBreakEvenEnabled": BOOL,
         "InpBreakEvenTriggerPoints": Num(minimum=0.0),
         "InpBreakEvenOffsetPoints": Num(minimum=0.0),
@@ -298,12 +314,113 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpMaxSpreadAtrRatio": Num(minimum=0.0, maximum=1.0),
         "InpCommissionPerVolume": Num(minimum=0.0),
     },
+    #--- ADR 0004: every bot has its own demo-execution EA. Grid/DCA reuse the
+    #--- bounded grid/DCA rules of their simulation EAs but send real demo orders.
+    "GridDemoEA": {
+        **_DEMO_EXECUTION_COMMON,
+        "InpCloseOnKillSwitch": BOOL,
+        "InpGridSide": Enum((1, -1)),
+        "InpSpacingMode": Enum((0, 1)),
+        "InpSpacingPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
+        "InpAtrMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpMaxGridLevels": Num(minimum=1.0, maximum=50.0, integer=True),
+        "InpBaseVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpVolumeMultiplier": Num(minimum=1.0),
+        "InpMaxLevelVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpExitMode": Enum((0, 1)),
+        "InpLevelTargetPoints": Num(minimum=0.0),
+        "InpBasketTargetPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpBasketStopPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpMaxExposure": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpMaxBasketLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
+        "InpHaltOnBreach": BOOL,
+    },
+    "DCADemoEA": {
+        **_DEMO_EXECUTION_COMMON,
+        "InpCloseOnKillSwitch": BOOL,
+        "InpDcaSide": Enum((1, -1)),
+        "InpBaseVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpTriggerMode": Enum((0, 1)),
+        "InpDcaDistancePoints": Num(minimum=0.0),
+        "InpBarsBetweenAdds": Num(minimum=0.0, integer=True),
+        "InpMaxDcaAdds": Num(minimum=0.0, maximum=50.0, integer=True),
+        "InpAddVolumeMultiplier": Num(minimum=1.0),
+        "InpMaxAddVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpBasketTargetPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpBasketStopPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpMaxExposure": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpMaxBasketLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
+        "InpHaltOnBreach": BOOL,
+    },
+    #--- ADR 0005: fourth demo bot — InfiniteRunner_XAU V2. One runner position
+    #--- toward a far mandatory safety TP with a monotonic trail; decisions on
+    #--- closed bars; BE/trailing anchored to the stored initial R.
+    "InfiniteRunnerXAUV2DemoEA": {
+        **_DEMO_EXECUTION_COMMON,
+        "InpCloseOnKillSwitch": BOOL,
+        "InpPersistState": BOOL,
+        "InpStateFile": STR,
+        "InpResetStateOnInit": BOOL,
+        "InpDirectionMode": Enum((0, 1)),
+        "InpH1TF": Num(minimum=0.0, integer=True),
+        "InpM15TF": Num(minimum=0.0, integer=True),
+        "InpEntryTF": Num(minimum=0.0, integer=True),
+        "InpEmaFast": Num(minimum=2.0, integer=True),
+        "InpEmaSlow": Num(minimum=2.0, integer=True),
+        "InpSlopeBars": Num(minimum=1.0, maximum=200.0, integer=True),
+        "InpSlowSlopeTolPoints": Num(minimum=0.0),
+        "InpPullbackTolPoints": Num(minimum=0.0),
+        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
+        "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
+        "InpMinBarsBetweenEntries": Num(minimum=0.0, maximum=1000.0, integer=True),
+        "InpMaxTradesPerDay": Num(minimum=1.0, maximum=5000.0, integer=True),
+        "InpLotMode": Enum((0, 1)),
+        "InpLots": Num(minimum=0.0, maximum=100.0),
+        "InpRiskPercent": Num(minimum=0.0, maximum=10.0),
+        "InpMaxLots": Num(minimum=0.0, maximum=100.0),
+        "InpMaxSpreadAtrRatio": Num(minimum=0.0, maximum=10.0),
+        "InpAbnormalAtrRatio": Num(minimum=0.0, maximum=100.0),
+        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
+        "InpAtrBaselineBars": Num(minimum=10.0, maximum=5000.0, integer=True),
+        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
+        "InpHaltOnBreach": BOOL,
+        "InpManualResetDrawdown": BOOL,
+        "InpSlMode": Enum((0, 1)),
+        "InpInitialSlPoints": Num(minimum=0.0),
+        "InpSlAtrMultiplier": Num(minimum=0.0),
+        "InpMinStopPoints": Num(minimum=0.0),
+        "InpMaxStopPoints": Num(minimum=0.0),
+        "InpTrailMode": Enum((0, 1)),
+        "InpTrailStartPts": Num(minimum=0.0),
+        "InpTrailDistancePts": Num(minimum=0.0),
+        "InpTrailStepPts": Num(minimum=0.0),
+        "InpTrailAtrMultiplier": Num(minimum=0.0),
+        "InpBreakEvenTriggerR": Num(minimum=0.0),
+        "InpBreakEvenBufferPts": Num(minimum=0.0),
+        "InpSafetyTpPoints": Num(minimum=0.0),
+    },
 }
 
-#--- ADR 0003: the demo EA is the only preset allowed to request execution, and
-#--- only with DEMO_ONLY. Everything else stays SIMULATION_ONLY.
+#--- ADR 0004 + 0005: the four demo EAs are the presets allowed to request
+#--- execution, and only with DEMO_ONLY. Every simulation EA stays SIMULATION_ONLY.
+DEMO_EA_NAMES = (
+    "PATrendRiderXAUv1DemoEA",
+    "GridDemoEA",
+    "DCADemoEA",
+    "InfiniteRunnerXAUV2DemoEA",
+)
+
 EA_EXECUTION_MODE: dict[str, str] = {
-    name: (DEMO_MODE if name == "PATrendRiderXAUv1DemoEA" else EXECUTION_MODE)
+    name: (DEMO_MODE if name in DEMO_EA_NAMES else EXECUTION_MODE)
     for name in EA_INPUTS
 }
 
@@ -404,6 +521,80 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("InpDcaDistancePoints: must be positive in price mode")
         if inputs["InpTriggerMode"] == 1 and inputs["InpBarsBetweenAdds"] < 1:
             issues.append("InpBarsBetweenAdds: must be at least 1 in bar mode")
+
+    if ea == "GridDemoEA":
+        if inputs["InpMaxLevelVolume"] < inputs["InpBaseVolume"]:
+            issues.append("InpMaxLevelVolume: must cover InpBaseVolume")
+        if inputs["InpMaxExposure"] < inputs["InpMaxLevelVolume"]:
+            issues.append("InpMaxExposure: must cover InpMaxLevelVolume")
+        if inputs["InpVolumeMultiplier"] < 1:
+            issues.append("InpVolumeMultiplier: must be at least 1")
+        if inputs["InpSpacingMode"] == 0 and inputs["InpSpacingPoints"] <= 0:
+            issues.append("InpSpacingPoints: must be positive in fixed mode")
+        if inputs["InpSpacingMode"] == 1:
+            if inputs["InpAtrPeriod"] < 2:
+                issues.append("InpAtrPeriod: must be at least 2 in ATR mode")
+            if inputs["InpAtrMultiplier"] <= 0:
+                issues.append("InpAtrMultiplier: must be positive in ATR mode")
+        if inputs["InpExitMode"] == 0 and inputs["InpLevelTargetPoints"] <= 0:
+            issues.append("InpLevelTargetPoints: must be positive in LEVEL mode")
+        if inputs["InpExitMode"] == 1 and inputs["InpBasketTargetPoints"] <= 0:
+            issues.append("InpBasketTargetPoints: must be positive in BASKET mode")
+        if inputs["InpBasketStopPoints"] <= 0:
+            issues.append("InpBasketStopPoints: must be positive (mandatory basket stop)")
+        if inputs["InpMaxGridLevels"] < 1:
+            issues.append("InpMaxGridLevels: must be at least 1")
+        if inputs["InpMaxGridLevels"] > 50:
+            issues.append("InpMaxGridLevels: must be at most 50 (bounded grid)")
+
+    if ea == "DCADemoEA":
+        if inputs["InpMaxAddVolume"] < inputs["InpBaseVolume"]:
+            issues.append("InpMaxAddVolume: must cover InpBaseVolume")
+        if inputs["InpMaxExposure"] < inputs["InpMaxAddVolume"]:
+            issues.append("InpMaxExposure: must cover InpMaxAddVolume")
+        if inputs["InpAddVolumeMultiplier"] < 1:
+            issues.append("InpAddVolumeMultiplier: must be at least 1")
+        if inputs["InpTriggerMode"] == 0 and inputs["InpDcaDistancePoints"] <= 0:
+            issues.append("InpDcaDistancePoints: must be positive in price mode")
+        if inputs["InpTriggerMode"] == 1 and inputs["InpBarsBetweenAdds"] < 1:
+            issues.append("InpBarsBetweenAdds: must be at least 1 in bar mode")
+        if inputs["InpBasketStopPoints"] <= 0:
+            issues.append("InpBasketStopPoints: must be positive (mandatory basket stop)")
+        if inputs["InpMaxDcaAdds"] > 50:
+            issues.append("InpMaxDcaAdds: must be at most 50 (bounded DCA)")
+
+    #--- ADR 0005: InfiniteRunner demo stop band, mandatory safety TP, trail
+    #--- and lot-mode consistency.
+    if ea == "InfiniteRunnerXAUV2DemoEA":
+        if inputs["InpEmaSlow"] <= inputs["InpEmaFast"]:
+            issues.append("InpEmaSlow: must be greater than InpEmaFast")
+        trend = _TF_SECONDS.get(int(inputs["InpH1TF"]))
+        structure = _TF_SECONDS.get(int(inputs["InpM15TF"]))
+        entry = _TF_SECONDS.get(int(inputs["InpEntryTF"]))
+        if trend is None or structure is None or entry is None:
+            issues.append("timeframes: must use known MT5 period constants")
+        elif not (trend > structure > entry):
+            issues.append("timeframes: must be ordered H1 > M15 > entry")
+        if inputs["InpMaxStopPoints"] < inputs["InpMinStopPoints"]:
+            issues.append("InpMaxStopPoints: must cover InpMinStopPoints")
+        if inputs["InpSafetyTpPoints"] < inputs["InpMinStopPoints"]:
+            issues.append("InpSafetyTpPoints: mandatory TP must clear the stop band")
+        if inputs["InpSlMode"] == 0 and inputs["InpInitialSlPoints"] <= 0:
+            issues.append("InpInitialSlPoints: must be positive in fixed SL mode")
+        if inputs["InpSlMode"] == 1 and inputs["InpSlAtrMultiplier"] <= 0:
+            issues.append("InpSlAtrMultiplier: must be positive in ATR SL mode")
+        if inputs["InpTrailMode"] == 0 and inputs["InpTrailDistancePts"] <= 0:
+            issues.append("InpTrailDistancePts: must be positive in fixed trail mode")
+        if inputs["InpTrailMode"] == 1 and inputs["InpTrailAtrMultiplier"] <= 0:
+            issues.append("InpTrailAtrMultiplier: must be positive in ATR trail mode")
+        if inputs["InpTrailStartPts"] <= 0 or inputs["InpTrailStepPts"] <= 0:
+            issues.append("trailing: trail start and trail step must be positive")
+        if inputs["InpLotMode"] == 1 and inputs["InpRiskPercent"] <= 0:
+            issues.append("InpRiskPercent: must be positive in risk-percent lot mode")
+        if inputs["InpMaxLots"] <= 0:
+            issues.append("InpMaxLots: exposure cap must be positive")
+        if inputs["InpMaxTradesPerDay"] < 1:
+            issues.append("InpMaxTradesPerDay: must be at least 1")
 
     if ea == "PinePlanSimEA":
         if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:

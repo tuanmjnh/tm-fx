@@ -20,6 +20,8 @@
     "InpMinStopPoints": 5.0,
     "InpMinTargetPoints": 5.0,
     "InpMaxHoldingBars": 0,
+    "InpPaRr1": 1.0,
+    "InpPaRrMin": 1.5,
     "InpBreakEvenEnabled": false,
     "InpBreakEvenTriggerPoints": 400.0,
     "InpBreakEvenOffsetPoints": 0.0,
@@ -60,6 +62,6 @@
     "slippage": "points, adverse on every fill including stop fills",
     "target_fill": "the target price is used as the fill; favourable gaps are not credited",
     "swap": "not modelled in this preset",
-    "indicator": "iCustom with the indicator's default inputs; the EA never overrides them"
+    "indicator": "iCustom with the indicator's default inputs except the rr bridge (InpPaRr1, InpPaRrMin), which the EA forwards to open or close the plan gate"
   }
 }

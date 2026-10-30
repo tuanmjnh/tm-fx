@@ -1333,8 +1333,8 @@ Quy ước: cột **Thiếu** là giá trị khi `na`/không áp dụng. Giá = 
 | 165 | `DISP_BEAR` | Displacement bear | 0/1 | 0 | Bar | audit |
 | 166 | `REJ_BULL` | Rejection bull | 0/1 | 0 | Bar | audit |
 | 167 | `REJ_BEAR` | Rejection bear | 0/1 | 0 | Bar | audit |
-| 168 | `IS_OVEREXT` | `extEma > maxExt || extCandle > maxCandle` | 0/1 | 0 | Bar | audit |
-| 169 | `EXT_EMA_ATR` | `|close−emaF|/atr` | ≥ 0 | 0 | Bar | audit |
+| 168 | `IS_OVEREXT` | `extEma > maxExt \|\| extCandle > maxCandle` | 0/1 | 0 | Bar | audit |
+| 169 | `EXT_EMA_ATR` | `\|close−emaF\|/atr` | ≥ 0 | 0 | Bar | audit |
 | 170 | `EXT_CANDLE_ATR` | `(high−low)/atr` | ≥ 0 | 1 | Bar | audit |
 
 ##### L. Indicator (11)
@@ -1422,7 +1422,7 @@ Quy ước: cột **Thiếu** là giá trị khi `na`/không áp dụng. Giá = 
 | 224 | `MODE_DIR` | Hướng mode | −1/0/1 | 0 | Bar | audit |
 | 225 | `ACTIVE_MODE` | `ENUM_TM2_MODE` | 0..3 | 0 | Bar | **có** |
 | 226 | `MODE_READY` | Có mode active | 0/1 | 0 | Bar | audit |
-| 227 | `MODE_GATE_OK` | `!filter || ready&&match` | 0/1 | 0 | Bar | **có** |
+| 227 | `MODE_GATE_OK` | `!filter \|\| ready&&match` | 0/1 | 0 | Bar | **có** |
 | 228 | `MODE_REASON` | `ENUM_TM2_REASON` | 0..31 | 0 | Bar | **có** |
 | 229 | `MODE_B_INVALID_LONG` | Mode B invalid long | 0/1 | 0 | Bar | audit |
 | 230 | `MODE_B_INVALID_SHORT` | Mode B invalid short | 0/1 | 0 | Bar | audit |
@@ -1540,7 +1540,7 @@ struct TM2EngineState
 
 | Chuỗi | Công thức | Warm-up |
 |---|---|---|
-| `tr` | `max(h−l, |h−c1|, |l−c1|)`, bar 0 = `h−l` | bar 0 |
+| `tr` | `max(h−l, \|h−c1\|, \|l−c1\|)`, bar 0 = `h−l` | bar 0 |
 | `atr` | RMA(tr, `atrLen`) | `atrLen` |
 | `bbMid/up/lo` | SMA20 ± 2·stdev20 (population) | 20 |
 | `bbWidth` | `(up−lo)/mid*100`, mid ≤ 0 → 0 | 20 |

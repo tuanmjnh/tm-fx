@@ -263,7 +263,7 @@ PATTERN → BOS → CHoCH → MSS → RETEST → FAILBRK → CONT → PULL → S
 | Repaint audit | `REPAINT_AUDIT_PriceActionMTF.md` |
 | Buffer contract | `BUFFER_CONTRACT_PriceActionMTF.md` |
 | Indicator | `mt5/Indicators/PinePort/PriceActionMTF.mq5` |
-| Contract tests | `mt5/Scripts/PriceActionMTFContractTests.mq5` — **PASS 120/120** (MT5, 2026-10-28) |
+| Contract tests | `mt5/Scripts/PriceActionMTFContractTests.mq5` — **PASS 125/125** (MT5, 2026-10-29) |
 | EA hỗ trợ | `NOT_IMPLEMENTED` |
 | Parity | `BLOCKED` — chưa có CSV Pine |
 | Runtime | Contract test PASS; indicator gắn chart/plot chưa xác minh |
@@ -696,7 +696,7 @@ khi chưa chạy.
 
 ### 1. Phạm vi
 
-1. Input của `mt5/Indicators/PinePort/PriceActionMTF.mq5` (115 input).
+1. Input của `mt5/Indicators/PinePort/PriceActionMTF.mq5` (**117 input** = 115 Pine-parity + 2 bridge).
 2. **95 buffer hợp đồng** (index 12..106) cho EA/audit + **12 buffer render** (index 0..11).
 3. Bar policy: chỉ nến đã đóng; replay toàn bộ lịch sử mỗi nến.
 4. Cách EA đọc buffer, dedupe, ghi CSV (EA hỗ trợ: `NOT_IMPLEMENTED`).
@@ -722,7 +722,12 @@ Không định nghĩa: execution, sizing, commission, alert, dashboard. Repo kh�
 | P12 | Không port dashboard/box/label/ribbon/line trang trí | §6.1 |
 | P13 | Không "sửa" quirk Pine (SL ưu tiên, timeout exit = TP1, session sweep, OBV warm-up) | §11 |
 
-### 3. Input contract (115)
+### 3. Input contract (117)
+
+Danh sách vật lý có **117 input**: hai bridge ở §3.0 (MQL5-only) đứng **đầu** danh sách, sau
+đó là 115 input Pine-parity ở §3.1/§3.2. Số thứ tự trong §3.1/§3.2 là **số logic Pine
+(1..115)**, không đổi; bài test `PriceActionMTFContractTests` chạy trên logic thuần và không
+phụ thuộc thứ tự input.
 
 Không port 35 input hiển thị/chết: `confirmOnly`, `payloadMode`, `ms_bosOn/chochOn/mssOn`,
 `liq_sweepOn`, `liq_tlOn/tlTol/tlMaxDev`, `sr_showOn`, `fvg_showOn`, `ob_showOn`,
@@ -730,6 +735,26 @@ Không port 35 input hiển thị/chết: `confirmOnly`, `payloadMode`, `ms_bosO
 `sessTz` (thay bằng offset), `showViz`, `cBull/cBear`, `showSig/showHit/showZone/zoneLen`,
 `showEma/showPd/showPw/showSess/showPriceZones/showTl/showVwap/showVol/showDash/dashSize`,
 `cfBars` (chết).
+
+#### 3.0 Nhóm bridge EA (MQL5-only, vị trí 1–2)
+
+Hai input bridge phải nằm **đầu** danh sách vì `iCustom` truyền tham số theo **vị trí**.
+Chúng chỉ override `rr1`/`rrMin` của plan khi EA đẩy giá trị > 0; để 0 thì giữ nguyên default
+Pine-parity. Vì `rr1`/`rrMin` đã có khóa trong `PaConfigCanonical`, bridge **không** thêm khóa
+canonical (vẫn 116 khóa) và `input_hash` chỉ đổi khi giá trị override khác default.
+
+| # | Input | Kiểu | Default | Ghi chú |
+|---:|---|---|---:|---|
+| B1 | `InpRr1Ea` | double | 0.0 | 0 = dùng `InpRr1`; > 0 = ghi đè TP1 R (clamp ≥ 0.1) |
+| B2 | `InpRrMinEa` | double | 0.0 | 0 = dùng `InpRrMin`; > 0 = ghi đè min TP1 R (clamp ≥ 0.0) |
+
+- **Không** `input group` nào được khai báo trong file: một dòng `input group` chiếm một slot
+  `iCustom`, làm lệch ánh xạ vị trí (đã đo: `rr1` nhận giá trị của slot 2).
+- Bridge ghi vào `g_cfg.rr1`/`g_cfg.rrMin` ngay trước `PaNormalizeConfig`, nên mọi clamp của
+  §3.2 vẫn áp dụng.
+- Khi bridge hoạt động, indicator in `PAMTF|INFO|bridge|rr1=<x>|rrMin=<y>` để đối chiếu với
+  bản ghi EA `LAB|INFO|plan|pa_bridge|rr1=<x>|rr_min=<y>`.
+- Chỉ EA `PinePlanSimEA` dùng bridge (§12.1). Mọi EA khác gọi `iCustom` 0 tham số → default Pine.
 
 #### 3.1 Nhóm thời gian (MQL5-only)
 
@@ -1049,12 +1074,18 @@ Quy ước:
 
 ### 7. Bar policy và state
 
-Mỗi lần `rates_total` thay đổi (nến mới), indicator **reset state và replay từ bar 0** tới
-`rates_total-2`. Trong cùng một nến, trả `rates_total` ngay. Hệ quả:
+Mỗi lần `rates_total` thay đổi (nến mới), indicator replay từ bar 0 tới `rates_total-2`. Từ
+2026-10-29, replay dùng **state cache tăng dần** (`PA_REPLAY_INCREMENTAL 1`): state của nến đóng
+cuối cùng được giữ lại và chỉ replay thêm nến mới. Cache chỉ hợp lệ khi cùng `bar time` **và**
+cùng `close` với lúc lưu; nến cuối bị sửa (revised bar) sẽ tự động fallback về full replay. Chế độ
+`PA_REPLAY_INCREMENTAL 0` (full replay) giữ lại để A/B. Trong cùng một nến, trả `rates_total` ngay.
+Hệ quả:
 
-- Mọi buffer của nến đã đóng là hàm thuần của dữ liệu đã đóng → không RP2.
-- Không có state ẩn sống qua lần gọi; reload indicator cho cùng kết quả.
-- Chi phí O(n) mỗi nến; pattern/zone/FVG/OB cap nhỏ, neckline dùng mảng trực tiếp.
+- Mọi buffer của nến đã đóng vẫn là hàm thuần của dữ liệu đã đóng → không RP2.
+- Không có state ẩn sống qua lần gọi; reload indicator cho cùng kết quả (đã chứng minh bằng
+  checksum, §7.3).
+- Chi phí mỗi nến giảm từ O(n) xuống O(1) amortized; pattern/zone/FVG/OB cap nhỏ, neckline dùng
+  mảng trực tiếp.
 
 #### 7.1 `PaEngineState`
 
@@ -1127,7 +1158,7 @@ Các chuỗi sau tính một lần trên toàn bộ `rates_total` (giá trị t�
 
 | Chuỗi | Công thức | Warm-up |
 |---|---|---|
-| `tr` | `max(h-l, |h-c1|, |l-c1|)`, bar 0 = `h-l` | bar 0 |
+| `tr` | `max(h-l, \|h-c1\|, \|l-c1\|)`, bar 0 = `h-l` | bar 0 |
 | `atr` | RMA(tr, `atrLen`) | `atrLen` |
 | `volMA` | RMA(vol, `volMaLen`) | `volMaLen` |
 | `volSma` | SMA(vol, `rvLen`) | `rvLen` |
@@ -1149,6 +1180,36 @@ Các chuỗi sau tính một lần trên toàn bộ `rates_total` (giá trị t�
 
 `bbwPct` (percentile BBW) tính trong pass 2 bằng deque rolling min/max `regBbwLen` (O(1)
 amortized), không cần mảng phụ.
+
+#### 7.3 Replay tăng dần và cache HTF (hiệu năng)
+
+Bối cảnh: 9 tháng M15 (~25 700 nến) với full replay mỗi nến làm `PinePlanSimEA` chạy quá lâu trong
+Strategy Tester (`plan_*` từng bị `BLOCKED_PERFORMANCE`). Ba thay đổi, **không** đổi ngữ nghĩa
+tín hiệu:
+
+1. `PaMapHtfIndex` ([`PriceActionMTFContract.mqh`](../../mt5/Include/PinePort/PriceActionMTFContract.mqh))
+   đổi từ quét tuyến tính sang binary search trên mảng `closeTime` đã sắp xếp.
+2. Replay tăng dần (`PA_REPLAY_INCREMENTAL 1`) như mô tả §7, có guard `bar time` + `close`.
+3. Cache HTF append-only (`g_ctxCloseT/g_setupCloseT` + EMA window `PA_HTF_WINDOW 3000`). Lý do:
+   `CopyRates(0,3000)` trượt cửa sổ, nên tính lại EMA từ đầu mỗi lần sẽ ra giá trị khác cho các
+   nến đã đóng. Cache chỉ thêm nến mới đóng và EMA luôn chạy trên đúng 3000 nến gần nhất — đúng
+   cửa sổ cũ.
+
+Đo trên `diag_plan_1m` (XAUUSDm M15, 2026.01.05–2026.02.04, 2 000 lần gọi, 25 715 nến):
+
+| Chỉ số | Trước | Sau |
+|---|---:|---:|
+| pass 1 (series) | 36 181 ms | 31 243 ms |
+| prep (defaults/reset) | 21 743 ms | 25 ms |
+| replay engine | 95 390 ms | 67 ms |
+| tổng trong indicator | 153 313 ms | 31 335 ms |
+| wall time cả scenario | ~165 s | ~41 s |
+
+Tương đương số học được kiểm bằng checksum nội bộ trên 18 buffer (500 nến cuối, in mỗi 200 lần
+gọi): `chk` giống nhau ở cả ba mốc 1600/1800/2000 (`3815744811.104`, `3964751555.199`,
+`3760455708.970`) giữa full replay và incremental. A/B `PA_HTF_WINDOW 3000` vs EMA toàn bộ lịch sử
+cũng cho `chk` giống nhau. Instrumentation đo/checksum đã được gỡ khỏi source sau khi ghi bằng
+chứng; `PriceActionMTFContractTests` vẫn `ALL_PASS|pass=125 fail=0`.
 
 ### 8. Engine pipeline (mỗi nến đóng, thứ tự bắt buộc)
 
@@ -1419,7 +1480,8 @@ else: tp1..tp3 = EMPTY (plan vẫn có thể valid)
 ```
 
 **Default `rr1 = 1.0 < rrMin = 1.5` → `valid = false` trên mọi nến** khi chưa đổi input
-(Q2/R2). Đây là hành vi nguồn, không sửa.
+(Q2/R2). Đây là hành vi nguồn, không sửa. Muốn vượt gate này mà giữ default Pine, dùng bridge
+§3.0/§12.1 (đặt `InpRr1Ea` > `InpRrMinEa`).
 
 #### 10.5 Gates và block
 
@@ -1449,6 +1511,36 @@ Block (lý do đầu tiên, đúng thứ tự):
 | 7 `DIR` | `!okDir` |
 | 8 `CONFLUENCE` | `!okConfluence` |
 | 9 `REGIME` | `!okRegime` |
+
+**Q11 — `okScore` gần như loại toàn bộ cửa short.** (Trước đây tài liệu này ghi nhầm hành vi là
+"Q8"; Q8 thật là quirk timeout ở §11 và §16. Từ 2026-10-30 hành vi cổng score mang id `Q11`.)
+`score100 = round(50 + rawScore*50)` với
+`rawScore ∈ [-1, 1]` và `dir = sign(rawScore)`. Default `InpScrNoTrade = 49`, mà
+`okScore = score100 > 49` ⇔ `score100 ≥ 50` ⇔ `rawScore ≥ -0.01` (làm tròn). Vì `dir == -1` đòi
+`rawScore < 0`, hai điều kiện chỉ chồng nhau trong dải `rawScore ∈ [-0.01, 0)` — tức cửa short
+gần như luôn bị block `6 SCORE`, còn cửa long có nguyên dải `50..100`.
+
+Đã kiểm chứng bằng buffer, không còn là suy luận. Expert chẩn đoán chỉ đọc (`ZZPlanBlockCount`,
+deploy tạm trong Data Folder, source lưu ở `reports/build/q8-diag/`) đếm `PA_BUF_BLOCK` theo
+`PA_BUF_DIR` trên đúng kỳ `plan_rr2` (XAUUSDm M15, 2026.01.05–2026.10.01, 17 595 nến, warmup 200,
+`rr1=2.0 rrMin=1.5`), kết quả 2026-10-30 trong
+`reports/build/tester-reports/q8_block_count/q8_block_counts.csv`:
+
+| `dir` | nến | `score100 > 49` | signal | `score100` min..max | block `6 SCORE` (first) |
+|---|---:|---:|---:|---|---:|
+| −1 | 8 414 | 188 (2,23 %) | 0 | 15 .. 50 | 2 961 |
+| 0 | 0 | 0 | 0 | — | 0 |
+| +1 | 9 181 | 9 181 (100 %) | 302 | 50 .. 87 | 0 |
+
+Ba điểm xác nhận dải giải tích: (a) gate SCORE chặn nến down và **không bao giờ** chặn nến up;
+(b) giá trị `score100` lớn nhất phía down đúng bằng 50, nên miền qua cổng chỉ là `{50}` ⇔
+`rawScore ∈ [-0.01, 0)`; (c) `PA_BUF_SIG_SHORT` không bật lần nào trong kỳ, `dir` không bằng 0 lần
+nào. Journal `plan_rr2` (93/93 ENTRY là BUY, 0 SELL) là hệ quả nhất quán. Chi tiết và giới hạn:
+[`../PROGRESS.md`](../PROGRESS.md) §60.
+
+Port giữ nguyên công thức và ngưỡng của nguồn (P9/Q2), **không** hạ `scrNoTrade` hay đổi score: đổi
+ngưỡng là đổi chiến lược. Phần còn mở là đối chiếu với nguồn Pine (Track B, cần CSV Pine) — hiện vẫn
+`BLOCKED`.
 
 ### 11. State machine (P10 + quirk)
 
@@ -1494,7 +1586,8 @@ Kết luận bắt buộc:
 
 ### 12. EA và CSV
 
-- `iCustom(_Symbol, _Period, "PinePort\\PriceActionMTF.mq5", <115 inputs>)`.
+- `iCustom(_Symbol, _Period, "PinePort\\PriceActionMTF.mq5")` — 0 tham số → default Pine.
+  §12.1 nói khi nào truyền 2 bridge param.
 - Chờ `BarsCalculated(handle) >= Bars(_Symbol,_Period)`.
 - Đọc `shift = 1` cố định cho mọi buffer.
 - Gate bắt buộc:
@@ -1520,6 +1613,24 @@ atr,pos_dir,pos_stage,plan_valid,input_hash
   `detected_at` = tick đầu tiên EA đọc `shift=1`.
 - `input_hash` = FNV-1a 32-bit trên canonical string `PaConfigCanonical` +
   `PA_CONTRACT_VERSION`.
+
+### 12.1 `PinePlanSimEA` dùng bridge
+
+`PinePlanSimEA` (nguồn `PriceActionMTF`) là EA duy nhất truyền bridge:
+
+```cpp
+g_handle = (InpSource==PLAN_SOURCE_PA)
+         ? iCustom(_Symbol,_Period,"PinePort\\PriceActionMTF",InpPaRr1,InpPaRrMin)
+         : iCustom(_Symbol,_Period,"PinePort\\PriceActionMTF");
+```
+
+- `InpPaRr1` (default 1.0) và `InpPaRrMin` (default 1.5) **trùng default indicator** nên
+  `pa_bridge` không đổi hành vi: `input_hash` vẫn `DAE21A85` và `plan_baseline` vẫn 0 trade.
+- Hai input này chỉ được thêm vào `BuildConfigHash` khi `InpSource == PLAN_SOURCE_PA`; các
+  nguồn `TM XAU Signals 2`/`TM Indicator 2` giữ nguyên `config_hash` cũ.
+- Đây là lối duy nhất để vượt quirk `rr1 < rrMin` (§10.4) **mà không sửa default Pine**:
+  đặt `InpPaRr1` > `InpPaRrMin` (ví dụ 2.0 > 1.5). Làm vậy `plan.valid` mới có thể bật.
+- Scenario tham chiếu: `plan_rr2` (`InpPaRr1=2.0`) — xem `docs/guides/strategy-tester.md` §9.2.
 
 ### 13. Hàm contract (header)
 
@@ -1667,7 +1778,7 @@ khẳng định công thức, không phải kết quả runtime.
 
 | ID | Nội dung | Kỳ vọng |
 |---|---|---|
-| E1 | 2 pivot high 100 / 100.5, ATR 2, band 0.5 | DT (|diff| ≤ 1) |
+| E1 | 2 pivot high 100 / 100.5, ATR 2, band 0.5 | DT (`\|diff\|` ≤ 1) |
 | E2 | DT neck 99, close 98.5, close[1] 99.5 | break bear, PATTERN=DT |
 | E3 | 2 pivot low 100/100.5, neck high nhất giữa | DB, break bull |
 | E4 | h1 100, h2 121, hsRatio 1.2 | HST |
@@ -1684,7 +1795,7 @@ khẳng định công thức, không phải kết quả runtime.
 | F2 | tuần server trước (thứ Hai) high/low | pwh/pwl đúng |
 | F3 | session đổi Asia → London | sessHi/Lo reset về high/low hiện tại |
 | F4 | name chuyển `-` | sessHi/Lo và sessPrev giữ nguyên |
-| F5 | |high[sw]−prevHigh| ≤ 0.05·ATR | eqHi |
+| F5 | `\|high[sw]−prevHigh\|` ≤ 0.05·ATR | eqHi |
 | F6 | low < pdl, close > pdl | sweepBull |
 | F7 | trong phiên, low < sessLo (sessLo đã gồm low) | sweepBull nhánh session **false** (Q3) |
 | F8 | ngoài phiên `-`, sessLo=190 cũ, low 189, close 191 | nhánh session **true** |
@@ -1694,7 +1805,7 @@ khẳng định công thức, không phải kết quả runtime.
 | ID | Nội dung | Kỳ vọng |
 |---|---|---|
 | G1 | px 100, ATR 2, width 0.5 | top 100.5, bot 99.5 |
-| G2 | zone support mid 100; register resistance 100.4 | merge (|diff| 0.4 < 1), side giữ support, touches 2 |
+| G2 | zone support mid 100; register resistance 100.4 | merge (`\|diff\|` 0.4 < 1), side giữ support, touches 2 |
 | G3 | merge không đổi top/bot | top/bot zone cũ |
 | G4 | srMax 2, thêm zone thứ 3 | zone cũ nhất bị shift |
 | G5 | low = bot − 0.3·ATR − ε | nearSupport false; ε ngược lại true |
@@ -1730,7 +1841,7 @@ khẳng định công thức, không phải kết quả runtime.
 | I6 | bbExpand, close < open | volScore −0.5 |
 | I7 | relVolScore 1, obvScore 1, vsaScore 1 | volumeScore 1 |
 | I8 | vwapScore 1, dayRange 0.4 | location 0.7 |
-| I9 | trend = 1 ở tất cả nhóm, weights default | raw 1, score100 100; chỉ gTrend=1 | raw 0.15, score100 58 |
+| I9 | `SignalConfig` mọi nhóm (a), rồi `BaseConfig` chỉ nhóm trend/EMA (b) | (a) raw 1, score100 100, dir 1; (b) score100 58, dir 1 |
 
 #### J. MTF (8)
 
@@ -1751,7 +1862,7 @@ khẳng định công thức, không phải kết quả runtime.
 |---|---|---|
 | K1 | adx 26, không squeeze | TRENDING |
 | K2 | adx 17 | CHOPPY |
-| K3 | adx 20, squeeze, |emaF−emaM| < 0.1ATR | CHOPPY |
+| K3 | adx 20, squeeze, `\|emaF−emaM\|` < 0.1ATR | CHOPPY |
 | K4 | adx 20, không squeeze/chop | RANGING |
 | K5 | low = bot − 0.104·ATR (zone) | nearRangeEdge true; 0.106·ATR → false |
 | K6 | dir +1, ctxDir +1 | cf1 true |
@@ -1769,7 +1880,7 @@ khẳng định công thức, không phải kết quả runtime.
 | L6 | rr1 2.0, rrMin 1.5 | rrOk true |
 | L7 | R mode entry 100, risk 2, rr 1/2/3 | tp 102/104/106 |
 | L8 | MM patHeight 6 | tp +3/+6/+9 |
-| L9 | MM patHeight 0, |lastHigh−lastLow| 4 | mm 4; cả hai 0 + fallback → TP theo R |
+| L9 | MM patHeight 0, `\|lastHigh−lastLow\|` 4 | mm 4; cả hai 0 + fallback → TP theo R |
 | L10 | MM no-fallback, mm 0 | plan valid có thể true, tp1..3 EMPTY |
 
 #### M. State (10)
@@ -1829,9 +1940,9 @@ kiểm tra:
 | V6 | Bind | 107 buffer, index 0..106 đúng một lần; 0..11 DATA, 12..106 CALCULATIONS |
 | V7 | Closed bar | có `lastClosed = total - 2` và `j <= lastClosed` |
 | V8 | Không confirm input | không khai báo input confirm |
-| V9 | Input count | đúng 115 `input` |
-| V10 | Test IDs | đủ A1..A5, B1..B10, C1..C5, D1..D8, E1..E8, F1..F8, G1..G9, H1..H10, I1..I9, J1..J8, K1..K7, L1..L10, M1..M10, N1..N5, O1..O3, P1..P4 |
-| V11 | Marker | test script in `TEST|RESULT|ALL_PASS` |
+| V9 | Input count | đúng 117 `input`; không `input group`; 2 input đầu là `InpRr1Ea`/`InpRrMinEa` |
+| V10 | Test IDs | đủ A1..A5, B1..B10, C1..C5, D1..D8, E1..E8, F1..F8, G1..G9, H1..H10, I1..I9, J1..J13, K1..K7, L1..L10, M1..M10, N1..N5, O1..O3, P1..P4 (124) |
+| V11 | Marker | test script in `TEST\|RESULT\|ALL_PASS` |
 | V12 | Docs | contract chứa `indicator_buffers 107`, `## 14. Test vector`, `NOT_IMPLEMENTED`, `BLOCKED` |
 | V13 | Safety | không `OrderSend/CTrade/AccountInfo/WebRequest/Socket*/FileOpen/Alert/...` |
 | V14 | No placeholder | không `TODO/FIXME/TBD/PLACEHOLDER` |
@@ -1850,7 +1961,7 @@ Gate 3 criteria:
 **Kết luận:** contract đóng băng cho Phase 4. Trạng thái runtime: `NOT_RUN`; EA: `NOT_IMPLEMENTED`;
 parity: `BLOCKED` (chưa có CSV Pine, E1–E10 `PENDING`).
 
-### 16. Hành vi nguồn phải giữ nguyên (Q1–Q10)
+### 16. Hành vi nguồn phải giữ nguyên (Q1–Q11)
 
 | ID | Quirk | Hệ quả port |
 |---|---|---|
@@ -1864,6 +1975,7 @@ parity: `BLOCKED` (chưa có CSV Pine, E1–E10 `PENDING`).
 | Q8 | Timeout đóng với `xExit = tp1` | `PA_CLOSE` timeout có `xR` theo TP1, không theo giá đóng |
 | Q9 | SL ưu tiên hơn TP khi cùng nến | TP1+SL = loss, không phải win (khác TM FZ) |
 | Q10 | OBV slope warm-up `nz(na)=0`; bucket khi volMA na = VeryLow; veto ×0.4 khi volRatio 0 | Giữ nguyên để parity lịch sử |
+| Q11 | `okScore = score100 > scrNoTrade` với default 49 ⇔ `rawScore ≥ -0.01`, trong khi `dir == -1` đòi `rawScore < 0` | Cửa short chỉ còn dải `rawScore ∈ [-0.01, 0)`; xem §10.5 và đếm buffer `PA_BUF_BLOCK` theo `dir` |
 
 Ngoài ra:
 

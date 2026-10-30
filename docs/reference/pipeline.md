@@ -91,7 +91,7 @@ Lần chạy `demo-phase9` (2026-10-27), dataset synthetic 1.800 bar:
 | MODEL SHA-256 | `5c5260f3daec807c1c67b23ec691e1c9047a60ce78c96f311f9a03bf4be859e8` |
 
 Bản sao báo cáo (đã lược đường dẫn tuyệt đối):
-[`phase-reports/phase-9-sample-report.md`](../phase-reports/phase-9-sample-report.md). Report gốc nằm trong
+[`phase-reports/phase-9-sample-report.md`](../archive/v1/phase-reports/phase-9-sample-report.md). Report gốc nằm trong
 `reports/pipeline/demo-phase9/` và bị `.gitignore`.
 
 Kết quả cho thấy backtest EMA có lãi nhẹ trên fixture, còn ML lỗ sau chi phí và kém buy & hold. Không

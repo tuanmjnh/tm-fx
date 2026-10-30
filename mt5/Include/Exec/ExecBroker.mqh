@@ -337,4 +337,16 @@ bool ExecMarginRequired(const bool is_buy,const double volume,const double price
                           volume,price,margin));
   }
 
+//--- Account-currency P/L of one deal. Used for risk sizing: call with
+//--- volume 1.0 from entry to the initial SL, then take -profit as loss.
+bool ExecCalcProfit(const bool is_buy,const double volume,const double entry,
+                    const double exit_price,double &profit)
+  {
+   profit=0.0;
+   if(!(volume>0.0) || !(entry>0.0) || !(exit_price>0.0))
+      return(false);
+   return(OrderCalcProfit(is_buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL,_Symbol,
+                          volume,entry,exit_price,profit));
+  }
+
 #endif // EXEC_BROKER_MQH

@@ -1,0 +1,174 @@
+; ====================================================================
+; CAU HINH TESTER CHO PATrendRiderXAUv1DemoEA (XAUUSD / Vang)
+; Du an: MT5 EA & AI Lab (tm-fx)
+; File: docs/configurations/pa_trendrider_xau.set
+; Chien luoc: Price Action Trend Rider v1 (Da khung thoi gian H1/M15/M5)
+; Quy uoc: Chi ho tro tai khoan DEMO va Strategy Tester (ADR 0003, ADR 0004)
+; ====================================================================
+
+; --------------------------------------------------------------------
+; 1. CAU HINH THUC THI VA AN TOAN TAI KHOAN (Demo Execution)
+; --------------------------------------------------------------------
+; InpEnableExecution: true = Kich hoat vao lenh that tren tai khoan Demo/Tester.
+;                     false = Chay che do Dry-run (chi ghi nhat ky log, khong vao lenh).
+InpEnableExecution=true
+
+; InpAllowedSymbols: Danh sach tien to cap tien/san pham cho phep giao dich (phan cach bang dau phay).
+;                    XAUUSD chap nhan ca XAUUSDm, XAUUSD.a, XAUUSD_i... tren cac san khac nhau.
+InpAllowedSymbols=XAUUSD
+
+; InpMagicNumber: Ma so nhan dien lenh duy nhat cua bot nay (magic number).
+InpMagicNumber=25002001
+
+; InpMaxSlippagePoints: Do truot gia toi da chap nhan khi khop lenh thi truong (don vi: points).
+InpMaxSlippagePoints=30
+
+; InpTakeProfitR: Ty le Chot loi muc tieu theo he so R (TP = Entry +/- R * InpTakeProfitR).
+;                 Vi du: R = 3.0 nghia la ty le Risk:Reward la 1:3.
+InpTakeProfitR=3.0
+
+; InpKillSwitchFile: Ten file ngat khan cap trong thu muc MQL5/Files. Neu tao file nay, bot dong vi the va dung lai.
+InpKillSwitchFile=PA_TREND_RIDER_DEMO_STOP.txt
+
+; --------------------------------------------------------------------
+; 2. NHAT KY VA TRANG THAI HE THONG (Journal and State)
+; --------------------------------------------------------------------
+; InpEnableLog: true = Ghi nhat ky chi tiet ra file CSV trong thu muc MQL5/Files.
+InpEnableLog=true
+
+; InpLogFile: Ten file luu nhat ky giao dich.
+InpLogFile=pa_trendrider_demo.csv
+
+; InpPersistState: true = Luu trang thai (risk ledger, drawdown, equity...) ra file de khoi phuc sau khi mat dien/khoi dong lai.
+InpPersistState=true
+
+; InpStateFile: Ten file luu trang thai he thong.
+InpStateFile=pa_trendrider_demo_state.csv
+
+; InpResetStateOnInit: false = Khoi phuc lai trang thai cu neu co file state.
+;                      true = Xoa sach trang thai cu va bat dau lai tu dau (khuyen nghi dat true khi backtest moi).
+InpResetStateOnInit=true
+
+; InpDebug: true = In them cac thong tin debug chi tiet vao tab Experts.
+InpDebug=false
+
+; --------------------------------------------------------------------
+; 3. KHUNG THOI GIAN PHAN TICH (Timeframes)
+; --------------------------------------------------------------------
+; InpTrendTF: Khung thoi gian xac dinh xu huong chinh (16385 = PERIOD_H1).
+InpTrendTF=16385
+
+; InpStructureTF: Khung thoi gian xac dinh cau truc thi truong Swing/BOS (15 = PERIOD_M15).
+InpStructureTF=15
+
+; InpEntryTF: Khung thoi gian tim diem vao lenh pullback va trigger (5 = PERIOD_M5).
+InpEntryTF=5
+
+; InpTrendBars: So luong cay nen H1 load de phan tich xu huong.
+InpTrendBars=300
+
+; InpStructureBars: So luong cay nen M15 load de phan tich cau truc.
+InpStructureBars=300
+
+; InpEntryBars: So luong cay nen M5 load de tinh toan tin hieu vao lenh.
+InpEntryBars=400
+
+; --------------------------------------------------------------------
+; 4. THONG SO CAU TRUC PRICE ACTION (Structure)
+; --------------------------------------------------------------------
+; InpSwingLeft: So nen ben trai de xac dinh dinh/day Swing (Fractal Left).
+InpSwingLeft=2
+
+; InpSwingRight: So nen ben phai de xac nhan dinh/day Swing (Fractal Right).
+InpSwingRight=2
+
+; InpSpreadBufferMultiplier: He so dem spread khi dat cac muc pha vo / stop loss.
+InpSpreadBufferMultiplier=2.0
+
+; InpAtrBreakBufferMultiplier: He so ATR dem de xac nhan pha vo cau truc (BOS confirmation).
+InpAtrBreakBufferMultiplier=0.10
+
+; InpTrendMinDeltaAtr: Do doc / do lech toi thieu theo ATR de xac nhan xu huong ro rang.
+InpTrendMinDeltaAtr=0.05
+
+; InpRetestZoneAtr: Do rong vung retest tinh theo ATR quanh muc can swing vua pha vo.
+InpRetestZoneAtr=0.25
+
+; InpConfirmationBodyAtr: Do lon toi thieu cua than nen xac nhan tinh theo ATR (tranh nen doji yeu).
+InpConfirmationBodyAtr=0.5
+
+; InpConfirmationCloseZone: Ty le vi tri dong cua cua nen xac nhan (dong sat dinh/day nen).
+InpConfirmationCloseZone=0.25
+
+; InpMaxSignalAgeBars: So nen toi da tin hieu con hieu luc truoc khi bi huy do qua han.
+InpMaxSignalAgeBars=8
+
+; --------------------------------------------------------------------
+; 5. QUAN LY VON VA RUI RO (Risk Management)
+; --------------------------------------------------------------------
+; InpRiskPercent: Phan tram rui ro tai khoan cho moi lenh (% Balance). Mac dinh: 0.25%.
+InpRiskPercent=0.25
+
+; InpMaxPositions: So vi the toi da mo dong thoi (PATrendRider chi mo toi da 1 lenh duy nhat).
+InpMaxPositions=1
+
+; InpDailyLossLimitPct: Gioi han thua lo toi da trong ngay (%). Vuot qua nguong nay bot se dung vao lenh trong ngay.
+InpDailyLossLimitPct=1.0
+
+; InpMaxDrawdownPct: Muc sut giam tai khoan toi da (Max Drawdown %). Vuot qua muc nay bot se khoa hoan toan.
+InpMaxDrawdownPct=8.0
+
+; InpMaxConsecutiveLosses: So lenh thua lien tiep toi da cho phep truoc khi tam dung.
+InpMaxConsecutiveLosses=3
+
+; InpCooldownMinutes: Thoi gian nghi (phut) sau khi mot lenh bi Stop Loss truoc khi cho phep vao lenh tiep theo.
+InpCooldownMinutes=30
+
+; InpManualResetDrawdown: Dat true neu muon mo khoa thu cong trang thai drawdown lock.
+InpManualResetDrawdown=false
+
+; InpCommissionPerVolume: Phi hoa hong uoc tinh tren moi lot (dung de tru vao ngan sach rui ro khi tinh lot).
+InpCommissionPerVolume=0.0
+
+; --------------------------------------------------------------------
+; 6. QUAN LY DIEM DUNG VA TRAILING STOP (Stops and Trailing)
+; --------------------------------------------------------------------
+; InpBreakEvenAtR: Dua Stop Loss ve hoa von (Break-even) khi loi nhuan dat he so R nay (1.0 = dat 1R).
+InpBreakEvenAtR=1.0
+
+; InpTrailingStartR: Khoang loi nhuan theo he so R bat dau kich hoat keo Trailing Stop (1.5 = dat 1.5R).
+InpTrailingStartR=1.5
+
+; InpAtrStopBuffer: Khoang dem bo sung theo ATR khi dat Stop Loss ban dau.
+InpAtrStopBuffer=0.2
+
+; InpAtrTrailingMultiplier: He so nhan khoang cach ATR khi keo Trailing Stop theo sau gia.
+InpAtrTrailingMultiplier=1.2
+
+; InpMinSlAtr: Khoang cach Stop Loss toi thieu tinh theo he so ATR (tranh SL qua hep do nhip nhay gia).
+InpMinSlAtr=0.5
+
+; InpMaxSlAtr: Khoang cach Stop Loss toi da tinh theo he so ATR (tranh SL qua xa lam giam lot qua muc).
+InpMaxSlAtr=4.0
+
+; InpUpdateOnClosedBarOnly: true = Chi cap nhat va doi Stop Loss khi nen da dong cua (tranh nhieu gia trong nen).
+InpUpdateOnClosedBarOnly=true
+
+; --------------------------------------------------------------------
+; 7. BIEN DONG VA LOC SPREAD (Volatility and Spread Filter)
+; --------------------------------------------------------------------
+; InpAtrPeriod: Chu ky tinh toan chi bao Average True Range (ATR).
+InpAtrPeriod=14
+
+; InpAtrBaselineBars: So cay nen tham chieu de do do bien dong nen trung binh.
+InpAtrBaselineBars=100
+
+; InpAbnormalAtrRatio: Ty le bien dong bat thuong (neu ATR vuot qua gap 2.5 lan trung binh thi chan vao lenh do tin tuc/bien dong manh).
+InpAbnormalAtrRatio=2.5
+
+; InpMaxSpreadPoints: Spread toi da cho phep vao lenh (don vi: points).
+;                     Luu y: Tren Exness XAUUSDm (3 chu so thap phan), 600 points = 0.60 USD vang.
+InpMaxSpreadPoints=600.0
+
+; InpMaxSpreadAtrRatio: Ty le toi da giua Spread va ATR (0.25 = spread khong duoc chiem qua 25% cay nen ATR).
+InpMaxSpreadAtrRatio=0.25

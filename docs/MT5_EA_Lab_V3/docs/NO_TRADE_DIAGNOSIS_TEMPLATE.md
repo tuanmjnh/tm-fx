@@ -1,0 +1,23 @@
+# NO_TRADE_DIAGNOSIS
+
+- EA/version:
+- Source commit/hash:
+- Symbol/timeframe/date range:
+- Tester model:
+- Preset/config hash:
+- Runtime mode:
+- Init state:
+- Total ticks:
+- Bars processed:
+- Data ready / not ready:
+- BUY signals / SELL signals / FLAT:
+- Setup candidates:
+- Filter pass/block counts:
+- Risk/sizing blocks:
+- Margin/order-check blocks:
+- Requests sent/accepted/rejected:
+- Deals/positions confirmed:
+- First blocking stage:
+- First blocking reason:
+- Evidence/log path:
+- Corrective test (one filter changed at a time):

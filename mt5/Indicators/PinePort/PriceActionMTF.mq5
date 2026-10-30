@@ -65,6 +65,13 @@
 
 #include "../../Include/PinePort/PriceActionMTFContract.mqh"
 
+//--- EA bridge overrides. These two inputs MUST stay first: iCustom passes
+//--- parameters positionally and no input group is declared anywhere in this
+//--- file, because an "input group" line consumes an iCustom slot.
+//--- 0 = keep the strategy default from InpRr1 / InpRrMin further down.
+input double            InpRr1Ea             = 0.0;              // EA bridge: TP1 R multiple (0 = InpRr1)
+input double            InpRrMinEa           = 0.0;              // EA bridge: min TP1 R multiple (0 = InpRrMin)
+
 input int               InpSrvOffsetMin      = 180;              // Server to UTC offset (minutes)
 input int               InpMktOffsetMin      = -300;             // UTC to market offset (minutes)
 input int               InpVolSessOffsetMin  = 420;              // UTC to volume-session offset (minutes)
@@ -295,11 +302,121 @@ double g_b_last_low[];
 PaConfig g_cfg;
 int      g_last_rates=-1;
 
+//--- Incremental replay: engine state after g_replayBar, reused while the
+//--- history only grows (maxBars==0). Everything the engine consumes for bar
+//--- j is causal (series, pivots, necklines), so a cached state stays valid.
+//--- Guard: same bar time AND same close as when the state was saved, so a
+//--- revised last bar falls back to a full replay instead of a stale state.
+bool         g_replayValid=false;
+PaEngineState g_replayState;
+int          g_replayBar=-1;
+datetime     g_replayTime=0;
+double       g_replayClose=0.0;
+int          g_replayTotal=0;
+
+//--- Stable HTF cache: CopyRates(0,3000) slides its window, so raw copies
+//--- would recompute a different EMA for bars that fall out of the window.
+//--- Keep an append-only cache of closed HTF bars instead.
+ENUM_TIMEFRAMES g_ctxTfCache=PERIOD_CURRENT;
+ENUM_TIMEFRAMES g_setupTfCache=PERIOD_CURRENT;
+int             g_ctxLenCache=-1;
+int             g_setupLenCache=-1;
+datetime        g_ctxCloseT[],g_setupCloseT[];
+double          g_ctxCloses[],g_setupCloses[];
+datetime        g_ctxWinT[],g_setupWinT[];
+double          g_ctxEma[],g_setupEma[];
+
+//--- Incremental replay: 0 = full replay from bar 0 on every new bar,
+//--- 1 = reuse the cached engine state and replay only the new closed bar.
+//--- The switch exists for A/B equivalence testing; both settings must
+//--- produce identical output series.
+#define PA_REPLAY_INCREMENTAL 1
+//--- EMA window over the cached HTF history: 0 = whole history,
+//--- N>0 = last N closed HTF bars. Kept at 3000 to preserve the signal
+//--- semantics of the original CopyRates(0,3000) window.
+#define PA_HTF_WINDOW 3000
+
+//+------------------------------------------------------------------+
+//| Append newly closed HTF bars to the cache                        |
+//+------------------------------------------------------------------+
+void PaAppendHtfCache(const ENUM_TIMEFRAMES tf,const datetime lastBarTime,
+                      datetime &closeT[],double &closes[])
+  {
+   const int htfSeconds=(int)PeriodSeconds(tf);
+   MqlRates rates[];
+   ArraySetAsSeries(rates,false);
+   const int got=CopyRates(_Symbol,tf,0,3000,rates);
+   if(got<=0)
+      return;
+   const bool descending=(got>1 && rates[0].time>rates[got-1].time);
+   const int cached=ArraySize(closeT);
+   const datetime lastCached=(cached>0 ? closeT[cached-1] : 0);
+   int added=0;
+   ArrayResize(closeT,cached+got);
+   ArrayResize(closes,cached+got);
+   for(int k=0; k<got; k++)
+     {
+      const int src=(descending ? got-1-k : k);
+      const datetime closeTime=rates[src].time+htfSeconds;
+      if(closeTime>lastBarTime || closeTime<=lastCached)
+         continue;
+      closeT[cached+added]=closeTime;
+      closes[cached+added]=rates[src].close;
+      added++;
+     }
+   if(added<=0)
+     {
+      ArrayResize(closeT,cached);
+      ArrayResize(closes,cached);
+      return;
+     }
+   ArrayResize(closeT,cached+added);
+   ArrayResize(closes,cached+added);
+  }
+
+//+------------------------------------------------------------------+
+//| EMA over the mapped HTF window                                   |
+//+------------------------------------------------------------------+
+void PaBuildHtfEma(const datetime &closeT[],const double &closes[],const int len,
+                   datetime &winT[],double &winEma[])
+  {
+   const int count=ArraySize(closeT);
+   int first=0;
+   if(PA_HTF_WINDOW>0)
+      first=MathMax(0,count-PA_HTF_WINDOW);
+   const int n=count-first;
+   ArrayResize(winT,n);
+   double tail[];
+   ArrayResize(tail,n);
+   for(int i=0; i<n; i++)
+     {
+      winT[i]=closeT[first+i];
+      tail[i]=closes[first+i];
+     }
+   PaBuildEma(tail,n,len,winEma);
+  }
+
+void PaMapHtfSeries(const datetime &closeT[],const double &ema[],const int total,
+                    const datetime &time[],const int fromBar,
+                    double &emaOut[],bool &validOut[])
+  {
+   const int count=ArraySize(closeT);
+   for(int j=fromBar; j<total; j++)
+     {
+      const int k=PaMapHtfIndex(closeT,count,time[j]);
+      if(k<0 || PaIsEmpty(ema[k]))
+         continue;
+      emaOut[j]=ema[k];
+      validOut[j]=true;
+     }
+  }
+
 //+------------------------------------------------------------------+
 //| Higher-timeframe EMA mapped onto closed HTF bars                 |
 //+------------------------------------------------------------------+
 void PaLoadHtfEma(const ENUM_TIMEFRAMES tf,const int len,const int total,
-                  const datetime &time[],double &emaOut[],bool &validOut[])
+                  const datetime &time[],const datetime lastBarTime,const int fromBar,
+                  double &emaOut[],bool &validOut[])
   {
    ArrayResize(emaOut,total);
    ArrayInitialize(emaOut,EMPTY_VALUE);
@@ -308,37 +425,16 @@ void PaLoadHtfEma(const ENUM_TIMEFRAMES tf,const int len,const int total,
    if(len<=0)
       return;
 
-   const int htfSeconds=(int)PeriodSeconds(tf);
-   MqlRates rates[];
-   ArraySetAsSeries(rates,false);
-   const int got=CopyRates(_Symbol,tf,0,3000,rates);
-   if(got<=0)
+   if(tf==g_ctxTfCache && len==g_ctxLenCache)
+     {
+      PaAppendHtfCache(tf,lastBarTime,g_ctxCloseT,g_ctxCloses);
+      PaBuildHtfEma(g_ctxCloseT,g_ctxCloses,len,g_ctxWinT,g_ctxEma);
+      PaMapHtfSeries(g_ctxWinT,g_ctxEma,total,time,fromBar,emaOut,validOut);
       return;
-
-//--- Normalise to chronological order regardless of the terminal ordering.
-   const bool descending=(got>1 && rates[0].time>rates[got-1].time);
-   datetime htfClose[];
-   double htfCloses[];
-   ArrayResize(htfClose,got);
-   ArrayResize(htfCloses,got);
-   for(int k=0; k<got; k++)
-     {
-      const int src=(descending ? got-1-k : k);
-      htfClose[k]=rates[src].time+htfSeconds;
-      htfCloses[k]=rates[src].close;
      }
-
-   double htfEma[];
-   PaBuildEma(htfCloses,got,len,htfEma);
-
-   for(int j=0; j<total; j++)
-     {
-      const int k=PaMapHtfIndex(htfClose,got,time[j]);
-      if(k<0 || PaIsEmpty(htfEma[k]))
-         continue;
-      emaOut[j]=htfEma[k];
-      validOut[j]=true;
-     }
+   PaAppendHtfCache(tf,lastBarTime,g_setupCloseT,g_setupCloses);
+   PaBuildHtfEma(g_setupCloseT,g_setupCloses,len,g_setupWinT,g_setupEma);
+   PaMapHtfSeries(g_setupWinT,g_setupEma,total,time,fromBar,emaOut,validOut);
   }
 
 //+------------------------------------------------------------------+
@@ -529,7 +625,32 @@ int OnInit()
    g_cfg.cfOn=InpCfOn;
    g_cfg.cfLevelTolAtr=InpCfLevelTolAtr;
    g_cfg.cfRequire3=InpCfRequire3;
+   //--- EA bridge: only override when a positive value is supplied, then re-clamp.
+   if(InpRr1Ea>0.0)
+      g_cfg.rr1=InpRr1Ea;
+   if(InpRrMinEa>0.0)
+      g_cfg.rrMin=InpRrMinEa;
    PaNormalizeConfig(g_cfg);
+   if(InpRr1Ea>0.0 || InpRrMinEa>0.0)
+      PrintFormat("PAMTF|INFO|bridge|rr1=%.2f|rrMin=%.2f",g_cfg.rr1,g_cfg.rrMin);
+
+   g_ctxTfCache=g_cfg.ctxTf;
+   g_setupTfCache=g_cfg.setupTf;
+   g_ctxLenCache=g_cfg.ctxLen;
+   g_setupLenCache=g_cfg.setupLen;
+   ArrayResize(g_ctxCloseT,0);
+   ArrayResize(g_ctxCloses,0);
+   ArrayResize(g_ctxWinT,0);
+   ArrayResize(g_ctxEma,0);
+   ArrayResize(g_setupCloseT,0);
+   ArrayResize(g_setupCloses,0);
+   ArrayResize(g_setupWinT,0);
+   ArrayResize(g_setupEma,0);
+   g_replayValid=false;
+   g_replayBar=-1;
+   g_replayTime=0;
+   g_replayClose=0.0;
+   g_replayTotal=0;
 
    if(g_cfg.ctxTf!=PERIOD_H4 && g_cfg.ctxTf!=PERIOD_D1
       && g_cfg.ctxTf!=PERIOD_W1 && g_cfg.ctxTf!=PERIOD_MN1)
@@ -707,6 +828,21 @@ int OnCalculate(const int rates_total,
    const int lastClosed=total-2;
    const double tickSize=_Point;
 
+   int fromBar=0;
+   if(g_cfg.maxBars>0)
+      fromBar=MathMax(0,lastClosed-g_cfg.maxBars+1);
+   int start=fromBar;
+   bool fast=false;
+   if(PA_REPLAY_INCREMENTAL!=0 && g_cfg.maxBars==0 && g_replayValid
+      && total>=g_replayTotal && g_replayBar>=0 && g_replayBar<total
+      && lastClosed>=g_replayBar+1 && time[g_replayBar]==g_replayTime
+      && close[g_replayBar]==g_replayClose)
+     {
+      start=g_replayBar+1;
+      fast=true;
+     }
+   const int resetFrom=(fast ? start : 0);
+
    double volD[];
    ArrayResize(volD,total);
    for(int j=0; j<total; j++)
@@ -793,11 +929,11 @@ int OnCalculate(const int rates_total,
 
    double htfCtx[],htfSetup[];
    bool htfCtxOk[],htfSetupOk[];
-   PaLoadHtfEma(g_cfg.ctxTf,g_cfg.ctxLen,total,time,htfCtx,htfCtxOk);
-   PaLoadHtfEma(g_cfg.setupTf,g_cfg.setupLen,total,time,htfSetup,htfSetupOk);
+   PaLoadHtfEma(g_cfg.ctxTf,g_cfg.ctxLen,total,time,time[lastClosed],start,htfCtx,htfCtxOk);
+   PaLoadHtfEma(g_cfg.setupTf,g_cfg.setupLen,total,time,time[lastClosed],start,htfSetup,htfSetupOk);
 
 //--- Defaults for every bar; the live bar (rates_total-1) stays empty.
-   for(int j=0; j<total; j++)
+   for(int j=resetFrom; j<total; j++)
      {
       g_plot_ema_fast[j]=EMPTY_VALUE;
       g_plot_ema_mid[j]=EMPTY_VALUE;
@@ -910,7 +1046,7 @@ int OnCalculate(const int rates_total,
      }
 
 //--- Closed-bar series for plots (live bar intentionally left empty).
-   for(int j=0; j<=lastClosed; j++)
+   for(int j=resetFrom; j<=lastClosed; j++)
      {
       g_plot_ema_fast[j]=emaF[j];
       g_plot_ema_mid[j]=emaM[j];
@@ -929,15 +1065,17 @@ int OnCalculate(const int rates_total,
      }
 
 //--- Pass 2: engine replay on closed bars only.
-   int fromBar=0;
-   if(g_cfg.maxBars>0)
-      fromBar=MathMax(0,lastClosed-g_cfg.maxBars+1);
-
    PaEngineState st;
-   PaStateInit(st);
+   if(fast)
+      st=g_replayState;
+   else
+     {
+      PaStateInit(st);
+      g_replayValid=false;
+     }
    PaBar bar;
    PaBarOut out;
-   for(int j=fromBar; j<=lastClosed; j++)
+   for(int j=start; j<=lastClosed; j++)
      {
       PaBarInit(bar);
       bar.time=time[j];
@@ -1077,6 +1215,16 @@ int OnCalculate(const int rates_total,
       g_b_near_fvg_bear[j]=(out.nearFvgBear ? 1.0 : 0.0);
       g_b_last_high[j]=out.lastHigh;
       g_b_last_low[j]=out.lastLow;
+     }
+
+   if(g_cfg.maxBars==0 && lastClosed>=start)
+     {
+      g_replayState=st;
+      g_replayBar=lastClosed;
+      g_replayTime=time[lastClosed];
+      g_replayClose=close[lastClosed];
+      g_replayTotal=total;
+      g_replayValid=true;
      }
 
    return(rates_total);

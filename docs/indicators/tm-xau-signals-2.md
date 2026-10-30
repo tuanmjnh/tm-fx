@@ -500,7 +500,7 @@ if not closed and x2_posBars > 300     // 1135  -> timeout
 | Kịch bản | Pine | Port |
 |---|---|---|
 | Nến realtime đổi high/low | score/plan/pivot đổi liên tục (RP1) | Không tính nến live; chỉ nến đóng |
-| Nến vừa chạm SL vừa chạm TP | `hitSl && (hit1||hit2||hit3)` → loss | Cùng công thức, test M5 |
+| Nến vừa chạm SL vừa chạm TP | `hitSl && (hit1\|\|hit2\|\|hit3)` → loss | Cùng công thức, test M5 |
 | Nến chạm TP3 và TP2 | TP3 thắng, đóng, win | Cùng, test M4 |
 | Nến chạm TP2 rồi TP1 | stage=2, không đóng | Cùng, test M3 |
 | Nến entry rồi giá chạm SL ngay | Không xét SL cùng nến | Cùng (khối quản lý trước entry), test M1 |
@@ -1069,7 +1069,7 @@ struct X2EngineState
 
 | Chuỗi | Công thức | Warm-up |
 |---|---|---|
-| `tr` | `max(h-l, |h-c1|, |l-c1|)`, bar 0 = `h-l` | bar 0 |
+| `tr` | `max(h-l, \|h-c1\|, \|l-c1\|)`, bar 0 = `h-l` | bar 0 |
 | `atr` | RMA(tr, `atrLen`) | `atrLen` |
 | `atrMA` | SMA(atr, **20**) — hard-coded theo Pine | `atrLen+19` |
 | `volMA` | RMA(vol, `volMaLen`) | `volMaLen` |
@@ -1089,7 +1089,7 @@ struct X2EngineState
 | `pwh/pwl` | high/low tuần server trước (thứ Hai) | 1 tuần đủ |
 | `htfCtxEma/htfSetupEma` | EMA trên close HTF đã đóng | `ctxLen/setupLen` |
 | `sessName` | `X2SessionName(minute)` theo offset thị trường | 1 bar |
-| `volSessOk` | `!volSessOn || InWindow(minuteVol, start, end)` | 1 bar |
+| `volSessOk` | `!volSessOn \|\| InWindow(minuteVol, start, end)` | 1 bar |
 | `dayStamp/weekStamp` | ngày/tuần server (tuần bắt đầu thứ Hai) | 1 bar |
 
 `X2Bar` mang thêm OHLCV + `prevOpen/prevClose/prevHigh/prevLow` (EMPTY ở bar 0) +
@@ -1567,7 +1567,7 @@ khẳng định công thức, không phải kết quả runtime.
 |---|---|---|
 | F1 | px 100, ATR 2, width 0.5 | top 100.5, bot 99.5, touches 1 |
 | F2 | zone resistance mid 100; px 100.4, ATR 2, width 0.5 | merge, touches 2, side giữ −1 (Q2) |
-| F3 | px 101 (|diff| = atr·width = 1) | không merge → 2 zone |
+| F3 | px 101 (`\|diff\|` = atr·width = 1) | không merge → 2 zone |
 | F4 | srMax 2, thêm zone thứ 3 | size 2, zone cũ nhất bị bỏ |
 | F5 | support 99.5–100.5, ATR 2: low 98.9 / 98.89 | nearSupport true / false |
 | F6 | resistance 99.5–100.5, ATR 2: high 101.1 / 101.11 | nearResistance true / false |

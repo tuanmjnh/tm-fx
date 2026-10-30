@@ -75,6 +75,7 @@ long     g_day_key=0;
 ENUM_SIM_SIDE g_side=SIM_SIDE_BUY;
 
 int      g_dca_adds=0;
+int      g_total_adds=0;
 int      g_entries=0;
 int      g_closed_positions=0;
 int      g_baskets_closed=0;
@@ -471,6 +472,7 @@ void TryAdd(const datetime bar_time)
    if(!OpenPosition(plan.volume,bar_time,reason))
       return;
    g_dca_adds=plan.add_index;
+   g_total_adds++;
   }
 
 //+------------------------------------------------------------------+
@@ -482,9 +484,9 @@ void WriteSummary(void)
       return;
    LogEvent("SUMMARY",g_side,g_mid,g_portfolio.Exposure(),
             g_portfolio.AverageEntry(),0.0,0.0,g_portfolio.Exposure(),
-            StringFormat("entries=%d|adds=%d|closed=%d|baskets=%d|open=%d|"+
+            StringFormat("entries=%d|adds=%d|basket_adds=%d|closed=%d|baskets=%d|open=%d|"+
                          "realized=%.2f|max_dd=%.4f|blocks=%d|halted=%s",
-                         g_entries,g_dca_adds,g_closed_positions,
+                         g_entries,g_total_adds,g_dca_adds,g_closed_positions,
                          g_baskets_closed,g_portfolio.OpenPositions(),
                          g_portfolio.RealizedPnl(),
                          g_portfolio.MaxDrawdownPct(),g_risk.BlockedCount(),

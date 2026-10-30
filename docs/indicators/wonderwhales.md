@@ -588,7 +588,7 @@ Buffer 3/4/6/7 **luôn** `0` tại nến đang chạy (`j == rates_total-1`); EA
 - **Phase 4:** viết custom indicator MQL5 trong `MQL5/Indicators/PinePort/` khi được yêu cầu.
 - **Phase 5:** `PineSignalLabEA.mq5` signal-only, không có API gửi lệnh.
 
-Tham chiếu: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md),
+Tham chiếu: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../archive/v1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md),
 [`PINE_INVENTORY.md`](README.md), [`PROGRESS.md`](../PROGRESS.md).
 
 ## Repaint Audit — Wonderwhales (Pine v6)

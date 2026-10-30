@@ -27,7 +27,7 @@
 | `tick_volume` bị hiểu nhầm là real volume | Feature/volume-based logic sai | Ghi rõ định nghĩa; không dùng như real volume |
 | Đơn vị `spread` không nhất quán (point/pip/price) | Cost model sai | Chuẩn hóa và ghi đơn vị trong data dictionary |
 | Dữ liệu tổng hợp bị coi là dữ liệu thị trường | Kết luận sai | Mọi dataset có `data_kind`; chỉ fixture synthetic cho unit test |
-| Dữ liệu lớn hoặc có quyền hạn chế bị commit | Rò rỉ/vượt quyền sử dụng | `datasets/raw|processed` bị gitignore; chỉ mẫu nhỏ ở `samples/` |
+| Dữ liệu lớn hoặc có quyền hạn chế bị commit | Rò rỉ/vượt quyền sử dụng | `datasets/raw\|processed` bị gitignore; chỉ mẫu nhỏ ở `samples/` |
 | Look-ahead do dùng nhầm bar index | Kết quả đẹp giả tạo | Chỉ dùng nến đã đóng; test warm-up/boundary ở Phase 2–4 |
 | Config hash/data fingerprint bị hiểu là bảo đảm tái lập | So sánh sai hai run khác code/dữ liệu | Comparability kiểm tra config hash, data fingerprint, code version và git commit; worktree dirty là warning |
 
@@ -87,9 +87,9 @@
   terminal hoặc onnx có thể phá vỡ tương thích.
 - **Harness ≠ chiến lược:** EA chỉ đọc fixture tĩnh, không lấy feature từ bar hiện tại và không tạo tín
   hiệu. Không dùng log harness làm bằng chứng hiệu năng hay sẵn sàng live.
-- **Execution chỉ trong scope demo:** `OrderSend`/`CTrade` chỉ được phép ở `mt5/Include/Exec/*` và
-  `PATrendRiderXAUv1DemoEA` (ADR 0003). Mọi EA/module khác vẫn bị static gate chặn; live/real vẫn cần ADR
-  mới.
+- **Execution chỉ trong scope demo:** `OrderSend`/`CTrade` chỉ được phép ở `mt5/Include/Exec/*` và các EA
+  demo `PATrendRiderXAUv1DemoEA`, `GridDemoEA`, `DCADemoEA` (ADR 0004). Mọi EA/module khác vẫn bị static
+  gate chặn; live/real vẫn cần ADR mới.
 
 ### Rủi ro pipeline end-to-end (Phase 9)
 
@@ -141,8 +141,8 @@
 - **Preset JSON không được EA đọc trực tiếp:** EA nhận input trên chart/tester; JSON chỉ là nguồn kiểm tra
   và snapshot. Nhập sai một input là sai cấu hình dù validator đã pass cho file JSON.
 - **Runtime evidence một phần:** `SimCoreTests` 123/0, `SimPlanTests` 39/0, 6 contract suite (547 check)
-  và 13/15 scenario Strategy Tester đã chạy thật trong MT5 ngày 2026-10-28; 2 scenario `plan_*` là
-  `BLOCKED_PERFORMANCE`. Test vector không chứng minh EA chạy đúng trên dữ liệu thị trường, không đo
+  và 15/15 scenario Strategy Tester đã chạy thật trong MT5; 2 scenario `plan_*` có SUMMARY với 0 trade
+  (quirk `rr1 < rrMin` của source). Test vector không chứng minh EA chạy đúng trên dữ liệu thị trường, không đo
   spread/slippage thực và không thay thế report tester.
 - **Kết quả tester không phải bằng chứng lợi nhuận:** P&L theo contract size 1 của model, spread giả định
   theo preset hoặc đo một thời điểm, một symbol/một timeframe/một giai đoạn demo. Không suy ra lot thật
@@ -216,7 +216,7 @@
   vi đúng của ledger theo tài khoản, nhưng phải nhớ khi đọc `drawdown_pct` ngay sau khi chạy probe.
 - **Live/real vẫn là phạm vi mới:** muốn execution trên tài khoản thật phải lập ADR mới, review riêng và
   có tối thiểu: dry-run mặc định, một vị thế, SL/TP bắt buộc, giới hạn lot/risk, max daily loss, kill
-  switch, không martingale/grid/DCA ở giai đoạn đầu, bằng chứng Strategy Tester + demo trước đó.
+  switch, giỏ grid/DCA hữu hạn (trần tầng/add, exposure, ngân sách lỗ), bằng chứng Strategy Tester + demo trước đó.
 - **Rủi ro nếu bỏ qua ranh giới demo:** chạy DemoEA trên tài khoản thật (do nhầm terminal hoặc tắt guard)
   có thể gửi lệnh ngoài ý muốn; chạy khi chưa có log demo có thể che lỗi logic sizing/SL. Vì vậy preset
   demo là fail-closed, magic number tách khỏi sim và mọi kết quả demo phải được ghi bằng log thật.
@@ -229,7 +229,7 @@
 | Rủi ro | Trạng thái hiện tại | Ghi chú |
 |---|---|---|
 | MT5/MetaEditor thay đổi theo build | Đã xác minh build 5.0.0.6249 (EXNESS) khi compile ngày 2026-10-28 | Phải xác minh lại nếu terminal cập nhật build |
-| Agent không có đủ kết quả Strategy Tester | Compile 0 errors/0 warnings cho toàn bộ `.mq5` ngày 2026-10-28; `SimCoreTests` 123/0, `SimPlanTests` 39/0, 6 contract suite (547 check) PASS; 13/15 scenario có SUMMARY, 2 `plan_*` `BLOCKED_PERFORMANCE` | Giữ `READY_FOR_MANUAL_VALIDATION`; tối ưu `PriceActionMTF` trước khi chạy lại plan; parity và ONNX vẫn thủ công |
+| Agent không có đủ kết quả Strategy Tester | Compile 0 errors/0 warnings cho toàn bộ `.mq5`; `SimCoreTests` 123/0, `SimPlanTests` 39/0, 6 contract suite (547 check) PASS; 15/15 scenario có SUMMARY (`plan_*` 0 trade do quirk `rr1 < rrMin`) | Giữ `READY_FOR_MANUAL_VALIDATION` cho parity và ONNX; parity và ONNX vẫn thủ công |
 | OS là Windows 10, roadmap khuyến nghị Windows 11 | Đã ghi nhận | Không chặn các phase hiện tại; theo dõi lỗi đặc thù MT5 |
 | Khác biệt indicator MQL5 và Python | Cửa sổ EMA đã thống nhất `slow+1` và có comparator; MQL5 export chưa chạy | Chạy export thủ công và so sánh toàn bộ fixture trước khi tuyên bố tương đương |
 | Parity bị suy rộng quá mức | Comparator chỉ so sánh đúng hai file; self-comparison không phải parity | Ghi rõ rows_compared, fixture và trạng thái MQL5 runtime trong báo cáo |

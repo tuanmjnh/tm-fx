@@ -9,9 +9,9 @@ Nội dung:
 ---
 ## Strategy Tester thủ công cho EA mô phỏng (W8 + W10)
 
-**Trạng thái 2026-10-28:** 13/15 scenario đã chạy bằng Strategy Tester headless
+**Trạng thái 2026-10-29:** 15/15 scenario đã chạy bằng Strategy Tester headless
 (`terminal64.exe /config:…`, model *1 minute OHLC*, `XAUUSDm` M15, 2026.01.05–2026.10.01): 3 `ww_*`,
-10 runner/grid/DCA. 2 scenario `plan_*` là `BLOCKED_PERFORMANCE`. Report + CSV thật lưu trong
+10 runner/grid/DCA, 2 `plan_*`. Report + CSV thật lưu trong
 `reports/build/tester-reports/`. Agent chỉ dùng CLI headless có `ShutdownTerminal=1`, không điều khiển
 GUI và không nhập credential.
 
@@ -282,7 +282,8 @@ Nếu thiếu history, tester lỗi, hoặc CSV rỗng → `BLOCKED`/`FAIL`, kh�
 | `runner_*` (3) | PASS — 3/3 report + CSV thật, xem mục 9.1 |
 | `grid_*` (3) | PASS — 3/3 report + CSV thật, xem mục 9.1 |
 | `dca_*` (4) | PASS — 4/4 report + CSV thật, xem mục 9.1 |
-| `plan_baseline`, `plan_edge_tp3_stop_only` | `BLOCKED_PERFORMANCE` — PriceActionMTF quá chậm ở toàn kỳ 9 tháng; diagnostic 1 tháng xong 197 s với 0 entry |
+| `plan_baseline`, `plan_edge_tp3_stop_only` | PASS (0 trade, đúng thiết kế) — hết `BLOCKED_PERFORMANCE` sau khi tối ưu replay; xem mục 9.2 |
+| `plan_rr2` | PASS — 93 trade ảo, CSV nhất quán, `halted=HALTED` vì drawdown 5.02 %; xem mục 9.3 |
 | 6 contract test indicator | PASS — 6/6 suite, 547 check, xem [`../reference/simulation.md`](../reference/simulation.md) |
 | Kết luận hiệu năng | Không có; mọi số liệu phải đến từ report thật, không suy ra lợi nhuận |
 
@@ -332,13 +333,53 @@ Ghi chú trung thực:
 - `grid_edge_single_level` chỉ mở một level/basket nên trùng số với DCA — đúng cấu hình edge.
 - File: `reports/build/tester-reports/<scenario>/` (CSV 18 cột + `tester_<scenario>.htm`).
 
-### 9.2 `plan_*` — `BLOCKED_PERFORMANCE`
+### 9.2 `plan_*` — PASS với 0 trade (2026-10-29)
 
-Full kỳ 2026.01.05–2026.10.01 không hoàn tất sau ~13 phút; `metatester64` tính lại PriceActionMTF với
-chi phí tăng gần bậc hai theo số bar. Diagnostic rút còn 2026.01.05–2026.02.04: xong 197 s,
-`entries=0 rejected=0 trades=0` — chưa đủ để kết luận gì về logic plan. Không có report cho
-`plan_baseline` (chỉ CSV `INIT`) và `plan_edge_tp3_stop_only`. Muốn chạy được phải tối ưu cache
-indicator trước; không ghi đè trạng thái này bằng suy luận.
+**Trước:** full kỳ 2026.01.05–2026.10.01 không hoàn tất sau ~13 phút; `metatester64` tính lại
+PriceActionMTF với chi phí gần bậc hai theo số bar. Diagnostic 1 tháng mất 197 s.
+
+**Sau khi tối ưu** (replay tăng dần + binary search HTF + cache HTF append-only; chi tiết và bảng đo
+ở [`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §7.3):
+
+| Scenario | Wall time | `config_hash` | SUMMARY |
+|---|---:|---|---|
+| `plan_baseline` | 389.9 s | `A529A48A` | `entries=0\|rejected=0\|trades=0\|net=0.00\|max_dd=0.0000\|blocks=0\|halted=ACTIVE` |
+| `plan_edge_tp3_stop_only` | 409.8 s | `7DA9E7C9` | giống hệt `plan_baseline` |
+
+Cả hai chạy đủ 9 tháng (`SUMMARY` tại bar `2026.09.30 23:45`), CSV có 2 dòng `INIT` + `SUMMARY`,
+không có dòng trade.
+
+**Vì sao 0 trade — không phải lỗi:** source Pine mặc định `pa_rr1 = 1.0` và `pa_rrMin = 1.5`, nên
+`rrOk = (rr1 >= rrMin)` luôn false → `plan.valid = false` → không bao giờ có signal. Đây là quirk
+của source được port nguyên (decision P9, xem
+[`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §9). Chẩn đoán runtime
+2026-10-29 trên `diag_plan_1m` (1 tháng, 25 715 nến) xác nhận: 25 714 nến `plan_valid=0`, trong khi
+`dir_up=15 763`, `dir_dn=9 950`, `atr_ok=25 701`, `sl_ok=25 700`, `score=14..87` — mọi gate khác đều
+đạt, chỉ `rrOk` chặn.
+
+Muốn thấy trade phải đặt `rr1 >= rrMin` (ví dụ `rr1=2.0`) hoặc `rrMin=0`; đó là thay đổi cấu hình,
+không phải sửa code. Bằng chứng: `reports/build/tester-reports/plan_baseline/` và
+`reports/build/tester-reports/plan_edge_tp3_stop_only/` (CSV + htm + png).
+
+### 9.3 `plan_rr2` — PASS với trade thật (2026-10-29)
+
+Cùng EA và kỳ như mục 9.2, chỉ khác bridge: `InpPaRr1=2.0`, `InpPaRrMin=1.5`
+(`reports/build/tester-sets/plan_rr2.set`). `PinePlanSimEA` `config_hash=D6CEF886`, indicator
+`hash=E231116A`, `Model=1`, deposit 10 000 USD, leverage 1:100, build 6292, demo
+`Exness-MT5Trial17`. Report: History Quality 100%, `Bars: 17595`, `Ticks: 1053473`.
+Wall ≈ 336 s (dấu vết file: journal `INIT` 23:17:58.456 → CSV 23:23:34.549).
+
+| Hạng mục | Giá trị |
+|---|---|
+| SUMMARY | `entries=93\|rejected=0\|trades=93\|wins=26\|losses=67\|flats=0\|net=-333.11\|realized=-333.11\|max_dd=5.0210\|blocks=99\|halted=HALTED` |
+| Equity cuối | 9 666.89 (đơn vị mô hình, không phải lợi nhuận) |
+| CSV | 287 dòng = 1 `INIT` + 93 `ENTRY` + 93 `EXIT` + 99 `RISK` + 1 `SUMMARY` |
+| Lỗi cấu trúc | 0 — một `config_hash` toàn file, 93/93 ENTRY cặp EXIT, không vị thế mở cuối, 0 SL/TP sai phía |
+| Hướng lệnh | 93 BUY / 0 SELL — xem [`../PROGRESS.md`](../PROGRESS.md) §58.5 và [`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §10.5 (quirk `Q11`) |
+
+Chạy lại: `reports/build/tester-run/run_tester.ps1 -Scenario plan_rr2`.
+Bằng chứng: `reports/build/tester-reports/plan_rr2/` (`sim_plan_rr2.csv`, `tester_plan_rr2.htm`,
+`tester_plan_rr2.png`, `plan_rr2.journal.txt`).
 
 ## Strategy Tester report — <scenario>
 

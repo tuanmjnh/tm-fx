@@ -449,8 +449,8 @@ Thư viện dùng chung cho các EA mô phỏng (`RunnerTrailingLabEA`, `GridLab
   (chi tiết `docs/guides/toolchain.md`).
 - Test vector runtime **PASS**: `SimCoreTests` `pass=123 fail=0` và `SimPlanTests` `pass=39 fail=0`
   (MT5, 2026-10-28).
-- EA runtime **PASS một phần**: runner/grid/DCA đã chạy 10 scenario Strategy Tester (có SUMMARY);
-  `plan_*` `BLOCKED_PERFORMANCE`. Preset mẫu `configs/sim/runner_trailing.json`,
+- EA runtime **PASS**: runner/grid/DCA/plan đã chạy 15 scenario Strategy Tester (có SUMMARY); `plan_*`
+  0 trade do quirk `rr1 < rrMin` của source. Preset mẫu `configs/sim/runner_trailing.json`,
   `configs/sim/grid_lab.json`, `configs/sim/dca_lab.json`, `configs/sim/pine_plan_lab.json`,
   `configs/sim/wonderwhales_xauusdm.json`; scenario baseline/stress/edge:
   `configs/project.example.json` (15 scenario).
@@ -489,9 +489,9 @@ Thư viện dùng chung cho các EA mô phỏng (`RunnerTrailingLabEA`, `GridLab
   theo plan; target fill đúng target, không credit gap có lợi; SL được kiểm trước target.
 - Runtime: `SimPlanTests` PASS trong MT5 ngày 2026-10-28 (`TEST|RESULT|ALL_PASS|pass=39 fail=0|suite=sim_plan`).
   Lần chạy đầu phát hiện hằng số `point` sai trong test và lỗi biên số thực ở ngưỡng target; đã sửa
-  `SimPlanTests.mq5` + `SimPlan.mqh` rồi chạy lại. EA trong Strategy Tester: 2 scenario `plan_*`
-  `BLOCKED_PERFORMANCE` — 1 tháng chẩn đoán chạy 197 s với 0 entry; 9 tháng không xong trong ~13 phút
-  (~O(n²) ở `PriceActionMTF`).
+  `SimPlanTests.mq5` + `SimPlan.mqh` rồi chạy lại. EA trong Strategy Tester: 2 scenario `plan_*` chạy đủ
+  9 tháng (`plan_baseline` 389.9 s, `plan_edge_tp3_stop_only` 409.8 s) với SUMMARY và 0 trade — đúng quirk
+  `rr1=1.0 < rrMin=1.5` của source (sau khi tối ưu replay tăng dần, xem `docs/PROGRESS.md` §57).
 - Không đưa LongKaco VSA và TM Fusion Zones vào EA này: hai nguồn đó dùng máy trạng thái `FILL/RESULT`
   và `POS_SIDE`, không phải plan tĩnh.
 - Chi tiết luật, token lỗi và giới hạn: `docs/reference/simulation.md` mục **PinePlanSimEA**; preset:

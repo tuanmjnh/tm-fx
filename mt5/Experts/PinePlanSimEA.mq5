@@ -50,6 +50,10 @@ input double InpMinStopPoints       = 5.0;      // reject plans with a closer st
 input double InpMinTargetPoints     = 5.0;      // reject plans with a closer target
 input int    InpMaxHoldingBars      = 0;        // 0 = disabled
 
+input group "Indicator bridge (PriceActionMTF only)"
+input double InpPaRr1               = 1.0;      // PA TP1 R multiple (indicator InpRr1Ea)
+input double InpPaRrMin             = 1.5;      // PA minimum TP1 R (indicator InpRrMinEa)
+
 input group "Management"
 input bool   InpBreakEvenEnabled    = false;
 input double InpBreakEvenTriggerPoints = 400.0;
@@ -150,6 +154,16 @@ bool ValidateInputs(string &error)
       error="min_target_points_must_be_finite_non_negative";
       return(false);
      }
+   if(!SimIsFinite(InpPaRr1) || InpPaRr1<=0.0)
+     {
+      error="pa_rr1_must_be_finite_positive";
+      return(false);
+     }
+   if(!SimIsFinite(InpPaRrMin) || InpPaRrMin<0.0)
+     {
+      error="pa_rr_min_must_be_finite_non_negative";
+      return(false);
+     }
    if(!SimValidateCount(InpMaxHoldingBars,
                         "max_holding_bars_must_be_non_negative",error))
       return(false);
@@ -238,7 +252,11 @@ string BuildConfigHash(void)
                      SimFormatFingerprintPartInt("plan.volume",
                                                  (int)MathRound(InpVolume*100))+
                      SimFormatFingerprintPartInt("plan.balance",
-                                                 (int)MathRound(InpInitialBalance));
+                                                 (int)MathRound(InpInitialBalance))+
+                     ((InpSource==PLAN_SOURCE_PA)
+                      ? SimFormatFingerprintPart("plan.pa_rr1",InpPaRr1,2)+
+                        SimFormatFingerprintPart("plan.pa_rr_min",InpPaRrMin,2)
+                      : "");
    return(SimHashString(text));
   }
 
@@ -728,7 +746,12 @@ int OnInit(void)
      }
 
    g_source_name=SourceName();
-   g_handle=iCustom(_Symbol,_Period,SourcePath());
+   //--- PriceActionMTF exposes two leading bridge inputs (rr1, rrMin). Every other
+   //--- source keeps the zero-parameter call so its defaults stay authoritative.
+   if(InpSource==PLAN_SOURCE_PA)
+      g_handle=iCustom(_Symbol,_Period,SourcePath(),InpPaRr1,InpPaRrMin);
+   else
+      g_handle=iCustom(_Symbol,_Period,SourcePath());
    if(g_handle==INVALID_HANDLE)
      {
       PrintFormat("LAB|ERROR|plan|indicator_init_failed|source=%s|error=%d",
@@ -755,6 +778,9 @@ int OnInit(void)
    PrintFormat("LAB|INFO|plan|initialized|source=%s|hash=%s|log=%s|tester=%d",
                g_source_name,g_config_hash,(InpEnableLog ? InpLogFile : "disabled"),
                (int)MQLInfoInteger(MQL_TESTER));
+   if(InpSource==PLAN_SOURCE_PA)
+      PrintFormat("LAB|INFO|plan|pa_bridge|rr1=%.2f|rr_min=%.2f",
+                  InpPaRr1,InpPaRrMin);
    PrintFormat("LAB|INFO|plan|simulation_only|no_orders_are_sent");
    return(INIT_SUCCEEDED);
   }

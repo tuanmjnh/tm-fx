@@ -48,7 +48,7 @@ EXPECTED_TEST_IDS = {
     *(f"G{i}" for i in range(1, 10)),
     *(f"H{i}" for i in range(1, 11)),
     *(f"I{i}" for i in range(1, 10)),
-    *(f"J{i}" for i in range(1, 9)),
+    *(f"J{i}" for i in range(1, 14)),
     *(f"K{i}" for i in range(1, 8)),
     *(f"L{i}" for i in range(1, 11)),
     *(f"M{i}" for i in range(1, 11)),
@@ -219,10 +219,24 @@ def check_indicator(checker: Checker, buffer_map: dict[str, int]) -> None:
         checker.ok("indicator has no confirm-mode input")
 
     inputs = re.findall(r"^input\s+", text, re.M)
-    if len(inputs) == 115:
-        checker.ok("indicator declares exactly 115 inputs")
+    if len(inputs) == 117:
+        checker.ok("indicator declares exactly 117 inputs (115 Pine-parity + 2 bridge)")
     else:
-        checker.fail(f"indicator declares {len(inputs)} inputs, expected 115")
+        checker.fail(f"indicator declares {len(inputs)} inputs, expected 117")
+
+    # The two EA bridge inputs must stay first: iCustom passes parameters by
+    # position, so anything declared above them (including an `input group`
+    # line) would shift the mapping.
+    if re.search(r"^input group\b", text, re.M):
+        checker.fail("indicator declares an input group; it consumes an iCustom slot")
+    else:
+        checker.ok("indicator declares no input group")
+
+    first_inputs = re.findall(r"^input\s+\w+\s+(\w+)\s*=", text, re.M)[:2]
+    if first_inputs == ["InpRr1Ea", "InpRrMinEa"]:
+        checker.ok("EA bridge inputs InpRr1Ea/InpRrMinEa are the first two inputs")
+    else:
+        checker.fail(f"first two inputs are {first_inputs}, expected the EA bridge")
 
 
 def check_tests(checker: Checker) -> None:
@@ -233,13 +247,13 @@ def check_tests(checker: Checker) -> None:
     ids = set(
         re.findall(
             r'"(A[1-5]|B(?:10|[1-9])|C[1-5]|D[1-8]|E[1-8]|F[1-8]|G[1-9]|'
-            r'H(?:10|[1-9])|I[1-9]|J[1-8]|K[1-7]|L(?:10|[1-9])|'
+            r'H(?:10|[1-9])|I[1-9]|J(?:1[0-3]|[1-9])|K[1-7]|L(?:10|[1-9])|'
             r'M(?:10|[1-9])|N[1-5]|O[1-3]|P[1-4])"',
             text,
         )
     )
     if ids == EXPECTED_TEST_IDS:
-        checker.ok("contract test script contains all 119 test IDs")
+        checker.ok("contract test script contains all 124 test IDs")
     else:
         missing = sorted(EXPECTED_TEST_IDS - ids)
         extra = sorted(ids - EXPECTED_TEST_IDS)

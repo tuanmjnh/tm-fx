@@ -10,9 +10,9 @@ backtest có thể tái lập cho MetaTrader 5.
   trên `XAUUSDm` M5 (225 340 ticks, 11 285 bars). Phase 5 vẫn `READY_FOR_MANUAL_VALIDATION` (parity Pine ↔
   MQL5 `BLOCKED` vì thiếu CSV reference). Track C W1–W7, W9, W10 **PASS** (compile + static + toolchain);
   `SimCoreTests` 125/0, `SimPlanTests` 39/0 và `TrendRiderContractTests` 82/0 đã **PASS runtime** trong
-  MT5 ngày 2026-10-28; 15/17 scenario Strategy Tester đã **chạy thật** headless trên `XAUUSDm` (3 `ww_*`,
-  `runner_*`, `grid_*`, 4 `dca_*`, 2 `pa_*`); 2 scenario `plan_*` là `BLOCKED_PERFORMANCE` (chưa xong
-  9 tháng trong cửa sổ chạy, xem [`docs/PROGRESS.md`](docs/PROGRESS.md) §41–§42, §48).
+  MT5 ngày 2026-10-28; 17/17 scenario Strategy Tester đã **chạy thật** headless trên `XAUUSDm` (3 `ww_*`,
+  `runner_*`, `grid_*`, 4 `dca_*`, 2 `pa_*`, 2 `plan_*`); `plan_*` có SUMMARY với 0 trade do quirk
+  `rr1 < rrMin` của source Pine (xem [`docs/PROGRESS.md`](docs/PROGRESS.md) §57).
 - **Phạm vi hiện tại:** signal-only, mô phỏng offline (SL/TP tĩnh, trailing stop, bounded DCA/grid
   basket, vị thế ảo theo trade plan của PinePort, tín hiệu Wonderwhales và PA TrendRider XAU v1 trên
   `XAUUSDm`), metadata thí nghiệm cục bộ, ML baseline, ONNX inference-only và pipeline end-to-end trên
@@ -21,16 +21,17 @@ backtest có thể tái lập cho MetaTrader 5.
 - **MT5:** 30 target `.mq5` đã compile **0 errors, 0 warnings** bằng `scripts/build-mql5.ps1`
   (2026-10-29, build 6292); self-check `SimCoreTests`/`SimPlanTests`/`LabSignalEngineTests` (53 check),
   6/6 contract suite indicator (547 check), `TrendRiderContractTests` (82 check), ONNX runtime (24/24 hàng)
-  và 15/17 scenario Strategy Tester đã chạy thật. Chỉ còn parity Pine ↔ MQL5 (`BLOCKED` thiếu CSV
-  reference) và 2 scenario `plan_*` `BLOCKED_PERFORMANCE`. Quy trình:
+  và 17/17 scenario Strategy Tester đã chạy thật. Chỉ còn parity Pine ↔ MQL5 (`BLOCKED` thiếu CSV
+  reference). Quy trình:
   [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
 - **Ranh giới execution:** không hỗ trợ live/real execution. Repo có **một** đường chạy demo được
   guardrail đầy đủ: `PATrendRiderXAUv1DemoEA` trên tài khoản demo hoặc Strategy Tester, mặc định dry-run,
   bắt buộc SL/TP, một vị thế và kill switch. Xem
   [`docs/decisions/0003-demo-execution-scope.md`](docs/decisions/0003-demo-execution-scope.md) và
   [`docs/guides/demo-execution.md`](docs/guides/demo-execution.md).
-- **Tài liệu nguồn:** [`docs/ROADMAP_MT5_EA_AI_LAB.md`](docs/ROADMAP_MT5_EA_AI_LAB.md) và
-  [`docs/PROMPT_AI_IMPLEMENT_ROADMAP.md`](docs/PROMPT_AI_IMPLEMENT_ROADMAP.md).
+- **Tài liệu:** bộ hiện hành ở [`docs/README.md`](docs/README.md) và [`docs/v2/README.md`](docs/v2/README.md);
+  lộ trình tổng ở [`docs/MASTER_ROADMAP.md`](docs/MASTER_ROADMAP.md). Bộ v1 đã lưu trữ ở
+  [`docs/archive/v1/`](docs/archive/README.md).
 
 > Kết quả backtest/mô phỏng không đảm bảo lợi nhuận trong tương lai. Mọi con số phải ghi rõ dữ liệu,
 > khoảng thời gian, giả định chi phí và trạng thái dữ liệu (thực, sample hay synthetic).
@@ -42,7 +43,7 @@ backtest có thể tái lập cho MetaTrader 5.
 | OS | Windows 10/11 64-bit | Windows 10.0.19045.6456 |
 | Python | 3.11 64-bit | 3.11.9 (64-bit) |
 | Git | 2.x | 2.53.0.windows.3 |
-| MT5 + MetaEditor | Bản cài chính thức | MT5 5.0.0.6249 (bản EXNESS), có `MetaEditor64.exe`, `metatester64.exe` |
+| MT5 + MetaEditor | Bản cài chính thức | MT5 5.0.0.6292 (bản EXNESS), có `MetaEditor64.exe`, `metatester64.exe` |
 
 Chi tiết kiểm kê, trạng thái từng mục và các bước xác minh thủ công còn lại:
 [`docs/guides/install-and-test.md`](docs/guides/install-and-test.md).
@@ -80,15 +81,13 @@ tm-fx/                             # tên thư mục hiện tại; nội dung th
 ├── docs/
 │   ├── README.md                  # điểm vào duy nhất cho toàn bộ tài liệu
 │   ├── PROGRESS.md                # nhật ký phase/W + trạng thái thật
-│   ├── MASTER_ROADMAP.md
-│   ├── ROADMAP_MT5_EA_AI_LAB.md
-│   ├── PROMPT_AI_IMPLEMENT_ROADMAP.md
-│   ├── guides/                    # install-and-test, strategy-tester, toolchain
+│   ├── MASTER_ROADMAP.md          # lộ trình tổng
+│   ├── v2/                        # bộ tài liệu hiện hành (bắt đầu ở v2/README.md)
+│   ├── guides/                    # install-and-test, demo-execution, strategy-tester, toolchain
 │   ├── indicators/                # inventory, parity, 6 tài liệu indicator PinePort
 │   ├── reference/                 # architecture, simulation, testing, risk, release, …
-│   ├── decisions/
-│   ├── phase-reports/
-│   └── *-pack/                    # input pack gốc, chỉ đọc
+│   ├── decisions/                 # ADR 0001–0003
+│   └── archive/                   # tài liệu v1 + planning input, chỉ đọc
 ├── mt5/
 │   ├── Experts/                   # signal-only, ONNX harness, 5 EA mô phỏng
 │   ├── Include/                   # Logger, Indicators, SignalEngine, PinePort, Sim
@@ -242,25 +241,25 @@ không mở/ghi được. Giả định mô phỏng và định nghĩa metric:
 - ML baseline chỉ dùng dữ liệu synthetic trong demo; metric phân loại và metric chiến lược mô phỏng được
   báo cáo riêng, không phải bằng chứng lợi nhuận.
 - Bounded DCA/grid có simulator Python và 5 EA MQL5 mô phỏng (runner/grid/DCA/plan/Wonderwhales); cả 5 EA
-  đã chạy Strategy Tester (13 scenario có SUMMARY, không gửi lệnh); `plan_*` dừng ở
-  `BLOCKED_PERFORMANCE`. Không nối experiment store và không thay đổi engine một vị thế. Demo synthetic
+  đã chạy Strategy Tester (15 scenario có SUMMARY, không gửi lệnh); `plan_*` 0 trade do quirk
+  `rr1 < rrMin` của source. Không nối experiment store và không thay đổi engine một vị thế. Demo synthetic
   lỗ sau chi phí, không dùng làm khuyến nghị chiến lược.
 - Pipeline Phase 9 chỉ chạy validate/backtest/ML/store/report cục bộ; không chạy ONNX runtime hay bất kỳ
   đường thực thi lệnh nào. Strategy Tester chỉ dùng cho EA mô phỏng (0 deal).
 - Run ID và experiment ID là bất biến: chạy lại cùng ID bị từ chối thay vì ghi đè báo cáo cũ.
 
 Danh sách rủi ro đầy đủ: [`docs/reference/risk.md`](docs/reference/risk.md).
-Báo cáo Phase 0: [`docs/phase-reports/phase-0.md`](docs/phase-reports/phase-0.md).
-Báo cáo Phase 1: [`docs/phase-reports/phase-1.md`](docs/phase-reports/phase-1.md).
-Báo cáo Phase 2: [`docs/phase-reports/phase-2.md`](docs/phase-reports/phase-2.md).
-Báo cáo Phase 3: [`docs/phase-reports/phase-3.md`](docs/phase-reports/phase-3.md).
-Báo cáo Phase 4: [`docs/phase-reports/phase-4.md`](docs/phase-reports/phase-4.md).
-Báo cáo Phase 5: [`docs/phase-reports/phase-5.md`](docs/phase-reports/phase-5.md).
-Báo cáo Phase 6: [`docs/phase-reports/phase-6.md`](docs/phase-reports/phase-6.md).
-Báo cáo Phase 7: [`docs/phase-reports/phase-7.md`](docs/phase-reports/phase-7.md).
-Báo cáo Phase 8: [`docs/phase-reports/phase-8.md`](docs/phase-reports/phase-8.md).
-Báo cáo Phase 9: [`docs/phase-reports/phase-9.md`](docs/phase-reports/phase-9.md).
-Báo cáo mẫu Phase 9: [`docs/phase-reports/phase-9-sample-report.md`](docs/phase-reports/phase-9-sample-report.md).
+Báo cáo Phase 0: [`docs/archive/v1/phase-reports/phase-0.md`](docs/archive/v1/phase-reports/phase-0.md).
+Báo cáo Phase 1: [`docs/archive/v1/phase-reports/phase-1.md`](docs/archive/v1/phase-reports/phase-1.md).
+Báo cáo Phase 2: [`docs/archive/v1/phase-reports/phase-2.md`](docs/archive/v1/phase-reports/phase-2.md).
+Báo cáo Phase 3: [`docs/archive/v1/phase-reports/phase-3.md`](docs/archive/v1/phase-reports/phase-3.md).
+Báo cáo Phase 4: [`docs/archive/v1/phase-reports/phase-4.md`](docs/archive/v1/phase-reports/phase-4.md).
+Báo cáo Phase 5: [`docs/archive/v1/phase-reports/phase-5.md`](docs/archive/v1/phase-reports/phase-5.md).
+Báo cáo Phase 6: [`docs/archive/v1/phase-reports/phase-6.md`](docs/archive/v1/phase-reports/phase-6.md).
+Báo cáo Phase 7: [`docs/archive/v1/phase-reports/phase-7.md`](docs/archive/v1/phase-reports/phase-7.md).
+Báo cáo Phase 8: [`docs/archive/v1/phase-reports/phase-8.md`](docs/archive/v1/phase-reports/phase-8.md).
+Báo cáo Phase 9: [`docs/archive/v1/phase-reports/phase-9.md`](docs/archive/v1/phase-reports/phase-9.md).
+Báo cáo mẫu Phase 9: [`docs/archive/v1/phase-reports/phase-9-sample-report.md`](docs/archive/v1/phase-reports/phase-9-sample-report.md).
 Đặc tả tín hiệu: [`docs/reference/strategy-signal-spec.md`](docs/reference/strategy-signal-spec.md).
 Parity MQL5/Python: [`docs/reference/parity.md`](docs/reference/parity.md).
 Experiment store: [`docs/reference/experiment-store.md`](docs/reference/experiment-store.md).

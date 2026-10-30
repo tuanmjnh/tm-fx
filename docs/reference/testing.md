@@ -481,14 +481,14 @@ trailing stop **170 passed in 15.13s**; snapshot Phase 9 **155 passed in 12.69s*
 | T3 | Unit (MQL5) | 36 vector A–E cho dir/flip, mode gate, confirmed gate, cross, missing | `WonderwhalesContractTests.mq5` | **PASS 36/36** (2026-10-28) |
 | T3b | Unit (MQL5) | 47 vector A–H cho bucket, flag, sweep, pivot, setup, tracking, CLX, RMA/clamp | `LongKacoVSAContractTests.mq5` | **PASS 47/47** |
 | T3c | Unit (MQL5) | 82 vector A–O cho clamp/MA/series, regime, ribbon, zone, structure, candle, MTF, setup, score, risk, gates, state, hash | `TMFusionZonesContractTests.mq5` | **PASS 82/82** |
-| T3d | Unit (MQL5) | 119 vector A–P cho math/time, series, pivot, structure, pattern, liquidity, zone, candle, score, MTF, regime, plan, state, gates, hash, bar policy | `PriceActionMTFContractTests.mq5` | **PASS 120/120** |
+| T3d | Unit (MQL5) | 124 vector A–P cho math/time, series, pivot, structure, pattern, liquidity, zone, candle, score, MTF, regime, plan, state, gates, hash, bar policy | `PriceActionMTFContractTests.mq5` | **PASS 125/125** |
 | T3e | Unit (MQL5) | 105 vector A–O cho math/time, volume/VSA/OBV, session, structure, event ring, zones/FVG/OB, candles, indicators, scoring, MTF, plan/gates, state TP 3 tầng, hash, bar policy, normalize | `TMXAUSignals2ContractTests.mq5` | **PASS 107/107** |
 | T3f | Unit (MQL5) | 155 vector A–P cho math/time, VWAP/session, structure, zones, candle, gates, plan TP 3 tầng, normalize | `TMIndicator2ContractTests.mq5` | **PASS 155/155** |
 | T4 | Unit (Python) | Comparator: schema, khóa, tolerance, NaN, filter, warm-up, offset, CLI | `pytest python/tests/test_pine_parity.py` | PASS |
 | T4b | Unit (Python) | Audit CSV EA: thứ tự, căn timeframe, đồng nhất symbol/mode/hash, giá rỗng, ATR âm, `detected_at` | `pytest python/tests/test_signal_audit.py` | PASS |
 | T5 | Runtime indicator | Gắn indicator lên chart, kiểm tra plot/buffer, không repaint | MT5 thủ công | **NOT_RUN** |
 | T6 | Runtime EA | EA đọc `shift=1`, ghi CSV đúng schema, không trùng | MT5 thủ công | **NOT_RUN** |
-| T7 | Strategy Tester | Chạy EA trong tester, đọc Journal/Experts | MT5 thủ công | **PASS một phần** — 13/15 scenario EA mô phỏng; 2 `plan_*` `BLOCKED_PERFORMANCE` |
+| T7 | Strategy Tester | Chạy EA trong tester, đọc Journal/Experts | MT5 thủ công | **PASS** — 15/15 scenario EA mô phỏng có SUMMARY; `plan_*` 0 trade do quirk `rr1 < rrMin` |
 | T8 | Parity | So CSV Pine thật với CSV EA | `scripts/compare_pine_exports.py` | **BLOCKED** (thiếu reference) |
 
 ### 2. T1 — Static validation
@@ -550,16 +550,16 @@ contract đúng.
 
 **Trạng thái hiện tại:** **PASS 82/82** trong Strategy Tester (2026-10-28).
 
-#### 4c. T3d — 119 vector Price Action MTF
+#### 4c. T3d — 124 vector Price Action MTF
 
 1. Sync `mt5/Scripts/PriceActionMTFContractTests.mq5` và
    `mt5/Include/PinePort/PriceActionMTFContract.mqh` vào data folder.
 2. Compile (T2).
 3. Kéo script vào chart bất kỳ. Script không đọc dữ liệu thị trường, không giao dịch, không ghi file.
-4. Tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=120 fail=0|contract=1.0.0`.
+4. Tab **Experts** phải có `TEST|RESULT|ALL_PASS|pass=125 fail=0|contract=1.0.0`.
 
-**Trạng thái hiện tại:** **PASS 120/120** trong Strategy Tester (2026-10-28); 3 vector B7/B9/C3/E8
-được sửa theo đặc tả sau lần chạy đầu.
+**Trạng thái hiện tại:** **PASS 125/125** trong Strategy Tester (2026-10-29); 5 vector J9–J13 thêm
+cùng lần tối ưu `PaMapHtfIndex` (empty/before/after/duplicate + so khớp với linear scan).
 
 #### 4d. T3e — 105 vector TM XAU Signals 2
 
@@ -655,7 +655,7 @@ build 6292 trên `XAUUSDm`, không suy ra từ lần chạy trước.
 | L6 | Parity EMA | EMA window MQL5 ↔ Python trên fixture chuẩn hóa | `LabSignalExport` + `scripts/compare_signals.py` | **PASS** (fixture đúng; xem ghi chú sự cố fixture sai bên dưới) |
 | L7 | Runtime ONNX | Nạp `model.onnx`, chạy 24 hàng fixture, so `probability` với Python | `LabOnnxInference.mq5` + `onnx_parity` | **PASS 24/24**, max abs `4.927e-08`, mean `1.997e-08`, tol `1e-5`; provider CPU (CUDA/TensorRT fail trên máy này) |
 | L8 | Strategy Tester | `LabSignalEA` signal-only, kỳ vọng 0 trade | `terminal64.exe /config:...\lab_signal_ea_m5.ini` | **PASS** — xem §2 |
-| L9 | Python | Toàn bộ suite | `pytest -q` | **372 passed in 15.73s** (chạy lại 2026-10-29) |
+| L9 | Python | Toàn bộ suite | `pytest -q` | **374 passed in 14.76s** (chạy lại 2026-10-29) |
 
 ### 2. L8 — Strategy Tester `LabSignalEA`
 
