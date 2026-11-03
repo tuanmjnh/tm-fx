@@ -41,10 +41,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-ADR = "docs/decisions/0004-all-bots-demo-execution.md"
-ADR_0003 = "docs/decisions/0003-demo-execution-scope.md"
-ADR_0007 = "docs/decisions/0007-wonderwhales-demo-bot.md"
-GUIDE = "docs/guides/demo-execution.md"
+ADR = "docs/90-decisions/0004-all-bots-demo-execution.md"
+ADR_0003 = "docs/90-decisions/0003-demo-execution-scope.md"
+ADR_0007 = "docs/90-decisions/0007-wonderwhales-demo-bot.md"
+GUIDE = "docs/20-operations/demo-execution.md"
 DEMO_EA = "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5"
 GRID_DEMO_EA = "mt5/Experts/GridDemoEA.mq5"
 DCA_DEMO_EA = "mt5/Experts/DCADemoEA.mq5"

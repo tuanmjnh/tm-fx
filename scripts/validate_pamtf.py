@@ -22,9 +22,9 @@ FILES = {
     "contract": "mt5/Include/PinePort/PriceActionMTFContract.mqh",
     "indicator": "mt5/Indicators/PinePort/PriceActionMTF.mq5",
     "tests": "mt5/Scripts/PriceActionMTFContractTests.mq5",
-    "spec": "docs/indicators/price-action-mtf.md",
-    "audit": "docs/indicators/price-action-mtf.md",
-    "buffer_contract": "docs/indicators/price-action-mtf.md",
+    "spec": "docs/30-research/indicators/price-action-mtf.md",
+    "audit": "docs/30-research/indicators/price-action-mtf.md",
+    "buffer_contract": "docs/30-research/indicators/price-action-mtf.md",
 }
 
 FORBIDDEN_API = re.compile(

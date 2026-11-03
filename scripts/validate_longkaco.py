@@ -22,9 +22,9 @@ FILES = {
     "contract": "mt5/Include/PinePort/LongKacoVSAContract.mqh",
     "indicator": "mt5/Indicators/PinePort/LongKacoVSA.mq5",
     "tests": "mt5/Scripts/LongKacoVSAContractTests.mq5",
-    "spec": "docs/indicators/longkaco-vsa.md",
-    "audit": "docs/indicators/longkaco-vsa.md",
-    "buffer_contract": "docs/indicators/longkaco-vsa.md",
+    "spec": "docs/30-research/indicators/longkaco-vsa.md",
+    "audit": "docs/30-research/indicators/longkaco-vsa.md",
+    "buffer_contract": "docs/30-research/indicators/longkaco-vsa.md",
 }
 
 FORBIDDEN_API = re.compile(

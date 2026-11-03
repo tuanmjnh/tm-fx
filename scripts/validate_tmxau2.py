@@ -1,6 +1,6 @@
 """Static validation for the TM XAU Signals 2 PinePort sources and docs.
 
-Checks V1-V14 of docs/indicators/tm-xau-signals-2.md section 15.
+Checks V1-V14 of docs/30-research/indicators/tm-xau-signals-2.md section 15.
 Structure and safety only: this script never compiles, never runs MT5 and
 never claims runtime or parity success.
 
@@ -23,7 +23,7 @@ FILES = {
     "contract": "mt5/Include/PinePort/TMXAUSignals2Contract.mqh",
     "indicator": "mt5/Indicators/PinePort/TMXAUSignals2.mq5",
     "tests": "mt5/Scripts/TMXAUSignals2ContractTests.mq5",
-    "buffer_contract": "docs/indicators/tm-xau-signals-2.md",
+    "buffer_contract": "docs/30-research/indicators/tm-xau-signals-2.md",
 }
 
 FORBIDDEN_API = re.compile(

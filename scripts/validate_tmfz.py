@@ -22,9 +22,9 @@ FILES = {
     "contract": "mt5/Include/PinePort/TMFusionZonesContract.mqh",
     "indicator": "mt5/Indicators/PinePort/TMFusionZones.mq5",
     "tests": "mt5/Scripts/TMFusionZonesContractTests.mq5",
-    "spec": "docs/indicators/tm-fusion-zones.md",
-    "audit": "docs/indicators/tm-fusion-zones.md",
-    "buffer_contract": "docs/indicators/tm-fusion-zones.md",
+    "spec": "docs/30-research/indicators/tm-fusion-zones.md",
+    "audit": "docs/30-research/indicators/tm-fusion-zones.md",
+    "buffer_contract": "docs/30-research/indicators/tm-fusion-zones.md",
 }
 
 FORBIDDEN_API = re.compile(

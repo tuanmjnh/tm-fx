@@ -1,6 +1,6 @@
 """Static validation for the TM Indicator 2 PinePort sources and docs.
 
-Checks V1-V14 of docs/indicators/tm-indicator-2.md section 13.
+Checks V1-V14 of docs/30-research/indicators/tm-indicator-2.md section 13.
 Structure and safety only: this script never compiles, never runs MT5 and
 never claims runtime or parity success.
 
@@ -23,7 +23,7 @@ FILES = {
     "contract": "mt5/Include/PinePort/TMIndicator2Contract.mqh",
     "indicator": "mt5/Indicators/PinePort/TMIndicator2.mq5",
     "tests": "mt5/Scripts/TMIndicator2ContractTests.mq5",
-    "buffer_contract": "docs/indicators/tm-indicator-2.md",
+    "buffer_contract": "docs/30-research/indicators/tm-indicator-2.md",
 }
 
 FORBIDDEN_API = re.compile(
