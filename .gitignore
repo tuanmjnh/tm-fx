@@ -74,3 +74,6 @@ tmpsnub_*
 Thumbs.db
 .idea/
 .vscode/
+
+# Node (repo không có mã JS)
+node_modules/
