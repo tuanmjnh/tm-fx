@@ -1213,3 +1213,20 @@ cả `bar_open_time` và giá trị các buffer phụ để chẩn đoán. Nếu
 3. Volume: `tick_volume` là mặc định; nếu symbol có `real_volume = 0`, ghi rõ trong parity report.
 4. Timezone: CSV dùng giờ server; Pine export có thể là giờ exchange. Chuẩn hóa ở Phase 6.
 5. Chưa có reference CSV từ Pine → Phase 6 vẫn `BLOCKED`.
+
+### 13. Đường thực thi — hai EA, hai chế độ (ADR 0004 / 0007)
+
+| Chế độ | EA | Gửi lệnh? | Mục đích |
+|---|---|---|---|
+| Mô phỏng | `WonderwhalesSimEA` | Không (`SIMULATION_ONLY`) | Backtest mô phỏng, giữ nguyên bằng chứng 3 kịch bản cũ |
+| Demo/Tester | `WonderwhalesDemoEA` | Có, chỉ demo hoặc Strategy Tester | Bot demo thứ năm; magic `25007001`, preset `configs/demo/wonderwhales_demo.json`, kill switch `WONDERWHALES_DEMO_STOP.txt` |
+
+- Cả hai đọc cùng indicator `PinePort\Wonderwhales` qua bốn input `InpMode, InpPsarStart, InpPsarInc,
+  InpPsarMax, InpFastEma, InpSlowEma, InpEma200, InpAtrLen, InpMinAtrPct, InpVolMaLen, InpRsiLen,
+  InpBbLen, InpBbMult` (13 input theo thứ tự `iCustom`) và chỉ đọc `shift = 1`.
+- `WonderwhalesDemoEA` gửi lệnh qua `ExecBroker.mqh`, mọi lệnh có SL và TP bắt buộc; chạy thử và đọc
+  journal theo [`../guides/demo-execution.md`](../guides/demo-execution.md) §4.5.
+- Kịch bản chứng minh đường gửi lệnh: `reports/build/tester-run/ww_demo_exec.ini` +
+  `reports/build/tester-sets/ww_demo_exec.set`; journal `sim_ww_demo_exec.csv`.
+- Kết quả demo/backtest không phải cam kết lợi nhuận. Trạng thái bằng chứng demo: xem
+  [`../PROGRESS.md`](../PROGRESS.md); chiến lược vẫn `UNPROVEN`.

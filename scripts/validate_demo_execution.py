@@ -2,15 +2,15 @@
 
 Asserts the guardrails that separate demo execution from live trading:
 
-* every demo EA (TrendRider, Grid, DCA) only accepts a demo or Strategy Tester
-  account and fails closed on anything else;
+* every demo EA (TrendRider, Grid, DCA, InfiniteRunner, Wonderwhales) only
+  accepts a demo or Strategy Tester account and fails closed on anything else;
 * execution is enabled by default in both code and presets (ADR 0006) and a dry-run
   is the explicit InpEnableExecution=false override used for comparison runs;
 * every order carries a mandatory SL/TP; the TrendRider EA keeps one position,
   while Grid/DCA baskets stay bounded in level count, volume and loss budget;
 * a kill-switch file exists for each bot and a basket is flattened on breach;
 * trading APIs live only in the Exec sources (guard, broker, shared basket
-  helpers, the three demo EAs, contract tests, order probe); the simulation EAs
+  helpers, the five demo EAs, contract tests, order probe); the simulation EAs
   and presets are untouched and still refuse orders;
 * the order probe stays confirm-gated, tester-refusing and on its own magic;
 * the demo journal watcher stays read-only and mirrors the EA's CSV contract;
@@ -43,12 +43,15 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 ADR = "docs/decisions/0004-all-bots-demo-execution.md"
 ADR_0003 = "docs/decisions/0003-demo-execution-scope.md"
+ADR_0007 = "docs/decisions/0007-wonderwhales-demo-bot.md"
 GUIDE = "docs/guides/demo-execution.md"
 DEMO_EA = "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5"
 GRID_DEMO_EA = "mt5/Experts/GridDemoEA.mq5"
 DCA_DEMO_EA = "mt5/Experts/DCADemoEA.mq5"
 IR_DEMO_EA = "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5"
+WW_DEMO_EA = "mt5/Experts/WonderwhalesDemoEA.mq5"
 SIM_EA = "mt5/Experts/PATrendRiderXAUv1SimEA.mq5"
+WW_SIM_EA = "mt5/Experts/WonderwhalesSimEA.mq5"
 EXEC_GUARD = "mt5/Include/Exec/ExecGuard.mqh"
 EXEC_BROKER = "mt5/Include/Exec/ExecBroker.mqh"
 EXEC_COMMON = "mt5/Include/Exec/ExecDemoCommon.mqh"
@@ -60,14 +63,17 @@ DEMO_PRESET = "configs/demo/pa_trendrider_xau_demo.json"
 GRID_DEMO_PRESET = "configs/demo/grid_demo.json"
 DCA_DEMO_PRESET = "configs/demo/dca_demo.json"
 IR_DEMO_PRESET = "configs/demo/infinite_runner_demo.json"
+WW_DEMO_PRESET = "configs/demo/wonderwhales_demo.json"
 SIM_PRESET = "configs/sim/pa_trendrider_xau.json"
 
-#--- ADR 0004 + ADR 0005: one demo EA per strategy, each with its own shape.
+#--- ADR 0004 + ADR 0005 + ADR 0007: one demo EA per strategy, each with its
+#--- own shape.
 DEMO_EAS = {
     DEMO_EA: "single_position",
     GRID_DEMO_EA: "bounded_basket",
     DCA_DEMO_EA: "bounded_basket",
     IR_DEMO_EA: "runner_trailing",
+    WW_DEMO_EA: "single_position",
 }
 
 EXEC_SOURCES = (
@@ -133,11 +139,15 @@ def check_files(root: Path) -> list[str]:
         for relative in (
             ADR,
             ADR_0003,
+            ADR_0007,
             GUIDE,
             DEMO_EA,
             GRID_DEMO_EA,
             DCA_DEMO_EA,
+            IR_DEMO_EA,
+            WW_DEMO_EA,
             SIM_EA,
+            WW_SIM_EA,
             EXEC_GUARD,
             EXEC_BROKER,
             EXEC_COMMON,
@@ -146,6 +156,7 @@ def check_files(root: Path) -> list[str]:
             GRID_DEMO_PRESET,
             DCA_DEMO_PRESET,
             IR_DEMO_PRESET,
+            WW_DEMO_PRESET,
             SIM_PRESET,
             EXEC_PROBE,
             JOURNAL_WATCHER,
@@ -172,6 +183,14 @@ def check_adr(root: Path) -> list[str]:
     adr3 = _read(root, ADR_0003)
     if "0004-all-bots-demo-execution.md" not in adr3:
         issues.append("ADR 0003 must point at the superseding ADR 0004")
+
+    adr7 = _read(root, ADR_0007)
+    if "Accepted" not in adr7:
+        issues.append("ADR 0007 must be Accepted")
+    for token in ("WonderwhalesDemoEA", "WonderwhalesSimEA", "25007001",
+                  "DEMO_ONLY", "NOT_RUN"):
+        if token not in adr7:
+            issues.append(f"ADR 0007 must mention {token}")
     return issues
 
 
@@ -262,6 +281,39 @@ def check_demo_ea(root: Path, relative: str = DEMO_EA) -> list[str]:
         ):
             if token in text:
                 issues.append(f"InfiniteRunner demo EA must not expose {token} (runner)")
+
+    if relative == WW_DEMO_EA:
+        #--- ADR 0007: Wonderwhales keeps one guarded position, a mandatory
+        #--- TP on every order and risk sizing at the initial stop.
+        tp = _input_default(text, "InpTakeProfitR")
+        if tp is None:
+            issues.append("Wonderwhales InpTakeProfitR is missing")
+        else:
+            try:
+                if float(tp) <= 0.0:
+                    issues.append("Wonderwhales InpTakeProfitR must be positive")
+            except ValueError:
+                issues.append("Wonderwhales InpTakeProfitR must be numeric")
+        for token in (
+            "ExecFindOwnPosition",
+            "ExecModifyStops",
+            "ExecCalcProfit",
+            "ExecMarginRequired",
+            "ExecClosedPnl",
+            "ExecTakeProfitPrice",
+            "ExecTakeProfitValid",
+            "ExecStopsRespectBroker",
+            "WonderwhalesContract.mqh",
+        ):
+            if token not in text:
+                issues.append(f"Wonderwhales demo EA must use {token}")
+        for token in (
+            "InpMaxGridLevels",
+            "InpMaxDcaAdds",
+            "ExecDemoBasketClose",
+        ):
+            if token in text:
+                issues.append(f"Wonderwhales demo EA must not expose {token} (single position)")
     return issues
 
 
@@ -353,10 +405,13 @@ def check_exec_sources(root: Path) -> list[str]:
     if "OrderSend" in _read(root, EXEC_GUARD):
         issues.append("ExecGuard must stay pure")
 
-    sim_text = _read(root, SIM_EA)
-    for token in ("OrderSend(", "MqlTradeRequest", "PositionSelect("):
-        if token in sim_text:
-            issues.append(f"SimEA must remain simulation-only; found {token}")
+    for relative in (SIM_EA, WW_SIM_EA):
+        sim_text = _read(root, relative)
+        for token in ("OrderSend(", "MqlTradeRequest", "PositionSelect("):
+            if token in sim_text:
+                issues.append(
+                    f"{Path(relative).name} must remain simulation-only; found {token}"
+                )
     return issues
 
 
@@ -557,6 +612,31 @@ def check_presets(root: Path) -> list[str]:
     issues.extend(
         f"{ir_name}: {item}" for item in sim_configs.validate_preset(ir)
     )
+
+    #--- ADR 0007: the Wonderwhales demo preset is fail-closed, ships with
+    #--- execution enabled and pins the mandatory TP and exposure cap.
+    ww_name = Path(WW_DEMO_PRESET).name
+    ww = json.loads(_read(root, WW_DEMO_PRESET))
+    ww_inputs = ww.get("inputs", {})
+    if ww.get("ea") != "WonderwhalesDemoEA":
+        issues.append(f"{ww_name}: must target WonderwhalesDemoEA")
+    if ww.get("execution_mode") != "DEMO_ONLY":
+        issues.append(f"{ww_name}: execution_mode must be DEMO_ONLY")
+    if ww.get("allow_live_trading") is not False:
+        issues.append(f"{ww_name}: allow_live_trading must be false")
+    if ww_inputs.get("InpEnableExecution") is not True:
+        issues.append(f"{ww_name}: must ship with InpEnableExecution=true (ADR 0006)")
+    if "XAUUSD" not in str(ww_inputs.get("InpAllowedSymbols", "")):
+        issues.append(f"{ww_name}: InpAllowedSymbols must allow XAUUSD")
+    if not float(ww_inputs.get("InpTakeProfitR", 0.0)) > 0.0:
+        issues.append(f"{ww_name}: InpTakeProfitR must be positive (mandatory TP)")
+    if not float(ww_inputs.get("InpMaxLots", 0.0)) > 0.0:
+        issues.append(f"{ww_name}: InpMaxLots must be positive")
+    if not float(ww_inputs.get("InpMinStopPoints", 0.0)) > 0.0:
+        issues.append(f"{ww_name}: InpMinStopPoints must be positive")
+    issues.extend(
+        f"{ww_name}: {item}" for item in sim_configs.validate_preset(ww)
+    )
     return issues
 
 
@@ -608,6 +688,7 @@ def main(argv: list[str] | None = None) -> int:
     report("grid demo EA guardrails", check_demo_ea(root, GRID_DEMO_EA))
     report("dca demo EA guardrails", check_demo_ea(root, DCA_DEMO_EA))
     report("infinite runner demo EA guardrails", check_demo_ea(root, IR_DEMO_EA))
+    report("wonderwhales demo EA guardrails", check_demo_ea(root, WW_DEMO_EA))
     report("bounded grid/DCA baskets", check_bounded_baskets(root))
     report("exec sources", check_exec_sources(root))
     report("demo order probe", check_probe(root))

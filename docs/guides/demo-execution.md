@@ -1,10 +1,11 @@
-# Demo execution — PATrendRider, Grid, DCA và InfiniteRunner
+# Demo execution — PATrendRider, Grid, DCA, InfiniteRunner và Wonderwhales
 
-- **Phạm vi:** chạy **cả bốn bot** (`PATrendRiderXAUv1`, `Grid`, `DCA`, `InfiniteRunner_XAU`) trên
-  **tài khoản demo** hoặc Strategy Tester. Không áp dụng cho tài khoản real/contest.
-- **Quyết định:** [`../decisions/0004-all-bots-demo-execution.md`](../decisions/0004-all-bots-demo-execution.md)
-  và [`../decisions/0005-infiniterunner-xau-demo-bot.md`](../decisions/0005-infiniterunner-xau-demo-bot.md)
-  (ADR 0005 thêm bot thứ tư; ADR 0002 và phần còn lại của ADR 0003 vẫn hiệu lực).
+- **Phạm vi:** chạy **cả năm bot** (`PATrendRiderXAUv1`, `Grid`, `DCA`, `InfiniteRunner_XAU`,
+  `Wonderwhales`) trên **tài khoản demo** hoặc Strategy Tester. Không áp dụng cho tài khoản real/contest.
+- **Quyết định:** [`../decisions/0004-all-bots-demo-execution.md`](../decisions/0004-all-bots-demo-execution.md),
+  [`../decisions/0005-infiniterunner-xau-demo-bot.md`](../decisions/0005-infiniterunner-xau-demo-bot.md)
+  và [`../decisions/0007-wonderwhales-demo-bot.md`](../decisions/0007-wonderwhales-demo-bot.md)
+  (ADR 0005 thêm bot thứ tư, ADR 0007 thêm bot thứ năm; ADR 0002 và phần còn lại của ADR 0003 vẫn hiệu lực).
 - **Trạng thái bằng chứng:** mã nguồn compile 0/0, static gate xanh và contract test guard chạy được;
   kết quả giao dịch demo chỉ được ghi nhận sau khi EA chạy thật và journal được kiểm tra. Không có kết quả
   nào trong tài liệu này là cam kết lợi nhuận.
@@ -20,9 +21,10 @@
 | Grid | `GridDemoEA` | `configs/demo/grid_demo.json` | `GRID_DEMO_STOP.txt` | tối đa `InpMaxGridLevels` tầng, SL/TP giỏ |
 | DCA | `DCADemoEA` | `configs/demo/dca_demo.json` | `DCA_DEMO_STOP.txt` | tối đa `InpMaxDcaAdds` lần add, SL/TP giỏ |
 | InfiniteRunner_XAU | `InfiniteRunnerXAUV2DemoEA` | `configs/demo/infinite_runner_demo.json` | `INFINITE_RUNNER_DEMO_STOP.txt` | một vị thế runner, TP an toàn xa bắt buộc `InpSafetyTpPoints`, trail đơn điệu từ R ban đầu |
+| Wonderwhales | `WonderwhalesDemoEA` | `configs/demo/wonderwhales_demo.json` | `WONDERWHALES_DEMO_STOP.txt` | một vị thế theo tín hiệu indicator `PinePort\Wonderwhales`, SL PSAR/ATR%/fixed, TP `InpTakeProfitR` |
 
-Magic spacing: TrendRider `25002001`, Grid `25004001`, DCA `25005001`, InfiniteRunner `25006001`
-(probe `25002002`) — không bot nào chạm vị thế của bot khác.
+Magic spacing: TrendRider `25002001`, Grid `25004001`, DCA `25005001`, InfiniteRunner `25006001`,
+Wonderwhales `25007001` (probe `25002002`) — không bot nào chạm vị thế của bot khác.
 
 Preset nào cũng ship với `InpEnableExecution=true` (ADR 0006 — bot chạy ngay trên demo). Muốn
 dry-run đối chiếu thì đặt `InpEnableExecution=false` — đó là chế độ có chủ đích, không còn là
@@ -30,15 +32,15 @@ mặc định. Ranh giới phạm vi khác không đổi: chỉ demo/tester.
 
 ## 1. Ranh giới an toàn
 
-| Hạng mục | Quy tắc (cả bốn bot) |
+| Hạng mục | Quy tắc (cả năm bot) |
 |---|---|
 | Tài khoản | Chỉ `ACCOUNT_TRADE_MODE_DEMO` hoặc Strategy Tester. Real/contest → `INIT_FAILED`. |
 | Dry-run | `InpEnableExecution=true` mặc định (ADR 0006); đặt `false` cho phiên đối chiếu không gửi lệnh (ghi quyết định, không gửi lệnh). |
-| Số vị thế | TrendRider/Runner: một vị thế theo `InpMagicNumber`. Grid/DCA: một **giỏ** theo magic, bị chặn bởi `InpMaxGridLevels` / `InpMaxDcaAdds`. |
-| SL/TP | Bắt buộc trên **mọi** lệnh (stop loss và take profit). TrendRider: take profit = entry ± R × `InpTakeProfitR`. Grid/DCA: SL/TP tính từ giá vào bình quân, đặt cùng một mức giá tuyệt đối lên mọi chân và cập nhật lại sau mỗi lần thêm. Runner: SL trong band `[InpMinStopPoints, InpMaxStopPoints]` normalize theo tick, TP an toàn xa = entry ± `InpSafetyTpPoints` — không có input nào tắt được take profit. |
-| Khối lượng | TrendRider/Runner: tính từ tick size/tick value và ngân sách rủi ro (`ExecCalcProfit` cho Runner khi `InpLotMode=1`), làm tròn xuống volume step, chặn bởi `InpMaxLots` / `InpMaxVirtualExposure`. Grid/DCA: `base × multiplier^n` nhưng luôn bị chặn bởi trần mỗi chân và `InpMaxExposure`; normalize theo volume step, dưới lot tối thiểu → từ chối. |
+| Số vị thế | TrendRider/Runner/Wonderwhales: một vị thế theo `InpMagicNumber`. Grid/DCA: một **giỏ** theo magic, bị chặn bởi `InpMaxGridLevels` / `InpMaxDcaAdds`. |
+| SL/TP | Bắt buộc trên **mọi** lệnh (stop loss và take profit). TrendRider: take profit = entry ± R × `InpTakeProfitR`. Grid/DCA: SL/TP tính từ giá vào bình quân, đặt cùng một mức giá tuyệt đối lên mọi chân và cập nhật lại sau mỗi lần thêm. Runner: SL trong band `[InpMinStopPoints, InpMaxStopPoints]` normalize theo tick, TP an toàn xa = entry ± `InpSafetyTpPoints` — không có input nào tắt được take profit. Wonderwhales: SL theo PSAR của nến tín hiệu, ATR% × multiplier hoặc points cố định (sàn `InpMinStopPoints`), TP = entry ± R × `InpTakeProfitR`. |
+| Khối lượng | TrendRider/Runner/Wonderwhales: tính từ tick size/tick value và ngân sách rủi ro (`ExecCalcProfit` cho Runner khi `InpLotMode=1`, cho Wonderwhales với `InpRiskPercent`), làm tròn xuống volume step, chặn bởi `InpMaxLots` / `InpMaxVirtualExposure`. Grid/DCA: `base × multiplier^n` nhưng luôn bị chặn bởi trần mỗi chân và `InpMaxExposure`; normalize theo volume step, dưới lot tối thiểu → từ chối. |
 | Ngân sách lỗ giỏ | Grid/DCA: `InpMaxBasketLossPct` chặn lệnh thêm nếu lỗ của cả giỏ tại stop vượt % equity. |
-| Khóa rủi ro | Daily loss (`InpMaxDailyLossPct`), drawdown (`InpMaxDrawdownPct`, persist qua state file), chuỗi thua (`InpMaxConsecutiveLosses`). Vi phạm → đóng vị thế/giỏ và ngừng vào lệnh; runner dời lại khi `InpHaltOnBreach=true`. |
+| Khóa rủi ro | Daily loss (`InpMaxDailyLossPct`), drawdown (`InpMaxDrawdownPct`, persist qua state file), chuỗi thua (`InpMaxConsecutiveLosses`). Vi phạm → đóng vị thế/giỏ và ngừng vào lệnh; runner dời lại khi `InpHaltOnBreach=true`. Riêng Wonderwhales: halt daily-loss tự mở khoá khi sang ngày giao dịch mới (ghi `RESUME`), còn drawdown/kill switch vẫn dính tới khi khởi động lại. |
 | Kill switch | Tạo file kill switch trong `MQL5/Files` → đóng vị thế/giỏ (`InpCloseOnKillSwitch=true`) và ngừng vào lệnh tới khi khởi động lại. |
 | Cấm | Martingale/grid/DCA **vô hạn**, hedging, `WebRequest`, socket, đọc/ghi credential, tài khoản live. |
 
@@ -259,6 +261,34 @@ và `reports\build\tester-run\infinite_runner_demo_exec.ini`.
 `.set` này bật `InpEnableExecution=true` với `InpLogFile=sim_ir_demo_exec.csv`; preset JSON
 cũng mặc định `true` (ADR 0006) nên demo chạy tay không cần thao tác gì thêm.
 
+### 4.5 Chạy Wonderwhales demo (ADR 0007)
+
+Tín hiệu lấy từ indicator `PinePort\Wonderwhales` (buffer contract `1.0.0`); EA chỉ quyết định trên
+**nến đã đóng** và không tự tính lại chỉ báo. Preset M15, một vị thế theo magic `25007001`, SL mặc định
+theo PSAR của nến tín hiệu (`InpStopMode=0`), TP = entry ± `InpTakeProfitR` × R.
+
+1. **Transform đúng chart**: `XAUUSDm`, chart M15 (khớp preset; đổi timeframe là đổi cấu hình và
+   `config_hash`). Indicator `PinePort\Wonderwhales` phải deploy cùng EA (script deploy sao chép cả hai).
+2. **(Tuỳ chọn) Dry-run** với `InpEnableExecution=false`: CSV `wonderwhales_demo.csv` có `INIT`
+   (`mode=DRY_RUN`) và các dòng `DRY_RUN|would_open|…` khi có setup.
+3. **Phiên enabled là mặc định** (ADR 0006): journal in `INIT|mode=DEMO_EXECUTION|magic=25007001` và
+   mỗi `ENTRY` có `side`, `entry≠0`, `sl≠0`, `tp≠0`, `ticket`; dòng `reason` ghi `loss=…|budget=…`
+   để thấy volume được suy ra từ `InpRiskPercent` chứ không phải lot cố định.
+4. **Chẩn đoán hay gặp**: `risk_budget_exceeded` = lot tối thiểu 0.01 vượt ngân sách rủi ro (SL PSAR quá
+   rộng so với 1% equity — giảm risk hoặc chọn `InpStopMode` khác); `spread_exceeded` = spread vượt
+   `InpMaxSpreadPoints=600`; `consecutive_loss_cooldown` = chuỗi thua chạm `InpMaxConsecutiveLosses`,
+   chờ `InpCooldownMinutes`; `stop_below_broker_level` / `take_profit_invalid` = SL/TP quá sát hoặc sai phía.
+5. **Halt**: `daily_loss_limit_reached` đóng vị thế và khoá trong ngày, **tự mở khoá** ở ngày giao dịch
+   kế tiếp (dòng `RESUME`); `max_drawdown_reached` và kill switch dính tới khi khởi động lại — reset theo
+   §5.1 với state `wonderwhales_demo_state.csv`.
+6. **Dừng**: tạo `MQL5\Files\WONDERWHALES_DEMO_STOP.txt` (nội dung bất kỳ) hoặc gỡ EA. Vị thế luôn được
+   đối chiếu lại với broker khi khởi động; nếu broker giữ vị thế thiếu SL/TP, EA ghi `STOPS_REASSERT`.
+
+**Backtest bằng Strategy Tester**: `reports\build\tester-sets\ww_demo_exec.set` (copy vào
+`MQL5\Profiles\Tester\`) + `reports\build\tester-run\ww_demo_exec.ini`; journal lưu thành
+`sim_ww_demo_exec.csv` trong thư mục Files của tester agent. Kịch bản chạy 2026-01-05 → 2026-10-01,
+`Deposit=10000`, M15, model 1-minute.
+
 ## 5. Kill switch và dừng khẩn cấp
 
 - Tạo file `MQL5\Files\PA_TREND_RIDER_DEMO_STOP.txt` (nội dung bất kỳ). Tick kế tiếp EA đóng vị thế của
@@ -296,7 +326,9 @@ không persist state.
 
 ## 6. Nhật ký và kiểm chứng
 
-CSV `pa_trendrider_demo.csv` dùng schema 18 cột của `SimLogger`. Tên event **đúng như mã phát ra**:
+CSV của từng bot (`pa_trendrider_demo.csv`, `grid_demo.csv`, `dca_demo.csv`,
+`infinite_runner_demo.csv`, `wonderwhales_demo.csv`) dùng schema 18 cột của `SimLogger`. Tên event
+**đúng như mã phát ra**:
 
 | Event | Ý nghĩa |
 |---|---|
@@ -315,6 +347,9 @@ CSV `pa_trendrider_demo.csv` dùng schema 18 cột của `SimLogger`. Tên event
 | `ERROR` | Lỗi runtime (quote không hợp lệ, gửi lệnh fail, …) |
 | `ADOPT` / `SYNC` | Nhận vị thế đang mở của magic vào sổ kế toán EA / ticket đổi |
 | `RESET` | `InpManualResetDrawdown` mở khoá drawdown |
+| `HALT` | Khoá rủi ro kích hoạt: `reason=daily_loss_limit_reached` hoặc `max_drawdown_reached` |
+| `RESUME` | Wonderwhales: daily-loss lock tự mở ở ngày giao dịch mới; drawdown/kill switch không tự mở |
+| `STOPS_REASSERT` | Wonderwhales: vị thế đang mở thiếu SL/TP đã được đặt lại qua `ExecModifyStops` |
 | `SUMMARY` | Tổng hợp cuối phiên: entries/exits/wins/losses/net/drawdown/ledger/kill_switch |
 
 Reason token cố định: `not_demo_account`, `account_trade_disabled`, `terminal_trade_disabled`,

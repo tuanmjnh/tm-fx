@@ -3697,3 +3697,70 @@ InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đón
   `ENTRY`/`EXIT`/`TRAIL` trong `sim_ir_demo_exec.csv`; nếu vẫn `NO_TRADE`/`BLOCKED`
   → đọc reason token trong CSV.
 - **Lợi nhuận: UNPROVEN** — không thay đổi.
+
+## 69. ADR 0007 — Wonderwhales demo EA, bot demo thứ năm — 2026-11-03
+
+### 69.1 Yêu cầu và quyết định
+
+- Chủ dự án: *"dựa theo chỉ báo Wonderwhales, giúp mình sửa lại bot WonderwhalesSimEA để có thể chạy
+  được trên cả test và demo"*. ADR 0004 cấm thêm execution vào EA mô phỏng, nên yêu cầu được hiện thực
+  bằng **EA demo riêng** `WonderwhalesDemoEA`; `WonderwhalesSimEA` giữ nguyên `SIMULATION_ONLY`.
+- Quyết định ghi tại [`decisions/0007-wonderwhales-demo-bot.md`](decisions/0007-wonderwhales-demo-bot.md)
+  (Accepted; yêu cầu của chủ dự án là phê duyệt phạm vi theo ADR 0003 §7). Magic `25007001`, preset
+  `configs/demo/wonderwhales_demo.json`, kill switch `WONDERWHALES_DEMO_STOP.txt`.
+
+### 69.2 Deliverables
+
+- `mt5/Experts/WonderwhalesDemoEA.mq5`: một vị thế theo magic, tín hiệu từ `PinePort\Wonderwhales`
+  (`shift=1`), SL PSAR/ATR%/fixed + sàn `InpMinStopPoints`, TP bắt buộc `InpTakeProfitR`, volume từ
+  `InpRiskPercent` qua `ExecCalcProfit`, mọi lệnh qua `ExecBroker`.
+- Đăng ký đầy đủ: `sim_configs.EA_INPUTS`/`DEMO_EA_NAMES`, `validate-project.py`,
+  `validate_demo_execution.py`, `test_demo_execution.py`, `deploy_pineport.ps1`, preset và scenario
+  `reports/build/tester-run/ww_demo_exec.ini` + `reports/build/tester-sets/ww_demo_exec.set`.
+- Ba lỗi runtime được sửa trong quá trình kiểm chứng:
+  1. `OnInit` mở journal **trước** `ReconcilePosition()` để dòng `ADOPT`/`EXIT` lúc init không bị mất.
+  2. `EnsureStops()` gọi `ExecModifyStops` để đặt lại SL/TP nếu vị thế đang mở thiếu stop; ghi
+     `STOPS_REASSERT`.
+  3. Sau `ExecOpenMarket`, ticket vị thế được đồng bộ bằng `ExecFindOwnPosition` (không gọi reconcile
+     ngay để tránh coi độ trễ hiển thị là đóng vị thế).
+- **Sửa hành vi halt**: `InpMaxDailyLossPct` là khoá **theo ngày**; trước sửa, một ngày lỗ 2% khiến bot
+  halt vĩnh viễn. Nay sang ngày giao dịch mới EA tự mở khoá, ghi `RESUME`; halt do `InpMaxDrawdownPct` và
+  kill switch vẫn dính tới khi khởi động lại. ADR 0007 và `guides/demo-execution.md` đã cập nhật.
+
+### 69.3 Compile và deploy
+
+- `scripts/build-mql5.ps1 -Filter Experts\WonderwhalesDemoEA.mq5` → **PASS 0 errors, 0 warnings**,
+  `ex5=93756 bytes` (MetaEditor build 6292). Compile chỉ chứng minh cú pháp.
+- `scripts/deploy_pineport.ps1 -Apply -Force` → **DEPLOY_OK**, copy `MQL5\Experts\WonderwhalesDemoEA.mq5`
+  và compile lại 0/0.
+
+### 69.4 Bằng chứng Strategy Tester (headless, real run)
+
+- `run_tester.ps1 -Scenario ww_demo_exec`: terminal64 exit **0** sau **56.3 s**; archive tại
+  `reports/build/tester-reports/ww_demo_exec/`:
+  `sim_ww_demo_exec.csv` (28055 bytes, sha256 `EDE0A513A69A`),
+  `tester_ww_demo_exec.htm` (118300 bytes, `645A1F68E9E9`),
+  `tester_ww_demo_exec.png` (7420 bytes, `40B66E7A6A0E`).
+- Journal 18 cột: `INIT` (`mode=DEMO_EXECUTION`, `magic=25007001`, `config_hash=84AB2384`),
+  **41 ENTRY / 41 EXIT**, 18 dòng `RISK` (entry bị chặn), 2 `HALT`, 1 `RESUME`, 1 `SUMMARY`.
+- Entry đầu `2026.01.05 02:00` (SELL, SL/TP khác 0), entry cuối `2026.01.15 20:30`; volume 0.03–0.10
+  theo ngân sách rủi ro ~1%/lệnh (`loss=…|budget=…` trong cột reason).
+- Halt 1: `daily_loss_limit_reached|loss=2.06%` ngày 2026-01-06 → sang 2026-01-07 ghi `RESUME` và tiếp
+  tục vào lệnh. Halt 2: `max_drawdown_reached|dd=8.01%` ngày 2026-01-15 → dính tới hết kỳ test (đúng
+  thiết kế). `SUMMARY`: trades=41, wins=11, losses=30, **net=-625.72**, halted=`HALTED`.
+- Lưu ý vận hành: `.set` phải được copy vào `MQL5\Profiles\Tester\` (lần chạy đầu thiếu bước này nên
+  dùng input mặc định; journal khi đó là `wonderwhales_demo.csv` và đã phát hiện lỗi halt vĩnh viễn nói
+  trên). Kết quả trên **không** phải cam kết lợi nhuận; chiến lược vẫn `UNPROVEN`.
+
+### 69.5 Gate khi kết thúc mục này
+
+- `validate_demo_execution.py` → **checks=13 fail=0**, gồm `PASS: wonderwhales demo EA guardrails`.
+- `validate-project.py` → **checks=14 fail=1**. Lỗi duy nhất đến từ file WIP của chủ dự án
+  `mt5/Experts/InfiniteRunnerXAUV3DemoEA.mq5` (untracked, không sửa): các dòng 534/1621/1626 dùng
+  `AccountInfoDouble`, 1699/1704/1705 dùng `AccountInfoInteger` trong phạm vi bị quét. Không bypass gate.
+- `pytest python/tests` → **428 passed, 2 failed**; cả hai fail đều do cùng file WIP trên
+  (`test_project_validator_passes`, `test_repository_passes_static_checks`).
+- Link tương đối trong 3 tài liệu đã sửa resolve đủ; bảng markdown không lệch cột (ngoài false positive
+  do `|` escape trong ô như `BLOCKED|plan`).
+- **NOT_RUN**: phiên `WonderwhalesDemoEA` trên tài khoản demo thật (cần operator chạy chart).
+- **Lợi nhuận: UNPROVEN** — không thay đổi.

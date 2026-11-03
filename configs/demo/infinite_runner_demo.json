@@ -60,7 +60,14 @@
     "InpTrailAtrMultiplier": 2.0,
     "InpBreakEvenTriggerR": 0.0,
     "InpBreakEvenBufferPts": 100,
-    "InpSafetyTpPoints": 100000
+    "InpSafetyTpPoints": 100000,
+    "InpEnableStepTrailing": true,
+    "InpStep1_TriggerPoints": 1500.0,
+    "InpStep1_LockPoints": 200.0,
+    "InpStep2_TriggerPoints": 3000.0,
+    "InpStep2_LockPoints": 1500.0,
+    "InpStep3_TriggerPoints": 5000.0,
+    "InpStep3_LockPoints": 3500.0
   },
   "enum_map": {
     "InpDirectionMode": {

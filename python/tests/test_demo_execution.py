@@ -33,6 +33,11 @@ DEMO_EA_PRESETS = (
         "infiniterunnerxauv2demo",
         REPO_ROOT / "configs" / "demo" / "infinite_runner_demo.json",
     ),
+    (
+        "WonderwhalesDemoEA",
+        "wonderwhalesdemo",
+        REPO_ROOT / "configs" / "demo" / "wonderwhales_demo.json",
+    ),
 )
 
 

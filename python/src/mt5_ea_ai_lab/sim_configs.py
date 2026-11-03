@@ -407,16 +407,64 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpBreakEvenTriggerR": Num(minimum=0.0),
         "InpBreakEvenBufferPts": Num(minimum=0.0),
         "InpSafetyTpPoints": Num(minimum=0.0),
+        "InpEnableStepTrailing": BOOL,
+        "InpStep1_TriggerPoints": Num(minimum=0.0),
+        "InpStep1_LockPoints": Num(minimum=0.0),
+        "InpStep2_TriggerPoints": Num(minimum=0.0),
+        "InpStep2_LockPoints": Num(minimum=0.0),
+        "InpStep3_TriggerPoints": Num(minimum=0.0),
+        "InpStep3_LockPoints": Num(minimum=0.0),
+    },
+    #--- ADR 0007: fifth demo bot — Wonderwhales. One guarded position driven
+    #--- by the PinePort\\Wonderwhales buffers on closed bars, mandatory TP.
+    "WonderwhalesDemoEA": {
+        **_DEMO_EXECUTION_COMMON,
+        "InpCloseOnKillSwitch": BOOL,
+        "InpPersistState": BOOL,
+        "InpStateFile": STR,
+        "InpResetStateOnInit": BOOL,
+        "InpMode": Enum((0, 1, 2, 3)),
+        "InpPsarStart": Num(minimum=0.0, min_exclusive=True),
+        "InpPsarInc": Num(minimum=0.0, min_exclusive=True),
+        "InpPsarMax": Num(minimum=0.0, min_exclusive=True),
+        "InpFastEma": Num(minimum=1.0, integer=True),
+        "InpSlowEma": Num(minimum=1.0, integer=True),
+        "InpEma200": Num(minimum=1.0, integer=True),
+        "InpAtrLen": Num(minimum=1.0, integer=True),
+        "InpMinAtrPct": Num(minimum=0.0),
+        "InpVolMaLen": Num(minimum=1.0, integer=True),
+        "InpRsiLen": Num(minimum=1.0, integer=True),
+        "InpBbLen": Num(minimum=1.0, integer=True),
+        "InpBbMult": Num(minimum=0.0, min_exclusive=True),
+        "InpWarmupBars": Num(minimum=0.0, integer=True),
+        "InpSideFilter": Enum((0, 1, 2)),
+        "InpStopMode": Enum((0, 1, 2)),
+        "InpAtrPctMultiplier": Num(minimum=0.0, min_exclusive=True),
+        "InpFixedStopPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpMinStopPoints": Num(minimum=0.0),
+        "InpTakeProfitR": Num(minimum=0.0, maximum=50.0, min_exclusive=True),
+        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
+        "InpExitOnFlip": BOOL,
+        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpMaxLots": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpCooldownBars": Num(minimum=0.0, integer=True),
+        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
+        "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
+        "InpHaltOnBreach": BOOL,
     },
 }
 
-#--- ADR 0004 + 0005: the four demo EAs are the presets allowed to request
-#--- execution, and only with DEMO_ONLY. Every simulation EA stays SIMULATION_ONLY.
+#--- ADR 0004 + 0005 + 0007: the five demo EAs are the presets allowed to
+#--- request execution, and only with DEMO_ONLY. Every simulation EA stays
+#--- SIMULATION_ONLY.
 DEMO_EA_NAMES = (
     "PATrendRiderXAUv1DemoEA",
     "GridDemoEA",
     "DCADemoEA",
     "InfiniteRunnerXAUV2DemoEA",
+    "WonderwhalesDemoEA",
 )
 
 EA_EXECUTION_MODE: dict[str, str] = {
@@ -595,6 +643,22 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("InpMaxLots: exposure cap must be positive")
         if inputs["InpMaxTradesPerDay"] < 1:
             issues.append("InpMaxTradesPerDay: must be at least 1")
+        if inputs["InpEnableStepTrailing"]:
+            steps = (
+                (inputs["InpStep1_TriggerPoints"], inputs["InpStep1_LockPoints"]),
+                (inputs["InpStep2_TriggerPoints"], inputs["InpStep2_LockPoints"]),
+                (inputs["InpStep3_TriggerPoints"], inputs["InpStep3_LockPoints"]),
+            )
+            for index, (trigger, lock) in enumerate(steps, start=1):
+                if trigger <= 0 or lock < 0 or lock >= trigger:
+                    issues.append(
+                        f"InpStep{index}: lock must be below the trigger"
+                    )
+            if not (
+                steps[0][0] < steps[1][0] < steps[2][0]
+                and steps[0][1] < steps[1][1] < steps[2][1]
+            ):
+                issues.append("step trailing: triggers and locks must increase")
 
     if ea == "PinePlanSimEA":
         if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
@@ -629,6 +693,30 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
                 issues.append("InpAllowedSymbols: must allow at least one symbol")
             if not inputs["InpKillSwitchFile"].strip():
                 issues.append("InpKillSwitchFile: must name the kill-switch file")
+
+    #--- ADR 0007: Wonderwhales demo keeps the simulation signal/stop rules and
+    #--- adds the demo-order guards (mandatory TP, sized exposure).
+    if ea == "WonderwhalesDemoEA":
+        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
+            issues.append("InpSlowEma: must be greater than InpFastEma")
+        if inputs["InpEma200"] <= inputs["InpSlowEma"]:
+            issues.append("InpEma200: must be greater than InpSlowEma")
+        if inputs["InpWarmupBars"] < inputs["InpEma200"]:
+            issues.append("InpWarmupBars: must cover InpEma200")
+        if inputs["InpPsarStart"] > inputs["InpPsarMax"]:
+            issues.append("InpPsarStart: must not exceed InpPsarMax")
+        if inputs["InpPsarInc"] > inputs["InpPsarMax"]:
+            issues.append("InpPsarInc: must not exceed InpPsarMax")
+        if float(inputs["InpTakeProfitR"]) <= 0.0:
+            issues.append("InpTakeProfitR: demo orders need a mandatory TP")
+        if float(inputs["InpMagicNumber"]) <= 0:
+            issues.append("InpMagicNumber: must be positive to isolate the EA")
+        if float(inputs["InpMaxLots"]) <= 0.0:
+            issues.append("InpMaxLots: exposure cap must be positive")
+        if float(inputs["InpRiskPercent"]) <= 0.0:
+            issues.append("InpRiskPercent: must be positive for risk sizing")
+        if inputs["InpMaxConsecutiveLosses"] > 0 and inputs["InpCooldownMinutes"] <= 0:
+            issues.append("InpCooldownMinutes: a loss streak needs a cooldown")
 
     return issues
 

@@ -5,10 +5,11 @@
 vào [`archive/v1/`](archive/v1/) để backup, chỉ đọc.
 
 > **Ranh giới:** repository phục vụ nghiên cứu offline, mô phỏng và **demo execution có guardrail**.
-> Các EA mô phỏng không có `OrderSend`/`CTrade` và chỉ tạo vị thế ảo. Đường gửi lệnh duy nhất là
-> `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`, chỉ chấp nhận tài khoản demo hoặc Strategy Tester,
-> mặc định dry-run. Tài khoản real/live bị cấm; không credential; không kết nối broker.
-> Xem [`decisions/0003-demo-execution-scope.md`](decisions/0003-demo-execution-scope.md).
+> Các EA mô phỏng không có `OrderSend`/`CTrade` và chỉ tạo vị thế ảo. Năm EA demo (TrendRider, Grid,
+> DCA, InfiniteRunner, Wonderwhales) gửi lệnh qua điểm duy nhất `mt5/Include/Exec/ExecBroker.mqh`, chỉ
+> chấp nhận tài khoản demo hoặc Strategy Tester. Tài khoản real/live bị cấm; không credential; không kết
+> nối broker. Xem [`decisions/0004-all-bots-demo-execution.md`](decisions/0004-all-bots-demo-execution.md)
+> và [`decisions/0007-wonderwhales-demo-bot.md`](decisions/0007-wonderwhales-demo-bot.md).
 
 ## 1. Bắt đầu ở đâu
 
@@ -49,7 +50,7 @@ docs/
 │   ├── strategy-tester.md, toolchain.md
 ├── indicators/                # PinePort: inventory, parity, từng indicator
 ├── reference/                 # kiến trúc, simulation, risk, testing, release, ML/ONNX
-├── decisions/                 # ADR 0001–0003
+├── decisions/                 # ADR 0001–0007
 └── archive/
     ├── README.md              # chỉ mục tài liệu lưu trữ
     ├── v1/                    # roadmap, prompt, đặc tả, phase report, input pack v1
@@ -73,6 +74,8 @@ Số liệu chi tiết và đường dẫn bằng chứng nằm ở [`v2/TEST_RE
 | Broker demo chấp nhận lệnh thật | PASS qua `ExecDemoProbe` (0.01 XAUUSDm, 103 ms) |
 | DemoEA trên tài khoản demo | armed, state `WAITING_FOR_SETUP`, 0 ENTRY do chiến lược |
 | Grid / DCA demo execution | `ALLOWED` (ADR 0004); phiên demo thật `NOT_RUN` |
+| Wonderwhales demo — đường gửi lệnh trong Strategy Tester | PASS: 41 ENTRY / 41 EXIT, magic `25007001`, `mode=DEMO_EXECUTION`, journal `sim_ww_demo_exec.csv` |
+| Wonderwhales demo trên tài khoản demo thật | `NOT_RUN` (chưa có journal demo thật) |
 | Lợi nhuận của mọi chiến lược | `UNPROVEN` |
 
 Compile chỉ chứng minh cú pháp; tester chỉ chứng minh hành vi trong mô phỏng; không có kết quả nào là
