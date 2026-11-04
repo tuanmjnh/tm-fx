@@ -12,6 +12,7 @@ Mọi quyết định thay đổi phạm vi, ranh giới hay kiến trúc của 
 | [0006](0006-demo-default-execution-enabled.md) | Bot demo mặc định bật execution | Accepted | `InpEnableExecution=true` là mặc định; dry-run là override tường minh `false`. |
 | [0007](0007-wonderwhales-demo-bot.md) | Wonderwhales trở thành bot demo thứ năm | Accepted | Hai file: `WonderwhalesSimEA` giữ nguyên cho Tester, thêm `WonderwhalesDemoEA` qua guard. |
 | [0008](0008-docs-information-architecture.md) | Kiến trúc thông tin tài liệu: một cây theo mục đích, một điểm vào | Accepted (chủ dự án duyệt 2026-11-03) | Cây docs theo mục đích, một điểm vào, `99-archive/` bất biến, link-check là gate. |
+| [0009](0009-wonderwhales-xau-2mode-demo-bot.md) | Wonderwhales XAU 2-mode trở thành bot demo thứ sáu | Accepted (chủ dự án chốt S1–S4 2026-11-04) | EA `WonderwhalesXAU2ModeEA` (magic 25008001), một magic hai chế độ, cổng parity chặn entry, journal 18 cột + telemetry riêng. |
 
 Quy tắc: ADR mới thêm vào đây bằng một dòng; trạng thái đọc từ dòng `**Trạng thái:**` của từng file,
 không suy đoán. ADR nào sửa ADR khác thì cả hai đều giữ nguyên và ghi rõ quan hệ trong đầu mỗi file.

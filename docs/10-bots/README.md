@@ -1,6 +1,6 @@
-# Bots — danh mục 15 EA
+# Bots — danh mục 16 EA
 
-Dự án có **15 EA** trong `mt5/Experts/`: 5 EA demo (gửi lệnh thật trên tài khoản demo qua
+Dự án có **16 EA** trong `mt5/Experts/`: 6 EA demo (gửi lệnh thật trên tài khoản demo qua
 `mt5/Include/Exec/*`), 6 EA mô phỏng (vị thế ảo, không API lệnh), 3 EA tín hiệu và 1 EA inference ONNX.
 Trạng thái bằng chứng ghi theo nhãn dự án (`PASS` / `PARTIAL` / `NOT_RUN` / `UNPROVEN`); định nghĩa nhãn
 xem `docs/PROGRESS.md` và `20-operations/evidence.md`.
@@ -12,6 +12,7 @@ xem `docs/PROGRESS.md` và `20-operations/evidence.md`.
 | `DCADemoEA.mq5` | demo | 25005001 | `configs/demo/dca_demo.json` | [dca.md](dca.md) | `NOT_RUN` |
 | `InfiniteRunnerXAUV2DemoEA.mq5` | demo | 25006001 | `configs/demo/infinite_runner_demo.json` | [infinite-runner.md](infinite-runner.md) | `NOT_RUN` |
 | `WonderwhalesDemoEA.mq5` | demo | 25007001 | `configs/demo/wonderwhales_demo.json` | [wonderwhales.md](wonderwhales.md) | `UNPROVEN` |
+| `WonderwhalesXAU2ModeEA.mq5` | demo | 25008001 | `configs/demo/wonderwhales_xau_2mode_demo.json` | [wonderwhales-2mode.md](wonderwhales-2mode.md) | `NOT_RUN` |
 | `PATrendRiderXAUv1SimEA.mq5` | sim | N/A | `configs/sim/pa_trendrider_xau.json` | — | `NOT_RUN` ¹ |
 | `RunnerTrailingLabEA.mq5` | sim | N/A | `configs/sim/runner_trailing.json` | — | `NOT_RUN` ¹ |
 | `GridLabEA.mq5` | sim | N/A | `configs/sim/grid_lab.json` | — | `NOT_RUN` ¹ |
@@ -42,8 +43,9 @@ quan ở `NOT_RUN`); thiếu chu kỳ validation hoàn chỉnh nên trạng thá
 
 ## Đọc tiếp
 
-- Năm trang bot: [pa-trendrider.md](pa-trendrider.md) · [grid.md](grid.md) · [dca.md](dca.md) ·
-  [infinite-runner.md](infinite-runner.md) · [wonderwhales.md](wonderwhales.md).
+- Sáu trang bot: [pa-trendrider.md](pa-trendrider.md) · [grid.md](grid.md) · [dca.md](dca.md) ·
+  [infinite-runner.md](infinite-runner.md) · [wonderwhales.md](wonderwhales.md) ·
+  [wonderwhales-2mode.md](wonderwhales-2mode.md).
 - Giải phẫu EA chung: [ea-anatomy.md](ea-anatomy.md). Chuẩn input dùng chung (phase C):
   `input-convention.md` — đang soạn, xem thiết kế `docs/superpowers/specs/2026-11-03-tm-fx-docs-reorg-design.md` §9.
 - Cách chạy: [`../20-operations/demo-execution.md`](../20-operations/demo-execution.md),

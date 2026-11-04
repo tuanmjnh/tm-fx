@@ -454,6 +454,73 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
         "InpHaltOnBreach": BOOL,
     },
+    #--- ADR 0009: sixth demo bot - Wonderwhales XAU 2-mode (Scalp + Swing).
+    #--- One magic, a parity gate, mandatory SL/TP and a persistent weekly guard.
+    "WonderwhalesXAU2ModeEA": {
+        **_DEMO_EXECUTION_COMMON,
+        "InpDemoOnly": BOOL,
+        "InpTradingMode": Enum((0, 1, 2)),
+        "InpSignalMode": Enum((0, 1, 2, 3)),
+        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
+        "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
+        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
+        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxWeeklyLossPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxSpreadRatioToSlPct": Num(minimum=0.0, maximum=100.0),
+        "InpMaxExposure": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
+        "InpHaltOnBreach": BOOL,
+        "InpTakeProfitR": Num(minimum=0.0, maximum=50.0, min_exclusive=True),
+        "InpMinStopPoints": Num(minimum=0.0),
+        "InpMaxStopPoints": Num(minimum=0.0, min_exclusive=True),
+        "InpScalpBufferAtr": Num(minimum=0.0),
+        "InpScalpSlAtrFallback": Num(minimum=0.0, min_exclusive=True),
+        "InpSwingBufferAtr": Num(minimum=0.0),
+        "InpSwingSlAtrFallback": Num(minimum=0.0, min_exclusive=True),
+        "InpBreakEvenCostBuffer": BOOL,
+        "InpBreakEvenBufferPoints": Num(minimum=0.0),
+        "InpEnableTelemetry": BOOL,
+        "InpTelemetryFile": STR,
+        "InpPersistState": BOOL,
+        "InpStateFile": STR,
+        "InpResetStateOnInit": BOOL,
+        "InpCloseOnKillSwitch": BOOL,
+        "InpRequireParity": BOOL,
+        "InpPsarStart": Num(minimum=0.0, min_exclusive=True),
+        "InpPsarInc": Num(minimum=0.0, min_exclusive=True),
+        "InpPsarMax": Num(minimum=0.0, min_exclusive=True),
+        "InpFastEma": Num(minimum=1.0, integer=True),
+        "InpSlowEma": Num(minimum=1.0, integer=True),
+        "InpEma200": Num(minimum=1.0, integer=True),
+        "InpAtrLen": Num(minimum=1.0, integer=True),
+        "InpMinAtrPct": Num(minimum=0.0),
+        "InpVolMaLen": Num(minimum=1.0, integer=True),
+        "InpRsiLen": Num(minimum=1.0, integer=True),
+        "InpBbLen": Num(minimum=1.0, integer=True),
+        "InpBbMult": Num(minimum=0.0, min_exclusive=True),
+        "InpWarmupBars": Num(minimum=0.0, integer=True),
+        "InpScalpBiasTF": Enum(_TIMEFRAMES),
+        "InpScalpSetupTF": Enum(_TIMEFRAMES),
+        "InpScalpTriggerTF": Enum(_TIMEFRAMES),
+        "InpSwingBiasTF": Enum(_TIMEFRAMES),
+        "InpSwingSetupTF": Enum(_TIMEFRAMES),
+        "InpSwingTriggerTF": Enum(_TIMEFRAMES),
+        "InpBreakEvenTriggerR": Num(minimum=0.0),
+        "InpTrailTriggerR": Num(minimum=0.0),
+        "InpMinTrailStepPoints": Num(minimum=0.0),
+        "InpSwingRrMin": Num(minimum=0.0),
+        "InpSwingConfirmBars": Num(minimum=1.0, integer=True),
+        "InpStructureLookbackBars": Num(minimum=1.0, integer=True),
+        "InpEnableStructureTrail": BOOL,
+        "InpEnablePsarTrail": BOOL,
+        "InpEnableAtrTrail": BOOL,
+        "InpEnableStepTrail": BOOL,
+        "InpStepTrailPoints": Num(minimum=0.0),
+        "InpTrailBufferAtr": Num(minimum=0.0),
+        "InpExitOnFlip": BOOL,
+        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
+    },
 }
 
 #--- ADR 0004 + 0005 + 0007: the five demo EAs are the presets allowed to
@@ -465,6 +532,7 @@ DEMO_EA_NAMES = (
     "DCADemoEA",
     "InfiniteRunnerXAUV2DemoEA",
     "WonderwhalesDemoEA",
+    "WonderwhalesXAU2ModeEA",
 )
 
 EA_EXECUTION_MODE: dict[str, str] = {
@@ -717,6 +785,45 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("InpRiskPercent: must be positive for risk sizing")
         if inputs["InpMaxConsecutiveLosses"] > 0 and inputs["InpCooldownMinutes"] <= 0:
             issues.append("InpCooldownMinutes: a loss streak needs a cooldown")
+
+    #--- ADR 0009: the 2-mode Wonderwhales demo. One magic, Scalp/Swing modes,
+    #--- a mandatory TP, a bounded stop band and a parity gate.
+    if ea == "WonderwhalesXAU2ModeEA":
+        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
+            issues.append("InpSlowEma: must be greater than InpFastEma")
+        if inputs["InpEma200"] <= inputs["InpSlowEma"]:
+            issues.append("InpEma200: must be greater than InpSlowEma")
+        if inputs["InpWarmupBars"] < inputs["InpEma200"]:
+            issues.append("InpWarmupBars: must cover InpEma200")
+        if float(inputs["InpTakeProfitR"]) <= 0.0:
+            issues.append("InpTakeProfitR: demo orders need a mandatory TP")
+        if inputs["InpMaxPositions"] != 1:
+            issues.append("InpMaxPositions: must be 1")
+        if float(inputs["InpMaxExposure"]) <= 0.0:
+            issues.append("InpMaxExposure: exposure cap must be positive")
+        for name in ("InpMaxDailyLossPct", "InpMaxWeeklyLossPct",
+                     "InpMaxDrawdownPct"):
+            if float(inputs[name]) <= 0.0:
+                issues.append(f"{name}: a loss halt must be positive")
+        if float(inputs["InpMaxStopPoints"]) < float(inputs["InpMinStopPoints"]):
+            issues.append("InpMaxStopPoints: must cover InpMinStopPoints")
+        scalp = (
+            _TF_SECONDS.get(int(inputs["InpScalpBiasTF"])),
+            _TF_SECONDS.get(int(inputs["InpScalpSetupTF"])),
+            _TF_SECONDS.get(int(inputs["InpScalpTriggerTF"])),
+        )
+        swing = (
+            _TF_SECONDS.get(int(inputs["InpSwingBiasTF"])),
+            _TF_SECONDS.get(int(inputs["InpSwingSetupTF"])),
+            _TF_SECONDS.get(int(inputs["InpSwingTriggerTF"])),
+        )
+        if None in scalp or not (scalp[0] > scalp[1] > scalp[2]):
+            issues.append("scalp timeframes: must be ordered bias > setup > trigger")
+        if None in swing or not (swing[0] > swing[1] > swing[2]):
+            issues.append("swing timeframes: must be ordered bias > setup > trigger")
+        if int(inputs["InpTradingMode"]) == 2 and \
+           float(inputs["InpTakeProfitR"]) < float(inputs["InpSwingRrMin"]):
+            issues.append("InpTakeProfitR: SWING mode requires at least InpSwingRrMin")
 
     return issues
 

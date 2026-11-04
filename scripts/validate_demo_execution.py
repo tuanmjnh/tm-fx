@@ -44,6 +44,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ADR = "docs/90-decisions/0004-all-bots-demo-execution.md"
 ADR_0003 = "docs/90-decisions/0003-demo-execution-scope.md"
 ADR_0007 = "docs/90-decisions/0007-wonderwhales-demo-bot.md"
+ADR_0009 = "docs/90-decisions/0009-wonderwhales-xau-2mode-demo-bot.md"
 GUIDE = "docs/20-operations/demo-execution.md"
 DEMO_EA = "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5"
 GRID_DEMO_EA = "mt5/Experts/GridDemoEA.mq5"
@@ -65,6 +66,7 @@ GRID_DEMO_PRESET = "configs/demo/grid_demo.json"
 DCA_DEMO_PRESET = "configs/demo/dca_demo.json"
 IR_DEMO_PRESET = "configs/demo/infinite_runner_demo.json"
 WW_DEMO_PRESET = "configs/demo/wonderwhales_demo.json"
+WW2_DEMO_PRESET = "configs/demo/wonderwhales_xau_2mode_demo.json"
 SIM_PRESET = "configs/sim/pa_trendrider_xau.json"
 
 #--- ADR 0004 + ADR 0005 + ADR 0007: one demo EA per strategy, each with its
@@ -143,12 +145,14 @@ def check_files(root: Path) -> list[str]:
             ADR,
             ADR_0003,
             ADR_0007,
+            ADR_0009,
             GUIDE,
             DEMO_EA,
             GRID_DEMO_EA,
             DCA_DEMO_EA,
             IR_DEMO_EA,
             WW_DEMO_EA,
+            WW2_DEMO_EA,
             SIM_EA,
             WW_SIM_EA,
             EXEC_GUARD,
@@ -160,6 +164,7 @@ def check_files(root: Path) -> list[str]:
             DCA_DEMO_PRESET,
             IR_DEMO_PRESET,
             WW_DEMO_PRESET,
+            WW2_DEMO_PRESET,
             SIM_PRESET,
             EXEC_PROBE,
             JOURNAL_WATCHER,
@@ -194,6 +199,14 @@ def check_adr(root: Path) -> list[str]:
                   "DEMO_ONLY", "NOT_RUN"):
         if token not in adr7:
             issues.append(f"ADR 0007 must mention {token}")
+
+    adr9 = _read(root, ADR_0009)
+    if "Accepted" not in adr9:
+        issues.append("ADR 0009 must be Accepted")
+    for token in ("WonderwhalesXAU2ModeEA", "25008001", "DEMO_ONLY", "NOT_RUN",
+                  "parity"):
+        if token not in adr9:
+            issues.append(f"ADR 0009 must mention {token}")
     return issues
 
 
@@ -317,6 +330,46 @@ def check_demo_ea(root: Path, relative: str = DEMO_EA) -> list[str]:
         ):
             if token in text:
                 issues.append(f"Wonderwhales demo EA must not expose {token} (single position)")
+
+    if relative == WW2_DEMO_EA:
+        #--- ADR 0009: the 2-mode Wonderwhales demo keeps one guarded position,
+        #--- one magic, a mandatory TP, a parity gate and risk sizing at the stop.
+        tp = _input_default(text, "InpTakeProfitR")
+        if tp is None:
+            issues.append("WonderwhalesXAU2ModeEA InpTakeProfitR is missing")
+        else:
+            try:
+                if float(tp) <= 0.0:
+                    issues.append("WonderwhalesXAU2ModeEA InpTakeProfitR must be positive")
+            except ValueError:
+                issues.append("WonderwhalesXAU2ModeEA InpTakeProfitR must be numeric")
+        if _input_default(text, "InpMaxPositions") not in (None, "1"):
+            issues.append("WonderwhalesXAU2ModeEA InpMaxPositions must be fixed to 1")
+        if _input_default(text, "InpDemoOnly") != "true":
+            issues.append("WonderwhalesXAU2ModeEA InpDemoOnly must default to true")
+        if _input_default(text, "InpRequireParity") != "true":
+            issues.append("WonderwhalesXAU2ModeEA InpRequireParity must default to true")
+        for token in (
+            "ExecFindOwnPosition",
+            "ExecModifyStops",
+            "ExecCalcProfit",
+            "ExecMarginRequired",
+            "ExecClosedPnl",
+            "ExecTakeProfitPrice",
+            "ExecTakeProfitValid",
+            "ExecStopsRespectBroker",
+            "WonderwhalesContract.mqh",
+            "Ww2BestStop",
+        ):
+            if token not in text:
+                issues.append(f"WonderwhalesXAU2ModeEA must use {token}")
+        for token in (
+            "InpMaxGridLevels",
+            "InpMaxDcaAdds",
+            "ExecDemoBasketClose",
+        ):
+            if token in text:
+                issues.append(f"WonderwhalesXAU2ModeEA must not expose {token} (single position)")
     return issues
 
 
@@ -640,6 +693,31 @@ def check_presets(root: Path) -> list[str]:
     issues.extend(
         f"{ww_name}: {item}" for item in sim_configs.validate_preset(ww)
     )
+
+    #--- ADR 0009: the 2-mode Wonderwhales demo preset is fail-closed, ships
+    #--- with execution enabled and pins the parity gate and exposure cap.
+    ww2_name = Path(WW2_DEMO_PRESET).name
+    ww2 = json.loads(_read(root, WW2_DEMO_PRESET))
+    ww2_inputs = ww2.get("inputs", {})
+    if ww2.get("ea") != "WonderwhalesXAU2ModeEA":
+        issues.append(f"{ww2_name}: must target WonderwhalesXAU2ModeEA")
+    if ww2.get("execution_mode") != "DEMO_ONLY":
+        issues.append(f"{ww2_name}: execution_mode must be DEMO_ONLY")
+    if ww2.get("allow_live_trading") is not False:
+        issues.append(f"{ww2_name}: allow_live_trading must be false")
+    if ww2_inputs.get("InpEnableExecution") is not True:
+        issues.append(f"{ww2_name}: must ship with InpEnableExecution=true (ADR 0006)")
+    if "XAUUSD" not in str(ww2_inputs.get("InpAllowedSymbols", "")):
+        issues.append(f"{ww2_name}: InpAllowedSymbols must allow XAUUSD")
+    if not float(ww2_inputs.get("InpTakeProfitR", 0.0)) > 0.0:
+        issues.append(f"{ww2_name}: InpTakeProfitR must be positive (mandatory TP)")
+    if not float(ww2_inputs.get("InpMaxExposure", 0.0)) > 0.0:
+        issues.append(f"{ww2_name}: InpMaxExposure must be positive")
+    if ww2_inputs.get("InpRequireParity") is not True:
+        issues.append(f"{ww2_name}: InpRequireParity must be true")
+    issues.extend(
+        f"{ww2_name}: {item}" for item in sim_configs.validate_preset(ww2)
+    )
     return issues
 
 
@@ -692,6 +770,7 @@ def main(argv: list[str] | None = None) -> int:
     report("dca demo EA guardrails", check_demo_ea(root, DCA_DEMO_EA))
     report("infinite runner demo EA guardrails", check_demo_ea(root, IR_DEMO_EA))
     report("wonderwhales demo EA guardrails", check_demo_ea(root, WW_DEMO_EA))
+    report("wonderwhales 2-mode demo EA guardrails", check_demo_ea(root, WW2_DEMO_EA))
     report("bounded grid/DCA baskets", check_bounded_baskets(root))
     report("exec sources", check_exec_sources(root))
     report("demo order probe", check_probe(root))

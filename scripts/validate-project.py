@@ -72,6 +72,7 @@ DEMO_EAS = {
     "mt5/Experts/DCADemoEA.mq5": "bounded_dca",
     "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5": "runner_trailing",
     "mt5/Experts/WonderwhalesDemoEA.mq5": "psar_single",
+    "mt5/Experts/WonderwhalesXAU2ModeEA.mq5": "ww_2mode",
 }
 
 EXEC_FORBIDDEN_API = re.compile(
@@ -144,6 +145,18 @@ REQUIRED_FILES = (
     "mt5/Experts/DCADemoEA.mq5",
     "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5",
     "mt5/Experts/WonderwhalesDemoEA.mq5",
+    "mt5/Experts/WonderwhalesXAU2ModeEA.mq5",
+    "mt5/Scripts/WW2CoreTests.mq5",
+    "mt5/Include/Wonderwhales/WW2Types.mqh",
+    "mt5/Include/Wonderwhales/WW2SignalReader.mqh",
+    "mt5/Include/Wonderwhales/WW2RiskSizer.mqh",
+    "mt5/Include/Wonderwhales/WW2Swing.mqh",
+    "mt5/Include/Wonderwhales/WW2InitialStop.mqh",
+    "mt5/Include/Wonderwhales/WW2RiskGuard.mqh",
+    "mt5/Include/Wonderwhales/WW2TrailingCoordinator.mqh",
+    "mt5/Include/Wonderwhales/WW2Telemetry.mqh",
+    "mt5/Include/Wonderwhales/WW2ScalpStrategy.mqh",
+    "mt5/Include/Wonderwhales/WW2SwingStrategy.mqh",
     "mt5/Scripts/ExecGuardTests.mq5",
     "mt5/Scripts/ExecDemoProbe.mq5",
     "configs/demo/pa_trendrider_xau_demo.json",
@@ -151,9 +164,12 @@ REQUIRED_FILES = (
     "configs/demo/dca_demo.json",
     "configs/demo/infinite_runner_demo.json",
     "configs/demo/wonderwhales_demo.json",
+    "configs/demo/wonderwhales_xau_2mode_demo.json",
     "docs/90-decisions/0003-demo-execution-scope.md",
     "docs/90-decisions/0004-all-bots-demo-execution.md",
     "docs/90-decisions/0007-wonderwhales-demo-bot.md",
+    "docs/90-decisions/0009-wonderwhales-xau-2mode-demo-bot.md",
+    "docs/10-bots/wonderwhales-2mode.md",
     "docs/20-operations/demo-execution.md",
     "scripts/validate_demo_execution.py",
     "docs/00-start/README.md",
@@ -362,6 +378,18 @@ def check_exec_structure(root: Path) -> list[str]:
             "InpMaxDrawdownPct",
             "InpMaxConsecutiveLosses",
         ),
+        #--- ADR 0009: one 2-mode Wonderwhales position, one magic, a mandatory
+        #--- TP, risk-percent sizing at the initial stop and an exposure cap.
+        "ww_2mode": (
+            "ExecFindOwnPosition",
+            "ExecModifyStops",
+            "ExecCalcProfit",
+            "InpTakeProfitR",
+            "InpRiskPercent",
+            "InpMaxPositions",
+            "InpMaxExposure",
+            "InpRequireParity",
+        ),
     }
     for relative, kind in DEMO_EAS.items():
         text = (root / relative).read_text(encoding="utf-8")
@@ -490,7 +518,8 @@ def check_demo_presets(root: Path) -> list[str]:
         #--- ADR 0004: one demo EA per strategy; a simulation EA is never a
         #--- demo preset target.
         demo_eas = ("PATrendRiderXAUv1DemoEA", "GridDemoEA", "DCADemoEA",
-                    "InfiniteRunnerXAUV2DemoEA", "WonderwhalesDemoEA")
+                    "InfiniteRunnerXAUV2DemoEA", "WonderwhalesDemoEA",
+                    "WonderwhalesXAU2ModeEA")
         if ea not in demo_eas:
             issues.append(
                 f"{path.name}: demo presets must target one of {list(demo_eas)}"
@@ -549,6 +578,18 @@ def check_demo_presets(root: Path) -> list[str]:
                 issues.append(f"{path.name}: InpMaxLots must be positive")
             if float(inputs.get("InpMinStopPoints", 0.0)) <= 0.0:
                 issues.append(f"{path.name}: InpMinStopPoints must be positive")
+
+        #--- ADR 0009: the 2-mode Wonderwhales demo keeps one position, a
+        #--- mandatory TP, a sized exposure cap and a mandatory parity gate.
+        if ea == "WonderwhalesXAU2ModeEA":
+            if float(inputs.get("InpTakeProfitR", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpTakeProfitR must be positive")
+            if float(inputs.get("InpMaxExposure", 0.0)) <= 0.0:
+                issues.append(f"{path.name}: InpMaxExposure must be positive")
+            if inputs.get("InpMaxPositions") != 1:
+                issues.append(f"{path.name}: InpMaxPositions must be 1")
+            if inputs.get("InpRequireParity") is not True:
+                issues.append(f"{path.name}: InpRequireParity must be true")
     return issues
 
 

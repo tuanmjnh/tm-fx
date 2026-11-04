@@ -4,6 +4,11 @@
 **Phạm vi:** 5 EA demo (`PATrendRiderXAUv1DemoEA`, `GridDemoEA`, `DCADemoEA`, `InfiniteRunnerXAUV2DemoEA`,
 `WonderwhalesDemoEA`). Tài liệu này **không sửa code** — phase C mới áp dụng; mọi thứ trình bày ở đây là
 đích tới, còn tên input hiện tại của từng EA nằm ở 5 trang bot.
+
+> **Bot demo thứ sáu đã theo chuẩn này:** `WonderwhalesXAU2ModeEA` (ADR 0009, xem
+> [`wonderwhales-2mode.md`](wonderwhales-2mode.md)) là EA đầu tiên khai input **trực tiếp** theo 6 nhóm ở
+> mục 1, dùng `InpMaxExposure` (không `InpMaxLots`) và một magic. Nó là tham chiếu đích cho phase C của 5
+> EA còn lại.
 **Hiện trạng từng EA** (bảng input tên thật + cột `Tên chuẩn (phase C)`): [`pa-trendrider.md`](pa-trendrider.md) ·
 [`grid.md`](grid.md) · [`dca.md`](dca.md) · [`infinite-runner.md`](infinite-runner.md) · [`wonderwhales.md`](wonderwhales.md).
 Bảng gap ở mục 5 đã kiểm bằng `Select-String` trên 5 file `mt5/Experts/*DemoEA.mq5` ngày 2026-11-03;

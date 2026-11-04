@@ -1,11 +1,14 @@
-# Demo execution — PATrendRider, Grid, DCA, InfiniteRunner và Wonderwhales
+# Demo execution — PATrendRider, Grid, DCA, InfiniteRunner, Wonderwhales và Wonderwhales 2-mode
 
-- **Phạm vi:** chạy **cả năm bot** (`PATrendRiderXAUv1`, `Grid`, `DCA`, `InfiniteRunner_XAU`,
-  `Wonderwhales`) trên **tài khoản demo** hoặc Strategy Tester. Không áp dụng cho tài khoản real/contest.
+- **Phạm vi:** chạy **cả sáu bot** (`PATrendRiderXAUv1`, `Grid`, `DCA`, `InfiniteRunner_XAU`,
+  `Wonderwhales`, `WonderwhalesXAU2Mode`) trên **tài khoản demo** hoặc Strategy Tester. Không áp dụng cho
+  tài khoản real/contest.
 - **Quyết định:** [`../decisions/0004-all-bots-demo-execution.md`](../90-decisions/0004-all-bots-demo-execution.md),
-  [`../decisions/0005-infiniterunner-xau-demo-bot.md`](../90-decisions/0005-infiniterunner-xau-demo-bot.md)
-  và [`../decisions/0007-wonderwhales-demo-bot.md`](../90-decisions/0007-wonderwhales-demo-bot.md)
-  (ADR 0005 thêm bot thứ tư, ADR 0007 thêm bot thứ năm; ADR 0002 và phần còn lại của ADR 0003 vẫn hiệu lực).
+  [`../decisions/0005-infiniterunner-xau-demo-bot.md`](../90-decisions/0005-infiniterunner-xau-demo-bot.md),
+  [`../decisions/0007-wonderwhales-demo-bot.md`](../90-decisions/0007-wonderwhales-demo-bot.md) và
+  [`../decisions/0009-wonderwhales-xau-2mode-demo-bot.md`](../90-decisions/0009-wonderwhales-xau-2mode-demo-bot.md)
+  (ADR 0005 thêm bot thứ tư, ADR 0007 bot thứ năm, ADR 0009 bot thứ sáu; ADR 0002 và phần còn lại của
+  ADR 0003 vẫn hiệu lực).
 - **Trạng thái bằng chứng:** mã nguồn compile 0/0, static gate xanh và contract test guard chạy được;
   kết quả giao dịch demo chỉ được ghi nhận sau khi EA chạy thật và journal được kiểm tra. Không có kết quả
   nào trong tài liệu này là cam kết lợi nhuận.
@@ -22,13 +25,24 @@
 | DCA | `DCADemoEA` | `configs/demo/dca_demo.json` | `DCA_DEMO_STOP.txt` | tối đa `InpMaxDcaAdds` lần add, SL/TP giỏ |
 | InfiniteRunner_XAU | `InfiniteRunnerXAUV2DemoEA` | `configs/demo/infinite_runner_demo.json` | `INFINITE_RUNNER_DEMO_STOP.txt` | một vị thế runner, TP an toàn xa bắt buộc `InpSafetyTpPoints`, trail đơn điệu từ R ban đầu |
 | Wonderwhales | `WonderwhalesDemoEA` | `configs/demo/wonderwhales_demo.json` | `WONDERWHALES_DEMO_STOP.txt` | một vị thế theo tín hiệu indicator `PinePort\Wonderwhales`, SL PSAR/ATR%/fixed, TP `InpTakeProfitR` |
+| Wonderwhales XAU 2-mode | `WonderwhalesXAU2ModeEA` | `configs/demo/wonderwhales_xau_2mode_demo.json` | `WONDERWHALES_XAU_2MODE_DEMO_STOP.txt` | một chế độ tại một thời điểm (Scalp/Swing), một magic, BE/trailing chỉ siết SL, **cổng parity chặn entry** |
 
 Magic spacing: TrendRider `25002001`, Grid `25004001`, DCA `25005001`, InfiniteRunner `25006001`,
-Wonderwhales `25007001` (probe `25002002`) — không bot nào chạm vị thế của bot khác.
+Wonderwhales `25007001`, Wonderwhales 2-mode `25008001` (probe `25002002`) — không bot nào chạm vị thế của
+bot khác.
 
 Preset nào cũng ship với `InpEnableExecution=true` (ADR 0006 — bot chạy ngay trên demo). Muốn
 dry-run đối chiếu thì đặt `InpEnableExecution=false` — đó là chế độ có chủ đích, không còn là
 mặc định. Ranh giới phạm vi khác không đổi: chỉ demo/tester.
+
+> **Bot demo thứ sáu — Wonderwhales XAU 2-mode (`WonderwhalesXAU2ModeEA`).** Một magic `25008001`, hai
+> chế độ bên trong (`InpTradingMode` = `WW2_SCALP` / `WW2_SWING`); mode của mỗi lệnh lưu trong state lúc
+> vào. `InpDemoOnly` **bắt buộc `true`** (đặt `false` → `INIT_PARAMETERS_INCORRECT`). Break-even +
+> trailing cấu trúc/PSAR/ATR/step chỉ **siết** SL, R luôn từ SL ban đầu. Journal giữ **18 cột**; trường mở
+> rộng (R, SL, lý do trailing, EMA/PSAR/ATR) ghi file telemetry riêng. **Cổng parity chặn entry:**
+> `InpRequireParity=true` (mặc định) chặn mọi entry với `reason=parity_blocked` cho tới khi parity
+> Pine ↔ MT5 được chứng minh — kết quả khi bỏ parity không phải kết quả chiến lược hợp lệ. Trước khi gắn
+> EA lên chart, chạy `Scripts > WW2CoreTests` và kỳ vọng `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`.
 
 ## 1. Ranh giới an toàn
 

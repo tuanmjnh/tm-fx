@@ -38,6 +38,11 @@ DEMO_EA_PRESETS = (
         "wonderwhalesdemo",
         REPO_ROOT / "configs" / "demo" / "wonderwhales_demo.json",
     ),
+    (
+        "WonderwhalesXAU2ModeEA",
+        "wonderwhalesxau2modeea",
+        REPO_ROOT / "configs" / "demo" / "wonderwhales_xau_2mode_demo.json",
+    ),
 )
 
 
