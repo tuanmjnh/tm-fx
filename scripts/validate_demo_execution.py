@@ -50,6 +50,7 @@ GRID_DEMO_EA = "mt5/Experts/GridDemoEA.mq5"
 DCA_DEMO_EA = "mt5/Experts/DCADemoEA.mq5"
 IR_DEMO_EA = "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5"
 WW_DEMO_EA = "mt5/Experts/WonderwhalesDemoEA.mq5"
+WW2_DEMO_EA = "mt5/Experts/WonderwhalesXAU2ModeEA.mq5"
 SIM_EA = "mt5/Experts/PATrendRiderXAUv1SimEA.mq5"
 WW_SIM_EA = "mt5/Experts/WonderwhalesSimEA.mq5"
 EXEC_GUARD = "mt5/Include/Exec/ExecGuard.mqh"
@@ -74,6 +75,8 @@ DEMO_EAS = {
     DCA_DEMO_EA: "bounded_basket",
     IR_DEMO_EA: "runner_trailing",
     WW_DEMO_EA: "single_position",
+    #--- ADR 0009: sixth demo bot, one magic, Scalp/Swing modes.
+    WW2_DEMO_EA: "single_position",
 }
 
 EXEC_SOURCES = (

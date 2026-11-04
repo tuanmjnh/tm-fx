@@ -61,6 +61,7 @@ EXEC_SOURCES = {
     "mt5/Scripts/ExecGuardTests.mq5",
     "mt5/Scripts/ExecDemoProbe.mq5",
     "mt5/Scripts/CloseDemoPosition.mq5",
+    "mt5/Experts/WonderwhalesXAU2ModeEA.mq5",
 }
 
 #--- ADR 0004 + 0005: one demo EA per strategy. Each is checked for the guard

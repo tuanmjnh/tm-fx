@@ -264,3 +264,28 @@ file telemetry riêng. **Không còn câu hỏi mở chặn việc lập kế ho
 - Nội dung `docs/10-bots/wonderwhales-2mode.md` theo khuôn 6 mục của các trang bot khác.
 - Biên dịch/logic chi tiết của `WW2TrailingCoordinator` miễn đúng §5.5 và không nới SL.
 - Một commit build + một commit đăng ký (hoặc gộp nếu hợp lý), miễn §9 đạt.
+
+## 14. Điều chỉnh khi triển khai (2026-11-04, đã thực hiện)
+
+Ba điều chỉnh so với §5.2/§11, tất cả để giữ một nguồn sự thật và không phá bất biến của spec:
+
+1. **Bỏ các input trùng lặp theo chế độ.** Engine dùng **một** `InpRiskPercent`, `InpTakeProfitR`,
+   `InpBreakEvenTriggerR`, `InpTrailTriggerR`, `InpMinTrailStepPoints`, `InpCooldownMinutes`; giá trị
+   riêng của Scalp/Swing do **preset** đặt (spec §1.2: một chế độ chạy tại một thời điểm). Đã gỡ khỏi
+   §5.2/§11: `InpScalpRiskPercent`, `InpSwingRiskPercent`, `InpScalpRrTarget`, `InpSwingRrTarget`,
+   `InpScalpBeTriggerR`, `InpScalpTrailTriggerR`, `InpSwingBeTriggerR`, `InpSwingTrailTriggerR`,
+   `InpScalpCooldownAfterLossMinutes`, `InpSwingCooldownAfterLossMinutes`.
+2. **`InpMaxLots` → `InpMaxExposure`** (quy chuẩn input §5.2/§7).
+3. **Bỏ `InpSkipIfMinLotExceedsRisk`.** Spec §3.3 cấm làm tròn lot lên một cách vô điều kiện; một công tắc
+   có thể tắt kiểm tra đó sẽ vi phạm bất biến, nên EA luôn bỏ qua khi min-lot vượt ngân sách.
+
+Bổ sung đã hiện thực:
+- `InpDemoOnly` **bắt buộc `true`** — đặt `false` làm `OnInit` trả `INIT_PARAMETERS_INCORRECT` (`demo_only_required`).
+- `InpTradingMode` (`ENUM_WW2_MODE` = `WW2_SIGNAL_ONLY|WW2_SCALP|WW2_SWING`) thay cho `InpMode`;
+  `InpSignalMode` (`ENUM_WW_MODE`) giữ nguyên ngữ nghĩa chỉ báo.
+- `InpSwingRrMin` được kiểm ở `OnInit` (chế độ SWING đòi `InpTakeProfitR ≥ InpSwingRrMin`).
+- Module thực tế nằm ở `mt5/Include/Wonderwhales/`: `WW2Types`, `WW2SignalReader`, `WW2RiskSizer`,
+  `WW2Swing`, `WW2InitialStop`, `WW2RiskGuard`, `WW2TrailingCoordinator`, `WW2Telemetry`,
+  `WW2ScalpStrategy`, `WW2SwingStrategy`; test pure-logic ở `mt5/Scripts/WW2CoreTests.mq5`.
+- Trạng thái lưu **mode theo từng vị thế** (`pos_mode`); quản lý dùng mode đã lưu, không dùng
+  `InpTradingMode` hiện tại.

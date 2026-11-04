@@ -88,7 +88,7 @@ $files = @(
 
 # Track C simulation, TrendRider and demo-execution sources. The .mqh trees are
 # enumerated instead of listed so a new module cannot be left out of a redeploy.
-foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Exec", "mt5\Include\InfiniteRunner")) {
+foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Exec", "mt5\Include\InfiniteRunner", "mt5\Include\Wonderwhales")) {
     $treeRoot = Join-Path $ProjectRoot $tree
     if (-not (Test-Path -LiteralPath $treeRoot -PathType Container)) {
         Write-Host "FAIL: include tree missing: $treeRoot" -ForegroundColor Red
@@ -115,6 +115,8 @@ $files += @(
     [pscustomobject]@{ Source = "mt5\Experts\DCADemoEA.mq5"; Target = "MQL5\Experts\DCADemoEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Experts\InfiniteRunnerXAUV2DemoEA.mq5"; Target = "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesDemoEA.mq5"; Target = "MQL5\Experts\WonderwhalesDemoEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesXAU2ModeEA.mq5"; Target = "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\WW2CoreTests.mq5"; Target = "MQL5\Scripts\WW2CoreTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\TrendRiderContractTests.mq5"; Target = "MQL5\Scripts\TrendRiderContractTests.mq5" },
@@ -156,7 +158,9 @@ $compileTargets = @(
     "MQL5\Experts\GridDemoEA.mq5",
     "MQL5\Experts\DCADemoEA.mq5",
     "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5",
-    "MQL5\Experts\WonderwhalesDemoEA.mq5"
+    "MQL5\Experts\WonderwhalesDemoEA.mq5",
+    "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5",
+    "MQL5\Scripts\WW2CoreTests.mq5"
 )
 
 function Get-TerminalCandidates {
