@@ -1,105 +1,71 @@
 # Bộ tài liệu MT5 EA & AI Lab
 
-**Phiên bản:** 2.0 · **Cập nhật:** 2026-10-29
-**Điểm vào duy nhất:** file này. Bộ tài liệu mới nằm ở [`v2/`](v2/README.md); tài liệu v1 đã chuyển
-vào [`archive/v1/`](archive/v1/) để backup, chỉ đọc.
+Lab nghiên cứu EA MQL5 chạy trên MetaTrader 5: 5 bot demo có guardrail, 10 EA lab mô phỏng, pipeline
+Python (dữ liệu → backtest → ML → ONNX) và quy trình bằng chứng ghi nhãn trạng thái. File này là
+**điểm vào duy nhất** — mọi tài liệu còn hiệu lực đều tới được từ đây trong tối đa 2 lần bấm.
 
-> **Ranh giới:** repository phục vụ nghiên cứu offline, mô phỏng và **demo execution có guardrail**.
-> Các EA mô phỏng không có `OrderSend`/`CTrade` và chỉ tạo vị thế ảo. Năm EA demo (TrendRider, Grid,
-> DCA, InfiniteRunner, Wonderwhales) gửi lệnh qua điểm duy nhất `mt5/Include/Exec/ExecBroker.mqh`, chỉ
-> chấp nhận tài khoản demo hoặc Strategy Tester. Tài khoản real/live bị cấm; không credential; không kết
-> nối broker. Xem [`decisions/0004-all-bots-demo-execution.md`](decisions/0004-all-bots-demo-execution.md)
-> và [`decisions/0007-wonderwhales-demo-bot.md`](decisions/0007-wonderwhales-demo-bot.md).
+> **Ranh giới:** bot chỉ gửi lệnh trên **tài khoản demo** hoặc Strategy Tester (ADR 0004); tài khoản
+> real/live bị cấm và bị `ExecGuard` từ chối. Mọi lệnh đi qua `mt5/Include/Exec/ExecBroker.mqh`.
+> 5 EA demo: PATrendRider, Grid, DCA, InfiniteRunner, Wonderwhales. Không credential, không login
+> automation. Chi tiết: [`90-decisions/0004-all-bots-demo-execution.md`](90-decisions/0004-all-bots-demo-execution.md).
 
-## 1. Bắt đầu ở đâu
+## Đọc theo thứ tự
 
-| Bạn muốn… | Đọc |
+| # | Thư mục | Là gì |
+|---|---|---|
+| 1 | [`00-start/README.md`](00-start/README.md) | Bắt đầu: hướng dẫn lần đầu chạy bot, lộ trình, thuật ngữ. |
+| 2 | [`10-bots/README.md`](10-bots/README.md) | Danh mục 15 EA: 5 bot demo (magic, preset, nhãn) + 10 EA lab, giải phẫu EA, chuẩn input. |
+| 3 | [`20-operations/README.md`](20-operations/README.md) | Vận hành: cài đặt, preset, Strategy Tester, xử lý sự cố, bằng chứng. |
+| 4 | [`30-research/README.md`](30-research/README.md) | Nghiên cứu: kiến trúc, mô phỏng, rủi ro, parity, ML/ONNX, indicator PinePort. |
+| 5 | [`90-decisions/README.md`](90-decisions/README.md) | ADR: vì sao hệ thống như hiện tại, mỗi quyết định phạm vi một file. |
+| 6 | [`99-archive/README.md`](99-archive/README.md) | Lưu trữ V1/V2/V3 bất biến, chỉ đọc — lịch sử và bằng chứng gốc. |
+
+Nhật ký bằng chứng append-only: [`PROGRESS.md`](PROGRESS.md) (giữ nguyên vị trí, không nằm trong luồng đọc).
+
+## Tôi muốn…
+
+| Tôi muốn… | Đọc |
 |---|---|
-| **Chưa dùng MT5 bao giờ — chạy bot đầu tiên và xem bot vận hành** | [`guides/beginner-first-run.md`](guides/beginner-first-run.md) |
-| **Hiểu từng khối của một con bot + bảng tham số đầy đủ + ghép AI** | [`guides/ea-anatomy-and-ai.md`](guides/ea-anatomy-and-ai.md) |
-| Hiểu toàn bộ bộ tài liệu v2 | [`v2/README.md`](v2/README.md) |
-| Xem trạng thái và lộ trình thật | [`MASTER_ROADMAP.md`](MASTER_ROADMAP.md), [`v2/ROADMAP.md`](v2/ROADMAP.md) |
-| Cài đặt, compile, chạy test | [`v2/INSTALL_AND_TEST.md`](v2/INSTALL_AND_TEST.md) |
-| Cấu hình input/preset | [`v2/CONFIGURATION.md`](v2/CONFIGURATION.md) |
-| Hiểu rủi ro, sizing, trailing | [`v2/RISK_MODEL.md`](v2/RISK_MODEL.md) |
-| Kiểm tra ranh giới demo/live | [`v2/EXECUTION_AND_SAFETY.md`](v2/EXECUTION_AND_SAFETY.md) |
-| Xem test nào đã chạy thật | [`v2/TEST_REPORT.md`](v2/TEST_REPORT.md), [`v2/EVIDENCE.md`](v2/EVIDENCE.md) |
-| Hiểu PATrendRider XAU v1 | [`v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md`](v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md) |
-| Hiểu Grid / DCA | [`v2/STRATEGIES/GRID_EA.md`](v2/STRATEGIES/GRID_EA.md), [`v2/STRATEGIES/DCA_EA.md`](v2/STRATEGIES/DCA_EA.md) |
-| Sửa lỗi thường gặp | [`v2/TROUBLESHOOTING.md`](v2/TROUBLESHOOTING.md) |
-| Biết việc gì cần chủ dự án quyết | [`v2/DECISIONS_REQUIRED.md`](v2/DECISIONS_REQUIRED.md) |
-| Xem nhật ký bằng chứng chi tiết | [`PROGRESS.md`](PROGRESS.md) |
-| Xem tài liệu cũ | [`archive/README.md`](archive/README.md) |
+| Chạy bot lần đầu | [`00-start/first-run.md`](00-start/first-run.md) |
+| Cấu hình input | [`10-bots/input-convention.md`](10-bots/input-convention.md) |
+| Chạy demo | [`20-operations/demo-execution.md`](20-operations/demo-execution.md) |
+| Bot không vào lệnh | [`20-operations/troubleshooting.md`](20-operations/troubleshooting.md) |
+| Đổi preset | [`20-operations/presets.md`](20-operations/presets.md) |
+| Hiểu thuật ngữ | [`00-start/glossary.md`](00-start/glossary.md) |
 
-## 2. Cấu trúc
+## 5 bot demo
 
-```text
-docs/
-├── README.md                  # file này
-├── MASTER_ROADMAP.md          # lộ trình tổng, trạng thái, việc tiếp theo
-├── PROGRESS.md                # nhật ký từng phase với bằng chứng gốc
-├── v2/                        # bộ tài liệu hiện hành (xem v2/README.md)
-│   ├── README.md, ROADMAP.md, PROMPT_AI_IMPLEMENT.md
-│   ├── ENVIRONMENT.md, INSTALL_AND_TEST.md, CONFIGURATION.md
-│   ├── RISK_MODEL.md, EXECUTION_AND_SAFETY.md
-│   ├── TEST_REPORT.md, EVIDENCE.md, GITHUB_AUDIT.md
-│   ├── TROUBLESHOOTING.md, BACKLOG_AI.md, DECISIONS_REQUIRED.md
-│   └── STRATEGIES/{PA_TRENDRIDER_XAU_V1,GRID_EA,DCA_EA}.md
-├── guides/                    # hướng dẫn vận hành theo Track
-│   ├── beginner-first-run.md, ea-anatomy-and-ai.md, install-and-test.md, demo-execution.md
-│   ├── strategy-tester.md, toolchain.md
-├── indicators/                # PinePort: inventory, parity, từng indicator
-├── reference/                 # kiến trúc, simulation, risk, testing, release, ML/ONNX
-├── decisions/                 # ADR 0001–0007
-└── archive/
-    ├── README.md              # chỉ mục tài liệu lưu trữ
-    ├── v1/                    # roadmap, prompt, đặc tả, phase report, input pack v1
-    └── planning-inputs/       # pack kế hoạch ban đầu của v2
-```
+| Bot | Magic | Preset | Trang | Nhãn |
+|---|---|---|---|---|
+| `PATrendRiderXAUv1DemoEA` | 25002001 | `configs/demo/pa_trendrider_xau_demo.json` | [`10-bots/pa-trendrider.md`](10-bots/pa-trendrider.md) | `PARTIAL` |
+| `GridDemoEA` | 25004001 | `configs/demo/grid_demo.json` | [`10-bots/grid.md`](10-bots/grid.md) | `NOT_RUN` |
+| `DCADemoEA` | 25005001 | `configs/demo/dca_demo.json` | [`10-bots/dca.md`](10-bots/dca.md) | `NOT_RUN` |
+| `InfiniteRunnerXAUV2DemoEA` | 25006001 | `configs/demo/infinite_runner_demo.json` | [`10-bots/infinite-runner.md`](10-bots/infinite-runner.md) | `NOT_RUN` |
+| `WonderwhalesDemoEA` | 25007001 | `configs/demo/wonderwhales_demo.json` | [`10-bots/wonderwhales.md`](10-bots/wonderwhales.md) | `UNPROVEN` |
 
-## 3. Trạng thái tổng hợp
+Danh mục đủ 15 EA (5 demo + 10 lab): [`10-bots/README.md`](10-bots/README.md).
 
-Số liệu chi tiết và đường dẫn bằng chứng nằm ở [`v2/TEST_REPORT.md`](v2/TEST_REPORT.md) và
-[`v2/EVIDENCE.md`](v2/EVIDENCE.md). Tóm tắt:
+## Trạng thái cổng
 
-| Hạng mục | Trạng thái |
+Số `external`/`checked`/`passed` chi tiết ghi theo từng lần chạy trong [`PROGRESS.md`](PROGRESS.md)
+và [`20-operations/evidence.md`](20-operations/evidence.md); Task 12 điền số lần chạy mới nhất. Bốn
+lệnh của cổng và kỳ vọng:
+
+| Lệnh | Kỳ vọng |
 |---|---|
-| Compile MQL5 toàn bộ source | PASS `0 errors, 0 warnings` (MetaEditor build 6292) |
-| Contract test TrendRider | PASS `82/82` |
-| Unit test ExecGuard | PASS `51/0` |
-| Python test suite | `412 passed` (2026-10-30) |
-| Static gate (`validate-project.py`, `validate_demo_execution.py`) | PASS `14/14` và `8/8` (2026-10-29) |
-| PATrendRider SimEA — Strategy Tester | PASS, có CSV/HTML |
-| DemoEA — đường gửi lệnh trong Strategy Tester | PASS: 31 ENTRY / 31 EXIT, audit `PROBLEMS=0` |
-| Broker demo chấp nhận lệnh thật | PASS qua `ExecDemoProbe` (0.01 XAUUSDm, 103 ms) |
-| DemoEA trên tài khoản demo | armed, state `WAITING_FOR_SETUP`, 0 ENTRY do chiến lược |
-| Grid / DCA demo execution | `ALLOWED` (ADR 0004); phiên demo thật `NOT_RUN` |
-| Wonderwhales demo — đường gửi lệnh trong Strategy Tester | PASS: 41 ENTRY / 41 EXIT, magic `25007001`, `mode=DEMO_EXECUTION`, journal `sim_ww_demo_exec.csv` |
-| Wonderwhales demo trên tài khoản demo thật | `NOT_RUN` (chưa có journal demo thật) |
-| Lợi nhuận của mọi chiến lược | `UNPROVEN` |
+| `python scripts\check_docs_links.py` | `broken=0` — mọi link tương đối trong vùng tài liệu hiện hành resolve |
+| `python scripts\validate-project.py` | `checks=N fail=0` — layout, cấm API lệnh ngoài `Exec/*`, preset |
+| `python scripts\validate_demo_execution.py` | `checks=N fail=0` — guardrail từng EA demo, phạm vi ADR 0004/0007 |
+| `python -m pytest` | `0 failed` — suite Python + validator indicator |
 
-Compile chỉ chứng minh cú pháp; tester chỉ chứng minh hành vi trong mô phỏng; không có kết quả nào là
-cam kết lợi nhuận hay bằng chứng sẵn sàng cho tài khoản thật.
+## Quy ước
 
-## 4. Quy ước trạng thái
-
-| Nhãn | Nghĩa |
-|---|---|
-| `DONE` | Deliverable và acceptance criteria đạt, đã chạy thật, có bằng chứng |
-| `PASS` | Kiểm tra cụ thể đã chạy và đạt |
-| `PARTIAL` | Đã làm một phần, phạm vi chưa đủ để kết luận |
-| `READY_FOR_MANUAL_VALIDATION` | Code compile, test offline đạt, runtime chưa xác minh |
-| `NOT_RUN` | Chưa chạy; không được thay bằng suy luận |
-| `BLOCKED` / `BLOCKED_PENDING_ADR` | Thiếu đầu vào hoặc bị chặn bởi quyết định phạm vi |
-| `UNPROVEN` | Đã chạy nhưng chưa chứng minh được kết luận mong muốn |
-| `FAIL` | Đã chạy và không đạt; phải ghi ID/lỗi thật |
-
-Không đổi `NOT_RUN`/`BLOCKED`/`PARTIAL` thành PASS nếu chưa có log, CSV hoặc report thật.
-
-## 5. Quy ước nội dung
-
-- **Tiếng Việt** là ngôn ngữ chính; thuật ngữ kỹ thuật và token lỗi giữ nguyên tiếng Anh.
-- **Token lỗi** (`plan_invalid`, `max_virtual_exposure_reached`, …) là hợp đồng ổn định.
-- **Preset JSON** là nguồn chuẩn cho input; EA không đọc JSON trực tiếp.
-- **Số liệu** phải ghi nguồn: synthetic hay thật, khoảng thời gian, giả định chi phí.
-- **Input pack** trong `archive/` là tài liệu gốc chỉ đọc, không sửa và không trộn với tài liệu vận hành.
+- **Ngôn ngữ:** tiếng Việt có dấu; token kỹ thuật, token lỗi và tên input giữ nguyên tiếng Anh.
+- **Nhãn trạng thái:** 9 nhãn — 6 nhãn hợp đồng (`DONE`, `PASS`, `PARTIAL`, `NOT_RUN`, `BLOCKED`,
+  `UNPROVEN`) + 3 nhãn phụ (`FAIL`, `BLOCKED_PENDING_ADR`, `READY_FOR_MANUAL_VALIDATION`). Định nghĩa
+  và quy tắc đặt nhãn: [`00-start/glossary.md`](00-start/glossary.md), nguồn chuẩn
+  [`20-operations/evidence.md`](20-operations/evidence.md). Không nâng nhãn khi chưa có bằng chứng thật.
+- **[`99-archive/`](99-archive/README.md) read-only:** không sửa file nào, kể cả link chết; ánh xạ
+  link cũ → mới ở [`99-archive/LINK_MAP.md`](99-archive/LINK_MAP.md).
+- **Số liệu phải ghi nguồn:** dữ liệu synthetic hay thật, khoảng thời gian, giả định chi phí; kết quả
+  backtest/mô phỏng không phải bằng chứng lợi nhuận.
