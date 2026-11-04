@@ -19,7 +19,7 @@ Nội dung:
   lệnh, không đọc tài khoản.
 - **Trạng thái:** compile `0 errors, 0 warnings`; `SimCoreTests` **PASS runtime 123/0** trong MT5 ngày
   2026-10-28; `SimPlanTests` **PASS runtime 39/0** cùng ngày.
-- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W1–W5.
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../99-archive/MT5_EA_Lab_V1/MASTER_ROADMAP_v1.md) mục W1–W5.
 
 ### 1. File
 
@@ -323,8 +323,8 @@ Nếu thiếu dòng `TEST|RESULT|ALL_PASS` → coi như `NOT_RUN`, không suy lu
 - **Mục tiêu:** nghiên cứu hành vi một vị thế ảo duy nhất khi giữ lệnh theo xu hướng và nâng SL theo
   breakeven + trailing, dùng nền tảng `mt5/Include/Sim/` của W1–W3.
 - **Trạng thái:** compile `0 errors, 0 warnings`; chưa chạy trong MT5 (`NOT_RUN`).
-- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W3; đặc tả:
-  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../archive/v1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../99-archive/MT5_EA_Lab_V1/MASTER_ROADMAP_v1.md) mục W3; đặc tả:
+  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../99-archive/MT5_EA_Lab_V1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
   mục C.
 
 ### 1. An toàn
@@ -423,8 +423,8 @@ Schema 18 cột dùng chung mục **Simulation core** ở đầu tài liệu nà
 - **Mục tiêu:** nghiên cứu lưới vị thế ảo có giới hạn cứng: số tầng, volume mỗi tầng và tổng exposure.
   Không mô phỏng lưới vô hạn, không gồng không giới hạn.
 - **Trạng thái:** compile `0 errors, 0 warnings`; chưa chạy trong MT5 (`NOT_RUN`).
-- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W4; đặc tả:
-  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../archive/v1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../99-archive/MT5_EA_Lab_V1/MASTER_ROADMAP_v1.md) mục W4; đặc tả:
+  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../99-archive/MT5_EA_Lab_V1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
   mục A.
 
 ### 1. An toàn
@@ -535,8 +535,8 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 - **Mục tiêu:** nghiên cứu các lần bổ sung vị thế ảo theo khoảng giá hoặc khoảng thời gian, với giới hạn
   cứng về số lần add, volume mỗi lần và tổng exposure. Không bình quân vô hạn.
 - **Trạng thái:** compile `0 errors, 0 warnings`; chưa chạy trong MT5 (`NOT_RUN`).
-- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W5; đặc tả:
-  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../archive/v1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../99-archive/MT5_EA_Lab_V1/MASTER_ROADMAP_v1.md) mục W5; đặc tả:
+  [`MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md`](../99-archive/MT5_EA_Lab_V1/MT5_AI_Roadmaps/STRATEGY_SPEC_GRID_DCA_TRAILING.md)
   mục B.
 
 ### 1. An toàn
@@ -653,7 +653,7 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
   mô phỏng hoặc có dấu hiệu tài khoản/broker trước khi nạp vào MT5.
 - **Trạng thái:** validator exit 0 trên 6 file cấu hình (5 preset + project); pytest PASS; 15/15 scenario
   đã chạy thật, 2 scenario `plan_*` có SUMMARY với 0 trade (quirk `rr1 < rrMin`).
-- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W6.
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../99-archive/MT5_EA_Lab_V1/MASTER_ROADMAP_v1.md) mục W6.
 
 ### 1. File
 
@@ -777,7 +777,7 @@ Exit code: `0` tất cả pass, `1` có lỗi validate, `2` thiếu project root
 - **Trạng thái:** compile `0 errors, 0 warnings`; `SimPlanTests` **PASS runtime 39/0** (MT5, 2026-10-28);
   Strategy Tester **PASS 2/2** — `plan_baseline` 389.9 s và `plan_edge_tp3_stop_only` 409.8 s, đủ 9 tháng
   với SUMMARY, 0 trade do quirk `rr1=1.0 < rrMin=1.5` của source. Preset kiểm tra fail-closed PASS.
-- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../archive/v1/MASTER_ROADMAP_v1.md) mục W10.
+- **Nguồn lộ trình:** [`archive/v1/MASTER_ROADMAP_v1.md`](../99-archive/MT5_EA_Lab_V1/MASTER_ROADMAP_v1.md) mục W10.
 
 ### 1. Vì sao chỉ ba nguồn
 
@@ -809,7 +809,7 @@ EA đọc nến `shift=1` (nến đã đóng). Cách gọi `iCustom`:
 
 - `InpSource = PLAN_SOURCE_PA` → `iCustom(_Symbol,_Period,"PinePort\\PriceActionMTF",
   InpPaRr1, InpPaRrMin)`. Hai tham số này là **bridge** của indicator (`InpRr1Ea`/`InpRrMinEa`,
-  §3.0 của [`price-action-mtf.md`](../indicators/price-action-mtf.md)) và **phải** nằm đầu
+  §3.0 của [`price-action-mtf.md`](indicators/price-action-mtf.md)) và **phải** nằm đầu
   danh sách input; default `1.0`/`1.5` trùng default indicator nên hành vi không đổi.
 - `TM XAU Signals 2` / `TM Indicator 2` → `iCustom` **0 tham số**, dùng default của indicator.
 
@@ -910,7 +910,7 @@ compile không bắt được:
   Strategy Tester headless đã chạy thật trên `XAUUSDm` M15 ngày 2026-10-28 (baseline, conservative stress,
   edge ATR stop) — kết quả ở mục 8; preset + 3 scenario kiểm tra fail-closed PASS.
 - **Nguồn:** yêu cầu người dùng 2026-10-28 (chỉ `XAUUSDm`), hợp đồng buffer ở
-  [`docs/indicators/wonderwhales.md`](../indicators/wonderwhales.md) và
+  [`docs/indicators/wonderwhales.md`](indicators/wonderwhales.md) và
   `mt5/Include/PinePort/WonderwhalesContract.mqh`.
 
 ### 1. An toàn

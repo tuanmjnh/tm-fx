@@ -306,8 +306,8 @@ bằng cách tách nhánh `btMulti`, nhưng EA của repo này vẫn không port
 - **Ngày:** 2026-10-28
 - **Trạng thái:** `STATIC_PASS_RUNTIME_PENDING` — phân tích tĩnh trên source Pine; chưa chạy TradingView Bar Replay,
   chưa tạo alert, chưa chạy backtest. Các kết luận phụ thuộc runtime TradingView đánh dấu `PENDING` ở §10.
-- **Nguồn:** [`dist/LongKaco VSA.pine`](file:///D:/Applications/tm-trading/pine/dist/LongKaco%20VSA.pine) (681 dòng)
-  và [`dist/LongKaco VSA Backtest.pine`](file:///D:/Applications/tm-trading/pine/dist/LongKaco%20VSA%20Backtest.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/LongKaco VSA.pine` (681 dòng)
+  và `D:/Applications/tm-trading/pine/dist/LongKaco VSA Backtest.pine`
   (600 dòng). Không file Pine nào bị sửa.
 - **Đặc tả nền:** `INDICATOR_SPEC_LongKacoVSA.md`.
 

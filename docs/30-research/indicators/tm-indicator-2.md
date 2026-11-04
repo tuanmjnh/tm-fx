@@ -13,7 +13,7 @@ Nội dung:
 - **Phase:** 1 — Đặc tả thuật toán trước khi port
 - **Ngày:** 2026-10-28
 - **Trạng thái:** `PORTABLE_WITH_DIFFERENCES` (xem §13, §14)
-- **Nguồn:** [`dist/TM Indicator 2.pine`](../../../tm-trading/pine/dist/TM%20Indicator%202.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/TM Indicator 2.pine`
   (indicator, 2.243 dòng, 151 input khai báo, version 2.1.0, build 2026-10-27). Chỉ đọc, không sửa.
 - **Nguyên tắc:** SIMULATION_ONLY. Port chỉ tín hiệu/trạng thái trên nến đã đóng; không webhook,
   không execution, không đọc tài khoản, không đặt lệnh.
@@ -390,7 +390,7 @@ signal = okBar and tradeEligible and plan.valid
 - **Trạng thái:** `STATIC_PASS_RUNTIME_PENDING` — phân tích tĩnh trên source Pine; chưa chạy TradingView
   Bar Replay, chưa tạo alert, chưa chạy Strategy Tester. Các kết luận phụ thuộc runtime đánh dấu
   `PENDING` ở §14.
-- **Nguồn:** [`dist/TM Indicator 2.pine`](file:///D:/Applications/tm-trading/pine/dist/TM%20Indicator%202.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/TM Indicator 2.pine`
   (2.243 dòng, indicator v2.1.0, 151 input). Chỉ đọc, không sửa file Pine.
 - **Đặc tả nền:** `INDICATOR_SPEC_TMIndicator2.md`.
 - **Nguyên tắc:** SIMULATION_ONLY. Port chỉ tín hiệu/trạng thái trên nến đã đóng; không alert, không
@@ -789,7 +789,7 @@ if tm_okBar and tm_signal ...  // 1728  (4) mở vị thế mới
 - **Trạng thái:** `CONTRACT_FROZEN_FOR_PHASE4`
 - **Nguồn:** `INDICATOR_SPEC_TMIndicator2.md`,
   `REPAINT_AUDIT_TMIndicator2.md`,
-  [`dist/TM Indicator 2.pine`](../../../tm-trading/pine/dist/TM%20Indicator%202.pine)
+  `D:/Applications/tm-trading/pine/dist/TM Indicator 2.pine`
   (2.243 dòng, 151 input, v2.1.0 — chỉ đọc).
 - **Nguyên tắc bất biến:** SIMULATION_ONLY. Không `OrderSend`, không `CTrade`, không đọc tài
   khoản, không alert/webhook, không `WebRequest`, không file I/O trong indicator.

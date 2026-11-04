@@ -13,8 +13,8 @@ Nội dung:
 - **Phase:** 1 — Đặc tả thuật toán trước khi port
 - **Ngày:** 2026-10-28
 - **Trạng thái:** `PORTABLE_WITH_DIFFERENCES` (xem §10, §11)
-- **Nguồn:** [`dist/Price Action MTF.pine`](../../../tm-trading/pine/dist/Price%20Action%20MTF.pine) (indicator, 1801
-  dòng, 144 input) và [`dist/Price Action MTF Backtest.pine`](../../../tm-trading/pine/dist/Price%20Action%20MTF%20Backtest.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/Price Action MTF.pine` (indicator, 1801
+  dòng, 144 input) và `D:/Applications/tm-trading/pine/dist/Price Action MTF Backtest.pine`
   (strategy, 1826 dòng). Chỉ đọc, không sửa. Parts: `pine/parts-price-action-mtf/` (14 module).
 - **Nguyên tắc:** SIMULATION_ONLY. Porth chỉ tín hiệu trên nến đã đóng; indicator không có API giao dịch,
   không đọc tài khoản, không file I/O, không alert/webhook.
@@ -275,8 +275,8 @@ PATTERN → BOS → CHoCH → MSS → RETEST → FAILBRK → CONT → PULL → S
 - **Trạng thái:** `STATIC_PASS_RUNTIME_PENDING` — phân tích tĩnh trên source Pine; chưa chạy TradingView
   Bar Replay, chưa tạo alert, chưa chạy Strategy Tester. Các kết luận phụ thuộc runtime đánh dấu
   `PENDING` ở §14.
-- **Nguồn:** [`dist/Price Action MTF.pine`](file:///D:/Applications/tm-trading/pine/dist/Price%20Action%20MTF.pine)
-  (1.801 dòng, indicator), [`dist/Price Action MTF Backtest.pine`](file:///D:/Applications/tm-trading/pine/dist/Price%20Action%20MTF%20Backtest.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/Price Action MTF.pine`
+  (1.801 dòng, indicator), `D:/Applications/tm-trading/pine/dist/Price Action MTF Backtest.pine`
   (1.826 dòng, strategy) và `pine/parts-price-action-mtf/` (14 module). Không file Pine nào bị sửa.
 - **Đặc tả nền:** `INDICATOR_SPEC_PriceActionMTF.md`.
 - **Nguyên tắc:** SIMULATION_ONLY. Port chỉ tín hiệu trên nến đã đóng; không alert, không webhook,
@@ -1187,7 +1187,7 @@ Bối cảnh: 9 tháng M15 (~25 700 nến) với full replay mỗi nến làm `P
 Strategy Tester (`plan_*` từng bị `BLOCKED_PERFORMANCE`). Ba thay đổi, **không** đổi ngữ nghĩa
 tín hiệu:
 
-1. `PaMapHtfIndex` ([`PriceActionMTFContract.mqh`](../../mt5/Include/PinePort/PriceActionMTFContract.mqh))
+1. `PaMapHtfIndex` ([`PriceActionMTFContract.mqh`](../../../mt5/Include/PinePort/PriceActionMTFContract.mqh))
    đổi từ quét tuyến tính sang binary search trên mảng `closeTime` đã sắp xếp.
 2. Replay tăng dần (`PA_REPLAY_INCREMENTAL 1`) như mô tả §7, có guard `bar time` + `close`.
 3. Cache HTF append-only (`g_ctxCloseT/g_setupCloseT` + EMA window `PA_HTF_WINDOW 3000`). Lý do:
@@ -1536,7 +1536,7 @@ Ba điểm xác nhận dải giải tích: (a) gate SCORE chặn nến down và 
 (b) giá trị `score100` lớn nhất phía down đúng bằng 50, nên miền qua cổng chỉ là `{50}` ⇔
 `rawScore ∈ [-0.01, 0)`; (c) `PA_BUF_SIG_SHORT` không bật lần nào trong kỳ, `dir` không bằng 0 lần
 nào. Journal `plan_rr2` (93/93 ENTRY là BUY, 0 SELL) là hệ quả nhất quán. Chi tiết và giới hạn:
-[`../PROGRESS.md`](../PROGRESS.md) §60.
+[`../PROGRESS.md`](../../PROGRESS.md) §60.
 
 Port giữ nguyên công thức và ngưỡng của nguồn (P9/Q2), **không** hạ `scrNoTrade` hay đổi score: đổi
 ngưỡng là đổi chiến lược. Phần còn mở là đối chiếu với nguồn Pine (Track B, cần CSV Pine) — hiện vẫn

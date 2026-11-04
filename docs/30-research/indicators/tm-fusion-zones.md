@@ -625,8 +625,8 @@ equity sizing, commission hay bất kỳ lệnh thật nào.
 - **Ngày:** 2026-10-28
 - **Trạng thái:** `STATIC_PASS_RUNTIME_PENDING` — phân tích tĩnh trên source Pine; chưa chạy TradingView
   Bar Replay, chưa tạo alert, chưa chạy backtest. Các kết luận phụ thuộc runtime đánh dấu `PENDING` ở §13.
-- **Nguồn:** [`dist/TM Fusion Zones.pine`](file:///D:/Applications/tm-trading/pine/dist/TM%20Fusion%20Zones.pine)
-  (1.035 dòng) và [`dist/TM Fusion Zones Backtest.pine`](file:///D:/Applications/tm-trading/pine/dist/TM%20Fusion%20Zones%20Backtest.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/TM Fusion Zones.pine`
+  (1.035 dòng) và `D:/Applications/tm-trading/pine/dist/TM Fusion Zones Backtest.pine`
   (1.065 dòng). Không file Pine nào bị sửa.
 - **Đặc tả nền:** `INDICATOR_SPEC_TMFusionZones.md`.
 

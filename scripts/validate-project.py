@@ -30,6 +30,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from check_docs_links import check_links as check_docs_links  # noqa: E402
+
 FORBIDDEN_API = re.compile(
     r"\b(?:"
     r"OrderSendAsync|OrderSend|OrderCalcMargin|OrderCalcProfit|OrderCheck|"
@@ -149,6 +155,18 @@ REQUIRED_FILES = (
     "docs/90-decisions/0007-wonderwhales-demo-bot.md",
     "docs/20-operations/demo-execution.md",
     "scripts/validate_demo_execution.py",
+    "docs/00-start/README.md",
+    "docs/10-bots/README.md",
+    "docs/10-bots/input-convention.md",
+    "docs/20-operations/README.md",
+    "docs/20-operations/presets.md",
+    "docs/20-operations/troubleshooting.md",
+    "docs/20-operations/evidence.md",
+    "docs/30-research/README.md",
+    "docs/90-decisions/README.md",
+    "docs/90-decisions/0008-docs-information-architecture.md",
+    "docs/99-archive/README.md",
+    "docs/99-archive/LINK_MAP.md",
 )
 
 SIM_EAS = {
@@ -612,6 +630,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"PASS: {name}")
 
     report("layout", check_layout(root))
+    report("docs links", check_docs_links(root)[0])
 
     sources = mql_sources(mt5_dir)
     if not sources:

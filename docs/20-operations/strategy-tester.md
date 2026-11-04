@@ -284,7 +284,7 @@ Nếu thiếu history, tester lỗi, hoặc CSV rỗng → `BLOCKED`/`FAIL`, kh�
 | `dca_*` (4) | PASS — 4/4 report + CSV thật, xem mục 9.1 |
 | `plan_baseline`, `plan_edge_tp3_stop_only` | PASS (0 trade, đúng thiết kế) — hết `BLOCKED_PERFORMANCE` sau khi tối ưu replay; xem mục 9.2 |
 | `plan_rr2` | PASS — 93 trade ảo, CSV nhất quán, `halted=HALTED` vì drawdown 5.02 %; xem mục 9.3 |
-| 6 contract test indicator | PASS — 6/6 suite, 547 check, xem [`../reference/simulation.md`](../reference/simulation.md) |
+| 6 contract test indicator | PASS — 6/6 suite, 547 check, xem [`../reference/simulation.md`](../30-research/simulation.md) |
 | Kết luận hiệu năng | Không có; mọi số liệu phải đến từ report thật, không suy ra lợi nhuận |
 
 ### 9. Kết quả thật — WonderwhalesSimEA (2026-10-28)
@@ -339,7 +339,7 @@ Ghi chú trung thực:
 PriceActionMTF với chi phí gần bậc hai theo số bar. Diagnostic 1 tháng mất 197 s.
 
 **Sau khi tối ưu** (replay tăng dần + binary search HTF + cache HTF append-only; chi tiết và bảng đo
-ở [`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §7.3):
+ở [`../indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) §7.3):
 
 | Scenario | Wall time | `config_hash` | SUMMARY |
 |---|---:|---|---|
@@ -352,7 +352,7 @@ không có dòng trade.
 **Vì sao 0 trade — không phải lỗi:** source Pine mặc định `pa_rr1 = 1.0` và `pa_rrMin = 1.5`, nên
 `rrOk = (rr1 >= rrMin)` luôn false → `plan.valid = false` → không bao giờ có signal. Đây là quirk
 của source được port nguyên (decision P9, xem
-[`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §9). Chẩn đoán runtime
+[`../indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) §9). Chẩn đoán runtime
 2026-10-29 trên `diag_plan_1m` (1 tháng, 25 715 nến) xác nhận: 25 714 nến `plan_valid=0`, trong khi
 `dir_up=15 763`, `dir_dn=9 950`, `atr_ok=25 701`, `sl_ok=25 700`, `score=14..87` — mọi gate khác đều
 đạt, chỉ `rrOk` chặn.
@@ -375,7 +375,7 @@ Wall ≈ 336 s (dấu vết file: journal `INIT` 23:17:58.456 → CSV 23:23:34.5
 | Equity cuối | 9 666.89 (đơn vị mô hình, không phải lợi nhuận) |
 | CSV | 287 dòng = 1 `INIT` + 93 `ENTRY` + 93 `EXIT` + 99 `RISK` + 1 `SUMMARY` |
 | Lỗi cấu trúc | 0 — một `config_hash` toàn file, 93/93 ENTRY cặp EXIT, không vị thế mở cuối, 0 SL/TP sai phía |
-| Hướng lệnh | 93 BUY / 0 SELL — xem [`../PROGRESS.md`](../PROGRESS.md) §58.5 và [`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §10.5 (quirk `Q11`) |
+| Hướng lệnh | 93 BUY / 0 SELL — xem [`../PROGRESS.md`](../PROGRESS.md) §58.5 và [`../indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) §10.5 (quirk `Q11`) |
 
 Chạy lại: `reports/build/tester-run/run_tester.ps1 -Scenario plan_rr2`.
 Bằng chứng: `reports/build/tester-reports/plan_rr2/` (`sim_plan_rr2.csv`, `tester_plan_rr2.htm`,

@@ -2,9 +2,9 @@
 
 - **Phạm vi:** chạy **cả năm bot** (`PATrendRiderXAUv1`, `Grid`, `DCA`, `InfiniteRunner_XAU`,
   `Wonderwhales`) trên **tài khoản demo** hoặc Strategy Tester. Không áp dụng cho tài khoản real/contest.
-- **Quyết định:** [`../decisions/0004-all-bots-demo-execution.md`](../decisions/0004-all-bots-demo-execution.md),
-  [`../decisions/0005-infiniterunner-xau-demo-bot.md`](../decisions/0005-infiniterunner-xau-demo-bot.md)
-  và [`../decisions/0007-wonderwhales-demo-bot.md`](../decisions/0007-wonderwhales-demo-bot.md)
+- **Quyết định:** [`../decisions/0004-all-bots-demo-execution.md`](../90-decisions/0004-all-bots-demo-execution.md),
+  [`../decisions/0005-infiniterunner-xau-demo-bot.md`](../90-decisions/0005-infiniterunner-xau-demo-bot.md)
+  và [`../decisions/0007-wonderwhales-demo-bot.md`](../90-decisions/0007-wonderwhales-demo-bot.md)
   (ADR 0005 thêm bot thứ tư, ADR 0007 thêm bot thứ năm; ADR 0002 và phần còn lại của ADR 0003 vẫn hiệu lực).
 - **Trạng thái bằng chứng:** mã nguồn compile 0/0, static gate xanh và contract test guard chạy được;
   kết quả giao dịch demo chỉ được ghi nhận sau khi EA chạy thật và journal được kiểm tra. Không có kết quả
@@ -141,7 +141,7 @@ Period=M5
 - `Enabled=1` là nút **Algo Trading**; `AllowLiveTrading=1` là quyền giao dịch cấp cho EA được nạp lúc
   khởi động. Dòng `INIT` ghi thêm `mql_trade_allowed=1|0` (từ 2026-10-29); nếu là `0` thì terminal chưa
   cấp quyền và lệnh đầu tiên sẽ bị chặn với `OrderSend` error 10027 — xem
-  [`../reference/risk.md`](../reference/risk.md).
+  [`../reference/risk.md`](../30-research/risk.md).
 - File cấu hình chỉ chứa input chiến lược và cờ quyền; **không** chứa login/password/server. Terminal vẫn
   dùng phiên đăng nhập đã lưu; đăng nhập lại là thao tác tay, agent không điền hộ.
 

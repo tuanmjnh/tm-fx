@@ -624,7 +624,7 @@ Kỳ vọng: toàn bộ pass. Test dùng dữ liệu tổng hợp trong thư m�
 
 ### 9. T8 — Parity
 
-Xem [`PINE_PARITY_Wonderwhales.md`](../indicators/parity.md). Cần CSV reference thật từ Pine.
+Xem [`PINE_PARITY_Wonderwhales.md`](indicators/parity.md). Cần CSV reference thật từ Pine.
 Không tạo CSV giả. Trạng thái hiện tại: `BLOCKED`.
 
 ### 10. Tiêu chí dừng

@@ -21,9 +21,9 @@ Nội dung:
 
 | Vai trò | File | Loại | Dòng | SHA-256 (rút gọn) |
 |---|---|---|---:|---|
-| **Reference signal** | [`dist/Wonderwhales.pine`](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales.pine) | `indicator()`, overlay = false | 415 | `0529d7b9…d61b9` |
-| Biến thể hiển thị | [`dist/Wonderwhales Overlay.pine`](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Overlay.pine) | `indicator()`, overlay = true | 417 | `75131c44…51ff` |
-| **Reference execution** | [`dist/Wonderwhales Backtest.pine`](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine) | `strategy()`, overlay = true | 614 | `e7c15e1a…4910` |
+| **Reference signal** | `D:/Applications/tm-trading/pine/dist/Wonderwhales.pine` | `indicator()`, overlay = false | 415 | `0529d7b9…d61b9` |
+| Biến thể hiển thị | `D:/Applications/tm-trading/pine/dist/Wonderwhales Overlay.pine` | `indicator()`, overlay = true | 417 | `75131c44…51ff` |
+| **Reference execution** | `D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine` | `strategy()`, overlay = true | 614 | `e7c15e1a…4910` |
 
 Kết luận sau khi diff hai bản indicator:
 
@@ -52,7 +52,7 @@ dùng xác nhận quyền sử dụng trước khi phân phối.
 
 ### 3. Inputs — indicator (37 input)
 
-Nguồn: [`parts-wonderwhales/10_config.pine`](file:///D:/Applications/tm-trading/pine/parts-wonderwhales/10_config.pine),
+Nguồn: `D:/Applications/tm-trading/pine/parts-wonderwhales/10_config.pine`,
 dòng 72–122 trong dist. Mọi input đều `display = display.none` ở indicator (không hiện trên status line).
 
 #### 3.1 Parabolic SAR (dòng 72–74)
@@ -147,7 +147,7 @@ Guard: `ema200Safe = max(10, len)`, `bbLenSafe = max(1, len)`.
 
 ### 4. Công thức (dùng chung cho indicator và backtest)
 
-Nguồn: [`30_calc.pine`](file:///D:/Applications/tm-trading/pine/parts-wonderwhales/30_calc.pine),
+Nguồn: `D:/Applications/tm-trading/pine/parts-wonderwhales/30_calc.pine`,
 dist dòng 167–215.
 
 #### 4.1 Parabolic SAR và trạng thái hướng
@@ -265,7 +265,7 @@ Nguồn: dist dòng 272–407.
 
 ### 6. Điều kiện tín hiệu
 
-Nguồn: [`40_signals.pine`](file:///D:/Applications/tm-trading/pine/parts-wonderwhales/40_signals.pine),
+Nguồn: `D:/Applications/tm-trading/pine/parts-wonderwhales/40_signals.pine`,
 dist dòng 222–266.
 
 | Mode | `rawBuy` | `rawSell` | `validBuy` | `validSell` |
@@ -300,7 +300,7 @@ Hệ quả edge/level:
 
 ### 7. Biến thể Backtest — inputs và execution semantics
 
-Nguồn: [`45_strategy_exec.pine`](file:///D:/Applications/tm-trading/pine/parts-wonderwhales/45_strategy_exec.pine),
+Nguồn: `D:/Applications/tm-trading/pine/parts-wonderwhales/45_strategy_exec.pine`,
 dist dòng 273–471.
 
 #### 7.1 Inputs bổ sung (13, tổng 50)
@@ -588,8 +588,8 @@ Buffer 3/4/6/7 **luôn** `0` tại nến đang chạy (`j == rates_total-1`); EA
 - **Phase 4:** viết custom indicator MQL5 trong `MQL5/Indicators/PinePort/` khi được yêu cầu.
 - **Phase 5:** `PineSignalLabEA.mq5` signal-only, không có API gửi lệnh.
 
-Tham chiếu: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../archive/v1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md),
-[`PINE_INVENTORY.md`](README.md), [`PROGRESS.md`](../PROGRESS.md).
+Tham chiếu: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../../99-archive/MT5_EA_Lab_V1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md),
+[`PINE_INVENTORY.md`](README.md), [`PROGRESS.md`](../../PROGRESS.md).
 
 ## Repaint Audit — Wonderwhales (Pine v6)
 
@@ -598,9 +598,9 @@ Tham chiếu: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../archive/v1/pine-
 - **Trạng thái:** `STATIC_PASS_RUNTIME_PENDING` — kết luận dưới đây là **phân tích tĩnh** trên source Pine.
   Chưa chạy TradingView Bar Replay, chưa tạo alert thật, chưa chạy backtest. Mọi kết luận phụ thuộc hành vi
   runtime của TradingView được đánh dấu `PENDING` ở mục 10.
-- **Nguồn:** [`dist/Wonderwhales.pine`](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales.pine) (415 dòng,
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/Wonderwhales.pine` (415 dòng,
   SHA `0529d7b9…d61b9`) và
-  [`dist/Wonderwhales Backtest.pine`](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine)
+  `D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine`
   (614 dòng, SHA `e7c15e1a…4910`). Không file Pine nào bị sửa.
 - **Đặc tả nền:** `INDICATOR_SPEC_Wonderwhales.md`.
 
@@ -650,7 +650,7 @@ ww_signalBlockedSell = ww_blockedSell and ww_barConfirmed          // dòng 266
 ```
 
 - Input `ww_confirmOnClose` mặc định `true`, `display = display.none`
-  ([dòng 78](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales.pine#L78)).
+  (`D:/Applications/tm-trading/pine/dist/Wonderwhales.pine#L78`).
 - `barstate.isconfirmed` = `true` trên **mọi nến lịch sử**, và trên nến realtime chỉ ở lần tính cuối cùng
   trước khi nến đóng. Đây là điểm quyết định toàn bộ audit.
 - Cổng này áp cho **cả marker, cả `plot` status-line, cả 3 `alertcondition` tín hiệu, cả `alert()`**.
@@ -707,7 +707,7 @@ marker tại nến đó, vì trên lịch sử `isconfirmed = true` và `dir` cu
 Nếu close cuối < PSAR thì lịch sử **không** có marker, còn người xem realtime đã thấy marker. **RP1 + RP5.**
 
 **S4 — Nến đầu tiên có PSAR hợp lệ.**
-`ww_sarDir` khởi tạo `0` ([dòng 171](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales.pine#L171)).
+`ww_sarDir` khởi tạo `0` (`D:/Applications/tm-trading/pine/dist/Wonderwhales.pine#L171`).
 Nếu PSAR hợp lệ và `psar < close`, `dir = 1`, nhưng `dir[1] = 0`, nên `ww_buyFlip = false`. Tương tự cho
 SELL. **Không có tín hiệu ở nến PSAR hợp lệ đầu tiên.** Đây là warm-up bắt buộc, không phải bug.
 
@@ -747,21 +747,21 @@ trên chart **không** tắt alert.
 
 Header: `pyramiding = 0`, `calc_on_order_fills = true`, `calc_on_every_tick = true`,
 `process_orders_on_close = true`, commission 0.05%, slippage 0
-([dòng 2](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L2)).
+(`D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L2`).
 
 #### 7.1 Trạng thái và reset
 
 `ww_posEntry/Sl/Tp1/Tp2/Risk/Dir/IsLadder/isBeActive` là `var`, reset về `na/0/false` khi
-`strategy.position_size == 0` ([dòng 309–327](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L309)).
+`strategy.position_size == 0` (`D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L309`).
 Vì reset chạy **trước** khối entry, nến vừa đóng vị thế sẽ không giữ level cũ. Đây là state máy trạng thái
 tuần tự, không phải hàm thuần của nến.
 
 #### 7.2 Entry
 
 - Chỉ vào khi `strategy.position_size == 0` và `ww_signal*` đúng
-  ([dòng 330–331](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L330)).
+  (`D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L330`).
 - Entry price dùng `close` của nến tín hiệu; qty = `pct/100 * strategy.equity / close`
-  ([dòng 301](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L301)) → **phụ thuộc
+  (`D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L301`) → **phụ thuộc
   đường đi equity**, không tái lập được nếu equity khác.
 - Với gate on + `process_orders_on_close`, lệnh được gửi tại nến tín hiệu và fill ở close nến đó.
 
@@ -769,7 +769,7 @@ tuần tự, không phải hàm thuần của nến.
 
 - SL/TP tính từ `close`, `ww_calcAtr`, swing high/low tại nến tín hiệu.
 - BE dùng `high`/`low` của nến hiện tại để kích hoạt rồi dời SL trong **cùng nến**
-  ([dòng 411–414](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L411)). Đây là
+  (`D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L411`). Đây là
   dạng RP4: mức SL mới có thể được áp cho chính nến đã tạo ra tín hiệu kích hoạt, dù về mặt thời gian mức
   đó chỉ tồn tại sau thời điểm giá chạm ngưỡng. TradingView broker emulator xử lý thứ tự này theo cách
   riêng; **không được** coi là mô hình fill chuẩn khi port.
@@ -786,8 +786,8 @@ tuần tự, không phải hàm thuần của nến.
 1. **Ladder + `pyramiding = 0`:** hai `strategy.entry` cùng chiều (`Long1`, `Long2`) trên cùng nến có thể
    bị từ chối lệnh thứ hai. Hành vi thực tế `PENDING` (E6).
 2. **Ladder + Reversal:** `strategy.close("Long")`
-   ([dòng 423](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L423),
-   [dòng 453](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales%20Backtest.pine#L453)) không khớp
+   (`D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L423`,
+   `D:/Applications/tm-trading/pine/dist/Wonderwhales Backtest.pine#L453`) không khớp
    entry ID `Long1/Long2` (`Short1/Short2`), nên có thể **không đóng vị thế**. `PENDING` (E7).
 
 Hai lỗi này chỉ ảnh hưởng Phase 7+ nếu có port execution. Phase 4/5 (indicator + signal-only EA) không bị.
@@ -924,7 +924,7 @@ Không định nghĩa: execution, sizing, SL/TP/BE/trailing, alert. Đó là ph�
 ### 3. Input contract
 
 Tên, kiểu, default và **clamp** phải khớp Pine. Clamp lấy từ
-[`Wonderwhales.pine:129–142`](file:///D:/Applications/tm-trading/pine/dist/Wonderwhales.pine#L129).
+`D:/Applications/tm-trading/pine/dist/Wonderwhales.pine#L129`.
 
 | # | Input MQL5 | Kiểu | Default | Min | Clamp / ghi chú |
 |---:|---|---|---:|---:|---|
@@ -1225,8 +1225,8 @@ cả `bar_open_time` và giá trị các buffer phụ để chẩn đoán. Nếu
   InpPsarMax, InpFastEma, InpSlowEma, InpEma200, InpAtrLen, InpMinAtrPct, InpVolMaLen, InpRsiLen,
   InpBbLen, InpBbMult` (13 input theo thứ tự `iCustom`) và chỉ đọc `shift = 1`.
 - `WonderwhalesDemoEA` gửi lệnh qua `ExecBroker.mqh`, mọi lệnh có SL và TP bắt buộc; chạy thử và đọc
-  journal theo [`../guides/demo-execution.md`](../guides/demo-execution.md) §4.5.
+  journal theo [`../guides/demo-execution.md`](../../20-operations/demo-execution.md) §4.5.
 - Kịch bản chứng minh đường gửi lệnh: `reports/build/tester-run/ww_demo_exec.ini` +
   `reports/build/tester-sets/ww_demo_exec.set`; journal `sim_ww_demo_exec.csv`.
 - Kết quả demo/backtest không phải cam kết lợi nhuận. Trạng thái bằng chứng demo: xem
-  [`../PROGRESS.md`](../PROGRESS.md); chiến lược vẫn `UNPROVEN`.
+  [`../PROGRESS.md`](../../PROGRESS.md); chiến lược vẫn `UNPROVEN`.

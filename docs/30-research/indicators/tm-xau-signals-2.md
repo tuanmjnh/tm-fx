@@ -13,7 +13,7 @@ Nội dung:
 - **Phase:** 1 — Đặc tả thuật toán trước khi port
 - **Ngày:** 2026-10-28
 - **Trạng thái:** `PORTABLE_WITH_DIFFERENCES` (xem §13, §14)
-- **Nguồn:** [`dist/TM XAU Signals 2.pine`](../../../tm-trading/pine/dist/TM%20XAU%20Signals%202.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/TM XAU Signals 2.pine`
   (indicator, 1.383 dòng, 118 input). Chỉ đọc, không sửa.
 - **Nguyên tắc:** SIMULATION_ONLY. Port chỉ tín hiệu trên nến đã đóng; không alert/webhook,
   không execution, không đọc tài khoản.
@@ -273,7 +273,7 @@ Thứ tự cố định mỗi nến:
 - **Trạng thái:** `STATIC_PASS_RUNTIME_PENDING` — phân tích tĩnh trên source Pine; chưa chạy TradingView
   Bar Replay, chưa tạo alert, chưa chạy Strategy Tester. Các kết luận phụ thuộc runtime đánh dấu
   `PENDING` ở §15.
-- **Nguồn:** [`dist/TM XAU Signals 2.pine`](file:///D:/Applications/tm-trading/pine/dist/TM%20XAU%20Signals%202.pine)
+- **Nguồn:** `D:/Applications/tm-trading/pine/dist/TM XAU Signals 2.pine`
   (1.383 dòng, indicator, 118 input). Không file Pine nào bị sửa.
 - **Đặc tả nền:** `INDICATOR_SPEC_TMXAUSignals2.md`.
 - **Nguyên tắc:** SIMULATION_ONLY. Port chỉ tín hiệu trên nến đã đóng; không alert, không webhook,
@@ -604,7 +604,7 @@ strategy, phải audit riêng: thứ tự fill, pyramiding, thoát lệnh theo T
 - **Trạng thái:** `CONTRACT_FROZEN_FOR_PHASE4`
 - **Nguồn:** `INDICATOR_SPEC_TMXAUSignals2.md`,
   `REPAINT_AUDIT_TMXAUSignals2.md`,
-  [`dist/TM XAU Signals 2.pine`](../../../tm-trading/pine/dist/TM%20XAU%20Signals%202.pine)
+  `D:/Applications/tm-trading/pine/dist/TM XAU Signals 2.pine`
   (1.383 dòng, 118 input — chỉ đọc).
 - **Nguyên tắc bất biến:** SIMULATION_ONLY. Không `OrderSend`, không `CTrade`, không đọc tài
   khoản, không alert/webhook, không `WebRequest`, không file I/O trong indicator.

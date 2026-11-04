@@ -353,7 +353,7 @@ Kiểm tra thêm trên bản dist:
   `parity=BLOCKED` khi thiếu CSV reference thay vì tạo dữ liệu giả.
 - **Chưa làm:** chưa có CSV reference thật từ Pine; comparator `NOT_RUN` trên dữ liệu thật.
 
-Tham chiếu roadmap: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../archive/v1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
+Tham chiếu roadmap: [`pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md`](../../99-archive/MT5_EA_Lab_V1/pine-to-mt5-pack/ROADMAP_PINE_TO_MT5_EA.md).
 
 ## Pine ↔ MQL5 compatibility — Wonderwhales
 

@@ -6,7 +6,10 @@ mailto, tel) and same-page anchors are skipped and counted separately.
 ``file:`` URIs are reported as broken so documentation uses relative paths.
 
 Exempt by design: ``docs/PROGRESS.md`` (append-only history) and the immutable
-snapshots under ``docs/99-archive/`` and ``archive/``.
+snapshots under ``docs/99-archive/`` and ``archive/``. Transient tooling
+directories (pytest temporary fixture roots, pip build trees, task-runner temp
+folders, pytest caches) are pruned by name: they are never documentation and a
+pytest session that runs this checker must not fail on its own fixtures.
 
 Exit codes:
     0  every local link resolves
@@ -36,6 +39,11 @@ EXEMPT_DIRS = (
 )
 EXEMPT_FILES = ("docs/PROGRESS.md",)
 
+#--- Transient tooling directories: pruned by directory-name prefix so a test
+#--- run that executes this checker never fails on its own temporary fixtures.
+PRUNED_DIR_PREFIXES = ("pytest-of-", "pip-", "tmp", "tmpsnub_")
+PRUNED_DIR_NAMES = (".pytest_cache",)
+
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
@@ -48,12 +56,19 @@ def _is_exempt(rel: str) -> bool:
     return any(rel == d or rel.startswith(d + "/") for d in EXEMPT_DIRS)
 
 
+def _is_pruned_dir(name: str) -> bool:
+    return name in PRUNED_DIR_NAMES or name.startswith(PRUNED_DIR_PREFIXES)
+
+
 def _iter_markdown(root: Path):
     for dirpath, dirnames, filenames in os.walk(root):
         rel_dir = Path(dirpath).relative_to(root).as_posix()
         rel_dir = "" if rel_dir == "." else rel_dir
         dirnames[:] = [
-            name for name in dirnames if not _is_exempt(f"{rel_dir}/{name}".lstrip("/"))
+            name
+            for name in dirnames
+            if not _is_pruned_dir(name)
+            and not _is_exempt(f"{rel_dir}/{name}".lstrip("/"))
         ]
         for name in filenames:
             if not name.endswith(".md"):

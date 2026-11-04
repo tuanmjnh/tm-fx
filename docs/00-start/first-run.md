@@ -11,10 +11,10 @@ Nếu máy bạn khác, chỉ cần thay 3 đường dẫn ở §2.4 — mọi b
 >   `LAB|INFO|plan|simulation_only|no_orders_are_sent`.
 > - Muốn bot gửi lệnh thật thì **chỉ** được dùng tài khoản **demo** (tiền giả của sàn) và **chỉ** EA
 >   `PATrendRiderXAUv1DemoEA` (Phần 6). **Tài khoản real/live bị cấm hoàn toàn** theo
->   [`../decisions/0003-demo-execution-scope.md`](../decisions/0003-demo-execution-scope.md).
+>   [`../decisions/0003-demo-execution-scope.md`](../90-decisions/0003-demo-execution-scope.md).
 > - Không có hướng dẫn nào ở đây chứng minh bot "có lãi". Mọi số liệu trong repo đều là **đơn vị mô
 >   hình**; trạng thái lợi nhuận của mọi chiến lược là `UNPROVEN`
->   ([`../v2/EVIDENCE.md`](../v2/EVIDENCE.md) §2.5).
+>   ([`../v2/EVIDENCE.md`](../20-operations/evidence.md) §2.5).
 
 ---
 
@@ -255,7 +255,7 @@ kiện chỉ gặp nhau trong dải rất hẹp `[-0.01, 0)`.
 Hôm nay (2026-10-30) dải đó đã được **đo bằng buffer**, không còn là suy luận, trên đúng 17 595 nến
 của kỳ trên: phía down chỉ 188/8 414 nến qua cổng (2,23 %), `score100` tối đa đúng bằng 50, **0 tín hiệu
 bán**; phía up 9 181/9 181 qua cổng, 302 tín hiệu mua. Chi tiết:
-[`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §10.5 (quirk `Q11`) và
+[`../indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) §10.5 (quirk `Q11`) và
 [`../PROGRESS.md`](../PROGRESS.md) §60.
 
 Bài học cho người mới: **bot luôn có "cửa" ẩn**. Đọc log/CSV để biết nó *từ chối* vì lý do gì, thay vì
@@ -309,7 +309,7 @@ Ba trạng thái có thể xảy ra:
 
 `--offset-minutes 180`: khoảng lệch giữa giờ máy (GMT+7) và giờ server của **lần chạy mẫu**. Giữ 180 khi
 kiểm lại đúng file mẫu; nếu máy/server của bạn khác múi giờ, thử `0` rồi tăng dần cho tới khi hết
-`off_grid`. Tool kiểm tra những gì, xem [`install-and-test.md`](install-and-test.md) §4.1 Track C.
+`off_grid`. Tool kiểm tra những gì, xem [`install-and-test.md`](../20-operations/install.md) §4.1 Track C.
 
 ---
 
@@ -356,7 +356,7 @@ bằng chứng bot sống là log `initialized` + file CSV có dòng `INIT`.
 Bot `PATrendRiderXAUv1DemoEA` là EA **duy nhất** trong repo được phép gọi API lệnh, và bị guard chặn
 mặc định ở chế độ **dry-run** (chỉ log ý định, không gửi). Toàn bộ quy trình — điều kiện, cách bật
 guarded execution, panel trạng thái trên chart, kill switch, giám sát journal, đối soát tab History —
-nằm ở [`demo-execution.md`](demo-execution.md). Tóm tắt ranh giới:
+nằm ở [`demo-execution.md`](../20-operations/demo-execution.md). Tóm tắt ranh giới:
 
 | Được | Bị cấm |
 |---|---|
@@ -367,7 +367,7 @@ nằm ở [`demo-execution.md`](demo-execution.md). Tóm tắt ranh giới:
 
 Trạng thái hiện tại của đường demo: tester đã chạy 31 ENTRY/31 EXIT lệnh demo thật; trên tài khoản demo
 thì EA đang `WAITING_FOR_SETUP` và **chưa có ENTRY nào do chiến lược**
-([`../v2/EVIDENCE.md`](../v2/EVIDENCE.md) §2.3–§2.4).
+([`../v2/EVIDENCE.md`](../20-operations/evidence.md) §2.3–§2.4).
 
 ---
 
@@ -418,7 +418,7 @@ thì EA đang `WAITING_FOR_SETUP` và **chưa có ENTRY nào do chiến lược*
 | `drawdown` / `max_dd` | Mực sụt giảm so với đỉnh cân bằng, tính bằng % |
 | `HALTED` | RiskGuard đã ngắt bot vì vượt ngưỡng (vd `InpMaxDrawdownPct=5.0`) |
 | dry-run | Bot log ý định nhưng không gửi lệnh |
-| quirk `Q2`, `Q11` | Hành vi gốc của Pine được port giữ nguyên; xem [`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) §16 |
+| quirk `Q2`, `Q11` | Hành vi gốc của Pine được port giữ nguyên; xem [`../indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) §16 |
 
 ---
 
@@ -426,12 +426,12 @@ thì EA đang `WAITING_FOR_SETUP` và **chưa có ENTRY nào do chiến lược*
 
 | Muốn gì | Đọc |
 |---|---|
-| Hiểu từng khối của con bot, mọi tham số, cách ghép AI | [`ea-anatomy-and-ai.md`](ea-anatomy-and-ai.md) |
-| Hiểu preset/input từng bot | [`../v2/CONFIGURATION.md`](../v2/CONFIGURATION.md), [`strategy-tester.md`](strategy-tester.md) §4 |
-| Hiểu RiskGuard, sizing, trailing | [`../v2/RISK_MODEL.md`](../v2/RISK_MODEL.md) |
-| Chạy hàng loạt bằng lệnh, không bấm chuột | [`strategy-tester.md`](strategy-tester.md) + `reports\build\tester-run\run_tester.ps1` |
-| Kiểm môi trường/tổng quan cài đặt | [`install-and-test.md`](install-and-test.md), [`toolchain.md`](toolchain.md) |
-| Đường demo execution chi tiết | [`demo-execution.md`](demo-execution.md) |
-| Lỗi chuyên sâu hơn | [`../v2/TROUBLESHOOTING.md`](../v2/TROUBLESHOOTING.md) |
-| Chiến lược sau lưng bot | [`../v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md`](../v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md), [`../indicators/price-action-mtf.md`](../indicators/price-action-mtf.md) |
-| Bằng chứng nào đã chạy thật | [`../v2/TEST_REPORT.md`](../v2/TEST_REPORT.md), [`../v2/EVIDENCE.md`](../v2/EVIDENCE.md) |
+| Hiểu từng khối của con bot, mọi tham số, cách ghép AI | [`ea-anatomy-and-ai.md`](../10-bots/ea-anatomy.md) |
+| Hiểu preset/input từng bot | [`../v2/CONFIGURATION.md`](../20-operations/presets.md), [`strategy-tester.md`](../20-operations/strategy-tester.md) §4 |
+| Hiểu RiskGuard, sizing, trailing | [`../v2/RISK_MODEL.md`](../30-research/risk.md) |
+| Chạy hàng loạt bằng lệnh, không bấm chuột | [`strategy-tester.md`](../20-operations/strategy-tester.md) + `reports\build\tester-run\run_tester.ps1` |
+| Kiểm môi trường/tổng quan cài đặt | [`install-and-test.md`](../20-operations/install.md), [`toolchain.md`](../20-operations/toolchain.md) |
+| Đường demo execution chi tiết | [`demo-execution.md`](../20-operations/demo-execution.md) |
+| Lỗi chuyên sâu hơn | [`../v2/TROUBLESHOOTING.md`](../20-operations/troubleshooting.md) |
+| Chiến lược sau lưng bot | [`../v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md`](../10-bots/pa-trendrider.md), [`../indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) |
+| Bằng chứng nào đã chạy thật | [`../v2/TEST_REPORT.md`](../20-operations/evidence.md), [`../v2/EVIDENCE.md`](../20-operations/evidence.md) |

@@ -29,7 +29,7 @@ Nội dung:
   dùng tự đăng nhập tài khoản demo và bật `InpEnableExecution`; xem
   [`demo-execution.md`](demo-execution.md).
 
-Ranh giới thực thi: [`decisions/0003-demo-execution-scope.md`](../decisions/0003-demo-execution-scope.md).
+Ranh giới thực thi: [`decisions/0003-demo-execution-scope.md`](../90-decisions/0003-demo-execution-scope.md).
 
 ### 1. Điều kiện
 
@@ -420,7 +420,7 @@ TM Indicator 2 có 118 input, vượt giới hạn 63 tham số của `iCustom`,
 
 ### 9. So sánh với Pine
 
-Xem [`PINE_PARITY_Wonderwhales.md`](../indicators/parity.md).
+Xem [`PINE_PARITY_Wonderwhales.md`](../30-research/indicators/parity.md).
 
 ```powershell
 .venv\Scripts\python.exe scripts\compare_pine_exports.py `
@@ -436,7 +436,7 @@ Không có CSV reference thật thì ghi `BLOCKED`; không tạo CSV giả.
 
 #### 9.1 Parity đa nguồn
 
-Xem [`PINE_PARITY_MULTI_SOURCE.md`](../indicators/parity.md).
+Xem [`PINE_PARITY_MULTI_SOURCE.md`](../30-research/indicators/parity.md).
 
 ```powershell
 .venv\Scripts\python.exe scripts\compare_multi_signal_exports.py `
@@ -898,7 +898,7 @@ Các lệnh dưới đây chạy trong `.venv` (Python 3.11.9) tại thư mục 
 | `.venv\Scripts\python.exe -m pip check` | `No broken requirements found.` |
 | Import numpy/pandas/sklearn/matplotlib/pytest | Thành công; matplotlib cảnh báo không ghi được cache mặc định `%LOCALAPPDATA%\matplotlib` và tạo cache tạm trong repo |
 
-Chi tiết đầy đủ, bao gồm lệnh và danh sách file: [`phase-reports/phase-0.md`](../archive/v1/phase-reports/phase-0.md).
+Chi tiết đầy đủ, bao gồm lệnh và danh sách file: [`phase-reports/phase-0.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-0.md).
 
 #### Ghi chú môi trường
 
@@ -934,7 +934,7 @@ Không tuyên bố đã compile hoặc backtest thành công nếu chưa thực 
 
 MetaEditor CLI trong môi trường này trả exit code 1 dù biên dịch thành công. Quy tắc: luôn đọc nội dung
 log, không kết luận chỉ từ exit code. Strategy Tester **chưa chạy**; quy trình thủ công ở mục 4 và
-`mt5/README.md`. Chi tiết Phase 1: [`phase-reports/phase-1.md`](../archive/v1/phase-reports/phase-1.md).
+`mt5/README.md`. Chi tiết Phase 1: [`phase-reports/phase-1.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-1.md).
 
 ### 6. Kết quả Python Phase 3 (đã chạy thực tế)
 
@@ -946,7 +946,7 @@ log, không kết luận chỉ từ exit code. Strategy Tester **chưa chạy**;
 | CLI trên file có timestamp trùng | Exit code **2**; 1 error (`duplicate_timestamps`); ghi JSON + CSV |
 
 `pyarrow` cần cho Parquet; nếu môi trường khác thiếu package này, loader báo lỗi rõ và test Parquet
-được skip. Chi tiết: [`phase-reports/phase-3.md`](../archive/v1/phase-reports/phase-3.md).
+được skip. Chi tiết: [`phase-reports/phase-3.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-3.md).
 
 ### 7. Kết quả Python Phase 4 (đã chạy thực tế)
 
@@ -962,7 +962,7 @@ log, không kết luận chỉ từ exit code. Strategy Tester **chưa chạy**;
 | CLI với `outputs.plot: true` | Exit code **0**; tạo `equity.png` |
 
 Artifact mẫu nằm ở `reports/backtests/demo-ema-cross-synthetic/` (gitignored). Chi tiết giả định mô phỏng:
-[`testing-guide.md`](../reference/testing.md); báo cáo phase: [`phase-reports/phase-4.md`](../archive/v1/phase-reports/phase-4.md).
+[`testing-guide.md`](../30-research/testing.md); báo cáo phase: [`phase-reports/phase-4.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-4.md).
 
 ### 8. Kết quả Phase 5 (đã chạy thực tế)
 
@@ -979,7 +979,7 @@ Artifact mẫu nằm ở `reports/backtests/demo-ema-cross-synthetic/` (gitignor
 
 `LabSignalExport.mq5` **chưa được chạy** trong terminal; chỉ compile. Không có file
 `parity_signals_mql5.csv` thật trong repo. Vì vậy chưa có kết luận tương đương MQL5/Python. Quy trình thủ
-công: [`parity.md`](../reference/parity.md); báo cáo phase: [`phase-reports/phase-5.md`](../archive/v1/phase-reports/phase-5.md).
+công: [`parity.md`](../30-research/parity.md); báo cáo phase: [`phase-reports/phase-5.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-5.md).
 
 ### 9. Kết quả Phase 6 (đã chạy thực tế)
 
@@ -1002,8 +1002,8 @@ Database demo: `experiments/phase6-demo.sqlite` (gitignored). Report so sánh:
 `reports/comparisons/phase6-demo-a__vs__phase6-demo-b/` và
 `reports/comparisons/phase6-demo-a__vs__phase6-demo-alt/` (gitignored). Mọi kết quả là synthetic và
 worktree đang dirty, nên so sánh chỉ xác nhận cơ chế tái lập/metadata, không phải bằng chứng hiệu năng.
-Chi tiết: [`experiment-store.md`](../reference/experiment-store.md); báo cáo phase:
-[`phase-reports/phase-6.md`](../archive/v1/phase-reports/phase-6.md).
+Chi tiết: [`experiment-store.md`](../30-research/experiment-store.md); báo cáo phase:
+[`phase-reports/phase-6.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-6.md).
 
 ### 10. Kết quả Phase 7 (đã chạy thực tế)
 
@@ -1020,8 +1020,8 @@ Chi tiết: [`experiment-store.md`](../reference/experiment-store.md); báo cáo
 `scikit-learn 1.9.1`, `numpy 2.4.6`, `pandas 2.3.3` đã có và được pin từ Phase 0; Phase 7 không cài
 thêm dependency. Dataset/report ML nằm ở `datasets/samples/synthetic_ml_demo.csv` và
 `reports/ml/demo-phase7-ml/` (report bị gitignore). Kết quả synthetic yếu, chiến lược ML lỗ sau chi phí
-và kém buy & hold; không phải kết quả thị trường. Chi tiết: [`ml-baseline.md`](../reference/ml-baseline.md); báo cáo
-phase: [`phase-reports/phase-7.md`](../archive/v1/phase-reports/phase-7.md).
+và kém buy & hold; không phải kết quả thị trường. Chi tiết: [`ml-baseline.md`](../30-research/ml-baseline.md); báo cáo
+phase: [`phase-reports/phase-7.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-7.md).
 
 Kết quả ONNX và giới hạn runtime MT5 được ghi ở mục 11.
 
@@ -1039,8 +1039,8 @@ Kết quả ONNX và giới hạn runtime MT5 được ghi ở mục 11.
 `onnx`/`onnxruntime` chỉ dùng cho export và kiểm chứng offline trong venv; không cài system-wide.
 Artifact ONNX nằm ở `models/candidates/demo-phase7-ml/` (gitignored). EA **chưa chạy** trong MT5
 terminal/Strategy Tester, nên ONNX Runtime trong MT5 và parity runtime vẫn chưa được xác minh; Phase 8
-giữ `READY_FOR_MANUAL_VALIDATION`. Quy trình thủ công: [`onnx-inference.md`](../reference/onnx.md); báo cáo
-phase: [`phase-reports/phase-8.md`](../archive/v1/phase-reports/phase-8.md).
+giữ `READY_FOR_MANUAL_VALIDATION`. Quy trình thủ công: [`onnx-inference.md`](../30-research/onnx.md); báo cáo
+phase: [`phase-reports/phase-8.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-8.md).
 
 ### 12. Kết quả Phase 9 (đã chạy thực tế)
 
@@ -1059,10 +1059,10 @@ phase: [`phase-reports/phase-8.md`](../archive/v1/phase-reports/phase-8.md).
 
 Database demo: `experiments/phase9-demo.sqlite` (gitignored), hai row `demo-phase9-backtest` và
 `demo-phase9-ml` ở trạng thái `completed`. Report và database bị gitignore; bản sao báo cáo đã lược
-đường dẫn nằm ở [`phase-reports/phase-9-sample-report.md`](../archive/v1/phase-reports/phase-9-sample-report.md).
+đường dẫn nằm ở [`phase-reports/phase-9-sample-report.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-9-sample-report.md).
 Tái lập đã xác minh trên snapshot commit sạch tạm thời (116 file, commit `d3a9ea39…`, `git status`
 rỗng); cần lặp lại ngắn sau commit chính thức để gắn với commit hash repository. Chi tiết:
-[`end-to-end.md`](../reference/pipeline.md); báo cáo phase: [`phase-reports/phase-9.md`](../archive/v1/phase-reports/phase-9.md).
+[`end-to-end.md`](../30-research/pipeline.md); báo cáo phase: [`phase-reports/phase-9.md`](../99-archive/MT5_EA_Lab_V1/phase-reports/phase-9.md).
 
 ### 13. Kết quả trailing stop (đã chạy thực tế)
 
@@ -1073,7 +1073,7 @@ rỗng); cần lặp lại ngắn sau commit chính thức để gắn với com
 | `.venv\Scripts\python.exe scripts\run_backtest.py --config configs\backtest.example.yaml` | Exit code **0**; baseline không trailing giữ nguyên: 8 bar, 1 trade, net +294,60 |
 
 Dữ liệu là synthetic; kết quả chỉ kiểm tra cơ chế, không phải hiệu năng thị trường. Chi tiết quy tắc và
-giới hạn: [`trailing-stop.md`](../reference/trailing-stop.md).
+giới hạn: [`trailing-stop.md`](../30-research/trailing-stop.md).
 
 ### 14. Kết quả bounded DCA/grid (đã chạy thực tế)
 
@@ -1090,7 +1090,7 @@ Dữ liệu là synthetic; cả hai demo đều lỗ sau chi phí, chỉ kiểm 
 năng thị trường. Loss cap là lỗ ròng; demo grid cho thấy cap 20 giữ được lỗ thực tế ở mức 20,000000000001123
 và `loss_cap_overshoot = 0`. Report nằm trong `reports/backtests/demo-bounded-dca-synthetic/` và
 `reports/backtests/demo-bounded-grid-synthetic/` (gitignored). Chi tiết quy tắc, công thức và giới hạn:
-[`bounded-basket.md`](../reference/bounded-basket.md).
+[`bounded-basket.md`](../30-research/bounded-basket.md).
 
 ### 15. Đồng bộ và compile trong MT5 EXNESS (2026-10-28)
 
@@ -1105,7 +1105,7 @@ và `loss_cap_overshoot = 0`. Report nằm trong `reports/backtests/demo-bounded
 - **Chưa** đăng nhập tài khoản, chưa chạy script, chưa chạy Strategy Tester và chưa xác minh ONNX runtime;
   các bước thủ công tiếp theo ở `guide.md`.
 - Không bật execution: `LabSignalEA` là signal-only, 0 trade là đúng; ranh giới này ghi ở
-  [`decisions/0002-execution-boundary.md`](../decisions/0002-execution-boundary.md).
+  [`decisions/0002-execution-boundary.md`](../90-decisions/0002-execution-boundary.md).
 - Log compile nằm ở `reports/mt5/*.compile.log` (gitignored).
 
 ## Track C — PATrendRider XAU v1 (simulation-only)
@@ -1114,9 +1114,9 @@ và `loss_cap_overshoot = 0`. Report nằm trong `reports/backtests/demo-bounded
   `configs/sim/pa_trendrider_xau.json`, include `mt5/Include/TrendRider/*.mqh`.
 - **Nguyên tắc:** EA phân tích nến đóng H1/M15/M5, mở **một vị thế ảo** trong bộ nhớ và ghi CSV; không
   gửi lệnh, không đọc tài khoản/broker, không lưu credential.
-- **Đặc tả hiện hành:** [`../v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md`](../v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md).
-  Bản lưu trữ: [`../archive/v1/PA_TrendRider_XAU_V1_Specification_Vietnamese.md`](../archive/v1/PA_TrendRider_XAU_V1_Specification_Vietnamese.md)
-  và [`../archive/v1/PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](../archive/v1/PA_TrendRider_XAU_V1_Implementation_Vietnamese.md).
+- **Đặc tả hiện hành:** [`../v2/STRATEGIES/PA_TRENDRIDER_XAU_V1.md`](../10-bots/pa-trendrider.md).
+  Bản lưu trữ: [`../archive/v1/PA_TrendRider_XAU_V1_Specification_Vietnamese.md`](../99-archive/MT5_EA_Lab_V1/PA_TrendRider_XAU_V1_Specification_Vietnamese.md)
+  và [`../archive/v1/PA_TrendRider_XAU_V1_Implementation_Vietnamese.md`](../99-archive/MT5_EA_Lab_V1/PA_TrendRider_XAU_V1_Implementation_Vietnamese.md).
 
 ### 1. Kiểm tra tĩnh và compile
 
