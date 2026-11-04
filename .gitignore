@@ -77,3 +77,6 @@ Thumbs.db
 
 # Node (repo không có mã JS)
 node_modules/
+
+# Superpowers / agent scratch workspace
+.superpowers/
