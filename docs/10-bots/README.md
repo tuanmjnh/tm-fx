@@ -3,7 +3,7 @@
 Dự án có **15 EA** trong `mt5/Experts/`: 5 EA demo (gửi lệnh thật trên tài khoản demo qua
 `mt5/Include/Exec/*`), 6 EA mô phỏng (vị thế ảo, không API lệnh), 3 EA tín hiệu và 1 EA inference ONNX.
 Trạng thái bằng chứng ghi theo nhãn dự án (`PASS` / `PARTIAL` / `NOT_RUN` / `UNPROVEN`); định nghĩa nhãn
-xem `docs/PROGRESS.md` và (sắp có) `20-operations/evidence.md`.
+xem `docs/PROGRESS.md` và `20-operations/evidence.md`.
 
 | EA | kind | magic | preset | trang | trạng thái |
 |---|---|---|---|---|---|

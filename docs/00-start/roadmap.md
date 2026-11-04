@@ -10,7 +10,7 @@ hành vi trong mô phỏng; không kết quả nào là cam kết lợi nhuận 
 
 | Mảng | Nhãn | Một câu |
 |---|---|---|
-| Tài liệu | `PARTIAL` | Cây mới `00-start`…`99-archive` đã có entry layer, 8 ADR và link checker; phần viết lại link toàn repo (Task 10) chưa chạy nên cổng link-check chưa xanh. |
+| Tài liệu | `PASS` | Cây mới `00-start`…`99-archive` đã có entry layer, 8 ADR và link checker; cây đã hoàn chỉnh sau reorg và cổng link-check xanh (`check_docs_links.py` → `broken=0`, §70.2). |
 | PATrendRider XAU v1 (demo) | `PARTIAL` | Đường lệnh có bằng chứng tester thật (`pa_trendrider_demo_exec`: 28 ENTRY/28 EXIT, `config_hash=6B439450`); chưa có `ENTRY` nào do chiến lược tạo trên tài khoản demo. |
 | Grid (demo) | `NOT_RUN` | EA + preset + validator sẵn sàng theo ADR 0004; chưa có journal demo/tester nào của bot. |
 | DCA (demo) | `NOT_RUN` | EA + preset + validator sẵn sàng theo ADR 0004; chưa có journal demo/tester nào của bot. |
@@ -21,7 +21,7 @@ hành vi trong mô phỏng; không kết quả nào là cam kết lợi nhuận 
 | ML/ONNX | `PARTIAL` | ML baseline + export ONNX + runtime MQL5 chạy được (24/24 hàng fixture); parity Track B vẫn `BLOCKED` vì thiếu CSV reference từ Pine. |
 | Demo execution (hạ tầng) | `PASS` | `ExecBroker` + `ExecGuard` + kill switch + magic duy nhất đã được probe demo thật xác nhận (`ExecDemoProbe`: BUY 0.01 XAUUSDm, đóng trong 103 ms). |
 | Demo execution (chiến lược) | `NOT_RUN` | Chưa có phiên demo thật nào ghi `ENTRY` do chính chiến lược bot tạo ra. |
-| Cổng (gate) | `PARTIAL` | `validate-project.py` và `validate_demo_execution.py` xanh; link checker mới nối vào gate, chưa xanh toàn repo cho tới khi link rewrite xong. |
+| Cổng (gate) | `PASS` | `validate-project.py` → `checks=15 fail=0`; `validate_demo_execution.py` → `checks=13 fail=0`; 6 validator indicator xanh; `check_docs_links.py` → `broken=0`; `pytest` → `436 passed` (§70.2). |
 | Lợi nhuận mọi chiến lược | `UNPROVEN` | Mọi số net là đơn vị mô hình trên dữ liệu backtest/mô phỏng; nhãn này đứng yên cho tới khi có forward test dài hơn. |
 
 Mười EA lab (6 sim + 3 signal + 1 inference) giữ nhãn riêng trong
@@ -55,13 +55,13 @@ chốt trạng thái hiện tại. Định nghĩa đủ 9 nhãn: [`glossary.md`]
 | 5 EA demo compile + đăng ký validator/preset | Build 0 errors, 0 warnings (build 6292); preset JSON trong `configs/demo/` |
 | Strategy Tester cho PA + WW demo exec | `pa_trendrider_demo_exec`, `ww_demo_exec` — CSV + `.htm` + journal 18 cột lưu trong `reports/build/tester-reports/` |
 | Tái cấu trúc tài liệu theo mục đích | ADR 0008; cây `00-start`…`99-archive`, entry layer, link checker `scripts/check_docs_links.py` |
+| Viết lại link toàn repo, cổng link-check xanh | Rewrite link theo `docs/99-archive/LINK_MAP.md`; checker nối vào `validate-project.py`; `check_docs_links.py` → `broken=0 external=0 checked=397`, `validate-project.py` → `checks=15 fail=0` (PROGRESS §70.2) |
 | Research mã nguồn mở | 7/7 repo có commit SHA + license, 0 `USE` (PROGRESS mục GitHub audit) |
 
 **Đang dở** (một phần acceptance criteria đã kiểm, phần còn lại ghi rõ):
 
 | Việc | Đã kiểm | Chưa kiểm |
 |---|---|---|
-| Tái cấu trúc tài liệu (phase A) | Cây mới, 8 ADR, entry layer, Task 5–8 viết trang bot/operations/research/archive | Viết lại link toàn repo, cổng link-check xanh |
 | Chuẩn hoá input (phase B) | Đặc tả duyệt + bảng gap đã quét từ source 2026-11-03 trong `../10-bots/input-convention.md` | Sửa 5 EA demo theo 6 nhóm input, mỗi EA một commit |
 | Demo forward | Hạ tầng chạy được, probe PASS, tester PA/WW có lệnh | `ENTRY` demo do chiến lược của từng bot trên tài khoản demo |
 | Parity Pine ↔ MQL5 | Comparator + test PASS trên dữ liệu tổng hợp | CSV reference thật xuất từ Pine — thiếu là `BLOCKED`, không tạo CSV giả |
@@ -76,15 +76,16 @@ chốt trạng thái hiện tại. Định nghĩa đủ 9 nhãn: [`glossary.md`]
 
 ## 3. Ba phase tiếp theo
 
-### Phase A — Tái cấu trúc tài liệu (đang chạy)
+### Phase A — Tái cấu trúc tài liệu (xong)
 
-Phần còn lại của reorg: viết lại link trong toàn bộ tài liệu hiện hành trỏ về cây mới (bản ánh xạ
-`docs/99-archive/LINK_MAP.md`), rồi làm cổng xanh.
+Đã hoàn tất phần còn lại của reorg: viết lại link trong toàn bộ tài liệu hiện hành trỏ về cây mới (bản ánh xạ
+`docs/99-archive/LINK_MAP.md`), cổng link-check đã xanh.
 
 - **Việc:** rewrite link cũ (`v2/`, `archive/`, đường dẫn tuyệt đối) theo LINK_MAP; không đụng
   `PROGRESS.md` và `99-archive/` (cả hai được miễn kiểm link vì là lịch sử bất biến).
-- **Xong khi:** `python scripts\check_docs_links.py` → `broken=0`; `python scripts\validate-project.py`
-  → `fail=0`; `python -m pytest` → `0 failed` — cả ba ghi vào `../PROGRESS.md` ở lần chạy mới nhất.
+- **Xong khi (đã đạt):** `python scripts\check_docs_links.py` → `broken=0`; `python scripts\validate-project.py`
+  → `fail=0`; `python -m pytest` → `0 failed` — cả ba đã đạt ở lần chạy mới nhất ghi trong `../PROGRESS.md`
+  (§70.2: `broken=0 external=0 checked=397`, `checks=15 fail=0`, `436 passed`).
 - **Chống mục tiêu:** không tạo thêm một "bộ tài liệu v4"; không "sửa" link chết bằng cách trỏ tất cả
   về `99-archive/`; không tắt check trong validator để cổng xanh.
 
