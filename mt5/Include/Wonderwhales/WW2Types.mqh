@@ -39,6 +39,7 @@ struct Ww2Signal
    double fast_ema;
    double slow_ema;
    double ema200;
+   double open;
    double close;
   };
 

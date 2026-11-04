@@ -140,8 +140,8 @@ có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRES
   mọi lệnh có **SL và TP** (TP = 1.5R), volume ≤ `InpMaxExposure` và lỗ ≤ budget, kết thúc bằng HALT
   `max_drawdown_reached|dd=5.00%` đóng vị thế (`RISK_HALT`).
 - **Đường gửi lệnh + trailing (Swing):** scenario `ww2_swing_demo_exec` (parity off, lịch sử từ 2018 để có
-  W1/D1 EMA200) → **16 ENTRY / 16 EXIT**, **9 TRAIL** (BE ở r≈1.0, structure ở r≈1.3; R luôn ~1.0–1.4,
-  đo từ initial SL), 4 HALT (3 daily loss + 1 drawdown).
+  W1/D1 EMA200) → **16 ENTRY / 16 EXIT**, **10 TRAIL** (BE ở r≈1.0, structure ở r≥1.3; R luôn từ initial
+  SL, ≤ ~1.7), 4 HALT (3 daily loss + 1 drawdown 5.01%).
 - **Hai scenario parity-off chỉ là bằng chứng hạ tầng (`NOT_STRATEGY_RESULT`)**, không phải kết quả chiến
   lược: `net=-442.99` (Scalp) và `net=-292.99` (Swing) với risk tester 1% là số của một cấu hình chưa kiểm
   định, **không** phải cam kết hay đánh giá bot.
@@ -163,4 +163,13 @@ có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRES
   scenario tester Swing vì thế bắt đầu từ 2018. Trên chart demo, cần đủ nến W1/D1 trước khi mong có lệnh.
 - **Sự cố đã sửa (2026-11-04):** `ReconcilePosition` từng ghi đè SL ban đầu bằng SL broker đã trailing làm R
   nổ (287, 471). Đã tách `current_sl` (SL hiện tại) khỏi `initial_sl` (neo R); thêm test `r_ignores_trailed_stop`.
+- **Sửa theo review (2026-11-04):**
+  - Kill switch và risk-halt chạy **trước** warm-up guard (trước đây lệnh quản trị khẩn bị bỏ qua khi thiếu
+    nến). Kill-switch halt được **giải phóng khi khởi động lại** sau khi operator xoá file (các halt khác vẫn dính).
+  - `InpHaltOnBreach=false` giờ có tác dụng: chặn entry nhưng **không** đóng vị thế (vị thế giữ SL/TP broker).
+  - Trailing cấu trúc cộng/trừ `InpTrailBufferAtr × ATR` **ngoài** swing đã xác nhận (trước đây đặt đúng trên swing).
+  - BE/trailing chỉ arm khi **nến quản lý đóng cùng hướng** với vị thế.
+  - Vị thế adopt khi mất state được quản lý **an toàn** (không đoán mode theo Inputs, không suy R từ SL có thể
+    đã trailing) — đúng spec §7.3/§12.18.
+  - Validator giờ ép token `parity_blocked` (cổng parity không thể bị xoá âm thầm mà cổng tĩnh vẫn xanh).
 - Không dùng file này cho tài khoản real; mọi thay đổi cho phép real cần ADR mới.

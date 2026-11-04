@@ -33,6 +33,7 @@ bool Ww2ReadSignal(const int handle,const string symbol,
    out.fast_ema=0.0;
    out.slow_ema=0.0;
    out.ema200=0.0;
+   out.open=0.0;
    out.close=0.0;
 
    if(handle==INVALID_HANDLE)
@@ -86,8 +87,9 @@ bool Ww2ReadSignal(const int handle,const string symbol,
    out.fast_ema=fast_buf[0];
    out.slow_ema=slow_buf[0];
    out.ema200=e200_buf[0];
+   out.open=iOpen(symbol,tf,shift);
    out.close=iClose(symbol,tf,shift);
-   out.valid=(out.close>0.0);
+   out.valid=(out.close>0.0 && out.open>0.0);
    return(out.valid);
   }
 

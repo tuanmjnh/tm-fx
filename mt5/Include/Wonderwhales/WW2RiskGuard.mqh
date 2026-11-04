@@ -262,6 +262,17 @@ public:
       m_halt_reason=reason;
      }
 
+   //--- Clears a halt whose reason starts with `prefix` (used to release a
+   //--- kill-switch halt once the operator removed the file).
+   void ClearHalt(const string prefix)
+     {
+      if(m_halted && StringFind(m_halt_reason,prefix)==0)
+        {
+         m_halted=false;
+         m_halt_reason="";
+        }
+     }
+
    void Reset(void)
      {
       m_peak_equity=0.0;

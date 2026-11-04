@@ -11,6 +11,9 @@
 
 struct Ww2StopInput
   {
+   //--- The management bar must close in the position's direction before any
+   //--- break-even/trailing candidate may arm (spec §2.1/§2.2).
+   bool   allow_arm;
    bool   is_buy;
    double entry;
    double initial_sl;
@@ -46,6 +49,8 @@ double Ww2StopR(const Ww2StopInput &in)
 double Ww2BestStop(const Ww2StopInput &in,string &reason)
   {
    reason="";
+   if(!in.allow_arm)
+      return(0.0);
    const double risk=MathAbs(in.entry-in.initial_sl);
    if(!(risk>0.0))
       return(0.0);

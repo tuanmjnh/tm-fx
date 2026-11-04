@@ -46,8 +46,9 @@ void TestSizer(void)
    double volume=0.0;
    string reason="";
 
-   //--- A budget that cannot afford the minimum lot must be skipped.
-   const bool skip=Ww2SizeVolume(1.0,10.0,0.01,100.0,0.01,10.0,volume,reason);
+   //--- A budget that cannot afford the minimum lot must be skipped
+   //--- (loss_per_lot 200 -> min lot 0.01 would risk 2.0 > budget 1.0).
+   const bool skip=Ww2SizeVolume(1.0,200.0,0.01,100.0,0.01,10.0,volume,reason);
    Check(!skip && volume==0.0,"sizer_min_lot_over_budget_skipped");
 
    //--- Risk 100 with a 10-per-lot loss and 0.01 step -> 10.0 lots, capped at 5.
@@ -101,6 +102,7 @@ void TestRiskGuard(void)
 void TestTrailing(void)
   {
    Ww2StopInput in;
+   in.allow_arm=true;
    in.is_buy=true;
    in.entry=2000.0;
    in.initial_sl=1990.0;
@@ -133,6 +135,12 @@ void TestTrailing(void)
    loosen.structure_sl=1992.0;       // worse than the 1995 stop
    const double none=Ww2BestStop(loosen,reason);
    Check(none==0.0,"trail_never_loosens");
+
+   //--- A management bar that did not close in the position's direction must
+   //--- arm nothing, even above the trigger.
+   Ww2StopInput no_arm=in;
+   no_arm.allow_arm=false;
+   Check(Ww2BestStop(no_arm,reason)==0.0,"trail_requires_closed_bar_agreement");
 
    //--- R always from the initial SL, even after the stop moved.
    Ww2Position pos;

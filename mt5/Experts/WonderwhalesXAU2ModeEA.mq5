@@ -769,18 +769,19 @@ void ReconcilePosition(void)
       g_pos.is_buy=(info.type==POSITION_TYPE_BUY);
       g_pos.entry=info.open_price;
       g_pos.volume=info.volume;
+      //--- The broker's live SL is the best available anchor but may already be
+      //--- trailed, so no R is synthesized and the mode stays unknown: an
+      //--- adopted position is NOT managed with the current InpTradingMode
+      //--- (spec §7.3/§12.18).
       g_pos.initial_sl=info.sl;
-      g_pos.initial_r=MathAbs(info.open_price-info.sl);
+      g_pos.initial_r=0.0;
       g_pos.current_sl=info.sl;
       g_pos.tp=info.tp;
       g_pos.open_time=info.open_time;
-      //--- Mode is unknown for an adopted position; keep SIGNAL_ONLY so no
-      //--- mode-specific trailing runs until the operator confirms.
-      if(g_pos.mode==WW2_SIGNAL_ONLY && InpTradingMode!=WW2_SIGNAL_ONLY)
-         g_pos.mode=InpTradingMode;
+      g_pos.mode=WW2_SIGNAL_ONLY;
       LogEvent("ADOPT",(g_pos.is_buy ? SIM_SIDE_BUY : SIM_SIDE_SELL),
                info.open_price,info.volume,info.open_price,info.sl,info.tp,
-               "adopted_position_from_broker|mode="+Ww2ModeName(g_pos.mode));
+               "adopted_position_from_broker|mode_unknown_manage_safely");
       SaveState();
       return;
      }
@@ -1045,6 +1046,8 @@ void TrailPosition(const datetime bar_time)
   {
    if(!InpEnableExecution)
       return;
+   if(!(g_pos.mode==WW2_SCALP || g_pos.mode==WW2_SWING))
+      return;
    const bool is_buy=g_pos.is_buy;
    const ENUM_TIMEFRAMES strike=StrikeTimeframe(g_pos.mode);
    Ww2Signal sig;
@@ -1056,10 +1059,18 @@ void TrailPosition(const datetime bar_time)
    if(bid<=0.0 || ask<=0.0)
       return;
 
+   const double ref_price=(is_buy ? bid : ask);
+   const double atr_price=(sig.atr_pct>0.0 ? ref_price*(sig.atr_pct/100.0) : 0.0);
+
    bool have_struct=false;
    double struct_sl=0.0;
    if(InpEnableStructureTrail)
       ResolveSwing(is_buy,strike,have_struct,struct_sl);
+   //--- Structure trailing sits BEYOND the confirmed swing by the ATR buffer
+   //--- (spec §2.1/§2.2), not exactly on the swing.
+   if(have_struct && atr_price>0.0)
+      struct_sl=(is_buy ? struct_sl-InpTrailBufferAtr*atr_price
+                        : struct_sl+InpTrailBufferAtr*atr_price);
 
    //--- The current stop comes from the broker, not from memory: a manual or
    //--- broker-side change must be respected before proposing a new SL.
@@ -1068,6 +1079,9 @@ void TrailPosition(const datetime bar_time)
                           ? info.sl : g_pos.initial_sl;
 
    Ww2StopInput in;
+   //--- Break-even/trailing arm only when the management bar closed in the
+   //--- position's direction (spec §2.1/§2.2).
+   in.allow_arm=(is_buy ? (sig.close>=sig.open) : (sig.close<=sig.open));
    in.is_buy=is_buy;
    in.entry=g_pos.entry;
    in.initial_sl=g_pos.initial_sl;
@@ -1132,6 +1146,15 @@ void ManagePosition(const datetime bar_time)
          CloseAtMarket(StringFormat("MAX_HOLDING_BARS|bars=%d",(int)bars_held));
          return;
         }
+     }
+
+   //--- A position with an unknown mode (adopted without state) is protected by
+   //--- its broker SL/TP only: no mode-specific exit or trailing runs.
+   const bool mode_known=(g_pos.mode==WW2_SCALP || g_pos.mode==WW2_SWING);
+   if(!mode_known)
+     {
+      EnsureStops();
+      return;
      }
 
    //--- Read the strike timeframe for the STORED mode (not the current input).
@@ -1288,6 +1311,14 @@ int OnInit(void)
       { /* no halt on first refresh */ }
    SyncHalt();
 
+   //--- A kill-switch halt is released once the operator removed the file and
+   //--- restarted (ADR 0009 recovery); every other halt stays sticky.
+   if(!FileIsExist(InpKillSwitchFile))
+     {
+      g_guard.ClearHalt("kill_switch_active");
+      SyncHalt();
+     }
+
    if(InpEnableLog)
      {
       if(!g_logger.Open(InpLogFile,error))
@@ -1351,9 +1382,6 @@ void OnDeinit(const int reason)
 
 void OnTick(void)
   {
-   if(Bars(_Symbol,_Period)<InpWarmupBars+5)
-      return;
-
    const double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
    const double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
    if(bid<=0.0 || ask<=0.0)
@@ -1374,11 +1402,25 @@ void OnTick(void)
    SyncHalt();
    if(g_halted)
      {
-      if(g_pos.have)
+      const datetime halt_bar=iTime(_Symbol,_Period,0);
+      const bool halt_new=(halt_bar!=g_last_bar);
+      if(halt_new)
+         g_last_bar=halt_bar;
+      //--- InpHaltOnBreach=true (default) promotes a guard breach to a full
+      //--- halt and flatten. When false, entries stay blocked but the position
+      //--- keeps its broker SL/TP and its management.
+      if(InpHaltOnBreach && g_pos.have)
          CloseAtMarket("RISK_HALT");
+      else if(g_pos.have && halt_new)
+         ManagePosition(halt_bar);
       UpdatePanel(bid,ask);
       return;
      }
+
+   //--- Signal-based work needs enough closed history; the emergency controls
+   //--- above already ran.
+   if(Bars(_Symbol,_Period)<InpWarmupBars+5)
+      return;
 
    const datetime bar_time=iTime(_Symbol,_Period,0);
    const bool new_bar=(bar_time!=g_last_bar);

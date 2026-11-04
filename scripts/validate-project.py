@@ -389,6 +389,7 @@ def check_exec_structure(root: Path) -> list[str]:
             "InpMaxPositions",
             "InpMaxExposure",
             "InpRequireParity",
+            "parity_blocked",
         ),
     }
     for relative, kind in DEMO_EAS.items():

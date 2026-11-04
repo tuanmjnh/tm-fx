@@ -360,6 +360,7 @@ def check_demo_ea(root: Path, relative: str = DEMO_EA) -> list[str]:
             "ExecStopsRespectBroker",
             "WonderwhalesContract.mqh",
             "Ww2BestStop",
+            "parity_blocked",
         ):
             if token not in text:
                 issues.append(f"WonderwhalesXAU2ModeEA must use {token}")

@@ -3847,8 +3847,8 @@ InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đón
   (TP = 1.5R), volume ≤ `InpMaxExposure`, lỗ ≤ budget; kết thúc HALT `max_drawdown_reached|dd=5.00%`.
   `net=-442.99`.
 - `ww2_swing_demo_exec` (parity off, XAUUSDm H1, 2018.01.01→2026.10.01 để có W1/D1 EMA200): **16 ENTRY /
-  16 EXIT**, **9 TRAIL** (BE ở r≈1.0, structure ở r≈1.3), 4 HALT (3 daily loss + 1 drawdown 5.03%).
-  `net=-292.99`.
+  16 EXIT**, **10 TRAIL** (BE ở r≈1.0, structure ở r≥1.3; R ≤ ~1.7), 4 HALT (3 daily loss + 1 drawdown
+  5.01%). `net=-290.41` (số liệu sau khi sửa review ở §71.7).
 
 ### 71.4 Sự cố đã sửa trong lúc kiểm chứng
 
@@ -3869,3 +3869,30 @@ InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đón
 
 - Không sửa `WonderwhalesDemoEA` / `WonderwhalesSimEA` / `configs/sim/*` / `99-archive/**`; không nâng nhãn
   của 5 bot cũ; `PROGRESS.md` chỉ ghi thêm.
+
+### 71.7 Sửa theo review toàn nhánh (2026-11-04)
+
+Review độc lập (một subagent, đọc cả nhánh `e9dd488..HEAD`) trả về 8 phát hiện mức **Important** — đã sửa
+trong **một** lượt, compile lại 0/0 và chạy lại tester Swing/Scalp:
+
+1. Kill switch và risk-halt bị warm-up guard che (lệnh khẩn không chạy khi thiếu nến) → đưa khối khẩn lên
+   trước guard warm-up.
+2. `WW2CoreTests` vector min-lot sai (risk 1 / loss-per-lot 10 → không hề vượt budget) → đổi thành loss-per-lot
+   200; kiểm chứng bằng mirror Python (vector cũ **RED**, mới **GREEN**).
+3. Vị thế adopt khi mất state bị quản lý theo `InpTradingMode` hiện tại và suy R từ SL đã trailing → giữ mode
+   `SIGNAL_ONLY` (không trailing theo mode), không suy R (spec §7.3/§12.18).
+4. Trailing cấu trúc thiếu buffer ATR → cộng/trừ `InpTrailBufferAtr × ATR` ngoài swing (spec §2.1/§2.2).
+5. BE/trailing arm chỉ theo R, chưa chờ nến đóng cùng hướng → thêm `allow_arm` (nến quản lý đóng cùng hướng);
+   thêm test vector.
+6. Kill-switch halt dính vĩnh viễn dù đã xoá file + restart (trái mô tả trong preset) → giải phóng
+   `kill_switch_active` ở `OnInit` khi file không còn; halt khác vẫn dính.
+7. Cổng parity không được validator bảo vệ (xoá code vẫn xanh) → ép token `parity_blocked` trong cả hai validator.
+8. `InpHaltOnBreach` khai báo nhưng chưa dùng → tôn trọng: `false` thì chặn entry nhưng không đóng vị thế.
+
+10 phát hiện **Minor** được ghi nhận và **hoãn** (timeframe field ghi mode thay vì period; `DrawdownPct()`
+trả 0; `Ww2IndicatorReady` không dùng; chuỗi thua reset theo ngày vs theo lệnh; `InpMaxHoldingBars` đo theo
+chart TF; thiếu log SL bị từ chối; freeze level chưa xử lý; `initial_r` chết; include `SimRiskGuard` thừa).
+
+Sau khi sửa: `deploy` 0/0; Swing **16 ENTRY/EXIT, 10 TRAIL** (R ≤ ~1.7), Scalp **6 ENTRY/EXIT** (journal
+sha không đổi); cổng `validate-project 15/0`, `validate_demo_execution 14/0`, `check_docs_links 0/413`,
+`pytest 439 passed`.
