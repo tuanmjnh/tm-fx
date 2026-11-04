@@ -3810,3 +3810,62 @@ InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đón
   `MQL5\Files\infinite_runner_demo_state.csv` **chưa xóa**.
 - Chạy lại tester IR để lấy bằng chứng sau chẩn đoán "vị thế lạc chiếm slot": **`NOT_RUN`**.
 - Nhãn lợi nhuận của cả 5 bot demo vẫn là `UNPROVEN`; không có kết luận mới về hiệu quả chiến lược.
+
+---
+
+## 71. Wonderwhales XAU 2-mode — bot demo thứ sáu (ADR 0009) — 2026-11-04
+
+### 71.1 Việc đã làm
+
+- Nhánh `feat/wonderwhales-xau-2mode-ea` (chưa push, chưa merge). Đặc tả
+  `docs/10-bots/Wonderwhales_XAU_EA_2Mode_Spec_Vietnamese.md` lên **v2.2** (chốt S1–S4); thiết kế
+  `docs/superpowers/specs/2026-11-04-wonderwhales-2mode-ea-design.md`; kế hoạch
+  `docs/superpowers/plans/2026-11-04-wonderwhales-2mode-ea.md`.
+- EA mới `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` (magic `25008001`, một magic, hai chế độ Scalp/Swing,
+  mode lưu theo từng lệnh) + 10 module `mt5/Include/Wonderwhales/WW2*.mqh` + test thuần logic
+  `mt5/Scripts/WW2CoreTests.mq5`.
+- Đăng ký: ADR 0009, preset `configs/demo/wonderwhales_xau_2mode_demo.json` (71 key khớp EA),
+  `sim_configs.py` (spec input + `DEMO_EA_NAMES` + cross-check), `validate-project.py` (kind `ww_2mode`,
+  `EXEC_SOURCES`, `REQUIRED_FILES`, nhánh preset), `validate_demo_execution.py` (nhánh guardrail + ADR 0009),
+  `python/tests/test_demo_execution.py`, catalog `docs/10-bots/README.md` (16 EA), trang
+  `docs/10-bots/wonderwhales-2mode.md`, index ADR, `input-convention.md`, `demo-execution.md`.
+
+### 71.2 Cổng khi kết thúc
+
+- `deploy_pineport.ps1 -Apply -Force` → `DEPLOY_OK`, **0 errors / 0 warnings** (EA + `WW2CoreTests`).
+- `validate-project.py` → `checks=15 fail=0`.
+- `validate_demo_execution.py` → `checks=14 fail=0` (13→14, thêm guardrail bot thứ sáu).
+- `check_docs_links.py` → `broken=0 external=0 checked=413`.
+- `pytest` → **439 passed** (436→439, +3 case tham số cho EA thứ sáu).
+
+### 71.3 Bằng chứng Strategy Tester (headless, `terminal64.exe /config:`)
+
+- `ww2_scalp_parity_on` (`InpRequireParity=true`): **0 ENTRY**, `52778` dòng
+  `ENTRY_BLOCKED|reason=parity_blocked|parity_not_proven`; SUMMARY `trades=0|entries=0|parity=REQUIRED`
+  → cổng parity chặn entry đúng S2. Artefact `reports/build/tester-reports/ww2_scalp_parity_on/`.
+- `ww2_scalp_demo_exec` (parity off, XAUUSDm M5, 2026.01.05→10.01): **6 ENTRY / 6 EXIT**, SL+TP mọi lệnh
+  (TP = 1.5R), volume ≤ `InpMaxExposure`, lỗ ≤ budget; kết thúc HALT `max_drawdown_reached|dd=5.00%`.
+  `net=-442.99`.
+- `ww2_swing_demo_exec` (parity off, XAUUSDm H1, 2018.01.01→2026.10.01 để có W1/D1 EMA200): **16 ENTRY /
+  16 EXIT**, **9 TRAIL** (BE ở r≈1.0, structure ở r≈1.3), 4 HALT (3 daily loss + 1 drawdown 5.03%).
+  `net=-292.99`.
+
+### 71.4 Sự cố đã sửa trong lúc kiểm chứng
+
+- `ReconcilePosition` từng ghi đè SL ban đầu (`initial_sl`) bằng SL broker đã trailing → `R` nổ (287, 471).
+  Đã tách `current_sl` (SL hiện tại, dùng cho `EnsureStops`) khỏi `initial_sl` (neo R), lưu `pos_current_sl`
+  trong state, và thêm test `r_ignores_trailed_stop` vào `WW2CoreTests`. Sau khi sửa, R trong Swing nằm ở
+  ~1.0–1.38 (đúng ngưỡng BE/trail).
+
+### 71.5 Nhãn trung thực (không nâng)
+
+- **Bot `WonderwhalesXAU2ModeEA`: `NOT_RUN`.** Hai scenario parity-off chỉ là **bằng chứng hạ tầng
+  (`NOT_STRATEGY_RESULT`)** — risk tester 1% để min-lot vượt được ngân sách, không phải cấu hình chiến lược.
+- **Parity Pine ↔ MT5 vẫn `BLOCKED`** (chưa có CSV tham chiếu Pine). Vì vậy **không** coi `net=-442.99`
+  hay `net=-292.99` là kết quả chiến lược; lợi nhuận của bot giữ `UNPROVEN`, trạng thái giữ `NOT_RUN`.
+- Chưa chạy phiên demo chart; `WW2CoreTests` đã compile nhưng chưa chạy trên chart (cần terminal thủ công).
+
+### 71.6 Không đổi
+
+- Không sửa `WonderwhalesDemoEA` / `WonderwhalesSimEA` / `configs/sim/*` / `99-archive/**`; không nâng nhãn
+  của 5 bot cũ; `PROGRESS.md` chỉ ghi thêm.

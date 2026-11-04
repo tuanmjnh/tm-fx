@@ -528,6 +528,7 @@ void SaveState(void)
    FileWriteString(handle,StringFormat("pos_volume=%.8f\r\n",g_pos.volume));
    FileWriteString(handle,StringFormat("pos_initial_sl=%.8f\r\n",g_pos.initial_sl));
    FileWriteString(handle,StringFormat("pos_initial_r=%.8f\r\n",g_pos.initial_r));
+   FileWriteString(handle,StringFormat("pos_current_sl=%.8f\r\n",g_pos.current_sl));
    FileWriteString(handle,StringFormat("pos_tp=%.8f\r\n",g_pos.tp));
    FileWriteString(handle,"pos_open_time="+IntegerToString((long)g_pos.open_time)+"\r\n");
    FileWriteString(handle,"pos_mode="+IntegerToString((int)g_pos.mode)+"\r\n");
@@ -552,7 +553,8 @@ bool ReadStateFile(bool &restored)
    bool magic_ok=false;
    long pos_ticket=0;
    bool pos_is_buy=true;
-   double pos_entry=0.0,pos_volume=0.0,pos_initial_sl=0.0,pos_initial_r=0.0,pos_tp=0.0;
+   double pos_entry=0.0,pos_volume=0.0,pos_initial_sl=0.0,pos_initial_r=0.0;
+   double pos_current_sl=0.0,pos_tp=0.0;
    datetime pos_open_time=0;
    int pos_mode=0;
 
@@ -586,6 +588,8 @@ bool ReadStateFile(bool &restored)
             pos_initial_sl=StringToDouble(value);
          else if(key=="pos_initial_r")
             pos_initial_r=StringToDouble(value);
+         else if(key=="pos_current_sl")
+            pos_current_sl=StringToDouble(value);
          else if(key=="pos_tp")
             pos_tp=StringToDouble(value);
          else if(key=="pos_open_time")
@@ -606,6 +610,7 @@ bool ReadStateFile(bool &restored)
    g_pos.volume=pos_volume;
    g_pos.initial_sl=pos_initial_sl;
    g_pos.initial_r=pos_initial_r;
+   g_pos.current_sl=(pos_current_sl>0.0 ? pos_current_sl : pos_initial_sl);
    g_pos.tp=pos_tp;
    g_pos.open_time=pos_open_time;
    g_pos.mode=(pos_mode==(int)WW2_SCALP ? WW2_SCALP
@@ -725,7 +730,10 @@ void EnsureStops(void)
   {
    if(!g_pos.have || !InpEnableExecution)
       return;
-   if(!(g_pos.initial_sl>0.0) || !(g_pos.tp>0.0))
+   //--- Re-assert the CURRENT intended stop, never loosen it back to the initial
+   //--- stop after the position has trailed.
+   const double guard_sl=(g_pos.current_sl>0.0 ? g_pos.current_sl : g_pos.initial_sl);
+   if(!(guard_sl>0.0) || !(g_pos.tp>0.0))
       return;
    ExecPositionInfo info;
    if(!ExecFindOwnPosition(InpMagicNumber,info))
@@ -733,15 +741,15 @@ void EnsureStops(void)
    if(info.sl>0.0 && info.tp>0.0)
       return;
    ExecFillResult result;
-   if(!ExecModifyStops(info.ticket,g_pos.initial_sl,g_pos.tp,result))
+   if(!ExecModifyStops(info.ticket,guard_sl,g_pos.tp,result))
      {
       LogEvent("ERROR",(g_pos.is_buy ? SIM_SIDE_BUY : SIM_SIDE_SELL),
-               info.open_price,info.volume,g_pos.entry,g_pos.initial_sl,
+               info.open_price,info.volume,g_pos.entry,guard_sl,
                g_pos.tp,"stops_reassert_failed|"+result.message);
       return;
      }
    LogEvent("STOPS_REASSERT",(g_pos.is_buy ? SIM_SIDE_BUY : SIM_SIDE_SELL),
-            result.price,info.volume,g_pos.entry,g_pos.initial_sl,g_pos.tp,
+            result.price,info.volume,g_pos.entry,guard_sl,g_pos.tp,
             "sl_tp_reasserted|"+result.message);
   }
 
@@ -763,6 +771,7 @@ void ReconcilePosition(void)
       g_pos.volume=info.volume;
       g_pos.initial_sl=info.sl;
       g_pos.initial_r=MathAbs(info.open_price-info.sl);
+      g_pos.current_sl=info.sl;
       g_pos.tp=info.tp;
       g_pos.open_time=info.open_time;
       //--- Mode is unknown for an adopted position; keep SIGNAL_ONLY so no
@@ -779,8 +788,10 @@ void ReconcilePosition(void)
      {
       g_pos.ticket=info.ticket;
       g_pos.volume=info.volume;
+      //--- The broker's live stop is the CURRENT stop, not the R anchor: keep
+      //--- initial_sl untouched so R keeps measuring from the original risk.
       if(info.sl>0.0)
-         g_pos.initial_sl=info.sl;
+         g_pos.current_sl=info.sl;
       if(info.tp>0.0)
          g_pos.tp=info.tp;
       EnsureStops();
@@ -997,6 +1008,7 @@ bool TryEnter(const datetime bar_time)
    g_pos.volume=fill.volume;
    g_pos.initial_sl=sl;
    g_pos.initial_r=MathAbs(fill.price-sl);
+   g_pos.current_sl=sl;
    g_pos.tp=tp;
    g_pos.open_time=TimeCurrent();
    g_pos.mode=mode;
@@ -1095,6 +1107,8 @@ void TrailPosition(const datetime bar_time)
       return;
      }
    const double r=Ww2CurrentR(g_pos,is_buy,bid,ask);
+   g_pos.current_sl=NormalizePrice(new_sl);
+   SaveState();
    LogEvent("TRAIL",(is_buy ? SIM_SIDE_BUY : SIM_SIDE_SELL),reference,
             g_pos.volume,g_pos.entry,NormalizePrice(new_sl),g_pos.tp,
             StringFormat("trail|reason=%s|r=%.2f|mode=%s",reason,r,

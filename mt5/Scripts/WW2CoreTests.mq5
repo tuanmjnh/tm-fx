@@ -142,6 +142,12 @@ void TestTrailing(void)
    pos.is_buy=true;
    const double r=Ww2CurrentR(pos,true,2020.0,2020.2);
    Check(Near(r,2.0,1e-9),"r_measured_from_initial_sl");
+
+   //--- The live stop trailing up to break-even must not move R: R is anchored
+   //--- to initial_sl, never to current_sl.
+   pos.current_sl=2000.0;
+   const double r2=Ww2CurrentR(pos,true,2020.0,2020.2);
+   Check(Near(r2,2.0,1e-9),"r_ignores_trailed_stop");
   }
 
 void TestSwing(void)

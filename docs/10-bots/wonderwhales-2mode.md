@@ -1,7 +1,8 @@
 # Wonderwhales XAU 2-mode — bot demo thứ sáu
 
-**EA demo:** `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` · **magic** `25008001` · **nhãn** `NOT_RUN` (đã
-compile 0/0; tester headless + phiên demo chart chưa chạy trong bằng chứng commit này). Nguồn yêu cầu:
+**EA demo:** `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` · **magic** `25008001` · **nhãn** `NOT_RUN`
+(compile 0/0; tester headless đã chạy cổng parity + đường gửi lệnh; **kết quả chiến lược vẫn `NOT_RUN`** vì
+parity chưa đạt và chưa có phiên demo chart). Nguồn yêu cầu:
 [`Wonderwhales_XAU_EA_2Mode_Spec_Vietnamese.md`](Wonderwhales_XAU_EA_2Mode_Spec_Vietnamese.md) (v2.2) và
 [ADR 0009](../90-decisions/0009-wonderwhales-xau-2mode-demo-bot.md).
 
@@ -120,19 +121,32 @@ bị chặn gián tiếp qua risk guard.
 - Kill switch `WONDERWHALES_XAU_2MODE_DEMO_STOP.txt`; state
   `wonderwhales_xau_2mode_demo_state.csv`; telemetry `wonderwhales_xau_2mode_telemetry.csv`.
 - Journal chính `wonderwhales_xau_2mode_demo.csv` — **giữ hợp đồng 18 cột**; trường mở rộng ở file telemetry.
+- Preset tester dẫn xuất (nguồn sự thật vẫn là JSON): `docs/20-operations/presets/wonderwhales_xau_2mode_scalp.set`
+  và `wonderwhales_xau_2mode_swing.set` (đặt `InpTradingMode` + các giá trị riêng theo chế độ).
 
 ## 5. Bằng chứng
 
-Nhãn **`NOT_RUN`** — chỉ có compile.
+**Nhãn trạng thái: `NOT_RUN`.** Compile + cổng tĩnh + hai chứng minh hạ tầng (Strategy Tester headless,
+`terminal64.exe /config:`); **không** có kết quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa
+có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRESS.md) §71.
 
-- Compile `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
-- Cổng xanh sau khi đăng ký: `validate-project.py fail=0`, `validate_demo_execution.py fail=0`,
-  `check_docs_links.py broken=0`, `pytest` không giảm so với 436.
-- **Chưa** chạy Strategy Tester headless cho Scalp/Swing và **chưa** chạy phiên demo chart — xem
-  [`../PROGRESS.md`](../PROGRESS.md) cho trạng thái thật. Cổng parity chưa đạt ⇒ mọi entry bị chặn
-  (`parity_blocked`); kết quả khi bỏ parity không phải kết quả chiến lược.
+- **Compile** `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
+- **Cổng tĩnh xanh:** `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,
+  `check_docs_links.py broken=0`, `pytest 439 passed`.
+- **Cổng parity chặn entry (chứng minh):** scenario `ww2_scalp_parity_on` (`InpRequireParity=true`) →
+  **0 ENTRY**, `52778` dòng `ENTRY_BLOCKED|reason=parity_blocked|parity_not_proven`; SUMMARY
+  `trades=0|entries=0|parity=REQUIRED`. Bằng chứng: `reports/build/tester-reports/ww2_scalp_parity_on/`.
+- **Đường gửi lệnh + quản lý (Scalp):** scenario `ww2_scalp_demo_exec` (parity off) → **6 ENTRY / 6 EXIT**,
+  mọi lệnh có **SL và TP** (TP = 1.5R), volume ≤ `InpMaxExposure` và lỗ ≤ budget, kết thúc bằng HALT
+  `max_drawdown_reached|dd=5.00%` đóng vị thế (`RISK_HALT`).
+- **Đường gửi lệnh + trailing (Swing):** scenario `ww2_swing_demo_exec` (parity off, lịch sử từ 2018 để có
+  W1/D1 EMA200) → **16 ENTRY / 16 EXIT**, **9 TRAIL** (BE ở r≈1.0, structure ở r≈1.3; R luôn ~1.0–1.4,
+  đo từ initial SL), 4 HALT (3 daily loss + 1 drawdown).
+- **Hai scenario parity-off chỉ là bằng chứng hạ tầng (`NOT_STRATEGY_RESULT`)**, không phải kết quả chiến
+  lược: `net=-442.99` (Scalp) và `net=-292.99` (Swing) với risk tester 1% là số của một cấu hình chưa kiểm
+  định, **không** phải cam kết hay đánh giá bot.
 - Chạy `Scripts > WW2CoreTests` trên chart demo để kiểm vector thuần logic (kỳ vọng
-  `TEST|RESULT|ALL_PASS`).
+  `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`).
 
 ## 6. Giới hạn / quirk đã biết
 
@@ -145,4 +159,8 @@ Nhãn **`NOT_RUN`** — chỉ có compile.
   sang ngày/tuần server mới.
 - Min-lot vượt ngân sách → **bỏ qua** (không làm tròn lên).
 - `InpSwingRrMin` chỉ có hiệu lực khi `InpTradingMode=SWING`.
+- Swing cần **lịch sử W1/D1 dài** để EMA200 của chỉ báo có giá trị (buffer `EMPTY_VALUE` → không vào lệnh);
+  scenario tester Swing vì thế bắt đầu từ 2018. Trên chart demo, cần đủ nến W1/D1 trước khi mong có lệnh.
+- **Sự cố đã sửa (2026-11-04):** `ReconcilePosition` từng ghi đè SL ban đầu bằng SL broker đã trailing làm R
+  nổ (287, 471). Đã tách `current_sl` (SL hiện tại) khỏi `initial_sl` (neo R); thêm test `r_ignores_trailed_stop`.
 - Không dùng file này cho tài khoản real; mọi thay đổi cho phép real cần ADR mới.

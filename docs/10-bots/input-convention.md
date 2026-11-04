@@ -148,8 +148,9 @@ xác nhận "có ở cả 5 EA". Mọi dòng khác phải đọc đúng ô của
   `wonderwhales_demo.json`). Mỗi file khai `ea`, `execution_mode`, `symbol`, `timeframe` và khối
   `inputs` với key **trùng đúng tên input** trong EA (quy tắc mục 2).
 - Dẫn xuất thủ công: `.set` cho Strategy Tester ở [`../20-operations/presets/`](../20-operations/presets/)
-  (hiện 4 file: `pa_trendrider_xau.set`, `grid_demo.set`, `dca_demo.set`, `infinite_runner_v2.set`;
-  WW chưa có file `.set`). `.set` không bao giờ là nơi khai thay đổi — sửa `.set` mà không sửa JSON là
+  (hiện 6 file: `pa_trendrider_xau.set`, `grid_demo.set`, `dca_demo.set`, `infinite_runner_v2.set`,
+  `wonderwhales_xau_2mode_scalp.set`, `wonderwhales_xau_2mode_swing.set`; WW v1 chưa có file `.set`).
+  `.set` không bao giờ là nơi khai thay đổi — sửa `.set` mà không sửa JSON là
   cấu hình rác: lần sinh lại sẽ mất.
 - **Quy tắc đổi input an toàn:** đổi input trong EA ⇒ phải đổi JSON + `.set` + chạy validator **trong cùng
   một commit**:

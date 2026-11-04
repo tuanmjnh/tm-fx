@@ -51,8 +51,9 @@ struct Ww2Position
    bool           is_buy;
    double         volume;
    double         entry;
-   double         initial_sl;
+   double         initial_sl;   // R anchor; never overwritten by a trailed stop
    double         initial_r;
+   double         current_sl;   // live intended stop; updated by the trail
    double         tp;
    datetime       open_time;
    ENUM_WW2_MODE  mode;
@@ -67,6 +68,7 @@ void Ww2ResetPosition(Ww2Position &pos)
    pos.entry=0.0;
    pos.initial_sl=0.0;
    pos.initial_r=0.0;
+   pos.current_sl=0.0;
    pos.tp=0.0;
    pos.open_time=0;
    pos.mode=WW2_SIGNAL_ONLY;
