@@ -180,7 +180,7 @@ tự tạo workaround.
 Chạy lại trong Strategy Tester: đóng terminal rồi
 `terminal64.exe /config:"...\reports\build\tester-run\lab_onnx_inference.ini"`. Agent của tester xoá sạch
 `MQL5\Files` mỗi lần chạy, nên EA phải khai báo `#property tester_file` cho model và fixture — xem
-`docs/reference/onnx.md` §3.1. Không copy tay file vào thư mục agent.
+`docs/30-research/onnx.md` §3.1. Không copy tay file vào thư mục agent.
 
 ### 7. Strategy Tester cho LabSignalEA
 
@@ -879,7 +879,7 @@ nằm trong `.gitignore` để tránh commit nhầm.
 | Compile MQL5 | Đã compile Phase 1 bằng CLI: 0 errors, 0 warnings (xem mục 5) | Chạy lại trong MetaEditor GUI nếu cần xác nhận trực quan |
 | Strategy Tester chạy EA | **Chưa chạy**; agent không điều khiển GUI | Người dùng: `Ctrl+R`, chọn EA/symbol/timeframe, xem Journal/Experts |
 | Dữ liệu lịch sử của terminal | Không kiểm tra/không tải dữ liệu | Phase 1/3: xác nhận symbol và khoảng ngày có sẵn |
-| ONNX runtime trong MT5 | Đã chạy 2026-10-29 trên chart và trong Strategy Tester: 24/24 hàng khớp fixture (max `4.927e-08`) | Lặp lại theo `docs/reference/onnx.md` §3.1 và §4 |
+| ONNX runtime trong MT5 | Đã chạy 2026-10-29 trên chart và trong Strategy Tester: 24/24 hàng khớp fixture (max `4.927e-08`) | Lặp lại theo `docs/30-research/onnx.md` §3.1 và §4 |
 | Kết nối broker/tài khoản | **Ngoài phạm vi, không được làm** | Không thực hiện |
 
 ### 3. Kết quả thiết lập Python (đã chạy thực tế)

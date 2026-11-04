@@ -3,7 +3,7 @@
 //|     MT5 EA & AI Lab - PinePort buffer contract and pure logic    |
 //|                                                                  |
 //| No file I/O, no account access, no trading functions.            |
-//| Contract: docs/indicators/price-action-mtf.md                 |
+//| Contract: docs/30-research/indicators/price-action-mtf.md                 |
 //+------------------------------------------------------------------+
 #ifndef PRICEACTIONMTF_CONTRACT_MQH
 #define PRICEACTIONMTF_CONTRACT_MQH

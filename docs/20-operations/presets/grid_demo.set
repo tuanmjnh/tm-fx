@@ -1,7 +1,7 @@
 ; ====================================================================
 ; CAU HINH TESTER CHO GridDemoEA (XAUUSD / Vang)
 ; Du an: MT5 EA & AI Lab (tm-fx)
-; File: docs/configurations/grid_demo.set
+; File: docs/20-operations/presets/grid_demo.set
 ; Chien luoc: Luoi gia gioi han co kiem soat rui ro (Bounded Grid)
 ; Quy uoc: Chi ho tro tai khoan DEMO va Strategy Tester (ADR 0003, ADR 0004)
 ; ====================================================================

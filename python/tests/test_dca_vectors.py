@@ -5,7 +5,7 @@ from :class:`CSimPortfolio`; this module recomputes them from scratch with
 plain Python so a change in either side breaks a test. Simulation only: no
 broker, account or order API is involved.
 
-Scenario (``docs/reference/simulation.md`` section 5): BUY 0.10 @ 1.1000 and 0.15 @ 1.0700,
+Scenario (``docs/30-research/simulation.md`` section 5): BUY 0.10 @ 1.1000 and 0.15 @ 1.0700,
 average entry 1.082, exposure 0.25, target 1.112 (+0.03), stop 1.032 (-0.05).
 """
 

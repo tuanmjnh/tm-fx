@@ -603,8 +603,8 @@ equity sizing, commission hay bất kỳ lệnh thật nào.
 | Hạng mục | Trạng thái |
 |---|---|
 | Spec | DONE (tài liệu này) |
-| Repaint audit | `docs/indicators/tm-fusion-zones.md` |
-| Buffer contract | `docs/indicators/tm-fusion-zones.md` |
+| Repaint audit | `docs/30-research/indicators/tm-fusion-zones.md` |
+| Buffer contract | `docs/30-research/indicators/tm-fusion-zones.md` |
 | MQL5 indicator | `mt5/Indicators/PinePort/TMFusionZones.mq5` |
 | Contract tests | `mt5/Scripts/TMFusionZonesContractTests.mq5` — **PASS 82/82** (MT5, 2026-10-28) |
 | Pine vs MQL5 parity | `BLOCKED` — chưa có CSV export từ TradingView |

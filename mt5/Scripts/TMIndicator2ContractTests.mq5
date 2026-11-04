@@ -3,7 +3,7 @@
 //|    MT5 EA & AI Lab - synthetic checks for the TM Indicator 2     |
 //|    contract. Runs once. No file I/O, no market data, no account  |
 //|    access, no trading functions.                                 |
-//|    Vectors: docs/indicators/tm-indicator-2.md §12 (155)       |
+//|    Vectors: docs/30-research/indicators/tm-indicator-2.md §12 (155)       |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

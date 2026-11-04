@@ -85,7 +85,7 @@
   đầy đủ; preset phải `DEMO_ONLY`, `allow_live_trading=false`, `InpEnableExecution=true`.
 - `scripts/deploy_pineport.ps1` deploy thêm EA mới; `reports/build/tester-run/` có thêm kịch bản
   `ww_demo_exec` để chứng minh đường gửi lệnh trong Strategy Tester.
-- `docs/guides/demo-execution.md` và `docs/indicators/wonderwhales.md` mô tả bot thứ năm, cách chạy và
+- `docs/20-operations/demo-execution.md` và `docs/30-research/indicators/wonderwhales.md` mô tả bot thứ năm, cách chạy và
   cách đọc journal.
 - Muốn chạy chiến lược này trên chart demo: gắn `WonderwhalesDemoEA` (không phải `WonderwhalesSimEA`)
   lên `XAUUSDm`; muốn backtest mô phỏng: dùng `WonderwhalesSimEA` như cũ.

@@ -42,7 +42,7 @@
 - Static gate (`scripts/validate-project.py`) chỉ miễn trừ API lệnh cho đúng các file Exec; mọi source
   khác vẫn bị chặn. `scripts/validate_demo_execution.py` kiểm tra các guardrail ở trên.
 - Preset demo dùng `execution_mode: DEMO_ONLY`, `allow_live_trading: false`, và nằm ở `configs/demo/`.
-- Tài liệu vận hành: `docs/guides/demo-execution.md`.
+- Tài liệu vận hành: `docs/20-operations/demo-execution.md`.
 - Kết quả demo chỉ có giá trị vận hành (EA chạy đúng guardrail), không phải kết luận chiến lược.
 
 ## Phương án đã cân nhắc

@@ -34,4 +34,4 @@ Tài liệu kỹ thuật nền của lab. Chạy bot → `20-operations/`; hiể
 | [tm-xau-signals-2.md](indicators/tm-xau-signals-2.md) | TM XAU Signals 2: spec, audit repaint, hợp đồng buffer. |
 | [wonderwhales.md](indicators/wonderwhales.md) | Wonderwhales: spec, audit repaint, hợp đồng buffer — nguồn cho bot demo thứ năm. |
 
-Bản gốc của các file trên là `docs/reference/*.md` và `docs/indicators/**` (đã di chuyển, giữ tên; ánh xạ cũ → mới xem `99-archive/LINK_MAP.md`).
+Các file trên đã được di chuyển vào `docs/30-research/`, giữ nguyên tên (ánh xạ cũ → mới xem `99-archive/LINK_MAP.md`).

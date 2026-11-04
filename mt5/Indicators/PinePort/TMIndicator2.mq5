@@ -3,7 +3,7 @@
 //|  MT5 EA & AI Lab - PinePort of TM Indicator 2 (display + audit)  |
 //|                                                                  |
 //| Custom indicator only. No file I/O, no account access, no order  |
-//| functions. Contract: docs/indicators/tm-indicator-2.md.       |
+//| functions. Contract: docs/30-research/indicators/tm-indicator-2.md.       |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

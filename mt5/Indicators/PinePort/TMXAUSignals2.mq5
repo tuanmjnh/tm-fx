@@ -3,7 +3,7 @@
 //|   MT5 EA & AI Lab - PinePort of TM XAU Signals 2 (signal only)   |
 //|                                                                  |
 //| Custom indicator only. No file I/O, no account access, no order  |
-//| functions. Contract: docs/indicators/tm-xau-signals-2.md        |
+//| functions. Contract: docs/30-research/indicators/tm-xau-signals-2.md        |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

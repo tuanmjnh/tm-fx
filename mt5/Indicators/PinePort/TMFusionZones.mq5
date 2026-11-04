@@ -3,7 +3,7 @@
 //|      MT5 EA & AI Lab - PinePort of TM Fusion Zones (signal-only) |
 //|                                                                  |
 //| Custom indicator only. No file I/O, no account access, no order  |
-//| functions. Contract: docs/indicators/tm-fusion-zones.md        |
+//| functions. Contract: docs/30-research/indicators/tm-fusion-zones.md        |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

@@ -4,7 +4,7 @@
 //|                                                                  |
 //| Port of "TM XAU Signals 2" (Pine v6) to MQL5. Simulation-only    |
 //| research module: no file I/O, no account access, no trading.     |
-//| Contract: docs/indicators/tm-xau-signals-2.md                   |
+//| Contract: docs/30-research/indicators/tm-xau-signals-2.md                   |
 //+------------------------------------------------------------------+
 #ifndef TMXAUSIGNALS2_CONTRACT_MQH
 #define TMXAUSIGNALS2_CONTRACT_MQH

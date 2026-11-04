@@ -73,9 +73,9 @@
   default, kill switch, trần grid/add, SL/TP bắt buộc, một điểm gửi lệnh).
 - `configs/demo/`: thêm preset `grid_demo.json`, `dca_demo.json` (`execution_mode: DEMO_ONLY`,
   `allow_live_trading: false`).
-- Tài liệu vận hành: `docs/guides/demo-execution.md` mở rộng cho ba bot.
+- Tài liệu vận hành: `docs/20-operations/demo-execution.md` mở rộng cho ba bot.
 - Trạng thái `BLOCKED_PENDING_ADR` cho Grid/DCA demo được **gỡ** khỏi `docs/v2/*`, `docs/README.md`,
-  `docs/MASTER_ROADMAP.md`; thay bằng `ALLOWED` + nhãn bằng chứng thật (`NOT_RUN` tới khi có phiên demo).
+  `docs/00-start/roadmap.md`; thay bằng `ALLOWED` + nhãn bằng chứng thật (`NOT_RUN` tới khi có phiên demo).
 - `AGENTS.md` cập nhật: đường thực thi là ba EA demo trên `mt5/Include/Exec/*`, không còn câu
   "never use grid/DCA/martingale".
 

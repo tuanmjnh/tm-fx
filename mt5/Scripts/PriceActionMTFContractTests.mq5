@@ -3,7 +3,7 @@
 //|      MT5 EA & AI Lab - synthetic checks for the PA MTF contract  |
 //|                                                                  |
 //| Runs once. No file I/O, no market data, no account access, no    |
-//| trading functions. Vectors: docs/indicators/price-action-mtf.md|
+//| trading functions. Vectors: docs/30-research/indicators/price-action-mtf.md|
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

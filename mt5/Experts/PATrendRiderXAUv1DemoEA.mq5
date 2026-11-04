@@ -2,7 +2,7 @@
 //|                                     PATrendRiderXAUv1DemoEA.mq5 |
 //|      PA TrendRider XAU v1 - DEMO-ONLY execution EA                |
 //|                                                                  |
-//| Scope: docs/decisions/0003-demo-execution-scope.md.               |
+//| Scope: docs/90-decisions/0003-demo-execution-scope.md.               |
 //| Demo or Strategy Tester accounts only; live/real accounts are     |
 //| rejected at OnInit. Execution is enabled by default on demo        |
 //| (ADR 0006); set InpEnableExecution=false for a dry-run comparison. |
@@ -12,7 +12,7 @@
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"
 #property description "Demo-only PA TrendRider XAU v1: guarded order execution, one position, SL/TP mandatory."
-#property description "Execution enabled by default (ADR 0006; set InpEnableExecution=false for dry-run). Demo/tester only, real accounts rejected. See docs/decisions/0004-all-bots-demo-execution.md."
+#property description "Execution enabled by default (ADR 0006; set InpEnableExecution=false for dry-run). Demo/tester only, real accounts rejected. See docs/90-decisions/0004-all-bots-demo-execution.md."
 
 #include "../Include/Sim/SimLogger.mqh"
 #include "../Include/TrendRider/TRTypes.mqh"

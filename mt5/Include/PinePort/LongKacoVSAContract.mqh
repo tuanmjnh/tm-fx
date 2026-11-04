@@ -3,7 +3,7 @@
 //|     MT5 EA & AI Lab - PinePort buffer contract and pure logic    |
 //|                                                                  |
 //| No file I/O, no account access, no trading functions.            |
-//| Contract: docs/indicators/longkaco-vsa.md                     |
+//| Contract: docs/30-research/indicators/longkaco-vsa.md                     |
 //+------------------------------------------------------------------+
 #ifndef LONGKACO_VSA_CONTRACT_MQH
 #define LONGKACO_VSA_CONTRACT_MQH

@@ -5,7 +5,7 @@
 //| Port of "TM Indicator 2" v2.1.0 (Pine v6) to MQL5.               |
 //| Simulation-only research module: no file I/O, no account access, |
 //| no order functions, no alerts/webhooks.                          |
-//| Contract: docs/indicators/tm-indicator-2.md                   |
+//| Contract: docs/30-research/indicators/tm-indicator-2.md                   |
 //+------------------------------------------------------------------+
 #ifndef TMINDICATOR2_CONTRACT_MQH
 #define TMINDICATOR2_CONTRACT_MQH

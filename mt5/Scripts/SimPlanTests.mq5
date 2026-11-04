@@ -3,7 +3,7 @@
 //|      MT5 EA Lab - synthetic checks for SimPlan plan rules         |
 //|                                                                  |
 //| Runs once. No market data, no file I/O, no account access and no  |
-//| trading functions. Vectors: docs/reference/simulation.md.         |
+//| trading functions. Vectors: docs/30-research/simulation.md.         |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

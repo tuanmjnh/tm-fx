@@ -1,7 +1,7 @@
 ; ====================================================================
 ; CAU HINH TESTER CHO DCADemoEA (XAUUSD / Vang)
 ; Du an: MT5 EA & AI Lab (tm-fx)
-; File: docs/configurations/dca_demo.set
+; File: docs/20-operations/presets/dca_demo.set
 ; Chien luoc: Binh quan gia co gioi han va giap bao ve rui ro (Bounded DCA)
 ; Quy uoc: Chi ho tro tai khoan DEMO va Strategy Tester (ADR 0003, ADR 0004)
 ; ====================================================================

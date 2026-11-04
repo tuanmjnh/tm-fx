@@ -89,7 +89,7 @@ Tín hiệu: `event_time`, `symbol`, `timeframe`, `strategy_id`, `strategy_versi
 `reason_codes`, `input_bar_time`, `feature_snapshot`/reference, `model_id`/`model_version` (nếu có),
 `created_at`.
 
-Chi tiết đầy đủ nằm trong roadmap, mục 6. `docs/reference/data-dictionary.md` sẽ được tạo ở Phase 3.
+Chi tiết đầy đủ nằm trong roadmap, mục 6. `docs/30-research/data-dictionary.md` sẽ được tạo ở Phase 3.
 
 ## 6. Lưu trữ
 

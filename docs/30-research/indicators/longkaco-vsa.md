@@ -287,8 +287,8 @@ bằng cách tách nhánh `btMulti`, nhưng EA của repo này vẫn không port
 | Hạng mục | Trạng thái |
 |---|---|
 | Spec | DONE (tài liệu này) |
-| Repaint audit | `docs/indicators/longkaco-vsa.md` |
-| Buffer contract | `docs/indicators/longkaco-vsa.md` |
+| Repaint audit | `docs/30-research/indicators/longkaco-vsa.md` |
+| Buffer contract | `docs/30-research/indicators/longkaco-vsa.md` |
 | MQL5 indicator | `mt5/Indicators/PinePort/LongKacoVSA.mq5` |
 | Contract tests | `mt5/Scripts/LongKacoVSAContractTests.mq5` — **PASS 47/47** (MT5, 2026-10-28) |
 | Pine vs MQL5 parity | `BLOCKED` — chưa có CSV export từ TradingView |

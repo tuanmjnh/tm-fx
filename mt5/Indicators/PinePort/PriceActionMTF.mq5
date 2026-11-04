@@ -3,7 +3,7 @@
 //|      MT5 EA & AI Lab - PinePort of Price Action MTF (signal only)|
 //|                                                                  |
 //| Custom indicator only. No file I/O, no account access, no order  |
-//| functions. Contract: docs/indicators/price-action-mtf.md       |
+//| functions. Contract: docs/30-research/indicators/price-action-mtf.md       |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

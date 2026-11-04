@@ -1,7 +1,7 @@
 ; ====================================================================
 ; CAU HINH TESTER CHO PATrendRiderXAUv1DemoEA (XAUUSD / Vang)
 ; Du an: MT5 EA & AI Lab (tm-fx)
-; File: docs/configurations/pa_trendrider_xau.set
+; File: docs/20-operations/presets/pa_trendrider_xau.set
 ; Chien luoc: Price Action Trend Rider v1 (Da khung thoi gian H1/M15/M5)
 ; Quy uoc: Chi ho tro tai khoan DEMO va Strategy Tester (ADR 0003, ADR 0004)
 ; ====================================================================

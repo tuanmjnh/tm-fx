@@ -910,7 +910,7 @@ compile không bắt được:
   Strategy Tester headless đã chạy thật trên `XAUUSDm` M15 ngày 2026-10-28 (baseline, conservative stress,
   edge ATR stop) — kết quả ở mục 8; preset + 3 scenario kiểm tra fail-closed PASS.
 - **Nguồn:** yêu cầu người dùng 2026-10-28 (chỉ `XAUUSDm`), hợp đồng buffer ở
-  [`docs/indicators/wonderwhales.md`](indicators/wonderwhales.md) và
+  [`docs/30-research/indicators/wonderwhales.md`](indicators/wonderwhales.md) và
   `mt5/Include/PinePort/WonderwhalesContract.mqh`.
 
 ### 1. An toàn

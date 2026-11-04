@@ -162,7 +162,7 @@
 - **Execution chỉ trong scope demo:** `OrderSend` chỉ tồn tại ở `mt5/Include/Exec/ExecBroker.mqh` và được
   gọi từ `PATrendRiderXAUv1DemoEA` khi `InpEnableExecution=true`. Mọi EA khác (kể cả năm EA mô phỏng) không
   có API gửi lệnh; 0 deal trong Strategy Tester của chúng là hành vi đúng. Xem
-  `docs/decisions/0003-demo-execution-scope.md`.
+  `docs/90-decisions/0003-demo-execution-scope.md`.
 - **Demo EA từ chối tài khoản thật:** `OnInit` gọi `ExecContextAllowed` và trả `INIT_FAILED` khi
   `ACCOUNT_TRADE_MODE` khác `DEMO`, trừ khi `MQL_TESTER` bật. Đây là guardrail phần mềm, không phải bảo
   đảm tuyệt đối: người dùng vẫn phải kiểm tra trade mode trong terminal trước khi attach.

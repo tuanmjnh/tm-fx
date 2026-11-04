@@ -3,7 +3,7 @@
 //|     MT5 EA & AI Lab - PinePort buffer contract and pure logic    |
 //|                                                                  |
 //| No file I/O, no account access, no trading functions.            |
-//| Contract: docs/indicators/tm-fusion-zones.md                  |
+//| Contract: docs/30-research/indicators/tm-fusion-zones.md                  |
 //+------------------------------------------------------------------+
 #ifndef TMFUSIONZONES_CONTRACT_MQH
 #define TMFUSIONZONES_CONTRACT_MQH

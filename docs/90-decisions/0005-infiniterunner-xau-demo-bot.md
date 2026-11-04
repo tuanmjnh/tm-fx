@@ -100,7 +100,7 @@
 5. `scripts/deploy_pineport.ps1`: thêm EA + 3 include `InfiniteRunner/*.mqh` vào pipeline
    copy+compile; biên dịch cho tới 0 error 0 warning; copy sang terminal data folder.
 6. `python/tests/test_demo_execution.py`: kiểm preset fail-closed thứ ba (bản mẫu thứ tư) cho bot mới.
-7. Tài liệu: `docs/guides/demo-execution.md` nâng lên bảng 4 bot; PROGRESS ghi §65+;
+7. Tài liệu: `docs/20-operations/demo-execution.md` nâng lên bảng 4 bot; PROGRESS ghi §65+;
    nhãn `NOT_RUN` cho mọi kết quả chưa chạy thật; mọi hứa hẹn lợi nhuận vẫn là `UNPROVEN`.
 
 ## Ghi nhận thực hiện (2026-10-30)

@@ -3,7 +3,7 @@
 //|      MT5 EA & AI Lab - synthetic checks for the TM XAU2 contract |
 //|                                                                  |
 //| Runs once. No file I/O, no market data, no account access, no    |
-//| trading functions. Vectors: docs/indicators/tm-xau-signals-2.md |
+//| trading functions. Vectors: docs/30-research/indicators/tm-xau-signals-2.md |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
 #property version   "1.00"

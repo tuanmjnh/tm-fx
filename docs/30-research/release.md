@@ -29,11 +29,11 @@
 | 7 | Pipeline end-to-end chạy được | `scripts\run_pipeline.py --config configs\pipeline.example.yaml` | Đạt: exit 0, báo cáo demo |
 | 8 | Fail-safe dữ liệu/model | Test pipeline + ONNX missing model | Đạt: exit 1/2/4, không ghi đè |
 | 9 | Kết quả gắn nhãn demo/synthetic | `pipeline_report.md` có mục Demo + Limitations | Đạt |
-| 10 | Tài liệu giới hạn rõ | `docs/reference/risk.md`, `docs/reference/pipeline.md` | Đạt |
+| 10 | Tài liệu giới hạn rõ | `docs/30-research/risk.md`, `docs/30-research/pipeline.md` | Đạt |
 | 11 | Artifact không bị commit nhầm | `reports/`, `experiments/`, `models/candidates/`, `.ex5`, `.onnx` gitignored | Đạt |
 | 12 | Không quảng bá hiệu năng | Không có claim lợi nhuận/live trong README/docs | Đạt |
 | 13 | Bounded DCA/grid chạy và cap quan sát được | `scripts\run_basket_backtest.py` với hai config mẫu | Đạt: exit 0; DCA 57 basket/cap layer 4, grid loss cap 20 với `loss_cap_overshoot` 0 |
-| 14 | Ranh giới execution được ghi nhận | `docs/decisions/0003-demo-execution-scope.md`, `docs/guides/demo-execution.md`, README, AGENTS.md | Đạt: ADR Accepted; guide nêu demo-only, dry-run, kill switch, 0 trade là đúng |
+| 14 | Ranh giới execution được ghi nhận | `docs/90-decisions/0003-demo-execution-scope.md`, `docs/20-operations/demo-execution.md`, README, AGENTS.md | Đạt: ADR Accepted; guide nêu demo-only, dry-run, kill switch, 0 trade là đúng |
 | 15 | Không có credential/account ID trong docs/log | Review `git diff` và log MT5 trước commit | Đạt: log compile không chứa account/server |
 | 16 | Preset Track C fail-closed | `scripts\validate_sim_configs.py` | Đạt: checked=7 fail=0 (6 preset, 17 scenario); snapshot bất biến |
 | 16b | Preset demo fail-closed | `scripts\validate_demo_execution.py` | Đạt: checks=8 fail=0; DEMO_ONLY, `InpEnableExecution=false`, TP bắt buộc, magic tách khỏi bản mô phỏng; check `demo order probe` buộc `ExecDemoProbe` giữ `InpConfirm=false`, gọi lệnh qua `ExecBroker` chứ không `OrderSend`, từ chối tester và đọc `MQL_TRADE_ALLOWED` |
@@ -76,7 +76,7 @@
 3. Chạy lại mục 1.1–1.3 sau thay đổi cuối.
 4. Commit Phase 0–9, trailing stop, bounded DCA/grid, Track C W1–W9 và ADR 0002; ghi commit hash vào báo
    cáo phase nếu cần.
-5. Sau commit, lặp lại tái lập trên commit sạch theo `docs/reference/pipeline.md` mục 7; snapshot sạch đã đạt
+5. Sau commit, lặp lại tái lập trên commit sạch theo `docs/30-research/pipeline.md` mục 7; snapshot sạch đã đạt
    ngày 2026-10-28, chỉ cần xác nhận lại với commit hash chính thức và cập nhật checklist này.
 6. Backup `experiments/*.sqlite` và `reports/` nếu cần lưu kết quả lâu dài (gitignored).
 

@@ -1,7 +1,7 @@
 # Ghép bot EA với AI — mức tích hợp, pipeline ONNX, ràng buộc parity
 
-**Tách từ:** `docs/guides/ea-anatomy-and-ai.md` mục 11 (file cũ đã bị tách; nguyên văn còn trong git
-history và trong `99-archive/` sau khi có bản đồ link).
+**Tách từ:** mục 11 của guide cũ `ea-anatomy-and-ai.md` (file cũ đã bị tách thành `docs/10-bots/ea-anatomy.md` + tài liệu này; nguyên văn còn trong git
+history — ánh xạ cũ → mới xem `99-archive/LINK_MAP.md`).
 **Phạm vi:** mọi nhận định lấy từ source và artifact thật của repo (MQL5 build 6292).
 **Trạng thái tổng:** AI chỉ ở mức **cửa thêm** trên tín hiệu; chưa có bằng chứng parity trên dữ liệu
 thật. Chi tiết trạng thái từng hạng mục ở mục 5.

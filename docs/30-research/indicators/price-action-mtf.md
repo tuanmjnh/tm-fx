@@ -1630,7 +1630,7 @@ g_handle = (InpSource==PLAN_SOURCE_PA)
   nguồn `TM XAU Signals 2`/`TM Indicator 2` giữ nguyên `config_hash` cũ.
 - Đây là lối duy nhất để vượt quirk `rr1 < rrMin` (§10.4) **mà không sửa default Pine**:
   đặt `InpPaRr1` > `InpPaRrMin` (ví dụ 2.0 > 1.5). Làm vậy `plan.valid` mới có thể bật.
-- Scenario tham chiếu: `plan_rr2` (`InpPaRr1=2.0`) — xem `docs/guides/strategy-tester.md` §9.2.
+- Scenario tham chiếu: `plan_rr2` (`InpPaRr1=2.0`) — xem `docs/20-operations/strategy-tester.md` §9.2.
 
 ### 13. Hàm contract (header)
 
