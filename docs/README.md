@@ -48,15 +48,17 @@ Danh mục đủ 15 EA (5 demo + 10 lab): [`10-bots/README.md`](10-bots/README.m
 ## Trạng thái cổng
 
 Số `external`/`checked`/`passed` chi tiết ghi theo từng lần chạy trong [`PROGRESS.md`](PROGRESS.md)
-và [`20-operations/evidence.md`](20-operations/evidence.md); Task 12 điền số lần chạy mới nhất. Bốn
-lệnh của cổng và kỳ vọng:
+và [`20-operations/evidence.md`](20-operations/evidence.md). Số dưới đây là lần chạy cổng mới nhất
+(2026-11-03, PROGRESS §70); chạy lại khi đổi tài liệu hoặc code:
 
-| Lệnh | Kỳ vọng |
+| Cổng | Kết quả |
 |---|---|
-| `python scripts\check_docs_links.py` | `broken=0` — mọi link tương đối trong vùng tài liệu hiện hành resolve |
-| `python scripts\validate-project.py` | `checks=N fail=0` — layout, cấm API lệnh ngoài `Exec/*`, preset |
-| `python scripts\validate_demo_execution.py` | `checks=N fail=0` — guardrail từng EA demo, phạm vi ADR 0004/0007 |
-| `python -m pytest` | `0 failed` — suite Python + validator indicator |
+| `python scripts\check_docs_links.py` | `broken=0 external=0 checked=397` — mọi link tương đối trong vùng tài liệu hiện hành resolve |
+| `python scripts\validate-project.py` | `checks=15 fail=0` — layout, cấm API lệnh ngoài `Exec/*`, preset |
+| `python scripts\validate_demo_execution.py` | `checks=13 fail=0` — guardrail từng EA demo, phạm vi ADR 0004/0007 |
+| 6 validator indicator | 32/29/36/34/44/31 pass, 0 fail |
+| `python -m pytest -q` | `436 passed` |
+| `deploy_pineport.ps1 -Apply -Force` | `DEPLOY_OK`, 36 compiles, `0 errors / 0 warnings` |
 
 ## Quy ước
 

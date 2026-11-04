@@ -3764,3 +3764,49 @@ InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đón
   do `|` escape trong ô như `BLOCKED|plan`).
 - **NOT_RUN**: phiên `WonderwhalesDemoEA` trên tài khoản demo thật (cần operator chạy chart).
 - **Lợi nhuận: UNPROVEN** — không thay đổi.
+
+## 70. Tái cấu trúc tài liệu theo mục đích + cổng chặn link chết — 2026-11-03
+
+### 70.1 Việc đã làm
+
+- Chuyển toàn bộ tài liệu còn hiệu lực sang cây `00-start` / `10-bots` / `20-operations` /
+  `30-research` / `90-decisions` / `99-archive` bằng `git mv` (giữ lịch sử).
+- Viết mới 5 trang bot, `input-convention.md` (hợp đồng phase C), `troubleshooting.md`,
+  `evidence.md`, `open-source-research.md`, `glossary.md`, ADR 0008, `LINK_MAP.md`.
+- Viết lại `docs/README.md`, `README.md` gốc, `00-start/roadmap.md`, `20-operations/presets.md`.
+- Thêm `scripts/check_docs_links.py` + 6 test; nối vào `validate-project.py`.
+- Cô lập `InfiniteRunnerXAUV3DemoEA.mq5` sang `archive/wip/2026-11-03_InfiniteRunnerXAUV3/`.
+- Dọn rác gốc (`reportsbuild-allsuite/`, `pip-*`, `pytest-of-*`, `node_modules/`, log).
+
+### 70.2 Cổng khi kết thúc
+
+- `check_docs_links.py` → `broken=0 external=0 checked=397`.
+- `validate-project.py` → `checks=15 fail=0`.
+- `validate_demo_execution.py` → `checks=13 fail=0`.
+- 6 validator indicator → 32/29/36/34/44/31 pass, 0 fail.
+- `pytest` → `436 passed`.
+- `deploy_pineport.ps1 -Apply -Force` → `DEPLOY_OK`, 0 errors / 0 warnings.
+- Kiểm tra thủ công (đều PASS):
+  - Từ `docs/README.md` bấm tới được 5 trang bot (`10-bots/`), 4 tài liệu vận hành
+    (`20-operations/install.md`, `strategy-tester.md`, `toolchain.md`, `demo-execution.md`),
+    8 ADR (`90-decisions/0001`–`0008`, `README.md` link đủ), `99-archive/README.md`.
+  - 5 trang bot hiển thị đúng magic + preset + nhãn: PATrendRider `25002001` /
+    `pa_trendrider_xau_demo.json` / `PARTIAL`; Grid `25004001` / `grid_demo.json` / `NOT_RUN`;
+    DCA `25005001` / `dca_demo.json` / `NOT_RUN`; InfiniteRunner `25006001` /
+    `infinite_runner_demo.json` / `NOT_RUN`; Wonderwhales `25007001` / `wonderwhales_demo.json` /
+    `UNPROVEN`. Lợi nhuận của cả 5 bot vẫn `UNPROVEN` — không nhãn nào được nâng.
+  - `docs/99-archive/LINK_MAP.md` mở được, có 2 bảng (Bảng A di chuyển thật, Bảng B link cũ
+    không tồn tại).
+  - `README.md` gốc 33 dòng (≤60), không còn link `v2/`.
+
+### 70.3 Không đổi
+
+- Không sửa `input`/logic EA, không sửa `configs/demo/*.json`, không nâng nhãn trạng thái nào.
+- `99-archive/` và `PROGRESS.md` là bất biến; link bên trong không bị viết lại.
+
+### 70.4 Còn mở (trung thực)
+
+- Dọn vị thế lạc magic 25006001 trên chart demo: **chưa xác nhận đã đóng**; state file
+  `MQL5\Files\infinite_runner_demo_state.csv` **chưa xóa**.
+- Chạy lại tester IR để lấy bằng chứng sau chẩn đoán "vị thế lạc chiếm slot": **`NOT_RUN`**.
+- Nhãn lợi nhuận của cả 5 bot demo vẫn là `UNPROVEN`; không có kết luận mới về hiệu quả chiến lược.
