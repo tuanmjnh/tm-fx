@@ -158,6 +158,23 @@ if (-not $Contract -and $journalPath) {
     }
 }
 
+#--- Fail closed on a silently aborted run. The tester writes a report even when
+#--- it never loaded history (History Quality n/a, Bars 0, Ticks 0) and exits 0,
+#--- which on 2026-11-05 made a 12-second non-run look like a finished scenario.
+$bars = 0
+if (Test-Path $htm) {
+    $html = Get-Content -LiteralPath $htm -Raw -Encoding UTF8
+    $m = [regex]::Match($html, 'Bars:</td>\s*<td[^>]*><b>([0-9,]+)</b>')
+    if ($m.Success) { $bars = [double]($m.Groups[1].Value -replace '[^0-9]', '') }
+}
+if ($bars -le 0) {
+    throw "tester loaded no bars for $Scenario (report=$htm); run aborted, archive left untouched"
+}
+
+#--- Only replace the archive once the run is known good, so a failed run can
+#--- never leave a previous run's CSV looking like fresh evidence.
+Get-ChildItem $OutDir -File -ErrorAction SilentlyContinue | Remove-Item -Force
+
 $copied = @()
 if (Test-Path $htm) {
     Get-ChildItem $TerminalDataDir -Filter "$ReportName.*" -File |

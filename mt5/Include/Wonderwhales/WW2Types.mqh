@@ -80,6 +80,21 @@ double Ww2RiskDistance(const Ww2Position &pos)
    return(MathAbs(pos.entry-pos.initial_sl));
   }
 
+//--- Realized R of a closed trade: money P&L over the initial risk in money
+//--- (price distance * volume * contract size). Returns false when the
+//--- anchor is unknown (e.g. an adopted position) so callers can print NA
+//--- instead of inventing a zero.
+bool Ww2RealizedR(const double pnl,const double volume,const double initial_r,
+                  const double contract_size,double &r)
+  {
+   r=0.0;
+   const double risk_money=initial_r*volume*contract_size;
+   if(!(risk_money>0.0))
+      return(false);
+   r=pnl/risk_money;
+   return(true);
+  }
+
 //--- Current R of the position, always measured from the stored initial SL.
 double Ww2CurrentR(const Ww2Position &pos,const bool is_buy,const double bid,
                    const double ask)

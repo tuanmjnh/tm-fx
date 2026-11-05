@@ -9,8 +9,16 @@ Scenarios:
   ww2_scalp_demo_exec  parity OFF      -> proves the ExecBroker order path (infrastructure only).
   ww2_swing_demo_exec  parity OFF      -> same, Swing mode (starts 2018 so W1/D1 EMA200 has history).
   ww2_scalp_census     parity ON, InpDebug ON -> per-bar signal census, zero orders.
+  ww2_meas_scalp_<window>_<arm>  8 measurement runs: in/out of sample x ablation arm A..D.
 
-Parity is unproven, so the parity-off runs are NOT a strategy result.
+Parity is unproven, so every parity-off run is NOT a strategy result. The
+measurement matrix changes ONE variable per arm so the effect of each
+management rule is attributable:
+
+  A  base: fixed SL/TP only (no exit-on-flip, no holding cap, no trail)
+  B  A + break-even at 1.0R
+  C  B + structure trail
+  D  C + PSAR trail
 
 Usage:
   .venv\\Scripts\\python.exe scripts\\tester\\gen_ww2_sets.py
@@ -33,21 +41,109 @@ OUT_SETS = ROOT / "reports/build/tester-sets"
 OUT_INI = ROOT / "reports/build/tester-run"
 TRACKED = ROOT / "docs/20-operations/presets"
 
-# name, chart period, from_date, deposit, overrides
+# name, chart period, from_date, to_date, deposit, overrides
 SCENARIOS = (
-    ("ww2_scalp_parity_on", "M5", "2026.01.05", 10000,
+    ("ww2_scalp_parity_on", "M5", "2026.01.05", "2026.10.01", 10000,
      {"InpTradingMode": 1, "InpRequireParity": True}),
-    ("ww2_scalp_demo_exec", "M5", "2026.01.05", 10000,
+    ("ww2_scalp_demo_exec", "M5", "2026.01.05", "2026.10.01", 10000,
      {"InpTradingMode": 1, "InpRequireParity": False}),
-    ("ww2_swing_demo_exec", "H1", "2018.01.01", 10000,
+    ("ww2_swing_demo_exec", "H1", "2018.01.01", "2026.10.01", 10000,
      {"InpTradingMode": 2, "InpRequireParity": False, "InpTakeProfitR": 2.5}),
     # Diagnostic only: census ON, parity ON (no orders can be sent). 100k equity
     # and 0.15% risk keep the min-lot sizer from hiding signals, so the census
     # answers "why so few trades" with per-bar gate counts.
-    ("ww2_scalp_census", "M5", "2024.01.01", 100000,
+    ("ww2_scalp_census", "M5", "2024.01.01", "2026.10.01", 100000,
      {"InpTradingMode": 1, "InpRequireParity": True, "InpDebug": True,
       "InpRiskPercent": 0.15}),
 )
+
+#--- Measurement harness -------------------------------------------------
+# The guard caps are OFF on purpose: a risk halt in the middle of a window
+# would truncate the sample and make the arms incomparable. 100k equity at
+# 0.15% risk (150 USD) keeps the min-lot sizer from silently dropping signals.
+MEASURE_BASE = {
+    "InpTradingMode": 1,
+    "InpRequireParity": False,
+    "InpRiskPercent": 0.15,
+    "InpMaxExposure": 10.0,
+    "InpExitOnFlip": False,
+    "InpMaxHoldingBars": 0,
+    "InpBreakEvenTriggerR": 1e9,
+    #--- Trail candidates are evaluated only when r >= trail_trigger_r
+    #--- (WW2TrailingCoordinator) and OnInit rejects trail < break-even, so the
+    #--- arms that enable a candidate set 1.3 themselves (shipped preset value).
+    #--- Keeping 1e9 here makes "management off" mean exactly that.
+    "InpTrailTriggerR": 1e9,
+    "InpEnableStructureTrail": False,
+    "InpEnablePsarTrail": False,
+    "InpEnableAtrTrail": False,
+    "InpEnableStepTrail": False,
+    "InpMaxDailyLossPct": 0.0,
+    "InpMaxWeeklyLossPct": 0.0,
+    "InpMaxDrawdownPct": 0.0,
+    "InpMaxConsecutiveLosses": 0,
+    "InpCooldownMinutes": 0,
+}
+
+MEASURE_ARMS = {
+    "a": {},                                                        # fixed SL/TP only
+    "b": {"InpBreakEvenTriggerR": 1.0},                              # + break-even
+    #--- C and D must arm the trail trigger, otherwise the structure/PSAR
+    #--- candidates are never evaluated (the 2026-11-05 no-op). The variable
+    #--- under test is the trail candidate; the trigger is its arming point.
+    "c": {"InpBreakEvenTriggerR": 1.0, "InpTrailTriggerR": 1.3,
+          "InpEnableStructureTrail": True},                          # + structure
+    "d": {"InpBreakEvenTriggerR": 1.0, "InpTrailTriggerR": 1.3,
+          "InpEnableStructureTrail": True,
+          "InpEnablePsarTrail": True},                               # + PSAR
+}
+
+MEASURE_WINDOWS = {
+    "is": ("2024.01.01", "2025.06.30"),
+    "oos": ("2025.07.01", "2026.10.01"),
+}
+
+
+def _check_measure_arm(name: str, values: dict) -> None:
+    """Mirror the EA's OnInit guard so an invalid arm cannot be generated.
+
+    WonderwhalesXAU2ModeEA aborts with
+    ``init_parameters_invalid|trail_trigger_below_break_even`` when the trail
+    trigger is lower than the break-even trigger. That failure used to look like
+    a finished run (empty report, exit code 0), so it is cheaper to refuse here.
+    """
+    be = float(values.get("InpBreakEvenTriggerR", 0.0))
+    trail = float(values.get("InpTrailTriggerR", 0.0))
+    if trail < be:
+        raise ValueError(
+            f"{name}: InpTrailTriggerR ({trail}) < InpBreakEvenTriggerR ({be}); "
+            "the EA rejects this at OnInit"
+        )
+    if not any(values.get(flag) for flag in (
+            "InpEnableStructureTrail", "InpEnablePsarTrail",
+            "InpEnableAtrTrail", "InpEnableStepTrail")):
+        return
+    if trail >= 1e8:
+        raise ValueError(
+            f"{name}: a trail flag is on but InpTrailTriggerR is disabled; "
+            "the candidate would never be evaluated"
+        )
+
+
+def measure_scenarios() -> tuple:
+    """In-sample / out-of-sample x ablation arm, one variable at a time."""
+    out = []
+    for window, (from_date, to_date) in MEASURE_WINDOWS.items():
+        for arm, overrides in MEASURE_ARMS.items():
+            values = dict(MEASURE_BASE)
+            values.update(overrides)
+            name = f"ww2_meas_scalp_{window}_{arm}"
+            _check_measure_arm(name, values)
+            out.append((name, "M5", from_date, to_date, 100000, values))
+    return tuple(out)
+
+
+SCENARIOS += measure_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -98,7 +194,7 @@ def main() -> int:
     OUT_SETS.mkdir(parents=True, exist_ok=True)
     OUT_INI.mkdir(parents=True, exist_ok=True)
 
-    for name, period, from_date, deposit, overrides in SCENARIOS:
+    for name, period, from_date, to_date, deposit, overrides in SCENARIOS:
         values = dict(base)
         values.update({
             "InpEnableExecution": True,
@@ -113,10 +209,17 @@ def main() -> int:
         assert values["InpTakeProfitR"] > 0.0, "mandatory TP"
         assert values["InpMaxPositions"] == 1, "single position"
 
+        if name.startswith("ww2_meas_"):
+            note = [
+                "; Measurement arm: parity is unproven, so this is NOT a strategy result.",
+                "; A=base, B=+break-even, C=+structure, D=+PSAR; one variable per arm.",
+            ]
+        else:
+            note = ["; parity-off runs are infrastructure evidence, NOT a strategy result."]
         lines = [
             f"; {name} - WonderwhalesXAU2ModeEA - XAUUSDm {period}",
             "; Strategy Tester = virtual demo account (ADR 0009).",
-            "; parity-off runs are infrastructure evidence, NOT a strategy result.",
+            *note,
             "[TesterInputs]",
         ]
         lines += [f"{k}={render(v)}" for k, v in values.items()]
@@ -128,7 +231,7 @@ def main() -> int:
             f"Expert={preset['ea']}",
             f"ExpertParameters={name}.set",
             "Symbol=XAUUSDm", f"Period={period}", "Model=1",
-            f"FromDate={from_date}", "ToDate=2026.10.01",
+            f"FromDate={from_date}", f"ToDate={to_date}",
             f"Deposit={deposit}", "Currency=USD", "Leverage=1:100",
             "Optimization=0", "Visual=0", "ShutdownTerminal=1",
             "ReplaceReport=1", f"Report=tester_{name}", "",

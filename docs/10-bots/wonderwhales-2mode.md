@@ -127,13 +127,13 @@ bị chặn gián tiếp qua risk guard.
 ## 5. Bằng chứng
 
 **Nhãn trạng thái: `NOT_RUN`.** Compile + cổng tĩnh + hai chứng minh hạ tầng (Strategy Tester headless,
-`terminal64.exe /config:`) + một census tín hiệu; **không** có kết quả chiến lược hợp lệ vì parity Pine ↔ MT5
-chưa đạt và chưa có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRESS.md) §71 (bot) và §72
-(census).
+`terminal64.exe /config:`) + một census tín hiệu + một ma trận đo management (8 lần chạy); **không** có kết
+quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa có phiên demo chart. Chi tiết đầy đủ ở
+[`../PROGRESS.md`](../PROGRESS.md) §71 (bot), §72 (census) và §73 (measurement harness).
 
 - **Compile** `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
 - **Cổng tĩnh xanh:** `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,
-  `check_docs_links.py broken=0`, `pytest 439 passed`.
+  `check_docs_links.py broken=0 checked=427`, `pytest 452 passed`.
 - **Cổng parity chặn entry (chứng minh):** scenario `ww2_scalp_parity_on` (`InpRequireParity=true`) →
   **0 ENTRY**, `52778` dòng `ENTRY_BLOCKED|reason=parity_blocked|parity_not_proven`; SUMMARY
   `trades=0|entries=0|parity=REQUIRED`. Bằng chứng: `reports/build/tester-reports/ww2_scalp_parity_on/`.
@@ -148,6 +148,8 @@ chưa đạt và chưa có phiên demo chart. Chi tiết đầy đủ ở [`../P
   định, **không** phải cam kết hay đánh giá bot.
 - **Census tín hiệu (chẩn đoán, không phải kết quả chiến lược):** scenario `ww2_scalp_census` →
   194.869 nến M5 (2024-01-01 → 2026-09-30), **52 tín hiệu** (~19/năm). Chi tiết ở §5.1.
+- **Ma trận đo management (chẩn đoán, `NOT_STRATEGY_RESULT`):** 8 run `ww2_meas_scalp_{is,oos}_{a,b,c,d}`
+  → trailing/BE không đổi kết cục lệnh nào; nút thắt là entry. Chi tiết ở §5.2.
 - Chạy `Scripts > WW2CoreTests` trên chart demo để kiểm vector thuần logic (kỳ vọng
   `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`).
 
@@ -199,6 +201,38 @@ này (0 lần nó từ chối một setup đã pass). Nói cách khác: ít lệ
 
 Đây là chẩn đoán, **không** phải bằng chứng lợi nhuận: parity Pine ↔ MT5 vẫn `BLOCKED`, nhãn chiến lược
 vẫn `NOT_RUN`, profit `UNPROVEN`.
+
+### 5.2 Measurement harness — đo management trước khi tinh chỉnh
+
+Sau census (§5.1), bước (b) dựng một ma trận đo 8 lần chạy để biết mỗi quy tắc quản lý đóng góp gì, thay
+vì chỉ nhìn winrate. Nguyên tắc: **mỗi nhánh đổi đúng một biến**, đo trên cả in-sample lẫn out-of-sample,
+và loại cap risk (để một HALT không cắt ngắn mẫu). Chi tiết cách chạy:
+[`../20-operations/strategy-tester.md`](../20-operations/strategy-tester.md) §"Measurement harness".
+
+Cấu hình base: `InpExitOnFlip=false`, `InpMaxHoldingBars=0`, BE/trail tắt, các cap risk `0`,
+`InpRiskPercent=0.15`, deposit 100.000, **parity OFF**. Nhánh: A = chỉ SL/TP; B = A + BE 1,0R;
+C = B + structure trail (arm 1,3R); D = C + PSAR trail.
+
+Kết quả (2026-11-05, `reports/build/tester-reports/ww2_meas_scalp_*`):
+
+| Cửa sổ | Nhánh | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| IS 2024.01.01→2025.06.30 | A/B/C/D | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% |
+| OOS 2025.07.01→2026.10.01 | A | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% |
+| OOS | B/C/D | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% |
+
+Mọi nhánh `INSUFFICIENT_SAMPLE` (n < 30). Ba điều rút ra:
+
+1. **Mọi exit là −1R hoặc +1,5R** (thêm 3 scratch ở OOS B/C/D). Break-even và structure/PSAR **có bắn**
+   (5–10 sự kiện trail, ghi trong telemetry) nhưng **không đổi kết cục lệnh nào** — giá chạm TP hoặc SL
+   trước khi stop trail kịp bị chạm. Trailing **không phải** đòn bẩy ở cấu hình này.
+2. **BE 1R trung tính ở IS, hơi có hại ở OOS** (−291,23 USD so với A) vì nó kéo 3 lệnh thắng về scratch.
+3. **Winrate không phải vấn đề:** TP 1,5R ⇒ winrate hoà vốn 40%; OOS A đúng 40% (expectancy ≈ 0), IS
+   28,57% (âm). Nút thắt là **chất lượng entry**, khớp với census §5.1 (hai cổng một-nến chồng nhau).
+
+Chi tiết R: dòng `EXIT` của journal có thêm `|r=%.2f` (hoặc `|r=NA`), tính từ SL ban đầu; hợp đồng 18 cột
+không đổi. **Toàn bộ ma trận là `NOT_STRATEGY_RESULT`** (parity OFF, parity chưa chứng minh) — chỉ để xếp
+hạng giả thuyết, **không** phải bằng chứng lợi nhuận.
 
 ## 6. Giới hạn / quirk đã biết
 

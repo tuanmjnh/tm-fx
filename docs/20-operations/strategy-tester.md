@@ -415,6 +415,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 | `ww2_scalp_demo_exec` | ENTRY/EXIT có SL+TP (TP = `InpTakeProfitR`), HALT theo guard |
 | `ww2_swing_demo_exec` | ENTRY/EXIT + TRAIL (BE/structure); từ 2018 để W1/D1 EMA200 đủ history |
 | `ww2_scalp_census` | Parity ON + `InpDebug=true`, 100k deposit, risk 0,15% → ghi `_census.csv`, **0 lệnh**; dùng để đếm tín hiệu |
+| `ww2_meas_scalp_{is,oos}_{a,b,c,d}` | 8 lần đo: in-sample 2024.01.01→2025.06.30, out-of-sample 2025.07.01→2026.10.01 × 4 nhánh A–D; parity OFF nên **`NOT_STRATEGY_RESULT`** |
 
 `.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
 đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.
@@ -440,6 +441,96 @@ của setup = **52 tín hiệu** (~19/năm). Nguyên nhân gốc và bảng đ�
 [`../10-bots/wonderwhales-2mode.md`](../10-bots/wonderwhales-2mode.md) §5.1.
 
 Census là **chẩn đoán**, không phải kết quả chiến lược: parity Pine ↔ MT5 vẫn `BLOCKED`.
+
+### Measurement harness — đo trước khi đổi chiến lược
+
+Mục tiêu: biết mỗi quy tắc quản lý (break-even, structure trail, PSAR trail) đóng góp gì vào
+expectancy sau chi phí và drawdown, thay vì chỉ nhìn winrate. Nguyên tắc: **mỗi lần chạy đổi đúng một
+biến**, và mọi nhánh được đo trên cả in-sample lẫn out-of-sample.
+
+`gen_ww2_sets.py` sinh 8 scenario `ww2_meas_scalp_<window>_<arm>`:
+
+| Cửa sổ | Ngày | Nhánh | Cấu hình thêm |
+|---|---|---|---|
+| `is` (in-sample) | 2024.01.01 → 2025.06.30 | `a` | base: chỉ SL/TP cố định |
+| `oos` (out-of-sample) | 2025.07.01 → 2026.10.01 | `b` | `a` + break-even 1,0R |
+| | | `c` | `b` + structure trail (arm ở 1,3R) |
+| | | `d` | `c` + PSAR trail (cùng trigger 1,3R) |
+
+Base dùng cho **mọi** nhánh: `InpExitOnFlip=false`, `InpMaxHoldingBars=0`,
+`InpBreakEvenTriggerR=1e9`, `InpTrailTriggerR=1e9`, 4 cờ trail `false`, các cap risk `0`
+(daily/weekly/drawdown/consecutive/cooldown), `InpMaxExposure=10.0`, `InpRiskPercent=0.15`,
+deposit 100.000. Cap tắt để một HALT giữa cửa sổ không cắt ngắn mẫu và làm các nhánh mất tính so
+sánh; equity lớn + risk nhỏ để bộ định cỡ min-lot không bỏ tín hiệu. Nhánh C/D tự bật
+`InpTrailTriggerR=1.3` (giá trị preset) để candidate thật sự chạy — biến được đo là *candidate trail*,
+còn trigger chỉ là điểm arm của nó.
+
+Hai bẫy thật đã gặp khi dựng harness (2026-11-05), cả hai đều *im lặng* nên đã thêm chốt chặn:
+
+| Bẫy | Triệu chứng | Chốt chặn |
+|---|---|---|
+| `WW2TrailingCoordinator` chỉ xét candidate structure/PSAR khi `r >= InpTrailTriggerR` | "tắt trail" bằng `1e9` làm C/D **không bao giờ chạy**; 3 nhánh giống hệt nhau và ma trận "chứng minh" sai rằng trailing vô dụng | `gen_ww2_sets.py` từ chối arm có cờ trail bật mà trigger tắt; `analyse_measure.py` in `WARNING: identical outcome` |
+| `OnInit` từ chối `InpTrailTriggerR < InpBreakEvenTriggerR` (`init_parameters_invalid\|trail_trigger_below_break_even`) | run kết thúc **exit 0 sau ~12 s** với report `Bars 0`, và runner archive lại CSV của lần chạy trước như thể là mới | `gen_ww2_sets.py` từ chối cặp giá trị sai; `run_tester.ps1` fail-closed khi report 0 bar và chỉ xoá archive sau khi đã kiểm tra |
+
+`analyse_measure.py` in `WARNING: identical outcome across N arms` khi nhiều nhánh có cùng
+trades/net/win/loss — dấu hiệu một công tắc không hề tác động (dù hợp lệ hay bị vô hiệu).
+
+```powershell
+.venv\Scripts\python.exe scripts\tester\gen_ww2_sets.py
+foreach ($w in 'is','oos') { foreach ($a in 'a','b','c','d') {
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps1 -Scenario "ww2_meas_scalp_${w}_${a}" } }
+.venv\Scripts\python.exe scripts\tester\analyse_measure.py reports\build\tester-reports
+```
+
+`analyse_measure.py` đọc journal 18 cột và in, cho từng nhánh: số lệnh, winrate, net, expectancy tính
+bằng **R** và bằng tiền, profit factor, max drawdown lấy từ cột `equity`, phân bố exit-kind, histogram R
+và (nếu có file telemetry) tỉ lệ trail theo lý do. Nhánh dưới 30 lệnh bị gắn `INSUFFICIENT_SAMPLE` —
+với ~19 tín hiệu/năm thì hai cửa sổ này **được dự đoán là nhỏ**, và một tỉ lệ trên 5 lệnh chỉ là nhiễu.
+Nhánh có cùng trades/net/win/loss với nhánh khác bị gắn `WARNING: identical outcome` (dấu hiệu một công
+tắc trail bị vô hiệu, xem bẫy ở trên).
+
+R thực hiện được ghi ngay trong journal: dòng `EXIT` có thêm `|r=%.2f` (hoặc `|r=NA` khi không xác
+định được anchor), tính bằng `pnl / (|entry − initial_sl| × volume × contract_size)`. Không thêm cột
+nào — hợp đồng 18 cột giữ nguyên.
+
+Toàn bộ ma trận chạy với `InpRequireParity=false` (parity Pine ↔ MT5 chưa chứng minh), nên kết quả là
+**`NOT_STRATEGY_RESULT`**: dùng để xếp hạng giả thuyết và thiết kế bước (c), **không** phải bằng chứng
+lợi nhuận.
+
+#### Kết quả ma trận đo (2026-11-05)
+
+In-sample 2024.01.01 → 2025.06.30 (`_is_`):
+
+| Nhánh | Lệnh | Winrate | Net (USD) | Expectancy (R) | PF | MaxDD | Sự kiện trail |
+|---|---:|---:|---:|---:|---:|---:|---|
+| A | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | — |
+| B | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | BE ×5 |
+| C | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | BE ×5, STRUCTURE ×1 |
+| D | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | BE ×5, PSAR ×2 |
+
+Out-of-sample 2025.07.01 → 2026.10.01 (`_oos_`):
+
+| Nhánh | Lệnh | Winrate | Net (USD) | Expectancy (R) | PF | MaxDD | Sự kiện trail |
+|---|---:|---:|---:|---:|---:|---:|---|
+| A | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% | — |
+| B | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% | BE ×10 |
+| C | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% | BE ×9, STRUCTURE ×1 |
+| D | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% | BE ×9, STRUCTURE ×1 |
+
+Mọi nhánh `INSUFFICIENT_SAMPLE` (n < 30). Đọc đúng:
+
+1. **Mọi exit đều là −1R hoặc +1,5R** (thêm 3 scratch ~0R ở OOS B/C/D) — không có exit nào do stop đã
+   trail bị chạm. Break-even và structure/PSAR **có bắn** (5–10 sự kiện) nhưng **không đổi kết cục** của
+   bất kỳ lệnh nào: giá hoặc chạm TP 1,5R, hoặc quay lại SL 1R, trước khi stop trail kịp bị chạm.
+2. **Break-even 1R trung tính ở IS** (5 lần arm đều là lệnh sau đó chạm TP) **và hơi có hại ở OOS**
+   (−291,23 USD; −0,09R so với −0,01R của A) vì nó kéo 3 lệnh thắng về scratch ~0R.
+3. **Winrate không phải vấn đề.** Với TP 1,5R, winrate hoà vốn là `1/(1+1,5) = 40%`. OOS A đạt đúng
+   40% ⇒ expectancy ≈ 0. IS chỉ 28,57% ⇒ âm. Vấn đề nằm ở **chất lượng/lọc entry**, không ở exit.
+4. **Mẫu quá nhỏ để tinh chỉnh** (21 và 25 lệnh): chênh lệch ~0,3R không phân biệt được với nhiễu.
+
+⇒ Giả thuyết xếp hạng cho bước (c)/kế tiếp: (1) cổng entry (census §72 cho thấy hai cổng sự kiện một nến
+chồng nhau) là nút thắt chính; (2) hình học SL/TP (TP 1,5R đòi winrate 40%) là ràng buộc thứ hai;
+(3) trailing **không phải** đòn bẩy. Đây là **giả thuyết**, chưa phải kết luận.
 
 ### Dữ liệu ở đâu
 

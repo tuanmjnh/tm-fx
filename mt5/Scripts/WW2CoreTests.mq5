@@ -277,6 +277,26 @@ void TestStrategies(void)
          "swing_census_no_bias");
   }
 
+void TestRealizedR(void)
+  {
+   //--- R is money P&L over the initial risk in money (distance * volume *
+   //--- contract size); the exit reason carries it into the 18-column journal.
+   double r=0.0;
+   Check(Ww2RealizedR(150.0,0.10,10.0,100.0,r) && Near(r,1.5,1e-9),
+         "realized_r_profit");
+   Check(Ww2RealizedR(-100.0,0.10,10.0,100.0,r) && Near(r,-1.0,1e-9),
+         "realized_r_loss");
+   Check(Ww2RealizedR(0.0,0.10,10.0,100.0,r) && Near(r,0.0,1e-12),
+         "realized_r_breakeven_is_known");
+   //--- Unknown anchors must report NA, never a fabricated zero.
+   Check(!Ww2RealizedR(50.0,0.0,10.0,100.0,r) && Near(r,0.0,1e-12),
+         "realized_r_unknown_volume");
+   Check(!Ww2RealizedR(50.0,0.10,0.0,100.0,r) && Near(r,0.0,1e-12),
+         "realized_r_unknown_stop");
+   Check(!Ww2RealizedR(50.0,0.10,10.0,0.0,r) && Near(r,0.0,1e-12),
+         "realized_r_unknown_contract");
+  }
+
 void OnStart(void)
   {
    g_pass=0;
@@ -286,6 +306,7 @@ void OnStart(void)
    TestTrailing();
    TestSwing();
    TestStrategies();
+   TestRealizedR();
    if(g_fail==0)
       PrintFormat("TEST|RESULT|ALL_PASS|pass=%d fail=0|ww2=1",g_pass);
    else

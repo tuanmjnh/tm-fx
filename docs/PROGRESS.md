@@ -3979,3 +3979,97 @@ vì sự kiện — không phải nới bias.
 - Census chạy với parity ON nên **không** có lệnh nào; con số 52 là **số tín hiệu**, không phải số lệnh đã
   khớp, và không nói gì về lời/lỗ.
 - Chưa thay đổi tham số chiến lược nào ở bước này — cố ý, để bước (b) đo được trên cùng một cấu hình.
+
+## 73. Wonderwhales 2-mode — measurement harness: đo management trước khi tinh chỉnh — 2026-11-05
+
+Bước (b) của lộ trình đã duyệt. Sau census (bước a, §72) cho thấy nút thắt nằm ở entry, bước này dựng một
+ma trận đo **có thể so sánh** để trả lời: break-even và structure/PSAR trailing đóng góp gì vào expectancy,
+thay vì chỉ nhìn winrate. Nguyên tắc: mỗi nhánh đổi đúng một biến, đo cả in-sample lẫn out-of-sample, và
+đọc kết quả sau chi phí + drawdown, không phải winrate.
+
+### 73.1 Thiết kế
+
+- 8 scenario `ww2_meas_scalp_{is,oos}_{a,b,c,d}`: IS 2024.01.01→2025.06.30, OOS 2025.07.01→2026.10.01.
+- Base (mọi nhánh): `InpExitOnFlip=false`, `InpMaxHoldingBars=0`, BE/trail tắt, 4 cờ trail `false`, các
+  cap risk `0` (daily/weekly/drawdown/consecutive/cooldown), `InpMaxExposure=10.0`, `InpRiskPercent=0.15`,
+  deposit 100.000, `InpRequireParity=false`. Cap tắt để HALT không cắt ngắn mẫu và làm mất tính so sánh;
+  equity lớn + risk nhỏ để min-lot không bỏ tín hiệu.
+- Nhánh: **A** = chỉ SL/TP; **B** = A + break-even 1,0R; **C** = B + structure trail (arm 1,3R);
+  **D** = C + PSAR trail (cùng trigger 1,3R).
+- R thực hiện được ghi vào **chính** dòng `EXIT` của journal: `|r=%.2f` (hoặc `|r=NA` khi không xác định
+  được anchor), tính bằng `Ww2RealizedR(pnl, volume, initial_r, contract_size)` = `pnl/risk_money`, với
+  `initial_r` **không** bao giờ bị ghi đè bởi stop đã trail. Không thêm cột — hợp đồng 18 cột giữ nguyên.
+
+### 73.2 Hai lỗi thật của harness (đã sửa, đều im lặng)
+
+| Lỗi | Triệu chứng | Sửa |
+|---|---|---|
+| `WW2TrailingCoordinator` chỉ xét candidate structure/PSAR khi `r >= InpTrailTriggerR` | "tắt trail" bằng `1e9` làm C/D **không bao giờ chạy**; 3 nhánh giống hệt nhau và ma trận suýt "chứng minh" sai rằng trailing vô dụng | nhánh C/D tự đặt `InpTrailTriggerR=1.3`; generator từ chối arm có cờ trail bật mà trigger tắt |
+| `OnInit` từ chối `InpTrailTriggerR < InpBreakEvenTriggerR` | run kết thúc **exit 0 sau ~12 s** với report `Bars 0`, và runner archive lại CSV của lần chạy trước như thể mới | generator từ chối cặp giá trị sai; `run_tester.ps1` fail-closed khi report 0 bar và chỉ xoá archive sau khi kiểm tra |
+
+`analyse_measure.py` thêm `WARNING: identical closed-trade outcome across N arms` để lần sau lỗi kiểu này
+lộ ra ngay thay vì được đọc thành "trailing không có tác dụng".
+
+### 73.3 Kết quả (2026-11-05)
+
+In-sample 2024.01.01 → 2025.06.30:
+
+| Nhánh | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD | Trail |
+|---|---:|---:|---:|---:|---:|---:|---|
+| A | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | — |
+| B | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | BE ×5 |
+| C | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | BE ×5, STRUCTURE ×1 |
+| D | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | BE ×5, PSAR ×2 |
+
+Out-of-sample 2025.07.01 → 2026.10.01:
+
+| Nhánh | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD | Trail |
+|---|---:|---:|---:|---:|---:|---:|---|
+| A | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% | — |
+| B | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% | BE ×10 |
+| C | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% | BE ×9, STRUCTURE ×1 |
+| D | 25 | 44,00% | −376,68 | −0,09 | 0,81 | 1,40% | BE ×9, STRUCTURE ×1 |
+
+Mọi nhánh `INSUFFICIENT_SAMPLE` (n < 30).
+
+### 73.4 Đọc kết quả (giả thuyết, không phải kết luận)
+
+1. **Mọi exit là −1R hoặc +1,5R** (thêm 3 scratch ~0R ở OOS B/C/D). Break-even và structure/PSAR **có bắn**
+   (5–10 sự kiện) nhưng **không đổi kết cục lệnh nào**: giá chạm TP 1,5R hoặc quay lại SL 1R trước khi stop
+   trail kịp bị chạm. ⇒ Trailing/BE **không phải** đòn bẩy ở cấu hình này.
+2. **BE 1R trung tính ở IS và hơi có hại ở OOS** (−291,23 USD so với A) vì kéo 3 lệnh thắng về scratch.
+3. **Winrate không phải vấn đề.** TP 1,5R ⇒ winrate hoà vốn 40%. OOS A đạt đúng 40% (expectancy ≈ 0);
+   IS chỉ 28,57% (âm). Nút thắt là **chất lượng/lọc entry**, khớp với census §72.
+4. Mẫu quá nhỏ để tinh chỉnh (21/25 lệnh): chênh lệch ~0,3R không phân biệt được với nhiễu.
+
+Xếp hạng giả thuyết cho bước (c)/kế tiếp: (1) cổng entry; (2) hình học SL/TP; (3) trailing — loại.
+
+### 73.5 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Include/Wonderwhales/WW2Types.mqh` | `Ww2RealizedR()` — R = pnl/risk_money, `false` khi anchor không xác định |
+| `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` | `RealizedRSuffix()`; 2 đường EXIT (broker + close-at-market) nối `\|r=%.2f`/`\|r=NA` |
+| `mt5/Scripts/WW2CoreTests.mq5` | `TestRealizedR()` 6 check (lãi/lỗ/hoà/3 anchor thiếu) |
+| `scripts/tester/gen_ww2_sets.py` | `MEASURE_BASE`/`MEASURE_ARMS`/`MEASURE_WINDOWS`; `_check_measure_arm()` chốt 2 invariant; `to_date` thành tham số từng scenario |
+| `scripts/tester/analyse_measure.py` | Mới: trades/winrate/net/expectancy R+USD/PF/max DD/exit-kind/histogram R/trail mix; `INSUFFICIENT_SAMPLE`; warning nhánh trùng kết cục |
+| `scripts/tester/run_tester.ps1` | Fail-closed khi report 0 bar; xoá archive cũ chỉ sau khi run hợp lệ |
+| `python/tests/test_analyse_measure.py` | 7 test (số học, r=NA, pnl thiếu, telemetry trail, empty/not-found, cảnh báo trùng) |
+| `python/tests/test_tester_runner.py` | 2 contract cho fail-closed của runner |
+| `python/tests/test_gen_ww2_sets.py` | 4 test cho invariant của ma trận |
+
+### 73.6 Artefact và cổng
+
+- Artefact (gitignored): `reports/build/tester-reports/ww2_meas_scalp_*/` — mỗi run có journal, telemetry,
+  `.htm`, `.png`; 8 run mất ~13 phút (~90–110 s mỗi run).
+- `deploy_pineport.ps1 -Apply -Force`: **0 errors / 0 warnings**.
+- `validate-project.py` `checks=15 fail=0`; `validate_demo_execution.py` `checks=14 fail=0`;
+  `check_docs_links.py` `broken=0 checked=427`; `pytest 452 passed` (trước bước này 439).
+- `WW2CoreTests` compile 0/0 nhưng **chưa chạy trên chart** (cần terminal thủ công): kỳ vọng
+  `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1` (gồm 11 test census + 6 test realized-R).
+
+### 73.7 Nhãn trung thực (không nâng)
+
+- Toàn bộ ma trận chạy parity OFF ⇒ **`NOT_STRATEGY_RESULT`**: chỉ dùng để xếp hạng giả thuyết, **không**
+  phải bằng chứng lợi nhuận. Bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`, parity Pine ↔ MT5 vẫn `BLOCKED`.
+- Chưa đổi tham số chiến lược nào ở bước này — cố ý, để bước (c) đo parity trên cùng cấu hình.

@@ -463,6 +463,19 @@ void LogEvent(const string event_name,const ENUM_SIM_SIDE side,
       PrintFormat("LAB|ERROR|ww2|log_write_failed|%s",error);
   }
 
+//--- Realized R appended to every EXIT row. The 18-column journal contract
+//--- is unchanged: R rides in the free-text reason field, measured from the
+//--- stored initial SL (never the trailed one).
+string RealizedRSuffix(const double pnl,const bool known)
+  {
+   double r=0.0;
+   if(!known ||
+      !Ww2RealizedR(pnl,g_pos.volume,g_pos.initial_r,
+                    SymbolInfoDouble(_Symbol,SYMBOL_TRADE_CONTRACT_SIZE),r))
+      return("|r=NA");
+   return(StringFormat("|r=%.2f",r));
+  }
+
 double DrawdownPct(void)
   {
    const double peak=g_guard.PeakEquity();
@@ -685,9 +698,9 @@ void FinalizeClosedPosition(void)
    g_last_exit_bar=iTime(_Symbol,_Period,0);
    LogEvent("EXIT",(g_pos.is_buy ? SIM_SIDE_BUY : SIM_SIDE_SELL),0.0,
             g_pos.volume,g_pos.entry,g_pos.initial_sl,g_pos.tp,
-            StringFormat("BROKER_EXIT|mode=%s|pnl_known=%d|pnl=%.2f|deals=%d|streak=%d",
+            StringFormat("BROKER_EXIT|mode=%s|pnl_known=%d|pnl=%.2f|deals=%d|streak=%d%s",
                          Ww2ModeName(g_pos.mode),(known ? 1 : 0),pnl,deals,
-                         g_guard.StreakLosses()));
+                         g_guard.StreakLosses(),RealizedRSuffix(pnl,known)));
    Ww2ResetPosition(g_pos);
    SaveState();
   }
@@ -721,9 +734,10 @@ bool CloseAtMarket(const string reason)
    g_last_exit_bar=iTime(_Symbol,_Period,0);
    LogEvent("EXIT",(g_pos.is_buy ? SIM_SIDE_BUY : SIM_SIDE_SELL),fill.price,
             g_pos.volume,g_pos.entry,g_pos.initial_sl,g_pos.tp,
-            StringFormat("%s|mode=%s|close_price=%.3f|pnl_known=%d|pnl=%.2f|deals=%d|streak=%d|%s",
+            StringFormat("%s|mode=%s|close_price=%.3f|pnl_known=%d|pnl=%.2f|deals=%d|streak=%d|%s%s",
                          reason,Ww2ModeName(g_pos.mode),fill.price,(known ? 1 : 0),
-                         pnl,deals,g_guard.StreakLosses(),fill.message));
+                         pnl,deals,g_guard.StreakLosses(),fill.message,
+                         RealizedRSuffix(pnl,known)));
    Ww2ResetPosition(g_pos);
    SaveState();
    return(true);
