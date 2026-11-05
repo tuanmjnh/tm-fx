@@ -4,10 +4,13 @@ Exit codes:
     0  every signal matched
     1  at least one mismatch was reported
     2  an input file or argument was invalid
+    3  blocked: one of the two exports does not exist
 
 The Pine CSV must use the schema documented in
 ``docs/30-research/indicators/wonderwhales.md``. This script does not create or alter
-reference data; it only compares two existing exports.
+reference data; it only compares two existing exports. When the Pine export is
+missing it reports ``parity=BLOCKED`` instead of inventing rows, so a caller can
+tell "no reference yet" apart from "the comparator is broken".
 """
 
 from __future__ import annotations
@@ -24,6 +27,11 @@ from mt5_ea_ai_lab.evaluation.pine_parity import (
     compare_pine_exports,
     write_report,
 )
+
+EXIT_MATCH = 0
+EXIT_MISMATCH = 1
+EXIT_INVALID = 2
+EXIT_BLOCKED = 3
 
 
 def _resolve(path_value: str) -> Path:
@@ -92,6 +100,14 @@ def main(argv: list[str] | None = None) -> int:
     out_dir = _resolve(args.out_dir)
     bar_times = _resolve(args.bar_times) if args.bar_times else None
 
+    for label, path in (("pine", pine_path), ("mql5", mql5_path)):
+        if not path.is_file():
+            print(
+                f"parity=BLOCKED reason={label}_file_missing path={path}",
+                file=sys.stderr,
+            )
+            return EXIT_BLOCKED
+
     try:
         report = compare_pine_exports(
             pine_path,
@@ -107,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
         json_path, csv_path = write_report(report, out_dir)
     except (PineParityError, OSError) as exc:
         print(f"comparison_error: {exc}", file=sys.stderr)
-        return 2
+        return EXIT_INVALID
 
     print(
         f"status={report.status} rows_pine={report.rows_pine} "
@@ -120,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"report_json={json_path}")
     print(f"report_csv={csv_path}")
-    return 0 if report.status == "match" else 1
+    return EXIT_MATCH if report.status == "match" else EXIT_MISMATCH
 
 
 if __name__ == "__main__":

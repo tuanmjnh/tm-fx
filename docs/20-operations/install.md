@@ -432,7 +432,8 @@ Xem [`PINE_PARITY_Wonderwhales.md`](../30-research/indicators/parity.md).
 
 `180` là ví dụ cho server GMT+3. Phải đổi theo server thực tế; EA ghi giờ server, Pine export dùng UTC.
 
-Không có CSV reference thật thì ghi `BLOCKED`; không tạo CSV giả.
+Không có CSV reference thật thì ghi `BLOCKED`; không tạo CSV giả. Exit 0 = match, 1 = mismatch,
+2 = CSV/đối số lỗi, **3 = `BLOCKED`** (thiếu một trong hai file).
 
 #### 9.1 Parity đa nguồn
 

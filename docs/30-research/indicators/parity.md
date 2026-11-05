@@ -122,6 +122,10 @@ Exit code:
 | `0` | Tất cả dòng khớp |
 | `1` | Có ít nhất một mismatch |
 | `2` | File/argument không hợp lệ (schema, timestamp, khóa trùng, filter rỗng) |
+| `3` | `parity=BLOCKED` — thiếu một trong hai file (thường là CSV reference của Pine) |
+
+Code `3` cho phép phân biệt "chưa có reference" với "comparator hỏng"; nhờ nó trạng thái `BLOCKED` đọc được
+bằng máy và không bị lẫn với lỗi schema.
 
 Output: `pine_mismatch_report.json` và `pine_mismatch_report.csv` trong `--out-dir`.
 
@@ -146,7 +150,7 @@ direction, tolerance, NaN, hash, filter, warm-up, timestamp sai, khóa trùng, t
    Pine export phải là UTC; nếu không, dùng `--pine-offset-minutes`.
 6. Symbol/timeframe chuẩn vẫn chưa chốt; parity thật cần chốt trước khi chạy.
 7. Không có kết quả parity thật cho đến khi có reference CSV; mọi báo cáo phải ghi `BLOCKED`, không
-   được suy ra từ unit test.
+   được suy ra từ unit test. Thiếu file → exit code `3` (`parity=BLOCKED`), không phải `2`.
 
 ### 9. Checklist trước khi chạy parity thật
 

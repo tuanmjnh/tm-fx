@@ -361,9 +361,24 @@ def test_cli_exit_codes(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> N
     assert code == 1
     assert "status=mismatch" in capsys.readouterr().out
 
+    #--- A missing export is BLOCKED (3), not an invalid argument: callers must
+    #--- be able to tell "no Pine reference yet" from "the comparator is broken".
     code = comparator.main(
         ["--pine", str(tmp_path / "missing.csv"), "--mql5", str(matching)]
     )
+    assert code == 3
+    assert "parity=BLOCKED reason=pine_file_missing" in capsys.readouterr().err
+
+    code = comparator.main(
+        ["--pine", str(pine), "--mql5", str(tmp_path / "missing.csv")]
+    )
+    assert code == 3
+    assert "parity=BLOCKED reason=mql5_file_missing" in capsys.readouterr().err
+
+    #--- An existing but malformed file stays a hard error (2).
+    bad = write_csv(tmp_path / "bad.csv", BASE_ROWS)
+    bad.write_text("bar_open_time,symbol\n", encoding="utf-8")
+    code = comparator.main(["--pine", str(bad), "--mql5", str(matching)])
     assert code == 2
     assert "comparison_error" in capsys.readouterr().err
 

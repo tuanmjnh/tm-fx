@@ -133,7 +133,7 @@ quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa 
 
 - **Compile** `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
 - **Cổng tĩnh xanh:** `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,
-  `check_docs_links.py broken=0 checked=427`, `pytest 452 passed`.
+  `check_docs_links.py broken=0 checked=430`, `pytest 452 passed`.
 - **Cổng parity chặn entry (chứng minh):** scenario `ww2_scalp_parity_on` (`InpRequireParity=true`) →
   **0 ENTRY**, `52778` dòng `ENTRY_BLOCKED|reason=parity_blocked|parity_not_proven`; SUMMARY
   `trades=0|entries=0|parity=REQUIRED`. Bằng chứng: `reports/build/tester-reports/ww2_scalp_parity_on/`.
@@ -150,6 +150,9 @@ quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa 
   194.869 nến M5 (2024-01-01 → 2026-09-30), **52 tín hiệu** (~19/năm). Chi tiết ở §5.1.
 - **Ma trận đo management (chẩn đoán, `NOT_STRATEGY_RESULT`):** 8 run `ww2_meas_scalp_{is,oos}_{a,b,c,d}`
   → trailing/BE không đổi kết cục lệnh nào; nút thắt là entry. Chi tiết ở §5.2.
+- **Cổng parity (bước c):** comparator `compare_pine_exports.py` (+ `pine_parity.py`, 25 test) đã sẵn sàng;
+  thêm exit code `3` = `parity=BLOCKED` để tách "thiếu reference" khỏi lỗi schema. Chưa có CSV Pine
+  ⇒ `BLOCKED`. Runbook ở §5.3.
 - Chạy `Scripts > WW2CoreTests` trên chart demo để kiểm vector thuần logic (kỳ vọng
   `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`).
 
@@ -234,10 +237,58 @@ Chi tiết R: dòng `EXIT` của journal có thêm `|r=%.2f` (hoặc `|r=NA`), t
 không đổi. **Toàn bộ ma trận là `NOT_STRATEGY_RESULT`** (parity OFF, parity chưa chứng minh) — chỉ để xếp
 hạng giả thuyết, **không** phải bằng chứng lợi nhuận.
 
+### 5.3 Parity Pine ↔ MT5 — runbook (bước (c))
+
+**Trạng thái: `BLOCKED`** — comparator **đã có sẵn** và đã test, chỉ thiếu **CSV reference thật do Pine
+xuất**. Đây là thứ duy nhất còn giữ `InpRequireParity=true` (chặn mọi entry, `reason=parity_blocked`).
+Không tạo CSV giả. Công cụ: [`scripts/compare_pine_exports.py`](../../scripts/compare_pine_exports.py) +
+[`pine_parity.py`](../../python/src/mt5_ea_ai_lab/evaluation/pine_parity.py); schema và luật so ở
+[`../30-research/indicators/parity.md`](../30-research/indicators/parity.md).
+
+Bộ input phải **khoá giống hệt ở cả hai phía**:
+
+| Input | Giá trị |
+|---|---|
+| Signal mode | `SAR_EMA` (`InpSignalMode=WW_MODE_SAR_EMA`) |
+| PSAR start / inc / max | `0.02` / `0.02` / `0.2` |
+| Fast / Slow / EMA200 | `20` / `50` / `200` |
+| ATR length / Min ATR % | `14` / `0.5` |
+| Vol MA / RSI / BB len / BB mult | `20` / `14` / `20` / `2.0` |
+| Warm-up | `300` bar |
+| Confirm on bar close | `true` (bản port chỉ hỗ trợ chế độ này — D16/P3) |
+| Symbol / timeframe | `XAUUSDm` / `M5`, chốt một khoảng ngày đủ dài |
+
+Các bước:
+
+1. **Pine (TradingView):** chạy `Wonderwhales.pine` (bản indicator, **không** phải Backtest) trên XAUUSD M5 với
+   input khoá ở trên, `Confirm signals on bar close = true`; xuất các dòng tín hiệu ra CSV theo schema
+   `bar_open_time,symbol,timeframe,signal_id,side,sar_dir,psar,fast,slow,atr_pct` (UTC). Lưu ở
+   `reports/pine_parity/pine_reference.csv`.
+2. **MQL5:** attach `Scripts > PineSignalLabEA` trên `XAUUSDm M5` với `InpMode=WW_MODE_SAR_EMA` và cùng
+   bộ psar/ema/atr/warmup; EA ghi `MQL5\Files\pine_signal_log.csv`. So trên log của **indicator** (không
+   phải journal của EA) để phép so là hàm thuần của chuỗi nến: EA 2-mode đọc chính indicator đó ở `shift=1`,
+   nên parity indicator là điều kiện cần cho tín hiệu của EA.
+3. **So:**
+   ```powershell
+   .venv\Scripts\python.exe scripts\compare_pine_exports.py `
+     --pine reports\pine_parity\pine_reference.csv `
+     --mql5 "$env:APPDATA\MetaQuotes\Terminal\53785E099C927DB68A545C249CDBCE06\MQL5\Files\pine_signal_log.csv" `
+     --out-dir reports\pine_parity --mql5-offset-minutes 180 `
+     --warmup-bars 300 --bar-times reports\pine_parity\bars.csv
+   ```
+4. **Luật quyết định:** chỉ khi report có `status=match` **và** `mismatch_count=0` **và** số tín hiệu so
+   `≥ 100` mới được đặt `InpRequireParity=false`; lưu JSON report làm bằng chứng. Mọi trường hợp khác giữ
+   `true`. Exit code: `0` match, `1` mismatch, `2` lỗi schema/đối số, **`3` = `BLOCKED`** (thiếu file).
+
+> **Bẫy phải xử lý trước khi so:** comparator khớp `symbol` **chính xác**. Broker Exness dùng `XAUUSDm` còn
+> TradingView dùng `XAUUSD`, nên nếu để nguyên, *mọi* dòng thành `missing_in_*`. Phải ghi **cùng một chuỗi**
+> ở cột `symbol` cả hai file (ví dụ sửa cột `symbol` của export Pine thành `XAUUSDm`) trước khi chạy.
+
 ## 6. Giới hạn / quirk đã biết
 
 - **Parity Pine ↔ MT5 vẫn `BLOCKED`** (chưa có CSV tham chiếu Pine) ⇒ EA chặn entry. Đây là hành vi có chủ
-  đích, không phải lỗi.
+  đích, không phải lỗi. Runbook để gỡ và luật quyết định ở §5.3; thiếu file cho exit code `3`
+  (`parity=BLOCKED`) nên phân biệt được với lỗi schema.
 - Chỉ chạy **một chế độ demo tại một thời điểm**; không chạy đồng thời Scalp + Swing.
 - Mode của lệnh được lưu trong state lúc vào; nếu operator đổi `InpTradingMode` khi đang có vị thế, EA vẫn
   quản lý theo mode đã lưu (không theo input mới).

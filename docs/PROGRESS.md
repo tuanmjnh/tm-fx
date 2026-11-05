@@ -4073,3 +4073,49 @@ Xếp hạng giả thuyết cho bước (c)/kế tiếp: (1) cổng entry; (2) h
 - Toàn bộ ma trận chạy parity OFF ⇒ **`NOT_STRATEGY_RESULT`**: chỉ dùng để xếp hạng giả thuyết, **không**
   phải bằng chứng lợi nhuận. Bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`, parity Pine ↔ MT5 vẫn `BLOCKED`.
 - Chưa đổi tham số chiến lược nào ở bước này — cố ý, để bước (c) đo parity trên cùng cấu hình.
+
+## 74. Wonderwhales 2-mode — parity Pine ↔ MT5: comparator sẵn sàng, chốt `BLOCKED` (bước c) — 2026-11-05
+
+Bước (c) của lộ trình là "viết script so parity". Kết quả điều tra trước khi viết: **script đã tồn tại**.
+`scripts/compare_pine_exports.py` + `python/src/mt5_ea_ai_lab/evaluation/pine_parity.py` so CSV reference
+của Pine với log `PineSignalLabEA`, có offset server, warm-up, tolerance, report JSON/CSV, và đã có 25 test.
+Bên Pine cũng đã có schema + signal ID cho mode `SAR_EMA` (mode mà bot 2-mode dùng). Vì vậy viết thêm một
+comparator thứ hai là trùng lặp, không phải tiến bộ. Việc còn thiếu là **artefact reference thật**, thứ mà
+chỉ con người xuất được từ TradingView.
+
+### 74.1 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `scripts/compare_pine_exports.py` | Thêm exit code `3` = `parity=BLOCKED reason=<pine\|mql5>_file_missing` khi thiếu file; `0/1/2` đặt tên hằng `EXIT_*`. Trước đây thiếu file rơi vào `2` (lỗi schema), không phân biệt được "chưa có reference" với "comparator hỏng" |
+| `python/tests/test_pine_parity.py` | `test_cli_exit_codes` tách 3 nhánh: thiếu Pine → `3`, thiếu MQL5 → `3`, file hỏng → `2` |
+| `docs/10-bots/wonderwhales-2mode.md` | §5.3 runbook parity (input khoá hai phía, 4 bước, luật quyết định, bẫy symbol suffix); §5 bullet; §6 trỏ §5.3 |
+| `docs/30-research/indicators/parity.md` | Bảng exit code thêm `3`; mục giới hạn nêu `3` |
+| `docs/20-operations/install.md` | §9 nêu exit code `3` cho comparator Wonderwhales |
+
+### 74.2 Bẫy phải xử lý trước khi so (chưa từng ghi)
+
+Comparator khớp `symbol` **chính xác**. Server Exness dùng `XAUUSDm`, TradingView dùng `XAUUSD` ⇒ để nguyên
+thì *mọi* dòng thành `missing_in_*` và kết quả đọc sai hoàn toàn. Phải ghi cùng một chuỗi ở cột `symbol`
+cả hai file. Đã ghi vào §5.3 của trang bot.
+
+### 74.3 Luật quyết định (chốt trước, không đổi sau khi thấy kết quả)
+
+Chỉ khi report có `status=match`, `mismatch_count=0`, và số tín hiệu so `>= 100` mới được đặt
+`InpRequireParity=false`. Lưu JSON report làm bằng chứng. Mọi trường hợp khác giữ `true`.
+
+### 74.4 Cổng
+
+- Không file MQL nào đổi ở bước này nên trạng thái compile giữ nguyên từ §73: **0 errors / 0 warnings**.
+- `pytest 452 passed` — số test **không tăng** vì 3 assert mới nằm trong `test_cli_exit_codes` có sẵn
+  (`test_pine_parity.py`).
+- `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,
+  `check_docs_links.py broken=0 checked=430` (tăng 3 link do §5.3 của trang bot).
+
+### 74.5 Nhãn trung thực (không nâng)
+
+- Parity Pine ↔ MT5 vẫn **`BLOCKED`**: không có CSV reference thật, nên không có kết quả parity nào.
+  Comparator đã test chỉ chứng minh công cụ đúng, **không** chứng minh hai implementation tương đương.
+- Không có thay đổi tham số chiến lược; bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`.
+- Việc cần người dùng làm: xuất CSV reference từ TradingView (xem §5.3 / checklist
+  [`parity.md`](30-research/indicators/parity.md) mục 9) rồi báo lại để chạy comparator.
