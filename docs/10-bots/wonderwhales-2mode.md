@@ -379,6 +379,33 @@ vào trên nền `(1, 5)` — chưa làm, chờ quyết định.
 Bước kế tiếp hợp lý (chưa làm, chờ quyết định): thử **hình học SL/TP** trên nền đã chọn, hoặc dò cửa sổ setup
 trung gian (2–4) để tìm điểm edge bắt đầu loãng.
 
+### 5.7 Hình học TP (task G)
+
+Trên nền edge/lệnh tốt nhất `(setup 1, trigger 5)`, đổi **chỉ** `InpTakeProfitR` (SL giữ `1R`). Winrate
+hoà vốn tương ứng: `1/(1+TP)` = 50% / 44,4% / 40% / 33,3%.
+
+| TP | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| 1,0R | IS | 288 | 45,83% | −4.128,60 | −0,10 | 0,82 | 4,89% |
+| 1,25R | IS | 284 | 40,49% | −4.401,09 | −0,11 | 0,82 | 5,47% |
+| 1,5R (đối chứng) | IS | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% |
+| 2,0R | IS | 273 | 30,40% | −4.312,03 | −0,11 | 0,84 | 5,81% |
+| 1,0R | OOS | 307 | 48,53% | −1.578,98 | −0,03 | 0,93 | 3,69% |
+| 1,25R | OOS | 305 | 44,26% | −601,54 | −0,01 | 0,98 | 3,59% |
+| 1,5R (đối chứng) | OOS | 298 | 42,62% | **+2.601,60** | **+0,06** | **1,10** | 2,89% |
+| 2,0R | OOS | 287 | 36,59% | **+3.912,31** | **+0,09** | **1,14** | 3,31% |
+
+Đọc — **hai cửa sổ không đồng ý**, nên đây **không** phải bằng chứng chọn TP:
+
+1. Winrate giảm đúng như dự đoán và luôn nằm **trên** winrate hoà vốn tương ứng.
+2. **IS: cả bốn mức TP đều âm** (−0,10…−0,11R) với PF ~0,82–0,84 — hình học TP **không** giúp gì ở IS.
+3. **OOS: ưu tiên TP lớn** đơn điệu (−0,03 → −0,01 → +0,06 → +0,09R; PF 1,14 ở TP 2,0R).
+4. Mâu thuẫn IS/OOS nghĩa là lựa chọn TP **không** được hai cửa sổ cùng xác nhận; TP 2,0R tốt ở OOS có thể là
+   đặc điểm chế độ 2025-07→2026-10 chứ không phải edge. Vẫn **`NOT_STRATEGY_RESULT`**.
+
+Kết luận tạm: trong ba đòn bẩy đã đo (trailing, cửa sổ sự kiện, hình học TP), **cửa sổ sự kiện** là cái duy
+nhất cải thiện rõ và nhất quán; edge còn lại vẫn mỏng và chưa được hai cửa sổ xác nhận cùng lúc.
+
 ## 6. Giới hạn / quirk đã biết
 
 - **Parity Pine ↔ MT5 vẫn `BLOCKED`** (chưa có CSV tham chiếu Pine) ⇒ EA chặn entry. Đây là hành vi có chủ

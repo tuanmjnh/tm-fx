@@ -13,6 +13,7 @@ Scenarios:
   ww2_meas_scalp_<window>_gate_<w>  4 trigger-window runs: in/out of sample x trigger window.
   ww2_meas_scalp_<window>_setup_<s> 4 setup-window runs: in/out of sample x setup window.
   ww2_meas_scalp_<window>_combo_<c> 4 combination runs: trigger 5 fixed, setup 1 vs 5.
+  ww2_meas_scalp_<window>_geom_<g> 8 geometry runs: TP 1.0/1.25/1.5/2.0 R on base (1,5).
 
 Parity is unproven, so every parity-off run is NOT a strategy result. The
 measurement matrix changes ONE variable per arm so the effect of each
@@ -32,6 +33,13 @@ one input:
   setup_s5 M5 flip within the last five closed M5 bars (trigger window still 1)
   combo_c1 trigger window 5 with setup window 1 (control for the combination)
   combo_c5 trigger window 5 with setup window 5
+
+The geometry matrix fixes the base at (setup 1, trigger 5) and moves only the TP:
+
+  geom_tp10  TP 1.0R (break-even winrate 50.0%)
+  geom_tp125 TP 1.25R (44.4%)
+  geom_tp15  TP 1.5R (40.0%), the control
+  geom_tp20  TP 2.0R (33.3%)
 
 Usage:
   .venv\\Scripts\\python.exe scripts\\tester\\gen_ww2_sets.py
@@ -139,8 +147,20 @@ COMBO_VARIANTS = {
     "c5": {"InpTriggerWindowBars": 5, "InpSetupWindowBars": 5},
 }
 
+#--- Task G: TP geometry on the best per-trade base (setup 1, trigger 5).
+#--- The SL stays at the initial 1R stop; only InpTakeProfitR moves, which also
+#--- moves the break-even winrate (1/(1+TP)): 50% / 44.4% / 40% / 33.3%.
+GEOMETRY_BASE = {"InpTriggerWindowBars": 5, "InpSetupWindowBars": 1}
+GEOMETRY_VARIANTS = {
+    "tp10": {**GEOMETRY_BASE, "InpTakeProfitR": 1.0},
+    "tp125": {**GEOMETRY_BASE, "InpTakeProfitR": 1.25},
+    "tp15": {**GEOMETRY_BASE, "InpTakeProfitR": 1.5},   # control = the (1,5) base
+    "tp20": {**GEOMETRY_BASE, "InpTakeProfitR": 2.0},
+}
 
-def _window_scenarios(variants: dict, tag: str) -> tuple:
+
+def _variant_matrix(variants: dict, tag: str) -> tuple:
+    """(is, oos) x variant, each variant overriding MEASURE_BASE by one variable."""
     out = []
     for window, (from_date, to_date) in MEASURE_WINDOWS.items():
         for variant, overrides in variants.items():
@@ -154,17 +174,22 @@ def _window_scenarios(variants: dict, tag: str) -> tuple:
 
 def gate_scenarios() -> tuple:
     """In-sample / out-of-sample x trigger-window variant, one variable at a time."""
-    return _window_scenarios(GATE_VARIANTS, "gate")
+    return _variant_matrix(GATE_VARIANTS, "gate")
 
 
 def setup_scenarios() -> tuple:
     """In-sample / out-of-sample x setup-window variant, one variable at a time."""
-    return _window_scenarios(SETUP_VARIANTS, "setup")
+    return _variant_matrix(SETUP_VARIANTS, "setup")
 
 
 def combo_scenarios() -> tuple:
     """Trigger window fixed at its winner; the setup window is the only mover."""
-    return _window_scenarios(COMBO_VARIANTS, "combo")
+    return _variant_matrix(COMBO_VARIANTS, "combo")
+
+
+def geometry_scenarios() -> tuple:
+    """In-sample / out-of-sample x TP geometry; the TP is the only mover."""
+    return _variant_matrix(GEOMETRY_VARIANTS, "geom")
 
 
 def _check_measure_arm(name: str, values: dict) -> None:
@@ -210,6 +235,7 @@ SCENARIOS += measure_scenarios()
 SCENARIOS += gate_scenarios()
 SCENARIOS += setup_scenarios()
 SCENARIOS += combo_scenarios()
+SCENARIOS += geometry_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -289,6 +315,11 @@ def main() -> int:
             note = [
                 "; Combination run: parity is unproven, so this is NOT a strategy result.",
                 "; c1 = trigger 5 + setup 1 (control), c5 = trigger 5 + setup 5.",
+            ]
+        elif "_geom_" in name:
+            note = [
+                "; TP-geometry run: parity is unproven, so this is NOT a strategy result.",
+                "; base = trigger 5 + setup 1; TP 1.0/1.25/1.5/2.0 R, SL stays 1R.",
             ]
         elif name.startswith("ww2_meas_"):
             note = [

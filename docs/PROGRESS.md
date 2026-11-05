@@ -4295,3 +4295,62 @@ hoặc dò cửa sổ setup trung gian (2–4) để tìm điểm edge bắt đ�
   `NOT_STRATEGY_RESULT`.
 - Không thay đổi preset (chủ sở hữu đã chốt giữ `InpTriggerWindowBars=1`, `InpSetupWindowBars=1` cho tới khi
   parity xong).
+
+## 78. Wonderwhales 2-mode — hình học TP (task G) — 2026-11-05
+
+Chủ sở hữu chọn thử giả thuyết xếp hạng #2: hình học SL/TP. Đo trên nền edge/lệnh tốt nhất `(setup 1,
+trigger 5)` và **chỉ** đổi `InpTakeProfitR` (SL giữ ở initial stop `1R`). Winrate hoà vốn `1/(1+TP)`:
+50% / 44,4% / 40% / 33,3%.
+
+### 78.1 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `scripts/tester/gen_ww2_sets.py` | `GEOMETRY_BASE`/`GEOMETRY_VARIANTS` + `geometry_scenarios()` → `ww2_meas_scalp_{is,oos}_geom_{tp10,tp125,tp15,tp20}`; đổi tên helper chung `_window_scenarios` → `_variant_matrix` (giờ phục vụ cả 4 ma trận) |
+| `python/tests/test_gen_ww2_sets.py` | Test ma trận hình học: 8 scenario, nền `(1,5)` cố định, mỗi biến thể khác đối chứng **đúng một** input (`InpTakeProfitR`) |
+| `docs/...` | Bảng ở bot page §5.7; hàng scenario ở strategy-tester.md; README |
+
+Không đổi MQL ⇒ không cần compile.
+
+### 78.2 Kết quả (base setup 1, trigger 5; management nhánh A; parity OFF)
+
+| TP | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| 1,0R | IS | 288 | 45,83% | −4.128,60 | −0,10 | 0,82 | 4,89% |
+| 1,25R | IS | 284 | 40,49% | −4.401,09 | −0,11 | 0,82 | 5,47% |
+| 1,5R (đối chứng) | IS | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% |
+| 2,0R | IS | 273 | 30,40% | −4.312,03 | −0,11 | 0,84 | 5,81% |
+| 1,0R | OOS | 307 | 48,53% | −1.578,98 | −0,03 | 0,93 | 3,69% |
+| 1,25R | OOS | 305 | 44,26% | −601,54 | −0,01 | 0,98 | 3,59% |
+| 1,5R (đối chứng) | OOS | 298 | 42,62% | +2.601,60 | +0,06 | 1,10 | 2,89% |
+| 2,0R | OOS | 287 | 36,59% | +3.912,31 | +0,09 | 1,14 | 3,31% |
+
+Đối chứng `tp15` trùng khớp tuyệt đối với `gate_w5`/`combo_c1` ⇒ so sánh sạch.
+
+### 78.3 Đọc kết quả — HAI CỬA SỔ KHÔNG ĐỒNG Ý
+
+1. Winrate giảm đúng như dự đoán theo `1/(1+TP)` và luôn nằm **trên** ngưỡng hoà vốn tương ứng.
+2. **IS: cả bốn mức TP đều âm** (−0,10…−0,11R), PF ~0,82–0,84 ⇒ hình học TP **không** giúp gì ở IS.
+3. **OOS: ưu tiên TP lớn** đơn điệu (−0,03 → −0,01 → +0,06 → +0,09R; PF 1,14 ở TP 2,0R).
+4. Mâu thuẫn IS/OOS ⇒ **không** được chọn TP từ dữ liệu này. TP 2,0R tốt ở OOS có thể là đặc điểm chế độ
+   2025-07→2026-10 (xu hướng mạnh), không phải edge. Vẫn **`NOT_STRATEGY_RESULT`**.
+
+Kết luận: trong ba đòn bẩy đã đo — trailing (§73, **loại**), cửa sổ sự kiện (§75–77, cải thiện rõ nhưng edge
+mỏng), hình học TP (§78, **không nhất quán**) — chỉ cửa sổ sự kiện là cải thiện nhất quán. Edge của tín hiệu
+như đang port vẫn **chưa được thiết lập**.
+
+Bước kế tiếp hợp lý (chưa làm, chờ quyết định): (a) áp TP lớn lên nền `(5,5)` — cấu hình duy nhất dương ở
+**cả hai** cửa sổ — để xem có giữ được không; (b) đổi **chất lượng tín hiệu** (ví dụ đòi hướng PSAR M5 còn
+đồng ý tại thời điểm trigger) thay vì đổi exit; (c) kiểm chứng port bằng cross-implementation trước khi tinh
+chỉnh tiếp.
+
+### 78.4 Cổng
+
+- Không đổi file MQL ⇒ compile giữ nguyên từ §76 (**0 errors / 0 warnings**).
+- `validate-project.py checks=15 fail=0`; `validate_demo_execution.py checks=14 fail=0`;
+  `check_docs_links.py broken=0 checked=430`; `pytest 458 passed` (trước bước này 457; thêm 1 test hình học).
+
+### 78.5 Nhãn trung thực
+
+- Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF.
+- **Không** đổi preset, **không** chọn TP nào — dữ liệu không đủ để chọn.

@@ -419,6 +419,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 | `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` | 4 lần đo **cửa sổ trigger**: `w1` = chỉ cây trigger cuối (đối chứng), `w5` = mọi cây M1 của nến M5; cùng management nhánh A; **`NOT_STRATEGY_RESULT`** |
 | `ww2_meas_scalp_{is,oos}_setup_{s1,s5}` | 4 lần đo **cửa sổ setup**: `s1` = chỉ nến M5 cuối (đối chứng), `s5` = flip trong 5 nến M5 gần nhất (trigger window giữ `1`); **`NOT_STRATEGY_RESULT`** |
 | `ww2_meas_scalp_{is,oos}_combo_{c1,c5}` | 4 lần đo **tổ hợp**: trigger window cố định `5`; `c1` = setup `1` (đối chứng), `c5` = setup `5`; **`NOT_STRATEGY_RESULT`** |
+| `ww2_meas_scalp_{is,oos}_geom_{tp10,tp125,tp15,tp20}` | 8 lần đo **hình học TP** trên nền `(setup 1, trigger 5)`: TP `1,0`/`1,25`/`1,5` (đối chứng)/`2,0` R, SL giữ `1R`; **`NOT_STRATEGY_RESULT`** |
 
 `.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
 đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.
