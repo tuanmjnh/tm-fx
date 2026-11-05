@@ -68,7 +68,7 @@ Input khai theo 6 nhóm của [`input-convention.md`](input-convention.md) — *
 | | `InpBreakEvenCostBuffer` / `InpBreakEvenBufferPoints` | `true` / `50.0` |
 | `04 Journal and state` | `InpEnableLog` / `InpLogFile` | `true` / `"wonderwhales_xau_2mode_demo.csv"` |
 | | `InpEnableTelemetry` / `InpTelemetryFile` | `true` / `"wonderwhales_xau_2mode_telemetry.csv"` |
-| | `InpPersistState` / `InpStateFile` / `InpResetStateOnInit` / `InpDebug` | `true` / `"wonderwhales_xau_2mode_demo_state.csv"` / `false` / `false` |
+| | `InpPersistState` / `InpStateFile` / `InpResetStateOnInit` / `InpDebug` | `true` / `"wonderwhales_xau_2mode_demo_state.csv"` / `false` / `false` (`true` = bật census chẩn đoán) |
 | `05 Kill switch` | `InpKillSwitchFile` / `InpCloseOnKillSwitch` | `"WONDERWHALES_XAU_2MODE_DEMO_STOP.txt"` / `true` |
 | | `InpRequireParity` | `true` (cổng parity chặn entry) |
 | `06 Strategy` | `InpPsarStart`/`InpPsarInc`/`InpPsarMax` | `0.02`/`0.02`/`0.20` |
@@ -127,8 +127,9 @@ bị chặn gián tiếp qua risk guard.
 ## 5. Bằng chứng
 
 **Nhãn trạng thái: `NOT_RUN`.** Compile + cổng tĩnh + hai chứng minh hạ tầng (Strategy Tester headless,
-`terminal64.exe /config:`); **không** có kết quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa
-có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRESS.md) §71.
+`terminal64.exe /config:`) + một census tín hiệu; **không** có kết quả chiến lược hợp lệ vì parity Pine ↔ MT5
+chưa đạt và chưa có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRESS.md) §71 (bot) và §72
+(census).
 
 - **Compile** `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
 - **Cổng tĩnh xanh:** `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,
@@ -145,8 +146,59 @@ có phiên demo chart. Chi tiết đầy đủ ở [`../PROGRESS.md`](../PROGRES
 - **Hai scenario parity-off chỉ là bằng chứng hạ tầng (`NOT_STRATEGY_RESULT`)**, không phải kết quả chiến
   lược: `net=-442.99` (Scalp) và `net=-292.99` (Swing) với risk tester 1% là số của một cấu hình chưa kiểm
   định, **không** phải cam kết hay đánh giá bot.
+- **Census tín hiệu (chẩn đoán, không phải kết quả chiến lược):** scenario `ww2_scalp_census` →
+  194.869 nến M5 (2024-01-01 → 2026-09-30), **52 tín hiệu** (~19/năm). Chi tiết ở §5.1.
 - Chạy `Scripts > WW2CoreTests` trên chart demo để kiểm vector thuần logic (kỳ vọng
   `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`).
+
+### 5.1 Census tín hiệu Scalp — vì sao rất ít lệnh
+
+`InpDebug=true` bật **census**: mỗi nến chart đã đóng (khi đang flat) EA ghi một dòng vào
+`<tên journal>_census.csv` với từng cổng bias/setup/trigger và **lý do** chuỗi AND dừng lại. Census
+chạy **độc lập** với đường vào lệnh nên vẫn ghi được cả tín hiệu mà cổng parity hay bộ định cỡ sẽ chặn.
+Nó không gửi lệnh, không đụng hợp đồng 18 cột của journal.
+
+Scenario: `ww2_scalp_census` (M5, 2024.01.01 → 2026.10.01, deposit 100.000, parity ON, risk 0,15% —
+equity lớn + risk nhỏ để min-lot không che mất tín hiệu). Chạy:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\tester\gen_ww2_sets.py
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps1 -Scenario ww2_scalp_census
+.\.venv\Scripts\python.exe scripts\tester\analyse_census.py `
+    reports\build\tester-reports\ww2_scalp_census\sim_ww2_scalp_census_census.csv
+```
+
+Kết quả (194.869 nến, 2,75 năm):
+
+| Cổng | Số nến | % tổng | % của cổng trước |
+|---|---|---|---|
+| bias (M15 EMA20/50 + EMA200) | 160.310 | 82,27% | — (long 93.640 / short 66.670) |
+| setup (M5 PSAR flip **cùng phía** bias) | 4.657 | 2,39% | 2,90% của nến có bias |
+| signal (M1 xác nhận) | 52 | 0,03% | 1,12% của nến setup |
+
+Lý do dừng (`reason`, một dòng một lý do):
+
+| reason | Số nến | % |
+|---|---|---|
+| `no_m5_flip` | 155.653 | 79,88% |
+| `no_m15_bias` | 34.559 | 17,73% |
+| `no_m1_confirm` | 4.605 | 2,36% |
+| `signal` | 52 | 0,03% |
+
+Tín hiệu theo năm: 2024 = 13, 2025 = 23, 2026 = 16. Counter-trend setup (flip ngược bias) bị loại:
+734 khi bias long, 643 khi bias short. `setup_pass_without_align=0` xác nhận lớp kiểm tra EMA của EA
+không bao giờ mâu thuẫn với indicator.
+
+**Nguyên nhân gốc (có số liệu):** với `InpSignalMode=WW_MODE_SAR_EMA`, indicator đã định nghĩa
+`buy = PSAR flip && fast_ema > slow_ema` (`WwApplyMode` trong `WonderwhalesContract.mqh`). Vì vậy
+`m5.buy`/`m1.buy` là **sự kiện một nến** (đúng nến flip), không phải trạng thái. Cổng M5 chỉ mở ở
+2,90% số nến có bias, và cổng M1 đòi thêm một flip M1 **trên đúng nến M1 vừa đóng trùng nến M5** —
+điều này giết 98,88% số nến đã qua M5. Kiểm tra `m5.fast_ema>=m5.slow_ema` trong EA là dư thừa ở mode
+này (0 lần nó từ chối một setup đã pass). Nói cách khác: ít lệnh **không** phải do bộ lọc bias quá chặt
+(82% nến có bias) mà do **hai cổng sự kiện một nến chồng lên nhau**.
+
+Đây là chẩn đoán, **không** phải bằng chứng lợi nhuận: parity Pine ↔ MT5 vẫn `BLOCKED`, nhãn chiến lược
+vẫn `NOT_RUN`, profit `UNPROVEN`.
 
 ## 6. Giới hạn / quirk đã biết
 

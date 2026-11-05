@@ -112,6 +112,10 @@ $ReportName = if ($Contract) { "contract_$($Scenario -replace '^contract_', '')"
 $OutDir = Join-Path $OutRoot $Scenario
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
+#--- A scenario writes more than one CSV: the 18-column journal, the census and
+#--- the telemetry file all share the sim_<scenario> prefix.
+$journalPath = if ($AgentFilesDir) { Join-Path $AgentFilesDir "sim_$Scenario.csv" } else { $null }
+
 #--- A running terminal ignores /config:, so refuse to start in that case.
 $running = Get-Process terminal64 -ErrorAction SilentlyContinue
 if ($running) { throw "terminal64 is already running (pid $($running.Id)); close it first" }
@@ -127,8 +131,9 @@ if (Test-Path -LiteralPath $setSrc) {
 
 #--- Remove stale artefacts so freshness is unambiguous.
 Get-ChildItem $TerminalDataDir -Filter "$ReportName.*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
-$csvPath = if ($AgentFilesDir) { Join-Path $AgentFilesDir "sim_$Scenario.csv" } else { $null }
-if ($csvPath -and (Test-Path $csvPath)) { Remove-Item $csvPath -Force }
+if ($AgentFilesDir) {
+    Get-ChildItem $AgentFilesDir -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+}
 
 Write-Host "RUN $Scenario  ini=$Ini  report=$ReportName  data=$TerminalDataDir"
 $started = Get-Date
@@ -146,9 +151,9 @@ for ($i = 0; $i -lt 60; $i++) {
     if ((Test-Path $htm) -and ((Get-Item $htm).LastWriteTime -gt $started)) { break }
     Start-Sleep -Seconds 2
 }
-if (-not $Contract -and $csvPath) {
+if (-not $Contract -and $journalPath) {
     for ($i = 0; $i -lt 60; $i++) {
-        if ((Test-Path $csvPath) -and ((Get-Item $csvPath).LastWriteTime -gt $started)) { break }
+        if ((Test-Path $journalPath) -and ((Get-Item $journalPath).LastWriteTime -gt $started)) { break }
         Start-Sleep -Seconds 2
     }
 }
@@ -159,9 +164,13 @@ if (Test-Path $htm) {
         Copy-Item -Destination $OutDir -Force
     $copied += "$ReportName.*"
 }
-if (-not $Contract -and $csvPath -and (Test-Path $csvPath)) {
-    Copy-Item $csvPath (Join-Path $OutDir "sim_$Scenario.csv") -Force
-    $copied += "sim_$Scenario.csv"
+if (-not $Contract -and $AgentFilesDir) {
+    $csvs = @(Get-ChildItem $AgentFilesDir -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTime -gt $started })
+    foreach ($csv in $csvs) {
+        Copy-Item $csv.FullName (Join-Path $OutDir $csv.Name) -Force
+        $copied += $csv.Name
+    }
 }
 
 if ($copied.Count -eq 0) { throw "no artefacts produced for $Scenario" }

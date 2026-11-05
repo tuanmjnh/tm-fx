@@ -8,6 +8,7 @@ Scenarios:
   ww2_scalp_parity_on  parity gate ON  -> proves entries are blocked (parity_blocked).
   ww2_scalp_demo_exec  parity OFF      -> proves the ExecBroker order path (infrastructure only).
   ww2_swing_demo_exec  parity OFF      -> same, Swing mode (starts 2018 so W1/D1 EMA200 has history).
+  ww2_scalp_census     parity ON, InpDebug ON -> per-bar signal census, zero orders.
 
 Parity is unproven, so the parity-off runs are NOT a strategy result.
 
@@ -32,14 +33,20 @@ OUT_SETS = ROOT / "reports/build/tester-sets"
 OUT_INI = ROOT / "reports/build/tester-run"
 TRACKED = ROOT / "docs/20-operations/presets"
 
-# name, chart period, from_date, overrides
+# name, chart period, from_date, deposit, overrides
 SCENARIOS = (
-    ("ww2_scalp_parity_on", "M5", "2026.01.05",
+    ("ww2_scalp_parity_on", "M5", "2026.01.05", 10000,
      {"InpTradingMode": 1, "InpRequireParity": True}),
-    ("ww2_scalp_demo_exec", "M5", "2026.01.05",
+    ("ww2_scalp_demo_exec", "M5", "2026.01.05", 10000,
      {"InpTradingMode": 1, "InpRequireParity": False}),
-    ("ww2_swing_demo_exec", "H1", "2018.01.01",
+    ("ww2_swing_demo_exec", "H1", "2018.01.01", 10000,
      {"InpTradingMode": 2, "InpRequireParity": False, "InpTakeProfitR": 2.5}),
+    # Diagnostic only: census ON, parity ON (no orders can be sent). 100k equity
+    # and 0.15% risk keep the min-lot sizer from hiding signals, so the census
+    # answers "why so few trades" with per-bar gate counts.
+    ("ww2_scalp_census", "M5", "2024.01.01", 100000,
+     {"InpTradingMode": 1, "InpRequireParity": True, "InpDebug": True,
+      "InpRiskPercent": 0.15}),
 )
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
@@ -91,7 +98,7 @@ def main() -> int:
     OUT_SETS.mkdir(parents=True, exist_ok=True)
     OUT_INI.mkdir(parents=True, exist_ok=True)
 
-    for name, period, from_date, overrides in SCENARIOS:
+    for name, period, from_date, deposit, overrides in SCENARIOS:
         values = dict(base)
         values.update({
             "InpEnableExecution": True,
@@ -100,7 +107,7 @@ def main() -> int:
             "InpResetStateOnInit": True,
             "InpLogFile": f"sim_{name}.csv",
             "InpStateFile": f"{name}_state.csv",
-            "InpTelemetryFile": f"{name}_telemetry.csv",
+            "InpTelemetryFile": f"sim_{name}_telemetry.csv",
         })
         values.update(overrides)
         assert values["InpTakeProfitR"] > 0.0, "mandatory TP"
@@ -122,7 +129,7 @@ def main() -> int:
             f"ExpertParameters={name}.set",
             "Symbol=XAUUSDm", f"Period={period}", "Model=1",
             f"FromDate={from_date}", "ToDate=2026.10.01",
-            "Deposit=10000", "Currency=USD", "Leverage=1:100",
+            f"Deposit={deposit}", "Currency=USD", "Leverage=1:100",
             "Optimization=0", "Visual=0", "ShutdownTerminal=1",
             "ReplaceReport=1", f"Report=tester_{name}", "",
         ])

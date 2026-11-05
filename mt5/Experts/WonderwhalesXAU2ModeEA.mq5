@@ -30,6 +30,7 @@
 #include "../Include/Wonderwhales/WW2RiskGuard.mqh"
 #include "../Include/Wonderwhales/WW2TrailingCoordinator.mqh"
 #include "../Include/Wonderwhales/WW2Telemetry.mqh"
+#include "../Include/Wonderwhales/WW2Census.mqh"
 #include "../Include/Wonderwhales/WW2ScalpStrategy.mqh"
 #include "../Include/Wonderwhales/WW2SwingStrategy.mqh"
 
@@ -134,6 +135,7 @@ int      g_h_h1=INVALID_HANDLE;
 int      g_h_d1=INVALID_HANDLE;
 int      g_h_w1=INVALID_HANDLE;
 int      g_tele=INVALID_HANDLE;
+int      g_census=INVALID_HANDLE;
 
 double   g_point=0.0;
 int      g_digits=0;
@@ -161,6 +163,7 @@ Ww2Position g_pos;
 Ww2Signal   g_sig_bias;
 Ww2Signal   g_sig_setup;
 Ww2Signal   g_sig_trigger;
+Ww2CensusStats g_census_stats;
 
 int      g_entries=0;
 int      g_exits=0;
@@ -810,6 +813,60 @@ void BlockEntry(const ENUM_SIM_SIDE side,const string token,const string detail)
             "ENTRY_BLOCKED|reason="+token+(StringLen(detail)>0 ? "|"+detail : ""));
   }
 
+//--- Census file name: derived from the journal so a tester scenario writes
+//--- sim_<scenario>_census.csv next to sim_<scenario>.csv.
+string CensusFileName(void)
+  {
+   string base=InpLogFile;
+   if(StringLen(base)==0)
+      base="wonderwhales_xau_2mode_demo.csv";
+   const int len=StringLen(base);
+   if(len>4 && StringSubstr(base,len-4)==".csv")
+      base=StringSubstr(base,0,len-4);
+   return(base+"_census.csv");
+  }
+
+//--- One census row per chart bar, independent of the entry path. It runs only
+//--- when InpDebug opened the file, so it cannot change trading behaviour.
+void CensusBar(const datetime bar_time)
+  {
+   if(g_census==INVALID_HANDLE)
+      return;
+
+   if(InpTradingMode==WW2_SCALP)
+     {
+      if(!Ww2ReadSignal(g_h_m15,_Symbol,InpScalpBiasTF,1,g_sig_bias) ||
+         !Ww2ReadSignal(g_h_m5,_Symbol,InpScalpSetupTF,1,g_sig_setup) ||
+         !Ww2ReadSignal(g_h_m1,_Symbol,InpScalpTriggerTF,1,g_sig_trigger))
+         return;
+      Ww2ScalpGates g;
+      const bool signal=Ww2ScalpEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g);
+      Ww2CensusWrite(g_census,bar_time,InpTradingMode,
+                     g.bias_valid,g.bias_buy,g.bias_sell,
+                     g.setup_valid,g.setup_buy,g.setup_sell,g.setup_align,
+                     g.trigger_valid,g.trigger_buy,g.trigger_sell,
+                     signal,g.reason);
+      Ww2CensusCount(g_census_stats,g.reason);
+      return;
+     }
+
+   if(InpTradingMode==WW2_SWING)
+     {
+      if(!Ww2ReadSignal(g_h_w1,_Symbol,InpSwingBiasTF,1,g_sig_bias) ||
+         !Ww2ReadSignal(g_h_d1,_Symbol,InpSwingSetupTF,1,g_sig_setup) ||
+         !Ww2ReadSignal(g_h_h1,_Symbol,InpSwingTriggerTF,1,g_sig_trigger))
+         return;
+      Ww2SwingGates g;
+      const bool signal=Ww2SwingEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g);
+      Ww2CensusWrite(g_census,bar_time,InpTradingMode,
+                     g.bias_valid,g.bias_buy,g.bias_sell,
+                     g.setup_valid,g.setup_buy,g.setup_sell,g.setup_align,
+                     g.trigger_valid,g.trigger_buy,g.trigger_sell,
+                     signal,g.reason);
+      Ww2CensusCount(g_census_stats,g.reason);
+     }
+  }
+
 bool ResolveSwing(const bool is_buy,const ENUM_TIMEFRAMES tf,bool &have,
                   double &price)
   {
@@ -1180,15 +1237,19 @@ void WriteSummary(void)
   {
    if(!g_logger.IsOpen())
       return;
+   string detail=StringFormat("mode=%s|trades=%d|entries=%d|exits=%d|wins=%d|losses=%d|"
+                              "net=%.2f|blocks=%d|streak=%d|halted=%s|parity=%s|execution=%s",
+                              Ww2ModeName(InpTradingMode),g_wins+g_losses,g_entries,
+                              g_exits,g_wins,g_losses,g_realized_pnl,g_blocks,
+                              g_guard.StreakLosses(),(g_halted ? "HALTED" : "ACTIVE"),
+                              (InpRequireParity ? "REQUIRED" : "OFF"),
+                              (InpEnableExecution ? "DEMO_EXECUTION" : "DRY_RUN"));
+   //--- Keep the census counters in the archived journal: the tester log is
+   //--- not part of the report archive.
+   if(g_census!=INVALID_HANDLE)
+      detail+="|"+Ww2CensusSummary(g_census_stats);
    LogEvent("SUMMARY",SIM_SIDE_NONE,0.0,g_pos.volume,g_pos.entry,
-            g_pos.initial_sl,g_pos.tp,
-            StringFormat("mode=%s|trades=%d|entries=%d|exits=%d|wins=%d|losses=%d|"
-                         "net=%.2f|blocks=%d|streak=%d|halted=%s|parity=%s|execution=%s",
-                         Ww2ModeName(InpTradingMode),g_wins+g_losses,g_entries,
-                         g_exits,g_wins,g_losses,g_realized_pnl,g_blocks,
-                         g_guard.StreakLosses(),(g_halted ? "HALTED" : "ACTIVE"),
-                         (InpRequireParity ? "REQUIRED" : "OFF"),
-                         (InpEnableExecution ? "DEMO_EXECUTION" : "DRY_RUN")));
+            g_pos.initial_sl,g_pos.tp,detail);
   }
 
 //+------------------------------------------------------------------+
@@ -1332,6 +1393,15 @@ int OnInit(void)
       if(!Ww2TelemetryOpen(InpTelemetryFile,g_tele))
          PrintFormat("LAB|WARN|ww2|telemetry_open_failed|file=%s",InpTelemetryFile);
      }
+   if(InpDebug)
+     {
+      const string census_file=CensusFileName();
+      Ww2CensusReset(g_census_stats);
+      if(!Ww2CensusOpen(census_file,g_census))
+         PrintFormat("LAB|WARN|ww2|census_open_failed|file=%s",census_file);
+      else
+         PrintFormat("LAB|INFO|ww2|census_enabled|file=%s",census_file);
+     }
 
    ReconcilePosition();
    UpdateAccountState();
@@ -1363,6 +1433,9 @@ void OnDeinit(const int reason)
    WriteSummary();
    g_logger.Close();
    Ww2TelemetryClose(g_tele);
+   if(g_census!=INVALID_HANDLE)
+      PrintFormat("LAB|INFO|ww2|census_summary|%s",Ww2CensusSummary(g_census_stats));
+   Ww2CensusClose(g_census);
    if(g_h_m1!=INVALID_HANDLE)
       IndicatorRelease(g_h_m1);
    if(g_h_m5!=INVALID_HANDLE)
@@ -1426,6 +1499,11 @@ void OnTick(void)
    const bool new_bar=(bar_time!=g_last_bar);
    if(new_bar)
       g_last_bar=bar_time;
+
+   //--- Diagnostic census: independent of the entry path, so it also records
+   //--- the signals a parity gate or a sizing block would have suppressed.
+   if(new_bar && !g_pos.have)
+      CensusBar(bar_time);
 
    if(g_pos.have)
      {

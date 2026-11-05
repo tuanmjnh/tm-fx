@@ -390,8 +390,9 @@ nằm trong `reports/build/` — gitignored). Đây là nhóm script **duy nhấ
 
 | File | Vai trò |
 |---|---|
-| [`run_tester.ps1`](../../scripts/tester/run_tester.ps1) | Chạy 1 `<scenario>.ini`, lưu report + `sim_<scenario>.csv` vào `reports/build/tester-reports/<scenario>/` |
+| [`run_tester.ps1`](../../scripts/tester/run_tester.ps1) | Chạy 1 `<scenario>.ini`, lưu report + mọi CSV `sim_<scenario>*.csv` (journal, census, telemetry) vào `reports/build/tester-reports/<scenario>/` |
 | [`gen_ww2_sets.py`](../../scripts/tester/gen_ww2_sets.py) | Sinh `.set` (stage vào `MQL5\Profiles\Tester\`) + `.ini` từ JSON preset (không sửa tay `.set`) |
+| [`analyse_census.py`](../../scripts/tester/analyse_census.py) | Đọc `<journal>_census.csv`, in funnel bias → setup → signal + lý do dừng + cross-check |
 
 ### Chạy một scenario
 
@@ -413,9 +414,32 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 | `ww2_scalp_parity_on` | 0 ENTRY, nhiều `ENTRY_BLOCKED\|reason=parity_blocked` — chứng minh cổng parity |
 | `ww2_scalp_demo_exec` | ENTRY/EXIT có SL+TP (TP = `InpTakeProfitR`), HALT theo guard |
 | `ww2_swing_demo_exec` | ENTRY/EXIT + TRAIL (BE/structure); từ 2018 để W1/D1 EMA200 đủ history |
+| `ww2_scalp_census` | Parity ON + `InpDebug=true`, 100k deposit, risk 0,15% → ghi `_census.csv`, **0 lệnh**; dùng để đếm tín hiệu |
 
 `.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
 đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.
+
+### Census tín hiệu (chẩn đoán "vì sao ít lệnh")
+
+`InpDebug=true` bật census: mỗi nến chart đã đóng khi EA đang flat, EA ghi một dòng vào
+`<tên journal>_census.csv` (suy ra từ `InpLogFile`, ví dụ `sim_ww2_scalp_census_census.csv`) với 15 cột:
+`logged_at,bar_time,mode,bias_valid,bias_buy,bias_sell,setup_valid,setup_buy,setup_sell,setup_align,trigger_valid,trigger_buy,trigger_sell,signal,reason`.
+`reason` là cổng **đầu tiên** không pass (`bias_invalid`, `no_m15_bias`/`no_w1_bias`, `setup_invalid`,
+`no_m5_flip`/`no_d1_align`, `trigger_invalid`, `no_m1_confirm`/`no_h1_trigger`) hoặc `signal`.
+
+Census chạy **song song** với đường vào lệnh (không thay thế, không đổi hành vi), nên nó ghi cả tín hiệu
+mà parity/sizing sẽ chặn. Tổng hợp:
+
+```powershell
+.venv\Scripts\python.exe scripts\tester\analyse_census.py `
+    reports\build\tester-reports\ww2_scalp_census\sim_ww2_scalp_census_census.csv
+```
+
+Kết quả Scalp 2024-01-01 → 2026-09-30 (194.869 nến): bias 82,27% → setup 2,90% của bias → signal 1,12%
+của setup = **52 tín hiệu** (~19/năm). Nguyên nhân gốc và bảng đầy đủ:
+[`../10-bots/wonderwhales-2mode.md`](../10-bots/wonderwhales-2mode.md) §5.1.
+
+Census là **chẩn đoán**, không phải kết quả chiến lược: parity Pine ↔ MT5 vẫn `BLOCKED`.
 
 ### Dữ liệu ở đâu
 

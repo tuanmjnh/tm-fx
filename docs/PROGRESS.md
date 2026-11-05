@@ -3896,3 +3896,86 @@ chart TF; thiếu log SL bị từ chối; freeze level chưa xử lý; `initial
 Sau khi sửa: `deploy` 0/0; Swing **16 ENTRY/EXIT, 10 TRAIL** (R ≤ ~1.7), Scalp **6 ENTRY/EXIT** (journal
 sha không đổi); cổng `validate-project 15/0`, `validate_demo_execution 14/0`, `check_docs_links 0/413`,
 `pytest 439 passed`.
+
+## 72. Wonderwhales 2-mode — census tín hiệu Scalp: vì sao rất ít lệnh — 2026-11-05
+
+Chủ sở hữu báo Scalp giao dịch rất ít và winrate/PnL kém. Trước khi đổi bất kỳ tham số nào, bước (a) của
+lộ trình đã duyệt là **đo trước**: đếm tín hiệu theo từng cổng, để câu trả lời dựa trên dữ liệu chứ không
+phải phỏng đoán.
+
+### 72.1 Quyết định thiết kế
+
+- **Không thêm input mới.** Dùng lại `InpDebug` (trước đây khai báo nhưng chưa dùng) làm công tắc census,
+  và suy tên file từ `InpLogFile`: `<tên journal>_census.csv`. Lý do: giữ nguyên hợp đồng **71 input** của
+  preset và mọi mirror/validator (không phải sửa JSON, `.set`, test tuple, docs input table). Đánh đổi nếu
+  sai: operator không chọn được tên file census độc lập với journal.
+- Census **không đụng** đường vào lệnh và **không đụng** hợp đồng 18 cột: nó chạy song song trong `OnTick`
+  khi có nến mới và EA đang flat, ghi file riêng. Nhờ vậy nó ghi được cả tín hiệu mà cổng parity hoặc bộ
+  định cỡ sẽ chặn.
+- Bộ đếm tổng hợp được in ở `OnDeinit` (`census_summary`) **và** nhét vào trường `reason` của dòng
+  `SUMMARY` trong journal — vì log tester không nằm trong archive, còn journal thì có.
+
+### 72.2 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Include/Wonderwhales/WW2ScalpStrategy.mqh` | `Ww2ScalpGates` + `Ww2ScalpEvaluate()` trả lý do từng cổng; `Ww2ScalpEntry()` thành wrapper mỏng (hành vi không đổi) |
+| `mt5/Include/Wonderwhales/WW2SwingStrategy.mqh` | `Ww2SwingGates` + `Ww2SwingEvaluate()`; `Ww2SwingEntry()` wrapper |
+| `mt5/Include/Wonderwhales/WW2Census.mqh` | Mới: mở/ghi/đếm/tổng hợp/đóng CSV 15 cột |
+| `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` | Include, `g_census`, `g_census_stats`, `CensusFileName()`, `CensusBar()` trong `OnTick`, mở ở `OnInit` khi `InpDebug`, đóng + in summary ở `OnDeinit`, đếm vào `SUMMARY` |
+| `mt5/Scripts/WW2CoreTests.mq5` | 11 test mới cho reason code (`scalp_census_*`, `swing_census_*`) |
+| `scripts/tester/gen_ww2_sets.py` | Scenario `ww2_scalp_census` (M5, 2024.01.01, deposit 100.000, parity ON, `InpDebug=true`, risk 0,15%); deposit thành tham số từng scenario; telemetry đổi thành `sim_<name>_telemetry.csv` |
+| `scripts/tester/run_tester.ps1` | Archive **mọi** `sim_<scenario>*.csv` (journal + census + telemetry), không chỉ journal |
+| `scripts/tester/analyse_census.py` | Mới: funnel, lý do, cross-check, tín hiệu/năm |
+
+Reason code: `signal | bias_invalid | no_m15_bias | setup_invalid | no_m5_flip | trigger_invalid |
+no_m1_confirm` (Scalp) và `signal | bias_invalid | no_w1_bias | setup_invalid | no_d1_align |
+trigger_invalid | no_h1_trigger` (Swing). Mỗi dòng ghi cổng **đầu tiên** không pass.
+
+### 72.3 Kết quả census (2024-01-01 → 2026-09-30, M5, 194.869 nến)
+
+Scenario `ww2_scalp_census`: `terminal64.exe /config:` headless 199 s, parity ON nên **0 lệnh**; 194.869
+dòng `ENTRY_BLOCKED|reason=parity_blocked` trong journal (đúng S2).
+
+| Cổng | Số nến | % tổng | % của cổng trước |
+|---|---:|---:|---:|
+| bias M15 (EMA20/50 + EMA200) | 160.310 | 82,27% | — (long 93.640 / short 66.670) |
+| setup M5 (PSAR flip cùng phía bias) | 4.657 | 2,39% | 2,90% của nến có bias |
+| signal M1 xác nhận | 52 | 0,03% | 1,12% của nến setup |
+
+`reason`: `no_m5_flip` 155.653 (79,88%), `no_m15_bias` 34.559 (17,73%), `no_m1_confirm` 4.605 (2,36%),
+`signal` 52 (0,03%). Tín hiệu theo năm: 2024 = 13, 2025 = 23, 2026 = 16 ⇒ **~19 tín hiệu/năm**. Counter-trend
+setup bị loại: 734 (bias long) + 643 (bias short). `setup_pass_without_align=0` ⇒ lớp kiểm tra EMA của EA
+không bao giờ mâu thuẫn với indicator.
+
+### 72.4 Nguyên nhân gốc (có số liệu)
+
+Với `InpSignalMode=WW_MODE_SAR_EMA`, indicator đã định nghĩa `buy = PSAR flip && fast_ema > slow_ema`
+(`WwApplyMode`, `mt5/Include/PinePort/WonderwhalesContract.mqh`). Nên `m5.buy`/`m1.buy` là **sự kiện một
+nến**, không phải trạng thái:
+
+1. Cổng M5 chỉ mở ở **2,90%** số nến có bias.
+2. Cổng M1 đòi thêm một flip M1 **trên đúng nến M1 vừa đóng trùng nến M5** → giết **98,88%** số nến đã qua M5.
+
+Nói cách khác: ít lệnh **không** do bộ lọc bias quá chặt (82% nến có bias) mà do **hai cổng sự kiện một
+nến chồng lên nhau**. Kiểm tra `m5.fast_ema>=m5.slow_ema` trong EA là dư thừa ở mode này (0 lần từ chối).
+Hệ quả cho bước (b)/(c): muốn tăng số lệnh phải nới **cổng trigger** (M1) hoặc dùng M1 như trạng thái thay
+vì sự kiện — không phải nới bias.
+
+### 72.5 Artefact và cổng
+
+- Artefact (gitignored): `reports/build/tester-reports/ww2_scalp_census/` — journal 45,0 MB, census 14,5 MB,
+  telemetry, `.htm`, `.png`.
+- `deploy_pineport.ps1 -Apply -Force`: **0 errors / 0 warnings** (gồm `WW2CoreTests`).
+- `validate-project checks=15 fail=0`, `validate_demo_execution checks=14 fail=0`, `check_docs_links broken=0`,
+  `pytest 439 passed`.
+- `WW2CoreTests` đã compile nhưng **chưa chạy trên chart** (cần terminal thủ công): kỳ vọng
+  `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`.
+
+### 72.6 Nhãn trung thực (không nâng)
+
+- Đây là **chẩn đoán**, không phải kết quả chiến lược. parity Pine ↔ MT5 vẫn `BLOCKED`, bot vẫn `NOT_RUN`,
+  lợi nhuận vẫn `UNPROVEN`.
+- Census chạy với parity ON nên **không** có lệnh nào; con số 52 là **số tín hiệu**, không phải số lệnh đã
+  khớp, và không nói gì về lời/lỗ.
+- Chưa thay đổi tham số chiến lược nào ở bước này — cố ý, để bước (b) đo được trên cùng một cấu hình.

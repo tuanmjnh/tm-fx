@@ -217,6 +217,64 @@ void TestStrategies(void)
    d1.fast_ema=1999.0;
    d1.slow_ema=2000.0;
    Check(!Ww2SwingEntry(w1,d1,h1,swing_buy),"swing_blocks_on_conflict");
+
+   //--- Census gate reasons: every stage of the AND chain must be visible on
+   //--- its own, otherwise the diagnostic CSV cannot answer "why no trade".
+   Ww2ScalpGates sg;
+   m1.buy=false;
+   Check(!Ww2ScalpEvaluate(m15,m5,m1,sg) && sg.reason=="no_m1_confirm",
+         "scalp_census_no_m1_confirm");
+   m1.buy=true;
+   Check(Ww2ScalpEvaluate(m15,m5,m1,sg) && sg.reason=="signal" && sg.is_buy,
+         "scalp_census_signal");
+
+   Ww2Signal flat=m15;
+   flat.fast_ema=1999.0;
+   flat.slow_ema=2000.0;
+   flat.close=1995.0;
+   Check(!Ww2ScalpEvaluate(flat,m5,m1,sg) && sg.reason=="no_m15_bias",
+         "scalp_census_no_bias");
+
+   Ww2Signal no_flip=m5;
+   no_flip.buy=false;
+   Check(!Ww2ScalpEvaluate(m15,no_flip,m1,sg) && sg.reason=="no_m5_flip",
+         "scalp_census_no_setup");
+
+   Ww2Signal no_align=m5;
+   no_align.fast_ema=1999.0;
+   no_align.slow_ema=2000.0;
+   Check(!Ww2ScalpEvaluate(m15,no_align,m1,sg) && sg.reason=="no_m5_flip",
+         "scalp_census_no_setup_align");
+
+   Ww2Signal bad_trigger=m1;
+   bad_trigger.valid=false;
+   Check(!Ww2ScalpEvaluate(m15,m5,bad_trigger,sg) && sg.reason=="trigger_invalid",
+         "scalp_census_trigger_invalid");
+
+   Ww2Signal bad_bias=m15;
+   bad_bias.valid=false;
+   Check(!Ww2ScalpEvaluate(bad_bias,m5,m1,sg) && sg.reason=="bias_invalid",
+         "scalp_census_bias_invalid");
+
+   Ww2SwingGates wg;
+   d1.fast_ema=2005.0;
+   d1.slow_ema=2000.0;
+   h1.buy=false;
+   h1.sell=false;
+   Check(!Ww2SwingEvaluate(w1,d1,h1,wg) && wg.reason=="no_h1_trigger",
+         "swing_census_no_trigger");
+   h1.buy=true;
+   Check(Ww2SwingEvaluate(w1,d1,h1,wg) && wg.reason=="signal" && wg.is_buy,
+         "swing_census_signal");
+   d1.fast_ema=1999.0;
+   Check(!Ww2SwingEvaluate(w1,d1,h1,wg) && wg.reason=="no_d1_align",
+         "swing_census_no_d1_align");
+   Ww2Signal flat_w1=w1;
+   flat_w1.fast_ema=1999.0;
+   flat_w1.slow_ema=2000.0;
+   flat_w1.close=2005.0;
+   Check(!Ww2SwingEvaluate(flat_w1,d1,h1,wg) && wg.reason=="no_w1_bias",
+         "swing_census_no_bias");
   }
 
 void OnStart(void)

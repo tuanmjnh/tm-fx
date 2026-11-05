@@ -174,6 +174,7 @@ REQUIRED_FILES = (
     "scripts/validate_demo_execution.py",
     "scripts/tester/run_tester.ps1",
     "scripts/tester/gen_ww2_sets.py",
+    "scripts/tester/analyse_census.py",
     "scripts/tester/README.md",
     "docs/00-start/README.md",
     "docs/10-bots/README.md",
