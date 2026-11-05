@@ -83,7 +83,8 @@ $files = @(
     [pscustomobject]@{ Source = "mt5\Scripts\TMXAUSignals2ContractTests.mq5"; Target = "MQL5\Scripts\TMXAUSignals2ContractTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\TMIndicator2ContractTests.mq5"; Target = "MQL5\Scripts\TMIndicator2ContractTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Experts\PineSignalLabEA.mq5"; Target = "MQL5\Experts\PineSignalLabEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\PineMultiSignalLabEA.mq5"; Target = "MQL5\Experts\PineMultiSignalLabEA.mq5" }
+    [pscustomobject]@{ Source = "mt5\Experts\PineMultiSignalLabEA.mq5"; Target = "MQL5\Experts\PineMultiSignalLabEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesDumpTesterEA.mq5"; Target = "MQL5\Experts\WonderwhalesDumpTesterEA.mq5" }
 )
 
 # Track C simulation, TrendRider and demo-execution sources. The .mqh trees are
@@ -160,6 +161,7 @@ $compileTargets = @(
     "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5",
     "MQL5\Experts\WonderwhalesDemoEA.mq5",
     "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5",
+    "MQL5\Experts\WonderwhalesDumpTesterEA.mq5",
     "MQL5\Scripts\WW2CoreTests.mq5"
 )
 

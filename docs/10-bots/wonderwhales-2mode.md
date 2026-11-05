@@ -292,6 +292,12 @@ Các bước:
 > TradingView dùng `XAUUSD`, nên nếu để nguyên, *mọi* dòng thành `missing_in_*`. Phải ghi **cùng một chuỗi**
 > ở cột `symbol` cả hai file (ví dụ sửa cột `symbol` của export Pine thành `XAUUSDm`) trước khi chạy.
 
+**Không có TradingView Pro?** Có một kiểm tra *khác*, yếu hơn: **cross-implementation** — port spec Pine
+sang Python rồi so từng nến với buffer của indicator (`WonderwhalesDumpTesterEA` +
+`scripts/compare_wonderwhales_bars.py`). Kết quả 2026-11-06: EMA khớp hoàn toàn nhưng **PSAR lệch ~2,1–2,6%
+hướng**, nên port **chưa** được kiểm chứng. Kiểm tra này **không** phải parity và **không** được dùng để gỡ
+`InpRequireParity`. Chi tiết: [`../30-research/wonderwhales-scalp-study.md`](../30-research/wonderwhales-scalp-study.md) §11.
+
 ### 5.4 Sửa cổng entry — cửa sổ trigger (task D)
 
 Census §5.1 chỉ ra nút thắt: cả ba cổng chỉ đọc `shift=1`, nên cổng M1 đòi **đúng cây M1 cuối cùng**

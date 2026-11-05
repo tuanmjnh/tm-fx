@@ -4436,3 +4436,59 @@ cửa sổ sự kiện cải thiện nhất quán. **Edge của tín hiệu như
 hiện có `(setup 5, trigger 5)` dương ở cả hai cửa sổ nhưng PF chỉ 1,03–1,06 (winrate 41–42% so với hoà vốn 40%).
 
 Bot vẫn `NOT_RUN`, parity vẫn `BLOCKED`, profit vẫn `UNPROVEN`. Preset mặc định **không đổi**.
+
+## 81. Wonderwhales 2-mode — kiểm chứng port cross-implementation (task J) — 2026-11-06
+
+Không có TradingView Pro ⇒ không tạo được CSV reference của Pine. Thay vào đó, viết một bản cài đặt **độc
+lập** của spec Pine bằng Python và so **từng nến** với indicator MQL5 trên đúng cùng cây nến. Nhãn:
+**`CROSS_IMPLEMENTATION`**, không phải `PARITY`; **không** dùng để gỡ `InpRequireParity`.
+
+### 81.1 Phát hiện chặn trước đó (quan trọng)
+
+`PineSignalLabEA` **không thể ghi tín hiệu trong Strategy Tester**: nó đòi
+`BarsCalculated(handle) >= Bars()`, nhưng trong tester `Bars()` tính cả ~1 năm lịch sử nạp trước `FromDate`
+còn indicator chỉ tính vùng test (`calculated=71009` vs `rates_total=141805`) ⇒ kẹt `indicator_not_ready`
+suốt run, CSV chỉ có header (`signals=0`). Đây là lý do **chưa từng có kết quả parity nào**. Đã ghi vào
+`docs/30-research/indicators/parity.md` §8 mục 8.
+
+### 81.2 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Experts/WonderwhalesDumpTesterEA.mq5` | Mới: read-only, chỉ chạy trong tester; mỗi nến đóng ghi OHLCV + buffer `PinePort\Wonderwhales` (`psar,sar_dir,buy_signal,sell_signal,fast,slow,atr_pct,blocked_*`) ra CSV |
+| `scripts/tester/gen_portref_sets.py` | Mới: sinh `.set`/`.ini` cho dump (M1/M5/M15) |
+| `python/src/mt5_ea_ai_lab/signals/wonderwhales.py` | Mới: port độc lập spec Pine (PSAR/EMA/ATR + 4 mode + confirmed-bar) |
+| `scripts/build_wonderwhales_reference.py` | Mới: bars → CSV schema Pine (chỉ dòng tín hiệu) |
+| `scripts/compare_wonderwhales_bars.py` | Mới: so từng nến (tỉ lệ khớp chính xác, sai số tuyệt đối, mẫu lệch đầu tiên) |
+| `scripts/deploy_pineport.ps1` | Thêm EA dump vào **cả** whitelist copy và danh sách compile (trước đó EA không được deploy ⇒ tester báo 0 bar) |
+| Tests | `test_wonderwhales_port.py` (12), `test_portref_tooling.py` (9) |
+
+### 81.3 Kết quả (XAUUSDm, 2025.01.01→2026.01.01, mode SAR_EMA, bỏ 300 nến warm-up)
+
+| Khung | Nến so | `sar_dir` | `buy_signal` | `sell_signal` | `psar` (≤1e-4) | `fast`/`slow` (≤1e-4) |
+|---|---:|---:|---:|---:|---:|---:|
+| M15 | 23.320 | 97,39% | 99,40% | 99,70% | 87,82% | 100% |
+| M5 | 70.496 | 97,69% | 99,50% | 99,71% | 88,70% | 100% |
+| M1 | 352.837 | 97,89% | 99,62% | 99,65% | 90,14% | 100% |
+
+- **EMA khớp hoàn toàn** (`fast` ≤5e-9, `slow` ≤1,3e-5, 100% nến trong 1e-4) ⇒ phần EMA đã kiểm chứng chéo.
+- **Tín hiệu khớp 99,4–99,7%**.
+- **PSAR lệch:** hướng lệch ~2,1–2,6% nến; mức PSAR chỉ khớp 88–90% trong 1e-4, lệch tối đa tới **120** (M15).
+- Bản port đã tinh chỉnh sang biến thể clamp hai nến trước (M5: hướng 97,69% so với 96,44%), nhưng phần lệch
+  còn lại **không giải thích được**.
+
+### 81.4 Kết luận (trung thực)
+
+- **Không kết luận được bên nào đúng.** Port theo PSAR Wilder/Pine cổ điển; indicator gọi `iSAR` của MT5 —
+  vốn khác `ta.sar` (đúng rủi ro D1 trong `indicators/wonderwhales.md` §10, nay **đo được**).
+- **Port chưa được kiểm chứng** ⇒ các kết luận chiến lược ở §6–§7 của báo cáo vẫn đứng trên tín hiệu chưa
+  xác minh. Chỉ export thật từ TradingView mới giải quyết được.
+- Việc nên làm tiếp: **thay `iSAR` bằng PSAR tự cài trong indicator** (bắt đầu từ biến thể sát nhất đã đo),
+  rồi chạy lại cross-implementation; nếu khớp ~100% thì rủi ro chuyển thành "chưa có reference Pine".
+
+Báo cáo đầy đủ: [`30-research/wonderwhales-scalp-study.md`](30-research/wonderwhales-scalp-study.md) §11.
+
+### 81.5 Nhãn trung thực
+
+- Đây là kiểm chứng **hai bản cài đặt độc lập của cùng một spec**, **không** phải parity với TradingView.
+- Parity Pine ↔ MT5 vẫn **`BLOCKED`**; bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; preset không đổi.

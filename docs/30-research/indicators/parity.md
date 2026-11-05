@@ -151,6 +151,12 @@ direction, tolerance, NaN, hash, filter, warm-up, timestamp sai, khóa trùng, t
 6. Symbol/timeframe chuẩn vẫn chưa chốt; parity thật cần chốt trước khi chạy.
 7. Không có kết quả parity thật cho đến khi có reference CSV; mọi báo cáo phải ghi `BLOCKED`, không
    được suy ra từ unit test. Thiếu file → exit code `3` (`parity=BLOCKED`), không phải `2`.
+8. **`PineSignalLabEA` không ghi được tín hiệu trong Strategy Tester** (đo 2026-11-06): nó đòi
+   `BarsCalculated(handle) >= Bars()`, nhưng trong tester `Bars()` bao gồm cả lịch sử terminal nạp trước
+   `FromDate` trong khi indicator chỉ tính vùng test (`calculated=71009` vs `rates_total=141805`), nên nó
+   kẹt `indicator_not_ready` suốt run và xuất CSV chỉ có header (`signals=0`). Muốn lấy tín hiệu MQL5 trong
+   tester thì dùng `WonderwhalesDumpTesterEA` (đọc `shift=1` từng nến đóng, không phụ thuộc `rates_total`) —
+   xem `docs/30-research/wonderwhales-scalp-study.md` §11. Đây là một phần lý do chưa từng có parity chạy được.
 
 ### 9. Checklist trước khi chạy parity thật
 

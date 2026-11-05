@@ -169,6 +169,9 @@ foreach ($w in 'is','oos') { foreach ($a in 'a','b','c','d') {
 
 Chạy hết ma trận hiện có (40 scenario) mất khoảng **1 giờ**; mỗi run ~90–115 s.
 
+Port check (§11) có lệnh riêng, đầy đủ ở
+[`../../scripts/tester/README.md`](../../scripts/tester/README.md) mục "Port check Pine ↔ MQL5".
+
 ## 10. Việc còn mở và khuyến nghị
 
 1. **Parity (chặn mọi kết luận lợi nhuận)** — cần CSV reference thật do Pine xuất (runbook:
@@ -182,11 +185,63 @@ Chạy hết ma trận hiện có (40 scenario) mất khoảng **1 giờ**; mỗ
 4. Việc mở cũ vẫn treo: magic `25006001` trên demo chưa xác nhận đã đóng; file state của InfiniteRunner chưa
    xoá; 5 bot demo cũ vẫn `UNPROVEN` lợi nhuận (`../PROGRESS.md` §70.4).
 
-## 11. Artefact
+## 11. Kiểm chứng port — cross-implementation (task J)
+
+Không có TradingView Pro nên **không** tạo được CSV reference của Pine. Thay vào đó: viết một bản cài đặt
+**độc lập** của spec Pine bằng Python (`python/src/mt5_ea_ai_lab/signals/wonderwhales.py`), chạy trên **đúng
+cùng cây nến** với indicator MQL5, rồi so **từng nến**.
+
+**Nhãn: `CROSS_IMPLEMENTATION` — KHÔNG phải `PARITY`.** Nó chứng minh hai bản cài đặt độc lập của cùng một
+spec khớp nhau (hoặc không), **không** chứng minh bản nào khớp TradingView. Vì vậy nó **không** được dùng để
+gỡ `InpRequireParity`.
+
+Cách làm:
+
+1. `WonderwhalesDumpTesterEA` (read-only, chỉ chạy trong tester) ghi mỗi nến đã đóng **cùng giá trị buffer**
+   của `PinePort\Wonderwhales`: `psar,sar_dir,buy_signal,sell_signal,fast,slow,atr_pct,blocked_*`.
+2. Bản Python chạy spec trên đúng OHLCV đó.
+3. `scripts/compare_wonderwhales_bars.py` so từng trường sau khi bỏ 300 nến warm-up.
+
+**Phát hiện kèm theo (quan trọng):** `PineSignalLabEA` **không thể ghi tín hiệu trong Strategy Tester** — nó
+đòi `BarsCalculated(handle) >= Bars()`, nhưng trong tester `Bars()` tính cả ~1 năm lịch sử nạp trước
+`FromDate` còn indicator chỉ tính vùng test (`calculated=71009` vs `rates_total=141805`), nên nó kẹt
+`indicator_not_ready` suốt run và ghi **0 tín hiệu** (bằng chứng: `reports/.../portref_sig_m5`). Đây là lý do
+chưa từng có kết quả parity nào chạy được.
+
+### 11.1 Kết quả (XAUUSDm, 2025.01.01→2026.01.01, mode SAR_EMA, sau 300 nến warm-up)
+
+| Khung | Nến so | `sar_dir` | `buy_signal` | `sell_signal` | `psar` (≤1e-4) | `fast`/`slow` (≤1e-4) |
+|---|---:|---:|---:|---:|---:|---:|
+| M15 | 23.320 | 97,39% | 99,40% | 99,70% | 87,82% | 100% |
+| M5 | 70.496 | 97,69% | 99,50% | 99,71% | 88,70% | 100% |
+| M1 | 352.837 | 97,89% | 99,62% | 99,65% | 90,14% | 100% |
+
+Đọc:
+
+1. **EMA khớp hoàn toàn:** `fast` lệch ≤ 5e-9, `slow` ≤ 1,3e-5, 100% nến nằm trong 1e-4 trên cả ba khung ⇒
+   phần EMA của indicator đã được kiểm chứng chéo.
+2. **Tín hiệu khớp 99,4–99,7%** ⇒ ~0,3–0,6% nến cho tín hiệu khác.
+3. **PSAR mới là chỗ lệch:** hướng lệch **~2,1–2,6%** nến; mức PSAR chỉ khớp 88–90% trong 1e-4, lệch tối đa
+   tới **120** (M15). Bản port đã được tinh chỉnh sang biến thể clamp hai nến trước (97,69% hướng ở M5, so
+   với 96,44% của biến thể clamp một nến), nhưng phần lệch còn lại **không giải thích được**.
+4. Vì toàn bộ chuỗi entry dựa trên **PSAR flip**, mức độ lệch này là rủi ro thật cho parity.
+
+### 11.2 Kết luận (trung thực)
+
+- **Không kết luận được bên nào đúng.** Bản port theo PSAR Wilder/Pine cổ điển; indicator MQL5 gọi `iSAR`
+  của MT5 — vốn nổi tiếng khác `ta.sar` của TradingView (đúng như rủi ro D1 trong
+  [`indicators/wonderwhales.md`](indicators/wonderwhales.md) §10, giờ đã **đo được bằng số**).
+- Vì vậy: **port chưa được kiểm chứng** ⇒ mọi kết luận về chiến lược ở §6–§7 vẫn đứng trên một tín hiệu
+  chưa xác minh. Chỉ export thật từ TradingView mới giải quyết được.
+- Việc nên làm tiếp: **thay `iSAR` bằng một PSAR tự cài trong indicator** (bắt đầu bằng biến thể đã đo là sát
+  nhất), rồi đo lại cross-implementation; nếu khớp ~100% thì rủi ro chuyển từ "indicator" sang "chưa có
+  reference Pine".
+
+## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —
 `ww2_scalp_census/` (journal 45 MB + census 14,5 MB), và mỗi scenario `ww2_meas_scalp_*/` (journal, telemetry,
 `.htm`, `.png`). Bảng tổng hợp: `reports/build/measure_summary.txt` (do `analyse_measure.py` sinh).
 
 Cổng tĩnh tại commit cuối: `validate-project checks=15 fail=0`, `validate_demo_execution checks=14 fail=0`,
-`check_docs_links broken=0`, `pytest 459 passed`, compile `0 errors / 0 warnings`.
+`check_docs_links broken=0`, `pytest 480 passed`, compile `0 errors / 0 warnings`.
