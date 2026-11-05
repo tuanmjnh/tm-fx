@@ -133,7 +133,8 @@ bị chặn gián tiếp qua risk guard.
 `terminal64.exe /config:`) + một census tín hiệu + một ma trận đo management (8 lần chạy); **không** có kết
 quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa có phiên demo chart. Chi tiết đầy đủ ở
 [`../PROGRESS.md`](../PROGRESS.md) §71 (bot), §72 (census), §73 (measurement harness), §74 (parity runbook)
-và §75 (sửa cổng entry).
+và §75–§79 (sửa cổng entry → bộ lọc chất lượng). **Báo cáo tổng hợp một mạch (a→h):**
+[`../30-research/wonderwhales-scalp-study.md`](../30-research/wonderwhales-scalp-study.md).
 
 - **Compile** `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
 - **Cổng tĩnh xanh:** `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,

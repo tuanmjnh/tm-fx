@@ -4419,3 +4419,20 @@ hoặc (b) chấp nhận kết luận "không có edge chứng minh được" v�
 - Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF.
 - Preset **không** đổi mặc định: hai cửa sổ vẫn `1`, bộ lọc SAR vẫn `false`. Mọi giá trị thí nghiệm chỉ nằm
   trong `.set` của tester.
+
+## 80. Wonderwhales 2-mode — báo cáo tổng hợp nghiên cứu Scalp (a→h) — 2026-11-05
+
+Chủ sở hữu chốt: dừng tinh chỉnh tham số, viết báo cáo tổng hợp.
+
+- Tài liệu tracked: [`30-research/wonderwhales-scalp-study.md`](30-research/wonderwhales-scalp-study.md) —
+  tự chứa, gồm: câu hỏi, phương pháp, công cụ, nguyên nhân gốc, kết quả **bốn đòn bẩy**, cấu hình tốt nhất,
+  biết chắc/chưa biết, lệnh tái lập, việc còn mở.
+- Thêm vào `REQUIRED_FILES` (`scripts/validate-project.py`) và index `docs/30-research/README.md`; trang bot
+  §5 trỏ tới báo cáo.
+
+**Kết luận chính (không nâng nhãn):** trong bốn đòn bẩy rẻ — trailing (**loại**), cửa sổ sự kiện (**cải thiện
+rõ**, edge mỏng), hình học TP (**không nhất quán** IS/OOS), bộ lọc chất lượng SAR (**không tác dụng**) — chỉ
+cửa sổ sự kiện cải thiện nhất quán. **Edge của tín hiệu như đang port chưa được thiết lập.** Cấu hình tốt nhất
+hiện có `(setup 5, trigger 5)` dương ở cả hai cửa sổ nhưng PF chỉ 1,03–1,06 (winrate 41–42% so với hoà vốn 40%).
+
+Bot vẫn `NOT_RUN`, parity vẫn `BLOCKED`, profit vẫn `UNPROVEN`. Preset mặc định **không đổi**.

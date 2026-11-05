@@ -18,6 +18,7 @@ Tài liệu kỹ thuật nền của lab. Chạy bot → `20-operations/`; hiể
 | [simulation.md](simulation.md) | Simulation MQL5 core: runner, grid, DCA, plan, wonderwhales, preset. |
 | [strategy-signal-spec.md](strategy-signal-spec.md) | Đặc tả chiến lược và tín hiệu — baseline EMA crossover. |
 | [testing.md](testing.md) | Quy ước test, metric và test plan cho Python và MQL5. |
+| [wonderwhales-scalp-study.md](wonderwhales-scalp-study.md) | Nghiên cứu cải thiện bot 2-mode (bước a→h): nguyên nhân gốc, bốn đòn bẩy đã đo và kết luận chưa chứng minh được edge. |
 | [trailing-stop.md](trailing-stop.md) | Mô phỏng trailing stop bằng Python: các loại, tham số, so sánh. |
 | [open-source-research.md](open-source-research.md) | Quy trình 5 bước và tiêu chí chọn repo mã nguồn mở tham chiếu. |
 
