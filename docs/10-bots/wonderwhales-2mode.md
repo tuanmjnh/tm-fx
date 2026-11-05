@@ -78,6 +78,7 @@ Input khai theo 6 nhóm của [`input-convention.md`](input-convention.md) — *
 | | `InpScalpBiasTF`/`InpScalpSetupTF`/`InpScalpTriggerTF` | `M15`/`M5`/`M1` |
 | | `InpSwingBiasTF`/`InpSwingSetupTF`/`InpSwingTriggerTF` | `W1`/`D1`/`H1` |
 | | `InpTriggerWindowBars` | `1` (`1` = chỉ cây trigger cuối, hành vi gốc; `5` = mọi cây M1 của nến M5) |
+| | `InpSetupWindowBars` | `1` (`1` = chỉ nến setup cuối, hành vi gốc; `5` = flip trong 5 nến setup gần nhất) |
 | | `InpBreakEvenTriggerR`/`InpTrailTriggerR`/`InpMinTrailStepPoints` | `1.0`/`1.3`/`50.0` |
 | | `InpSwingRrMin`/`InpSwingConfirmBars`/`InpStructureLookbackBars` | `1.8`/`2`/`300` |
 | | `InpEnableStructureTrail`/`InpEnablePsarTrail`/`InpEnableAtrTrail`/`InpEnableStepTrail` | `true`/`false`/`false`/`false` |
@@ -322,6 +323,32 @@ Ba điều đọc được:
 
 Giả thuyết kế tiếp (chưa làm): IS âm trong khi winrate 36,52% < 40% (winrate hoà vốn của TP 1,5R) ⇒ biến
 cần thử tiếp là **cổng setup M5** (cửa sổ M5 / setup dạng trạng thái) hoặc **hình học SL/TP**.
+
+### 5.5 Cửa sổ setup M5 (task E)
+
+Sau khi sửa cửa sổ trigger (§5.4), thử tiếp **cửa sổ setup**: `InpSetupWindowBars` (mặc định `1` = chỉ
+nến setup cuối; `5` = flip trong 5 nến setup gần nhất). Đo **một biến**: trigger window giữ nguyên `1`.
+
+| Cấu hình (setup, trigger) | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `(1, 1)` đối chứng | IS | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% |
+| `(1, 1)` đối chứng | OOS | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% |
+| `(5, 1)` setup s5 | IS | 235 | 37,45% | −2.734,12 | **−0,08** | 0,87 | 5,26% |
+| `(5, 1)` setup s5 | OOS | 238 | 39,92% | −517,91 | **−0,01** | 0,97 | 1,83% |
+| `(1, 5)` trigger w5 (§5.4) | IS | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% |
+| `(1, 5)` trigger w5 (§5.4) | OOS | 298 | 42,62% | **+2.601,60** | **+0,06** | **1,10** | 2,89% |
+
+Đọc:
+
+1. Đối chứng `s1` **trùng khớp tuyệt đối** với nhánh A (và với `w1`) ⇒ hai mặc định đúng là không đổi hành vi.
+2. **Cả hai cửa sổ đều là nút thắt thật.** Mỗi cái một mình tăng số lệnh ~11–13× và gần như cắt đôi
+   expectancy âm ở IS (−0,32 → −0,08 / −0,10 R).
+3. **Chỉ cửa sổ trigger vượt 0 ở OOS** (+0,06R, PF 1,10). Setup s5 cải thiện IS tốt hơn một chút
+   (−0,08R so với −0,10R) nhưng **không** qua được OOS (−0,01R, PF 0,97).
+4. Vẫn **`NOT_STRATEGY_RESULT`**: không phải bằng chứng lợi nhuận, IS vẫn âm.
+
+Vì hai cửa sổ tác động khác nhau ở OOS, bước hợp lý kế tiếp là đo **tổ hợp `(5, 5)`** như một biến thêm
+vào trên nền `(1, 5)` — chưa làm, chờ quyết định.
 
 ## 6. Giới hạn / quirk đã biết
 

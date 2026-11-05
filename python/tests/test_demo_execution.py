@@ -116,10 +116,11 @@ def test_demo_preset_rejects_empty_symbol_list() -> None:
 WW2_PRESET = REPO_ROOT / "configs" / "demo" / "wonderwhales_xau_2mode_demo.json"
 
 
-def test_ww2_trigger_window_default_preserves_behaviour() -> None:
-    #--- 1 = read only the last trigger bar, i.e. the original gate.
+def test_ww2_event_windows_default_preserve_behaviour() -> None:
+    #--- 1 = read only the last closed bar, i.e. the original gates.
     config = _json(WW2_PRESET)
     assert config["inputs"]["InpTriggerWindowBars"] == 1
+    assert config["inputs"]["InpSetupWindowBars"] == 1
     assert validate_preset(config) == []
 
 

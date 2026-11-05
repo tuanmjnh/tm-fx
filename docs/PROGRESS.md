@@ -4183,3 +4183,63 @@ Mặc định `1` tái lập chính xác hành vi cũ — harness kiểm chứng
   lợi nhuận vì mọi lượt đo đều parity OFF.
 - Thay đổi này đụng **hợp đồng preset**: 71 → 72 key. Đã cập nhật đồng bộ JSON, schema, cross-check, test và
   docs.
+
+## 76. Wonderwhales 2-mode — cửa sổ setup M5 (task E) — 2026-11-05
+
+Chủ sở hữu chọn giả thuyết kế tiếp: cổng setup M5. Cùng phương pháp: mỗi lượt đổi đúng **một** biến,
+management nhánh A, đo in-sample + out-of-sample, so với đối chứng.
+
+### 76.1 Quyết định
+
+- `InpSetupWindowBars` là **input công khai**, mặc định `1` (= hành vi gốc). Preset 72 → **73 key**.
+- Đo cửa sổ setup **một mình**: `InpTriggerWindowBars` giữ ở mặc định `1`, để hiệu ứng quy được cho đúng
+  một biến. Tổ hợp `(setup 5, trigger 5)` là bước **riêng**, chưa làm ở đây.
+- Chủ sở hữu đã chốt: preset demo **giữ `InpTriggerWindowBars=1`** cho tới khi parity xong (parity `BLOCKED`
+  nên preset không tạo lệnh nào; IS vẫn âm nên chưa có cơ sở đổi mặc định cho operator).
+
+### 76.2 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` | Input `InpSetupWindowBars`; helper `SetupWindow()`; cả 4 điểm đọc setup (census + entry, Scalp + Swing) dùng `Ww2ReadSignalWindow` |
+| `mt5/Include/Wonderwhales/WW2SignalReader.mqh` | Đổi tên `Ww2ReadTriggerWindow` → `Ww2ReadSignalWindow` (giờ dùng cho cả setup lẫn trigger; cùng ngữ nghĩa "cây bắn gần nhất thắng") |
+| `configs/demo/wonderwhales_xau_2mode_demo.json` | Thêm `InpSetupWindowBars: 1` (72 → 73 key) |
+| `python/src/mt5_ea_ai_lab/sim_configs.py` | Schema cho `InpSetupWindowBars` (1..100, integer) |
+| `python/tests/test_demo_execution.py` | Test mặc định hai cửa sổ giữ nguyên hành vi |
+| `scripts/tester/gen_ww2_sets.py` | `SETUP_VARIANTS` + `setup_scenarios()`; gộp 2 ma trận cửa sổ vào `_window_scenarios()` |
+| `python/tests/test_gen_ww2_sets.py` | Test ma trận setup: 4 scenario, `s1` vs `s5` khác đúng một input, trigger window không đổi |
+
+### 76.3 Kết quả
+
+| Cấu hình (setup, trigger) | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `(1, 1)` đối chứng | IS | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% |
+| `(1, 1)` đối chứng | OOS | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% |
+| `(5, 1)` setup s5 | IS | 235 | 37,45% | −2.734,12 | −0,08 | 0,87 | 5,26% |
+| `(5, 1)` setup s5 | OOS | 238 | 39,92% | −517,91 | −0,01 | 0,97 | 1,83% |
+| `(1, 5)` trigger w5 (§75) | IS | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% |
+| `(1, 5)` trigger w5 (§75) | OOS | 298 | 42,62% | +2.601,60 | +0,06 | 1,10 | 2,89% |
+
+### 76.4 Đọc kết quả
+
+1. Đối chứng `s1` trùng khớp **tuyệt đối** với nhánh A và với `w1` ⇒ hai mặc định đúng là không đổi hành vi.
+2. **Cả hai cửa sổ đều là nút thắt thật**: mỗi cái một mình tăng số lệnh ~11–13× và gần như cắt đôi
+   expectancy âm ở IS (−0,32 → −0,08 / −0,10 R).
+3. **Chỉ cửa sổ trigger vượt 0 ở OOS** (+0,06R, PF 1,10). Setup s5 tốt hơn một chút ở IS (−0,08 so với
+   −0,10 R) nhưng **không** qua OOS (−0,01R, PF 0,97) ⇒ cửa sổ trigger là đòn bẩy mạnh hơn.
+4. Vẫn **`NOT_STRATEGY_RESULT`**: IS âm ở mọi biến thể, nên **không** có tuyên bố lợi nhuận.
+
+Bước kế tiếp hợp lý (chưa làm, chờ quyết định): đo tổ hợp `(5, 5)` như **một** biến thêm vào trên nền `(1, 5)`.
+
+### 76.5 Cổng
+
+- `deploy_pineport.ps1 -Apply -Force`: **0 errors / 0 warnings**.
+- `validate-project.py checks=15 fail=0`; `validate_demo_execution.py checks=14 fail=0`;
+  `check_docs_links.py broken=0 checked=430`; `pytest 456 passed` (trước bước này 455; thêm 1 test ma trận
+  setup).
+
+### 76.6 Nhãn trung thực
+
+- Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF nên là
+  `NOT_STRATEGY_RESULT`.
+- Hợp đồng preset 72 → 73 key; đã cập nhật JSON, schema, test, docs cùng lúc.

@@ -416,7 +416,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 | `ww2_swing_demo_exec` | ENTRY/EXIT + TRAIL (BE/structure); từ 2018 để W1/D1 EMA200 đủ history |
 | `ww2_scalp_census` | Parity ON + `InpDebug=true`, 100k deposit, risk 0,15% → ghi `_census.csv`, **0 lệnh**; dùng để đếm tín hiệu |
 | `ww2_meas_scalp_{is,oos}_{a,b,c,d}` | 8 lần đo management: in-sample 2024.01.01→2025.06.30, out-of-sample 2025.07.01→2026.10.01 × 4 nhánh A–D; parity OFF nên **`NOT_STRATEGY_RESULT`** |
-| `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` | 4 lần đo **cổng entry**: `w1` = chỉ cây trigger cuối (đối chứng), `w5` = mọi cây M1 của nến M5; cùng management nhánh A; **`NOT_STRATEGY_RESULT`** |
+| `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` | 4 lần đo **cửa sổ trigger**: `w1` = chỉ cây trigger cuối (đối chứng), `w5` = mọi cây M1 của nến M5; cùng management nhánh A; **`NOT_STRATEGY_RESULT`** |
+| `ww2_meas_scalp_{is,oos}_setup_{s1,s5}` | 4 lần đo **cửa sổ setup**: `s1` = chỉ nến M5 cuối (đối chứng), `s5` = flip trong 5 nến M5 gần nhất (trigger window giữ `1`); **`NOT_STRATEGY_RESULT`** |
 
 `.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
 đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.

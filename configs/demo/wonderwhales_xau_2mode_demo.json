@@ -67,6 +67,7 @@
     "InpSwingSetupTF": 16408,
     "InpSwingTriggerTF": 16385,
     "InpTriggerWindowBars": 1,
+    "InpSetupWindowBars": 1,
     "InpBreakEvenTriggerR": 1.0,
     "InpTrailTriggerR": 1.3,
     "InpMinTrailStepPoints": 50.0,

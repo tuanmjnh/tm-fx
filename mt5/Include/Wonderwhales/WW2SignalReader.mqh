@@ -93,20 +93,20 @@ bool Ww2ReadSignal(const int handle,const string symbol,
    return(out.valid);
   }
 
-//--- Reads the trigger timeframe over the window that belongs to the just
-//--- closed setup bar and merges it into one decision input.
+//--- Reads a timeframe over a window of closed bars and merges it into one
+//--- decision input: the most recent bar in the window that fired wins.
 //---
 //--- Why: the indicator emits BUY/SELL on the single bar where the flip
-//--- happens. Reading shift=1 only therefore demanded the trigger flip to land
-//--- on the LAST trigger bar of the setup bar (1 of 5 M1 bars for an M5 setup),
-//--- which the 2026-11-05 census showed removed 98.88% of setups. With a
-//--- window of k the most recent trigger bar inside the setup bar that fired
-//--- wins, so the pure evaluator keeps its single-signal contract.
-//--- The shift-1 read still has to succeed: a broken trigger indicator must
-//--- stay "trigger_invalid", not silently become a permissive state.
-bool Ww2ReadTriggerWindow(const int handle,const string symbol,
-                          const ENUM_TIMEFRAMES tf,const int window,
-                          Ww2Signal &out)
+//--- happens. Reading shift=1 only therefore demands the event on the very last
+//--- closed bar: for the M1 trigger that is 1 of the 5 M1 bars inside an M5
+//--- setup bar, which the 2026-11-05 census showed removed 98.88% of setups.
+//--- Used for both the setup window and the trigger window, so the pure
+//--- evaluators keep their single-signal contract.
+//--- The shift-1 read still has to succeed: a broken indicator must stay
+//--- "setup_invalid"/"trigger_invalid", not silently become a permissive state.
+bool Ww2ReadSignalWindow(const int handle,const string symbol,
+                         const ENUM_TIMEFRAMES tf,const int window,
+                         Ww2Signal &out)
   {
    if(!Ww2ReadSignal(handle,symbol,tf,1,out))
       return(false);

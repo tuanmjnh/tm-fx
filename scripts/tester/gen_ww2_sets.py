@@ -10,7 +10,8 @@ Scenarios:
   ww2_swing_demo_exec  parity OFF      -> same, Swing mode (starts 2018 so W1/D1 EMA200 has history).
   ww2_scalp_census     parity ON, InpDebug ON -> per-bar signal census, zero orders.
   ww2_meas_scalp_<window>_<arm>  8 measurement runs: in/out of sample x ablation arm A..D.
-  ww2_meas_scalp_<window>_gate_<w>  4 entry-gate runs: in/out of sample x trigger window.
+  ww2_meas_scalp_<window>_gate_<w>  4 trigger-window runs: in/out of sample x trigger window.
+  ww2_meas_scalp_<window>_setup_<s> 4 setup-window runs: in/out of sample x setup window.
 
 Parity is unproven, so every parity-off run is NOT a strategy result. The
 measurement matrix changes ONE variable per arm so the effect of each
@@ -21,10 +22,13 @@ management rule is attributable:
   C  B + structure trail
   D  C + PSAR trail
 
-The gate matrix changes only the trigger window, on the arm-A management:
+Two event-window matrices, each on the arm-A management and each changing exactly
+one input:
 
   gate_w1  last trigger bar only (shipped behaviour, control)
   gate_w5  any M1 bar of the closed M5 setup bar
+  setup_s1 last M5 setup bar only (control)
+  setup_s5 M5 flip within the last five closed M5 bars (trigger window still 1)
 
 Usage:
   .venv\\Scripts\\python.exe scripts\\tester\\gen_ww2_sets.py
@@ -118,18 +122,34 @@ GATE_VARIANTS = {
     "w5": {"InpTriggerWindowBars": 5},
 }
 
+#--- Task E: the M5 setup window, measured with the trigger window held at its
+#--- shipped default (1) so only the setup window changes.
+SETUP_VARIANTS = {
+    "s1": {"InpSetupWindowBars": 1},
+    "s5": {"InpSetupWindowBars": 5},
+}
 
-def gate_scenarios() -> tuple:
-    """In-sample / out-of-sample x trigger-window variant, one variable at a time."""
+
+def _window_scenarios(variants: dict, tag: str) -> tuple:
     out = []
     for window, (from_date, to_date) in MEASURE_WINDOWS.items():
-        for variant, overrides in GATE_VARIANTS.items():
+        for variant, overrides in variants.items():
             values = dict(MEASURE_BASE)
             values.update(overrides)
-            name = f"ww2_meas_scalp_{window}_gate_{variant}"
+            name = f"ww2_meas_scalp_{window}_{tag}_{variant}"
             _check_measure_arm(name, values)
             out.append((name, "M5", from_date, to_date, 100000, values))
     return tuple(out)
+
+
+def gate_scenarios() -> tuple:
+    """In-sample / out-of-sample x trigger-window variant, one variable at a time."""
+    return _window_scenarios(GATE_VARIANTS, "gate")
+
+
+def setup_scenarios() -> tuple:
+    """In-sample / out-of-sample x setup-window variant, one variable at a time."""
+    return _window_scenarios(SETUP_VARIANTS, "setup")
 
 
 def _check_measure_arm(name: str, values: dict) -> None:
@@ -173,6 +193,7 @@ def measure_scenarios() -> tuple:
 
 SCENARIOS += measure_scenarios()
 SCENARIOS += gate_scenarios()
+SCENARIOS += setup_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -242,6 +263,11 @@ def main() -> int:
             note = [
                 "; Entry-gate run: parity is unproven, so this is NOT a strategy result.",
                 "; w1 = last trigger bar only (control), w5 = any M1 bar of the M5 setup bar.",
+            ]
+        elif "_setup_" in name:
+            note = [
+                "; Setup-window run: parity is unproven, so this is NOT a strategy result.",
+                "; s1 = last M5 bar only (control), s5 = flip within the last 5 M5 bars.",
             ]
         elif name.startswith("ww2_meas_"):
             note = [

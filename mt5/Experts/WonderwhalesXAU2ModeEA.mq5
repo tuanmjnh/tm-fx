@@ -110,9 +110,11 @@ input ENUM_TIMEFRAMES InpScalpTriggerTF = PERIOD_M1;
 input ENUM_TIMEFRAMES InpSwingBiasTF    = PERIOD_W1;
 input ENUM_TIMEFRAMES InpSwingSetupTF   = PERIOD_D1;
 input ENUM_TIMEFRAMES InpSwingTriggerTF = PERIOD_H1;
-//--- Trigger lookback inside the confirming setup bar. 1 = only the last
-//--- trigger bar (original behaviour); 5 = any M1 bar of the closed M5 bar.
+//--- Event windows. 1 = only the last closed bar (original behaviour).
+//--- trigger: bars scanned inside the confirming setup bar (5 = all M1 of M5).
+//--- setup:   closed setup bars scanned for the flip (5 = last five M5 bars).
 input int InpTriggerWindowBars      = 1;      // trigger bars scanned per setup bar
+input int InpSetupWindowBars        = 1;      // setup bars scanned for the flip
 input double InpBreakEvenTriggerR   = 1.0;
 input double InpTrailTriggerR       = 1.3;
 input double InpMinTrailStepPoints  = 50.0;
@@ -843,11 +845,16 @@ string CensusFileName(void)
    return(base+"_census.csv");
   }
 
-//--- Trigger bars scanned inside one closed setup bar, clamped to >= 1 so the
-//--- default keeps the original "last trigger bar only" behaviour.
+//--- Window sizes, clamped to >= 1 so the defaults keep the original
+//--- "last closed bar only" behaviour.
 int TriggerWindow(void)
   {
    return(InpTriggerWindowBars>1 ? InpTriggerWindowBars : 1);
+  }
+
+int SetupWindow(void)
+  {
+   return(InpSetupWindowBars>1 ? InpSetupWindowBars : 1);
   }
 
 //--- One census row per chart bar, independent of the entry path. It runs only
@@ -860,9 +867,10 @@ void CensusBar(const datetime bar_time)
    if(InpTradingMode==WW2_SCALP)
      {
       if(!Ww2ReadSignal(g_h_m15,_Symbol,InpScalpBiasTF,1,g_sig_bias) ||
-         !Ww2ReadSignal(g_h_m5,_Symbol,InpScalpSetupTF,1,g_sig_setup) ||
-         !Ww2ReadTriggerWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
-                               TriggerWindow(),g_sig_trigger))
+         !Ww2ReadSignalWindow(g_h_m5,_Symbol,InpScalpSetupTF,
+                              SetupWindow(),g_sig_setup) ||
+         !Ww2ReadSignalWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
+                              TriggerWindow(),g_sig_trigger))
          return;
       Ww2ScalpGates g;
       const bool signal=Ww2ScalpEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g);
@@ -878,9 +886,10 @@ void CensusBar(const datetime bar_time)
    if(InpTradingMode==WW2_SWING)
      {
       if(!Ww2ReadSignal(g_h_w1,_Symbol,InpSwingBiasTF,1,g_sig_bias) ||
-         !Ww2ReadSignal(g_h_d1,_Symbol,InpSwingSetupTF,1,g_sig_setup) ||
-         !Ww2ReadTriggerWindow(g_h_h1,_Symbol,InpSwingTriggerTF,
-                               TriggerWindow(),g_sig_trigger))
+         !Ww2ReadSignalWindow(g_h_d1,_Symbol,InpSwingSetupTF,
+                              SetupWindow(),g_sig_setup) ||
+         !Ww2ReadSignalWindow(g_h_h1,_Symbol,InpSwingTriggerTF,
+                              TriggerWindow(),g_sig_trigger))
          return;
       Ww2SwingGates g;
       const bool signal=Ww2SwingEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g);
@@ -951,10 +960,11 @@ bool TryEnter(const datetime bar_time)
      {
       if(!Ww2ReadSignal(g_h_m15,_Symbol,InpScalpBiasTF,1,g_sig_bias))
          return(false);
-      if(!Ww2ReadSignal(g_h_m5,_Symbol,InpScalpSetupTF,1,g_sig_setup))
+      if(!Ww2ReadSignalWindow(g_h_m5,_Symbol,InpScalpSetupTF,
+                              SetupWindow(),g_sig_setup))
          return(false);
-      if(!Ww2ReadTriggerWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
-                               TriggerWindow(),g_sig_trigger))
+      if(!Ww2ReadSignalWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
+                              TriggerWindow(),g_sig_trigger))
          return(false);
       if(!Ww2ScalpEntry(g_sig_bias,g_sig_setup,g_sig_trigger,is_buy))
          return(false);
@@ -963,10 +973,11 @@ bool TryEnter(const datetime bar_time)
      {
       if(!Ww2ReadSignal(g_h_w1,_Symbol,InpSwingBiasTF,1,g_sig_bias))
          return(false);
-      if(!Ww2ReadSignal(g_h_d1,_Symbol,InpSwingSetupTF,1,g_sig_setup))
+      if(!Ww2ReadSignalWindow(g_h_d1,_Symbol,InpSwingSetupTF,
+                              SetupWindow(),g_sig_setup))
          return(false);
-      if(!Ww2ReadTriggerWindow(g_h_h1,_Symbol,InpSwingTriggerTF,
-                               TriggerWindow(),g_sig_trigger))
+      if(!Ww2ReadSignalWindow(g_h_h1,_Symbol,InpSwingTriggerTF,
+                              TriggerWindow(),g_sig_trigger))
          return(false);
       if(!Ww2SwingEntry(g_sig_bias,g_sig_setup,g_sig_trigger,is_buy))
          return(false);

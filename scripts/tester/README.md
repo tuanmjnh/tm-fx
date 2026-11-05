@@ -32,7 +32,8 @@ foreach ($w in 'is','oos') { foreach ($a in 'a','b','c','d') {
 ```
 
 Scenario: `ww2_scalp_parity_on`, `ww2_scalp_demo_exec`, `ww2_swing_demo_exec`, `ww2_scalp_census`,
-`ww2_meas_scalp_{is,oos}_{a,b,c,d}` (management) và `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` (cổng entry).
+`ww2_meas_scalp_{is,oos}_{a,b,c,d}` (management), `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` (cửa sổ
+trigger) và `ww2_meas_scalp_{is,oos}_setup_{s1,s5}` (cửa sổ setup).
 Census bật bằng `InpDebug=true` và ghi `<tên journal>_census.csv`; chi tiết ở
 [`docs/10-bots/wonderwhales-2mode.md`](../../docs/10-bots/wonderwhales-2mode.md) §5.1.
 Mọi ma trận đo chạy parity OFF nên mọi output là **`NOT_STRATEGY_RESULT`** (§5.2 cùng file).

@@ -68,6 +68,24 @@ def test_gate_matrix_has_four_valid_arms() -> None:
         assert values["InpEnablePsarTrail"] is False
 
 
+def test_setup_matrix_holds_the_trigger_window_at_default() -> None:
+    module = _load()
+    scenarios = module.setup_scenarios()
+    assert len(scenarios) == 4
+    by_name = {name: values for name, _p, _f, _t, _d, values in scenarios}
+    for name, values in by_name.items():
+        module._check_measure_arm(name, values)
+    assert by_name["ww2_meas_scalp_is_setup_s1"]["InpSetupWindowBars"] == 1
+    control = by_name["ww2_meas_scalp_is_setup_s1"]
+    wider = by_name["ww2_meas_scalp_is_setup_s5"]
+    diff = {k for k in control if control[k] != wider[k]}
+    assert diff == {"InpSetupWindowBars"}
+    #--- One variable at a time: the trigger window must not move as well.
+    #--- Absent means "whatever the preset default is", which is 1.
+    for values in by_name.values():
+        assert values.get("InpTriggerWindowBars", 1) == 1
+
+
 def test_rejects_trail_trigger_below_break_even() -> None:
     module = _load()
     with pytest.raises(ValueError, match="rejects this at OnInit"):
