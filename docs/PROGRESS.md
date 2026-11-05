@@ -4243,3 +4243,55 @@ Bước kế tiếp hợp lý (chưa làm, chờ quyết định): đo tổ hợ
 - Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF nên là
   `NOT_STRATEGY_RESULT`.
 - Hợp đồng preset 72 → 73 key; đã cập nhật JSON, schema, test, docs cùng lúc.
+
+## 77. Wonderwhales 2-mode — tổ hợp hai cửa sổ setup/trigger (task F) — 2026-11-05
+
+Chủ sở hữu chọn đo tổ hợp `(setup 5, trigger 5)` như **một** biến thêm vào trên nền tốt nhất `(1, 5)`.
+
+### 77.1 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `scripts/tester/gen_ww2_sets.py` | `COMBO_VARIANTS` + `combo_scenarios()` → `ww2_meas_scalp_{is,oos}_combo_{c1,c5}`; gộp ba ma trận cửa sổ vào `_window_scenarios()` |
+| `python/tests/test_gen_ww2_sets.py` | Test tổ hợp: 4 scenario, `c1` cố định trigger 5, `c5` khác đúng một input (setup) |
+| `docs/...` | Bảng kế tiếp ở bot page §5.6; hàng scenario ở strategy-tester.md; README |
+
+Không đổi MQL: `InpTriggerWindowBars` và `InpSetupWindowBars` đã có từ §75/§76, nên không cần compile lại.
+
+### 77.2 Kết quả (management nhánh A, parity OFF)
+
+| Cấu hình (setup, trigger) | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `(1, 1)` đối chứng | IS | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% |
+| `(1, 1)` đối chứng | OOS | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% |
+| `(5, 1)` setup | IS | 235 | 37,45% | −2.734,12 | −0,08 | 0,87 | 5,26% |
+| `(5, 1)` setup | OOS | 238 | 39,92% | −517,91 | −0,01 | 0,97 | 1,83% |
+| `(1, 5)` trigger | IS | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% |
+| `(1, 5)` trigger | OOS | 298 | 42,62% | +2.601,60 | +0,06 | 1,10 | 2,89% |
+| `(5, 5)` tổ hợp | IS | 854 | 41,92% | +4.207,65 | +0,03 | 1,06 | 5,46% |
+| `(5, 5)` tổ hợp | OOS | 841 | 41,26% | +2.517,92 | +0,02 | 1,03 | 3,51% |
+
+### 77.3 Đọc kết quả (đánh đổi, không phải thắng rõ)
+
+1. Tổ hợp làm **cả hai** cửa sổ dương — lần đầu IS dương — với ~3× số lệnh so với từng cửa sổ riêng.
+2. **Edge/lệnh mỏng đi ở OOS**: +0,02R (PF 1,03) so với +0,06R (PF 1,10) của `(1, 5)`. Cửa sổ setup rộng thêm
+   nhiều setup chất lượng thấp hơn: tổng net OOS tương đương (2.518 so với 2.602) nhưng tốn ~3× số lệnh.
+3. PF 1,03–1,06 với winrate ~41–42% so với hoà vốn 40% ⇒ edge **rất mỏng**, có thể nằm trong nhiễu và chi phí.
+   `(1, 5)` vẫn là cấu hình edge/lệnh tốt nhất.
+4. Vẫn **`NOT_STRATEGY_RESULT`**: không phải bằng chứng lợi nhuận.
+
+Bước kế tiếp hợp lý (chưa làm, chờ quyết định): **hình học SL/TP** trên nền đã chọn (giả thuyết xếp hạng #2),
+hoặc dò cửa sổ setup trung gian (2–4) để tìm điểm edge bắt đầu loãng.
+
+### 77.4 Cổng
+
+- Không đổi file MQL ⇒ compile giữ nguyên từ §76 (**0 errors / 0 warnings**).
+- `validate-project.py checks=15 fail=0`; `validate_demo_execution.py checks=14 fail=0`;
+  `check_docs_links.py broken=0 checked=430`; `pytest 457 passed` (trước bước này 456; thêm 1 test tổ hợp).
+
+### 77.5 Nhãn trung thực
+
+- Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF nên là
+  `NOT_STRATEGY_RESULT`.
+- Không thay đổi preset (chủ sở hữu đã chốt giữ `InpTriggerWindowBars=1`, `InpSetupWindowBars=1` cho tới khi
+  parity xong).

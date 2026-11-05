@@ -350,6 +350,35 @@ nến setup cuối; `5` = flip trong 5 nến setup gần nhất). Đo **một bi
 Vì hai cửa sổ tác động khác nhau ở OOS, bước hợp lý kế tiếp là đo **tổ hợp `(5, 5)`** như một biến thêm
 vào trên nền `(1, 5)` — chưa làm, chờ quyết định.
 
+### 5.6 Tổ hợp hai cửa sổ (task F)
+
+Đo tổ hợp `(setup 5, trigger 5)` như **một** biến thêm vào trên nền tốt nhất `(1, 5)`. Bảng tiến trình đầy đủ
+(management nhánh A, parity OFF):
+
+| Cấu hình (setup, trigger) | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `(1, 1)` đối chứng | IS | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% |
+| `(1, 1)` đối chứng | OOS | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% |
+| `(5, 1)` setup | IS | 235 | 37,45% | −2.734,12 | −0,08 | 0,87 | 5,26% |
+| `(5, 1)` setup | OOS | 238 | 39,92% | −517,91 | −0,01 | 0,97 | 1,83% |
+| `(1, 5)` trigger | IS | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% |
+| `(1, 5)` trigger | OOS | 298 | 42,62% | **+2.601,60** | **+0,06** | **1,10** | 2,89% |
+| `(5, 5)` tổ hợp | IS | 854 | 41,92% | **+4.207,65** | **+0,03** | 1,06 | 5,46% |
+| `(5, 5)` tổ hợp | OOS | 841 | 41,26% | **+2.517,92** | **+0,02** | 1,03 | 3,51% |
+
+Đọc (đây là đánh đổi, **không** phải thắng rõ):
+
+1. Tổ hợp làm **cả hai** cửa sổ dương — lần đầu IS dương — với số lệnh gấp ~3× so với từng cửa sổ riêng.
+2. Nhưng **edge trên mỗi lệnh mỏng đi ở OOS**: +0,02R (PF 1,03) so với +0,06R (PF 1,10) của `(1,5)`. Cửa sổ
+   setup rộng thêm **nhiều setup chất lượng thấp hơn**: tổng net tương đương ở OOS (2.518 so với 2.602) nhưng
+   tốn gấp ~3× số lệnh, và maxDD tăng nhẹ.
+3. PF 1,03–1,06 với winrate ~41–42% so với hoà vốn 40% (TP 1,5R) ⇒ edge **rất mỏng**, có thể nằm trong nhiễu
+   và chi phí. `(1,5)` vẫn là cấu hình có edge/lệnh tốt nhất.
+4. Vẫn **`NOT_STRATEGY_RESULT`** (parity OFF): không phải bằng chứng lợi nhuận.
+
+Bước kế tiếp hợp lý (chưa làm, chờ quyết định): thử **hình học SL/TP** trên nền đã chọn, hoặc dò cửa sổ setup
+trung gian (2–4) để tìm điểm edge bắt đầu loãng.
+
 ## 6. Giới hạn / quirk đã biết
 
 - **Parity Pine ↔ MT5 vẫn `BLOCKED`** (chưa có CSV tham chiếu Pine) ⇒ EA chặn entry. Đây là hành vi có chủ

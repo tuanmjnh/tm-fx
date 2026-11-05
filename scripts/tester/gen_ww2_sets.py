@@ -12,6 +12,7 @@ Scenarios:
   ww2_meas_scalp_<window>_<arm>  8 measurement runs: in/out of sample x ablation arm A..D.
   ww2_meas_scalp_<window>_gate_<w>  4 trigger-window runs: in/out of sample x trigger window.
   ww2_meas_scalp_<window>_setup_<s> 4 setup-window runs: in/out of sample x setup window.
+  ww2_meas_scalp_<window>_combo_<c> 4 combination runs: trigger 5 fixed, setup 1 vs 5.
 
 Parity is unproven, so every parity-off run is NOT a strategy result. The
 measurement matrix changes ONE variable per arm so the effect of each
@@ -29,6 +30,8 @@ one input:
   gate_w5  any M1 bar of the closed M5 setup bar
   setup_s1 last M5 setup bar only (control)
   setup_s5 M5 flip within the last five closed M5 bars (trigger window still 1)
+  combo_c1 trigger window 5 with setup window 1 (control for the combination)
+  combo_c5 trigger window 5 with setup window 5
 
 Usage:
   .venv\\Scripts\\python.exe scripts\\tester\\gen_ww2_sets.py
@@ -129,6 +132,13 @@ SETUP_VARIANTS = {
     "s5": {"InpSetupWindowBars": 5},
 }
 
+#--- Task F: add the setup window on top of the best single change so far.
+#--- The control is the trigger-window winner (1,5), so exactly one input moves.
+COMBO_VARIANTS = {
+    "c1": {"InpTriggerWindowBars": 5, "InpSetupWindowBars": 1},
+    "c5": {"InpTriggerWindowBars": 5, "InpSetupWindowBars": 5},
+}
+
 
 def _window_scenarios(variants: dict, tag: str) -> tuple:
     out = []
@@ -150,6 +160,11 @@ def gate_scenarios() -> tuple:
 def setup_scenarios() -> tuple:
     """In-sample / out-of-sample x setup-window variant, one variable at a time."""
     return _window_scenarios(SETUP_VARIANTS, "setup")
+
+
+def combo_scenarios() -> tuple:
+    """Trigger window fixed at its winner; the setup window is the only mover."""
+    return _window_scenarios(COMBO_VARIANTS, "combo")
 
 
 def _check_measure_arm(name: str, values: dict) -> None:
@@ -194,6 +209,7 @@ def measure_scenarios() -> tuple:
 SCENARIOS += measure_scenarios()
 SCENARIOS += gate_scenarios()
 SCENARIOS += setup_scenarios()
+SCENARIOS += combo_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -268,6 +284,11 @@ def main() -> int:
             note = [
                 "; Setup-window run: parity is unproven, so this is NOT a strategy result.",
                 "; s1 = last M5 bar only (control), s5 = flip within the last 5 M5 bars.",
+            ]
+        elif "_combo_" in name:
+            note = [
+                "; Combination run: parity is unproven, so this is NOT a strategy result.",
+                "; c1 = trigger 5 + setup 1 (control), c5 = trigger 5 + setup 5.",
             ]
         elif name.startswith("ww2_meas_"):
             note = [

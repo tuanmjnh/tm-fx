@@ -86,6 +86,24 @@ def test_setup_matrix_holds_the_trigger_window_at_default() -> None:
         assert values.get("InpTriggerWindowBars", 1) == 1
 
 
+def test_combo_matrix_adds_only_the_setup_window() -> None:
+    module = _load()
+    scenarios = module.combo_scenarios()
+    assert len(scenarios) == 4
+    by_name = {name: values for name, _p, _f, _t, _d, values in scenarios}
+    for name, values in by_name.items():
+        module._check_measure_arm(name, values)
+    control = by_name["ww2_meas_scalp_is_combo_c1"]
+    combo = by_name["ww2_meas_scalp_is_combo_c5"]
+    #--- The control is the trigger-window winner, so the setup window is the
+    #--- only input that differs.
+    assert control["InpTriggerWindowBars"] == 5
+    assert control["InpSetupWindowBars"] == 1
+    diff = {k for k in control if control[k] != combo[k]}
+    assert diff == {"InpSetupWindowBars"}
+    assert combo["InpSetupWindowBars"] == 5
+
+
 def test_rejects_trail_trigger_below_break_even() -> None:
     module = _load()
     with pytest.raises(ValueError, match="rejects this at OnInit"):
