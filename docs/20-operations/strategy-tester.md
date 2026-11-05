@@ -381,6 +381,56 @@ Chạy lại: `reports/build/tester-run/run_tester.ps1 -Scenario plan_rr2`.
 Bằng chứng: `reports/build/tester-reports/plan_rr2/` (`sim_plan_rr2.csv`, `tester_plan_rr2.htm`,
 `tester_plan_rr2.png`, `plan_rr2.journal.txt`).
 
+## Bộ chạy tester headless trong repo (`scripts/tester/`)
+
+Từ 2026-11-04, phần "chạy headless" được **track trong repo** để tái lập ở máy khác (trước đây runner chỉ
+nằm trong `reports/build/` — gitignored). Đây là nhóm script **duy nhất mở MT5 terminal**; nó chạy trên
+**tài khoản ảo của Strategy Tester**, không đăng nhập, không gửi lệnh thật, EA vẫn demo/tester-only
+(ADR 0004/0006).
+
+| File | Vai trò |
+|---|---|
+| [`run_tester.ps1`](../../scripts/tester/run_tester.ps1) | Chạy 1 `<scenario>.ini`, lưu report + `sim_<scenario>.csv` vào `reports/build/tester-reports/<scenario>/` |
+| [`gen_ww2_sets.py`](../../scripts/tester/gen_ww2_sets.py) | Sinh `.set` (stage vào `MQL5\Profiles\Tester\`) + `.ini` từ JSON preset (không sửa tay `.set`) |
+
+### Chạy một scenario
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\deploy_pineport.ps1 -Apply -Force   # compile EA vào terminal
+.venv\Scripts\python.exe scripts\tester\gen_ww2_sets.py                                          # sinh .set/.ini từ JSON
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps1 -Scenario ww2_scalp_demo_exec
+```
+
+- `run_tester.ps1` tự tìm data folder (`%APPDATA%\MetaQuotes\Terminal\*` có `MQL5\Experts`) và agent Files
+  (`%APPDATA%\MetaQuotes\Tester\*\Agent-*\MQL5\Files`); chỉ định bằng `-TerminalDataDir` / `-AgentFilesDir`
+  khi cần. Phải **đóng MT5 terminal** trước (script từ chối chạy nếu `terminal64` đang mở).
+- `.set` phải nằm trong `MQL5\Profiles\Tester\` — script tự stage nếu có `reports\build\tester-sets\<scenario>.set`.
+
+### Scenario của bot 2-mode (ADR 0009)
+
+| Scenario | Kỳ vọng |
+|---|---|
+| `ww2_scalp_parity_on` | 0 ENTRY, nhiều `ENTRY_BLOCKED\|reason=parity_blocked` — chứng minh cổng parity |
+| `ww2_scalp_demo_exec` | ENTRY/EXIT có SL+TP (TP = `InpTakeProfitR`), HALT theo guard |
+| `ww2_swing_demo_exec` | ENTRY/EXIT + TRAIL (BE/structure); từ 2018 để W1/D1 EMA200 đủ history |
+
+`.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
+đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.
+
+### Dữ liệu ở đâu
+
+- **Giá (market data)**: terminal broker tải về (symbol `XAUUSDm`) — **không** nằm trong repo; đổi máy/broker
+  thì phải để MT5 tải history (Symbols → Bars/Ticks → Request).
+- **Report + CSV**: `reports/build/tester-reports/<scenario>/` (gitignored → chỉ có trên máy chạy; xem
+  [`evidence.md`](evidence.md)).
+- **Cấu hình**: `configs/demo/*.json` (nguồn sự thật) + `.set` track trong [`presets/`](presets/).
+
+### Phương án GUI (không cần script)
+
+MT5 → **Ctrl+R** → Expert + Symbol + Period + Model **1 minute OHLC** + khoảng ngày → tab **Inputs** bấm
+**Load** chọn `.set` trong `docs/20-operations/presets/` → Start. Report ở tab Results/Graph; journal CSV ở
+`MQL5\Files` (chart demo) hoặc `MQL5\Files` của tester agent (khi chạy tester).
+
 ## Strategy Tester report — <scenario>
 
 > Copy file này vào `reports/strategy-tester/<scenario>-<YYYYMMDD>.md` và điền số liệu thật. Không điền

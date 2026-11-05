@@ -7,7 +7,7 @@ Thư mục này gom mọi thứ cần để **chạy được** bot: cài đặt
 | [install.md](install.md) | Cài đặt MT5, deploy PinePort, compile và kiểm chứng lần đầu. |
 | [demo-execution.md](demo-execution.md) | Ranh giới an toàn và quy trình chạy 5 bot demo (ADR 0004–0007). |
 | [presets.md](presets.md) | Preset JSON là nguồn sự thật; `.set` là dẫn xuất; magic number của từng bot. |
-| [strategy-tester.md](strategy-tester.md) | Chạy Strategy Tester headless và đọc report + CSV đúng cách. |
+| [strategy-tester.md](strategy-tester.md) | Chạy Strategy Tester headless (bộ chạy tracked [scripts/tester/](../../scripts/tester/README.md)) và đọc report + CSV đúng cách. |
 | [toolchain.md](toolchain.md) | Năm script build/validate/test, không script nào chạm terminal. |
 | [troubleshooting.md](troubleshooting.md) | Pipeline chẩn đoán 10 bước và 7 nguyên nhân "0 trade" đã gặp thật. |
 | [evidence.md](evidence.md) | 9 nhãn trạng thái, bảng bằng chứng theo tuyên bố, nơi lưu report. |

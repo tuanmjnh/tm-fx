@@ -1,7 +1,9 @@
 # Toolchain dùng chung (W7)
 
 Năm script root kiểm tra môi trường, build MQL5, chạy pytest, validate tĩnh và đóng gói source.
-Không script nào mở terminal MT5, kết nối broker, đọc file tài khoản hay gửi lệnh.
+Không script nào **trong số này** mở terminal MT5, kết nối broker, đọc file tài khoản hay gửi lệnh.
+Riêng bộ chạy Strategy Tester ở [`../../scripts/tester/`](../../scripts/tester/README.md) **có** mở
+`terminal64.exe /config:` trên tài khoản ảo của tester — xem mục cuối trang này.
 
 | Script | Việc chính | Exit code |
 |---|---|---|
@@ -69,3 +71,11 @@ phase cũ là ảnh chụp lịch sử, không phải invariant. Điều kiện 
   contract test 6 indicator **6/6 PASS**
   (547 check) ngày 2026-10-28, `PriceActionMTF` chạy lại `pass=125 fail=0` ngày 2026-10-29.
 - Compile/test thành công không chứng minh hành vi runtime hay P&L; W8 vẫn là bước bắt buộc.
+
+## Bộ chạy Strategy Tester (`scripts/tester/`) — script duy nhất mở terminal
+
+Khác năm script root, [`../../scripts/tester/run_tester.ps1`](../../scripts/tester/run_tester.ps1) **mở**
+`terminal64.exe /config:` để chạy Strategy Tester. Nó chạy trên **tài khoản ảo của tester**, không đăng
+nhập, không gửi lệnh thật; EA vẫn demo/tester-only (ADR 0004/0006). Input sinh bằng
+[`../../scripts/tester/gen_ww2_sets.py`](../../scripts/tester/gen_ww2_sets.py) từ `configs/demo/*.json`.
+Chi tiết + nơi lưu report: [`strategy-tester.md`](strategy-tester.md).
