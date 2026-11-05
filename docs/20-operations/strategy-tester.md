@@ -420,6 +420,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 | `ww2_meas_scalp_{is,oos}_setup_{s1,s5}` | 4 lần đo **cửa sổ setup**: `s1` = chỉ nến M5 cuối (đối chứng), `s5` = flip trong 5 nến M5 gần nhất (trigger window giữ `1`); **`NOT_STRATEGY_RESULT`** |
 | `ww2_meas_scalp_{is,oos}_combo_{c1,c5}` | 4 lần đo **tổ hợp**: trigger window cố định `5`; `c1` = setup `1` (đối chứng), `c5` = setup `5`; **`NOT_STRATEGY_RESULT`** |
 | `ww2_meas_scalp_{is,oos}_geom_{tp10,tp125,tp15,tp20}` | 8 lần đo **hình học TP** trên nền `(setup 1, trigger 5)`: TP `1,0`/`1,25`/`1,5` (đối chứng)/`2,0` R, SL giữ `1R`; **`NOT_STRATEGY_RESULT`** |
+| `ww2_meas_scalp_{is,oos}_qual_{q0,q1}` | 4 lần đo **chất lượng tín hiệu** trên nền `(5,5)`: `q0` = tắt bộ lọc SAR (đối chứng), `q1` = bật `InpScalpRequireSarAgree`; **`NOT_STRATEGY_RESULT`** |
 
 `.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
 đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.
@@ -430,7 +431,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 `<tên journal>_census.csv` (suy ra từ `InpLogFile`, ví dụ `sim_ww2_scalp_census_census.csv`) với 15 cột:
 `logged_at,bar_time,mode,bias_valid,bias_buy,bias_sell,setup_valid,setup_buy,setup_sell,setup_align,trigger_valid,trigger_buy,trigger_sell,signal,reason`.
 `reason` là cổng **đầu tiên** không pass (`bias_invalid`, `no_m15_bias`/`no_w1_bias`, `setup_invalid`,
-`no_m5_flip`/`no_d1_align`, `trigger_invalid`, `no_m1_confirm`/`no_h1_trigger`) hoặc `signal`.
+`no_m5_flip`/`no_d1_align`, `no_sar_agree` (bộ lọc chất lượng, §5.8 bot page), `trigger_invalid`,
+`no_m1_confirm`/`no_h1_trigger`) hoặc `signal`.
 
 Census chạy **song song** với đường vào lệnh (không thay thế, không đổi hành vi), nên nó ghi cả tín hiệu
 mà parity/sizing sẽ chặn. Tổng hợp:

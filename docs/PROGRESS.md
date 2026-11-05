@@ -4354,3 +4354,68 @@ chỉnh tiếp.
 
 - Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF.
 - **Không** đổi preset, **không** chọn TP nào — dữ liệu không đủ để chọn.
+
+## 79. Wonderwhales 2-mode — bộ lọc chất lượng SAR (task H) — 2026-11-05
+
+Chủ sở hữu chọn đổi **chất lượng tín hiệu** thay vì exit. Bộ lọc: đòi hướng PSAR của khung setup **còn**
+đồng ý tại thời điểm trigger, để loại setup mà xu hướng đã đảo ngược sau khi flip. Đo trên nền `(5,5)` —
+cấu hình duy nhất dương ở **cả hai** cửa sổ — với **một** biến.
+
+### 79.1 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Include/Wonderwhales/WW2ScalpStrategy.mqh` | `Ww2ScalpGates.sar_ok`; tham số tuỳ chọn `sar_agree=true` cho `Ww2ScalpEvaluate()`/`Ww2ScalpEntry()`; cổng mới `no_sar_agree` **giữa** setup và trigger |
+| `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` | Input `InpScalpRequireSarAgree` (mặc định `false`); `g_sig_setup_now` (nến setup mới nhất); `SarAgree()`/`SetupSarAgree()`; census + entry truyền cờ này |
+| `mt5/Scripts/WW2CoreTests.mq5` | 3 test: `no_sar_agree`, `sar_agree`, và mặc định (bỏ tham số) giữ hành vi cũ |
+| `configs/demo/wonderwhales_xau_2mode_demo.json` | Thêm `InpScalpRequireSarAgree: false` (73 → **74 key**) |
+| `python/src/mt5_ea_ai_lab/sim_configs.py` | Schema `InpScalpRequireSarAgree` (bool) |
+| `python/tests/test_demo_execution.py` | Khẳng định mặc định `false` và preset hợp lệ |
+| `scripts/tester/gen_ww2_sets.py` | `QUALITY_BASE`/`QUALITY_VARIANTS` + `quality_scenarios()` → `ww2_meas_scalp_{is,oos}_qual_{q0,q1}` |
+| `python/tests/test_gen_ww2_sets.py` | Test ma trận chất lượng: 4 scenario, nền `(5,5)`, `q1` khác `q0` đúng một input |
+
+Tham số tuỳ chọn có giá trị mặc định nên 11 test census cũ **không phải sửa** — hành vi gọi cũ giữ nguyên.
+
+### 79.2 Kết quả (base (5,5); management nhánh A; parity OFF)
+
+| Cấu hình | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `q0` tắt lọc (đối chứng) | IS | 854 | 41,92% | +4.207,65 | +0,03 | 1,06 | 5,46% |
+| `q1` bật lọc | IS | 848 | 41,75% | +3.594,01 | +0,03 | 1,05 | 5,38% |
+| `q0` tắt lọc (đối chứng) | OOS | 841 | 41,26% | +2.517,92 | +0,02 | 1,03 | 3,51% |
+| `q1` bật lọc | OOS | 828 | 41,30% | +2.645,45 | +0,03 | 1,04 | 3,80% |
+
+### 79.3 Đọc kết quả — BỘ LỌC BỊ LOẠI
+
+1. Đối chứng `q0` trùng khớp tuyệt đối với `combo_c5` (854 và 841 lệnh) ⇒ so sánh sạch.
+2. Lọc chỉ bỏ **6 lệnh (IS)** và **13 lệnh (OOS)** ≈ 0,7–1,5%: cửa sổ trigger chỉ rộng 1 nến M5 nên gần như
+   không có thời gian để SAR M5 đảo ngược sau flip.
+3. Tác động **đổi dấu giữa hai cửa sổ** (IS −613 USD, OOS +127 USD) và cùng bậc nhiễu ⇒ không có tác dụng.
+
+Nghi vấn "chất lượng kém vì xu hướng đã đảo sau flip" **không đúng**.
+
+### 79.4 Tổng kết bốn đòn bẩy đã đo
+
+| Đòn bẩy | Kết quả | Bằng chứng |
+|---|---|---|
+| Trailing / break-even | **Loại** (không đổi kết cục lệnh nào) | §73 |
+| Cửa sổ sự kiện (setup/trigger) | **Cải thiện rõ**, edge còn mỏng | §75–77 |
+| Hình học TP | **Không nhất quán** IS vs OOS | §78 |
+| Bộ lọc chất lượng SAR | **Không tác dụng** | §79 |
+
+⇒ Với bốn đòn bẩy rẻ này, **edge của tín hiệu như đang port chưa được thiết lập**. Bước có ý nghĩa tiếp theo
+không còn là tinh chỉnh tham số, mà là (a) **kiểm chứng port** bằng cross-implementation trước khi kết luận,
+hoặc (b) chấp nhận kết luận "không có edge chứng minh được" và dừng tinh chỉnh.
+
+### 79.5 Cổng
+
+- `deploy_pineport.ps1 -Apply -Force`: **0 errors / 0 warnings** (10 source).
+- `validate-project.py checks=15 fail=0`; `validate_demo_execution.py checks=14 fail=0`;
+  `check_docs_links.py broken=0 checked=430`; `pytest 459 passed` (trước bước này 458; thêm 1 test ma trận
+  chất lượng).
+
+### 79.6 Nhãn trung thực
+
+- Parity vẫn `BLOCKED`, bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; mọi lượt đo parity OFF.
+- Preset **không** đổi mặc định: hai cửa sổ vẫn `1`, bộ lọc SAR vẫn `false`. Mọi giá trị thí nghiệm chỉ nằm
+  trong `.set` của tester.

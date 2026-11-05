@@ -124,6 +124,25 @@ def test_geometry_matrix_moves_only_the_take_profit() -> None:
         assert diff == {"InpTakeProfitR"}
 
 
+def test_quality_matrix_toggles_only_the_sar_filter() -> None:
+    module = _load()
+    scenarios = module.quality_scenarios()
+    assert len(scenarios) == 4
+    by_name = {name: values for name, _p, _f, _t, _d, values in scenarios}
+    for name, values in by_name.items():
+        module._check_measure_arm(name, values)
+    control = by_name["ww2_meas_scalp_is_qual_q0"]
+    filtered = by_name["ww2_meas_scalp_is_qual_q1"]
+    #--- The base is the only both-window-positive configuration.
+    for values in by_name.values():
+        assert values["InpSetupWindowBars"] == 5
+        assert values["InpTriggerWindowBars"] == 5
+    assert control["InpScalpRequireSarAgree"] is False
+    diff = {k for k in control if control[k] != filtered[k]}
+    assert diff == {"InpScalpRequireSarAgree"}
+    assert filtered["InpScalpRequireSarAgree"] is True
+
+
 def test_rejects_trail_trigger_below_break_even() -> None:
     module = _load()
     with pytest.raises(ValueError, match="rejects this at OnInit"):

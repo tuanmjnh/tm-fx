@@ -36,12 +36,13 @@ struct Ww2ScalpGates
    bool   setup_buy;       // M5 PSAR/EMA signal is long
    bool   setup_sell;      // M5 PSAR/EMA signal is short
    bool   setup_align;     // M5 fast/slow EMA agrees with the bias side
+   bool   sar_ok;          // M5 SAR direction still agrees (quality filter)
    bool   trigger_valid;   // M1 bars readable
    bool   trigger_buy;     // M1 confirmation is long
    bool   trigger_sell;    // M1 confirmation is short
    bool   is_buy;          // side when reason == "signal"
    string reason;          // signal|bias_invalid|no_m15_bias|setup_invalid|
-                           // no_m5_flip|trigger_invalid|no_m1_confirm
+                           // no_m5_flip|no_sar_agree|trigger_invalid|no_m1_confirm
   };
 
 void Ww2ResetScalpGates(Ww2ScalpGates &g)
@@ -53,6 +54,7 @@ void Ww2ResetScalpGates(Ww2ScalpGates &g)
    g.setup_buy=false;
    g.setup_sell=false;
    g.setup_align=false;
+   g.sar_ok=true;
    g.trigger_valid=false;
    g.trigger_buy=false;
    g.trigger_sell=false;
@@ -62,13 +64,20 @@ void Ww2ResetScalpGates(Ww2ScalpGates &g)
 
 //--- M5 setup (PSAR flip agreeing with the M15 bias and its own EMAs) plus an
 //--- M1 confirmation on the closed bar, reported gate by gate.
+//---
+//--- `sar_agree` is the optional quality filter (task H): true by default so
+//--- every existing caller keeps the original behaviour. The EA computes it
+//--- from the CURRENT M5 bar, which catches a trend that already flipped back
+//--- since the (possibly older) setup bar fired.
 bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
-                      const Ww2Signal &m1,Ww2ScalpGates &g)
+                      const Ww2Signal &m1,Ww2ScalpGates &g,
+                      const bool sar_agree=true)
   {
    Ww2ResetScalpGates(g);
    g.bias_valid=m15.valid;
    g.setup_valid=m5.valid;
    g.trigger_valid=m1.valid;
+   g.sar_ok=sar_agree;
 
    if(!m15.valid)
      {
@@ -101,6 +110,11 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
       g.setup_align=(m5.fast_ema>=m5.slow_ema);
       if(m5.buy && g.setup_align)
         {
+         if(!g.sar_ok)
+           {
+            g.reason="no_sar_agree";
+            return(false);
+           }
          if(m1.buy)
            {
             g.is_buy=true;
@@ -118,6 +132,11 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
    g.setup_align=(m5.fast_ema<=m5.slow_ema);
    if(m5.sell && g.setup_align)
      {
+      if(!g.sar_ok)
+        {
+         g.reason="no_sar_agree";
+         return(false);
+        }
       if(m1.sell)
         {
          g.is_buy=false;
@@ -133,10 +152,11 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
 
 //--- Decision-only wrapper kept for the entry path and the core tests.
 bool Ww2ScalpEntry(const Ww2Signal &m15,const Ww2Signal &m5,
-                   const Ww2Signal &m1,bool &is_buy)
+                   const Ww2Signal &m1,bool &is_buy,
+                   const bool sar_agree=true)
   {
    Ww2ScalpGates g;
-   const bool ok=Ww2ScalpEvaluate(m15,m5,m1,g);
+   const bool ok=Ww2ScalpEvaluate(m15,m5,m1,g,sar_agree);
    is_buy=(ok ? g.is_buy : false);
    return(ok);
   }

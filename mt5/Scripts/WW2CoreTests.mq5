@@ -256,6 +256,16 @@ void TestStrategies(void)
    Check(!Ww2ScalpEvaluate(bad_bias,m5,m1,sg) && sg.reason=="bias_invalid",
          "scalp_census_bias_invalid");
 
+   //--- Quality filter (task H): a setup that passed is still rejected when the
+   //--- current SAR direction no longer agrees. The default must keep the old
+   //--- behaviour, so the third call omits the argument entirely.
+   Check(!Ww2ScalpEvaluate(m15,m5,m1,sg,false) && sg.reason=="no_sar_agree" &&
+         !sg.sar_ok,"scalp_census_no_sar_agree");
+   Check(Ww2ScalpEvaluate(m15,m5,m1,sg,true) && sg.reason=="signal" && sg.sar_ok,
+         "scalp_census_sar_agree");
+   Check(Ww2ScalpEvaluate(m15,m5,m1,sg) && sg.reason=="signal" && sg.sar_ok,
+         "scalp_census_sar_agree_default_off");
+
    Ww2SwingGates wg;
    d1.fast_ema=2005.0;
    d1.slow_ema=2000.0;

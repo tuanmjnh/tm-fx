@@ -14,6 +14,7 @@ Scenarios:
   ww2_meas_scalp_<window>_setup_<s> 4 setup-window runs: in/out of sample x setup window.
   ww2_meas_scalp_<window>_combo_<c> 4 combination runs: trigger 5 fixed, setup 1 vs 5.
   ww2_meas_scalp_<window>_geom_<g> 8 geometry runs: TP 1.0/1.25/1.5/2.0 R on base (1,5).
+  ww2_meas_scalp_<window>_qual_<q> 4 quality runs: SAR-agreement filter on base (5,5).
 
 Parity is unproven, so every parity-off run is NOT a strategy result. The
 measurement matrix changes ONE variable per arm so the effect of each
@@ -158,6 +159,15 @@ GEOMETRY_VARIANTS = {
     "tp20": {**GEOMETRY_BASE, "InpTakeProfitR": 2.0},
 }
 
+#--- Task H: signal quality on the only both-window-positive base (setup 5,
+#--- trigger 5). The filter rejects a window flip whose SAR direction has since
+#--- reversed; it can only bite while the setup window is > 1.
+QUALITY_BASE = {"InpTriggerWindowBars": 5, "InpSetupWindowBars": 5}
+QUALITY_VARIANTS = {
+    "q0": {**QUALITY_BASE, "InpScalpRequireSarAgree": False},   # control = (5,5)
+    "q1": {**QUALITY_BASE, "InpScalpRequireSarAgree": True},
+}
+
 
 def _variant_matrix(variants: dict, tag: str) -> tuple:
     """(is, oos) x variant, each variant overriding MEASURE_BASE by one variable."""
@@ -190,6 +200,11 @@ def combo_scenarios() -> tuple:
 def geometry_scenarios() -> tuple:
     """In-sample / out-of-sample x TP geometry; the TP is the only mover."""
     return _variant_matrix(GEOMETRY_VARIANTS, "geom")
+
+
+def quality_scenarios() -> tuple:
+    """In-sample / out-of-sample x SAR-agreement filter on the (5,5) base."""
+    return _variant_matrix(QUALITY_VARIANTS, "qual")
 
 
 def _check_measure_arm(name: str, values: dict) -> None:
@@ -236,6 +251,7 @@ SCENARIOS += gate_scenarios()
 SCENARIOS += setup_scenarios()
 SCENARIOS += combo_scenarios()
 SCENARIOS += geometry_scenarios()
+SCENARIOS += quality_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -320,6 +336,11 @@ def main() -> int:
             note = [
                 "; TP-geometry run: parity is unproven, so this is NOT a strategy result.",
                 "; base = trigger 5 + setup 1; TP 1.0/1.25/1.5/2.0 R, SL stays 1R.",
+            ]
+        elif "_qual_" in name:
+            note = [
+                "; Quality run: parity is unproven, so this is NOT a strategy result.",
+                "; base = (5,5); q0 = SAR filter off (control), q1 = filter on.",
             ]
         elif name.startswith("ww2_meas_"):
             note = [

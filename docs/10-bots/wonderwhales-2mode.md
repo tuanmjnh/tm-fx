@@ -79,6 +79,7 @@ Input khai theo 6 nhóm của [`input-convention.md`](input-convention.md) — *
 | | `InpSwingBiasTF`/`InpSwingSetupTF`/`InpSwingTriggerTF` | `W1`/`D1`/`H1` |
 | | `InpTriggerWindowBars` | `1` (`1` = chỉ cây trigger cuối, hành vi gốc; `5` = mọi cây M1 của nến M5) |
 | | `InpSetupWindowBars` | `1` (`1` = chỉ nến setup cuối, hành vi gốc; `5` = flip trong 5 nến setup gần nhất) |
+| | `InpScalpRequireSarAgree` | `false` (bật = đòi hướng PSAR của khung setup **còn** đồng ý lúc trigger; chỉ chặn khi `InpSetupWindowBars>1`) |
 | | `InpBreakEvenTriggerR`/`InpTrailTriggerR`/`InpMinTrailStepPoints` | `1.0`/`1.3`/`50.0` |
 | | `InpSwingRrMin`/`InpSwingConfirmBars`/`InpStructureLookbackBars` | `1.8`/`2`/`300` |
 | | `InpEnableStructureTrail`/`InpEnablePsarTrail`/`InpEnableAtrTrail`/`InpEnableStepTrail` | `true`/`false`/`false`/`false` |
@@ -405,6 +406,31 @@ hoà vốn tương ứng: `1/(1+TP)` = 50% / 44,4% / 40% / 33,3%.
 
 Kết luận tạm: trong ba đòn bẩy đã đo (trailing, cửa sổ sự kiện, hình học TP), **cửa sổ sự kiện** là cái duy
 nhất cải thiện rõ và nhất quán; edge còn lại vẫn mỏng và chưa được hai cửa sổ xác nhận cùng lúc.
+
+### 5.8 Bộ lọc chất lượng SAR (task H)
+
+Vì đổi exit không còn ăn thua, thử đổi **entry**: `InpScalpRequireSarAgree=true` đòi hướng PSAR của khung
+setup **còn** đồng ý tại thời điểm trigger, loại bỏ setup mà xu hướng đã đảo ngược sau khi flip. Đo trên nền
+`(5,5)` (cấu hình duy nhất dương ở cả hai cửa sổ), **một biến**.
+
+| Cấu hình | Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `q0` tắt lọc (đối chứng) | IS | 854 | 41,92% | +4.207,65 | +0,03 | 1,06 | 5,46% |
+| `q1` bật lọc | IS | 848 | 41,75% | +3.594,01 | +0,03 | 1,05 | 5,38% |
+| `q0` tắt lọc (đối chứng) | OOS | 841 | 41,26% | +2.517,92 | +0,02 | 1,03 | 3,51% |
+| `q1` bật lọc | OOS | 828 | 41,30% | +2.645,45 | +0,03 | 1,04 | 3,80% |
+
+Đọc — bộ lọc này **bị loại**:
+
+1. Đối chứng `q0` trùng khớp tuyệt đối với `combo_c5` (854 và 841 lệnh) ⇒ so sánh sạch.
+2. Lọc chỉ bỏ **6 lệnh (IS)** và **13 lệnh (OOS)** ≈ 0,7–1,5% — vì cửa sổ trigger chỉ rộng 1 nến M5, quá ít
+   thời gian để SAR M5 đảo ngược sau flip.
+3. Tác động **đổi dấu giữa hai cửa sổ** (IS xấu hơn 613 USD, OOS tốt hơn 127 USD) và cùng bậc nhiễu ⇒
+   không có tác dụng.
+
+Kết luận: nghi vấn "chất lượng kém do xu hướng đã đảo sau flip" **không đúng**. Bốn đòn bẩy đã đo —
+trailing (§5.2), cửa sổ sự kiện (§5.4–5.6), hình học TP (§5.7), bộ lọc chất lượng (§5.8) — chỉ **cửa sổ
+sự kiện** cải thiện rõ; edge vẫn chưa được hai cửa sổ xác nhận cùng lúc.
 
 ## 6. Giới hạn / quirk đã biết
 

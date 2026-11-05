@@ -115,6 +115,10 @@ input ENUM_TIMEFRAMES InpSwingTriggerTF = PERIOD_H1;
 //--- setup:   closed setup bars scanned for the flip (5 = last five M5 bars).
 input int InpTriggerWindowBars      = 1;      // trigger bars scanned per setup bar
 input int InpSetupWindowBars        = 1;      // setup bars scanned for the flip
+//--- Quality filter: require the CURRENT setup-timeframe SAR direction to still
+//--- agree, so a setup window older flip that has since reversed is rejected.
+//--- Only bites while InpSetupWindowBars > 1 (a fresh flip always agrees).
+input bool InpScalpRequireSarAgree  = false;  // Scalp: SAR must still agree
 input double InpBreakEvenTriggerR   = 1.0;
 input double InpTrailTriggerR       = 1.3;
 input double InpMinTrailStepPoints  = 50.0;
@@ -167,6 +171,7 @@ string   g_strike_tf_text="";
 Ww2Position g_pos;
 Ww2Signal   g_sig_bias;
 Ww2Signal   g_sig_setup;
+Ww2Signal   g_sig_setup_now;   // latest closed setup bar (quality filter)
 Ww2Signal   g_sig_trigger;
 Ww2CensusStats g_census_stats;
 
@@ -857,6 +862,25 @@ int SetupWindow(void)
    return(InpSetupWindowBars>1 ? InpSetupWindowBars : 1);
   }
 
+//--- Quality filter (task H): does the CURRENT setup-TF SAR direction still
+//--- agree with the side the setup fired? Always true when the filter is off.
+bool SarAgree(const bool is_buy)
+  {
+   if(!InpScalpRequireSarAgree)
+      return(true);
+   return(is_buy ? g_sig_setup_now.sar_dir==1 : g_sig_setup_now.sar_dir==-1);
+  }
+
+//--- The side the setup fired, checked against the current SAR direction.
+bool SetupSarAgree(void)
+  {
+   if(g_sig_setup.buy)
+      return(SarAgree(true));
+   if(g_sig_setup.sell)
+      return(SarAgree(false));
+   return(true);
+  }
+
 //--- One census row per chart bar, independent of the entry path. It runs only
 //--- when InpDebug opened the file, so it cannot change trading behaviour.
 void CensusBar(const datetime bar_time)
@@ -869,11 +893,13 @@ void CensusBar(const datetime bar_time)
       if(!Ww2ReadSignal(g_h_m15,_Symbol,InpScalpBiasTF,1,g_sig_bias) ||
          !Ww2ReadSignalWindow(g_h_m5,_Symbol,InpScalpSetupTF,
                               SetupWindow(),g_sig_setup) ||
+         !Ww2ReadSignal(g_h_m5,_Symbol,InpScalpSetupTF,1,g_sig_setup_now) ||
          !Ww2ReadSignalWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
                               TriggerWindow(),g_sig_trigger))
          return;
       Ww2ScalpGates g;
-      const bool signal=Ww2ScalpEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g);
+      const bool signal=Ww2ScalpEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g,
+                                         SetupSarAgree());
       Ww2CensusWrite(g_census,bar_time,InpTradingMode,
                      g.bias_valid,g.bias_buy,g.bias_sell,
                      g.setup_valid,g.setup_buy,g.setup_sell,g.setup_align,
@@ -963,10 +989,13 @@ bool TryEnter(const datetime bar_time)
       if(!Ww2ReadSignalWindow(g_h_m5,_Symbol,InpScalpSetupTF,
                               SetupWindow(),g_sig_setup))
          return(false);
+      if(!Ww2ReadSignal(g_h_m5,_Symbol,InpScalpSetupTF,1,g_sig_setup_now))
+         return(false);
       if(!Ww2ReadSignalWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
                               TriggerWindow(),g_sig_trigger))
          return(false);
-      if(!Ww2ScalpEntry(g_sig_bias,g_sig_setup,g_sig_trigger,is_buy))
+      if(!Ww2ScalpEntry(g_sig_bias,g_sig_setup,g_sig_trigger,is_buy,
+                        SetupSarAgree()))
          return(false);
      }
    else

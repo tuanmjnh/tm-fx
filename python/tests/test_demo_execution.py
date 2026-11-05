@@ -121,6 +121,9 @@ def test_ww2_event_windows_default_preserve_behaviour() -> None:
     config = _json(WW2_PRESET)
     assert config["inputs"]["InpTriggerWindowBars"] == 1
     assert config["inputs"]["InpSetupWindowBars"] == 1
+    #--- The SAR quality filter is off by default: it may only be enabled from
+    #--- measured evidence, never as a shipped default.
+    assert config["inputs"]["InpScalpRequireSarAgree"] is False
     assert validate_preset(config) == []
 
 
