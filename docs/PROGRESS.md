@@ -4119,3 +4119,67 @@ Chỉ khi report có `status=match`, `mismatch_count=0`, và số tín hiệu so
 - Không có thay đổi tham số chiến lược; bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`.
 - Việc cần người dùng làm: xuất CSV reference từ TradingView (xem §5.3 / checklist
   [`parity.md`](30-research/indicators/parity.md) mục 9) rồi báo lại để chạy comparator.
+
+## 75. Wonderwhales 2-mode — sửa cổng entry: cửa sổ trigger (task D) — 2026-11-05
+
+Chủ sở hữu chọn hướng "sửa cổng entry". Census §72 đã chỉ ra nút thắt; bước này thực thi giả thuyết
+xếp hạng #1 bằng đúng một biến, đo trước–sau trên cả in-sample lẫn out-of-sample.
+
+### 75.1 Nguyên nhân (đã xác nhận trong code)
+
+Cả census và đường vào lệnh chỉ đọc `shift=1` cho mọi khung (`WonderwhalesXAU2ModeEA.mq5` dòng 845–960).
+Nên cổng M1 đòi **đúng cây M1 cuối cùng** của nến M5 vừa đóng phải là cây flip — trong 5 cây M1 của nến
+M5 chỉ cây thứ 5 được xét. Khớp 100% với `no_m1_confirm` giết 98,88% số setup ở census.
+
+### 75.2 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Experts/WonderwhalesXAU2ModeEA.mq5` | Input `InpTriggerWindowBars` (mặc định `1`); helper `TriggerWindow()`; census + đường entry (Scalp & Swing) đọc trigger qua `Ww2ReadTriggerWindow()` |
+| `mt5/Include/Wonderwhales/WW2SignalReader.mqh` | `Ww2ReadTriggerWindow()`: đọc cửa sổ trigger của nến setup, lấy cây bắn **gần nhất**; cây shift-1 vẫn phải đọc được để lỗi indicator vẫn là `trigger_invalid` |
+| `configs/demo/wonderwhales_xau_2mode_demo.json` | Thêm `InpTriggerWindowBars: 1` (preset 71 → **72 key**) |
+| `python/src/mt5_ea_ai_lab/sim_configs.py` | Schema + cross-check: `window ≤ số cây trigger trong một nến setup` (5 cho M5/M1, 24 cho D1/H1) |
+| `python/tests/test_demo_execution.py` | 2 test: mặc định `1` giữ nguyên hành vi; ràng buộc cửa sổ (6 bị từ chối, 5 qua, 0 bị từ chối) |
+| `scripts/tester/gen_ww2_sets.py` | `GATE_VARIANTS` + `gate_scenarios()` → `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` |
+| `python/tests/test_gen_ww2_sets.py` | Test ma trận cổng: 4 scenario, `w1` vs `w5` khác **đúng một** input, management nhánh A |
+
+Cổng M1 (`Ww2ScalpEvaluate`) **không đổi**: chỉ nguồn dữ liệu trigger đổi, nên 11 test census cũ vẫn đúng.
+Mặc định `1` tái lập chính xác hành vi cũ — harness kiểm chứng điều này bằng số, không bằng lời.
+
+### 75.3 Kết quả (đo bằng ma trận sẵn có, 4 lượt, mỗi lượt đổi một biến)
+
+| Cửa sổ | Nhánh | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD | Sample |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| IS 2024.01.01→2025.06.30 | `gate_w1` (đối chứng) | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | `INSUFFICIENT_SAMPLE` |
+| IS | `gate_w5` | **282** | 36,52% | −4.287,54 | **−0,10** | 0,83 | 5,95% | **OK** |
+| OOS 2025.07.01→2026.10.01 | `gate_w1` (đối chứng) | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% | `INSUFFICIENT_SAMPLE` |
+| OOS | `gate_w5` | **298** | 42,62% | **+2.601,60** | **+0,06** | 1,10 | 2,89% | **OK** |
+
+1. **Đối chứng trùng khớp tuyệt đối** với nhánh A của §73 (21 lệnh/−988,62 và 25 lệnh/−85,45) ⇒ mặc định
+   `1` không đổi hành vi.
+2. **Số lệnh ~13×** và **expectancy tốt lên ở cả hai cửa sổ** (−0,32→−0,10 R; −0,01→+0,06 R); OOS vượt 0,
+   PF 1,10, maxDD 2,89%.
+3. Sample chuyển `INSUFFICIENT_SAMPLE` → **`OK`** ở cả hai cửa sổ: harness bắt đầu xếp hạng được thay vì
+   chỉ báo "chưa đủ mẫu".
+
+### 75.4 Đọc kết quả (không nâng nhãn)
+
+- Toàn bộ vẫn **`NOT_STRATEGY_RESULT`** (parity OFF). OOS dương **không** phải bằng chứng lợi nhuận.
+- **IS vẫn âm** ⇒ chất lượng entry **chưa** được chứng minh. Chỉ khẳng định được: cửa sổ trigger là nút thắt
+  thật, và sửa nó cải thiện rõ ở cả hai cửa sổ.
+- IS winrate 36,52% < 40% (winrate hoà vốn của TP 1,5R); OOS 42,62% > 40%. Nhất quán với dấu của expectancy.
+- Giả thuyết kế tiếp, chưa làm: **cổng setup M5** (cửa sổ M5 / setup dạng trạng thái) hoặc **hình học SL/TP**.
+
+### 75.5 Cổng
+
+- `deploy_pineport.ps1 -Apply -Force` (gồm `WW2SignalReader`): **0 errors / 0 warnings**.
+- `validate-project.py checks=15 fail=0`; `validate_demo_execution.py checks=14 fail=0`;
+  `check_docs_links.py broken=0 checked=430`; `pytest 455 passed` (trước bước này 452; thêm 2 test preset +
+  1 test ma trận cổng).
+
+### 75.6 Nhãn trung thực
+
+- Parity vẫn `BLOCKED`; bot vẫn `NOT_RUN`; profit vẫn `UNPROVEN`. Không có kết quả nào ở đây là bằng chứng
+  lợi nhuận vì mọi lượt đo đều parity OFF.
+- Thay đổi này đụng **hợp đồng preset**: 71 → 72 key. Đã cập nhật đồng bộ JSON, schema, cross-check, test và
+  docs.

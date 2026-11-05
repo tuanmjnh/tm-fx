@@ -415,7 +415,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\tester\run_tester.ps
 | `ww2_scalp_demo_exec` | ENTRY/EXIT có SL+TP (TP = `InpTakeProfitR`), HALT theo guard |
 | `ww2_swing_demo_exec` | ENTRY/EXIT + TRAIL (BE/structure); từ 2018 để W1/D1 EMA200 đủ history |
 | `ww2_scalp_census` | Parity ON + `InpDebug=true`, 100k deposit, risk 0,15% → ghi `_census.csv`, **0 lệnh**; dùng để đếm tín hiệu |
-| `ww2_meas_scalp_{is,oos}_{a,b,c,d}` | 8 lần đo: in-sample 2024.01.01→2025.06.30, out-of-sample 2025.07.01→2026.10.01 × 4 nhánh A–D; parity OFF nên **`NOT_STRATEGY_RESULT`** |
+| `ww2_meas_scalp_{is,oos}_{a,b,c,d}` | 8 lần đo management: in-sample 2024.01.01→2025.06.30, out-of-sample 2025.07.01→2026.10.01 × 4 nhánh A–D; parity OFF nên **`NOT_STRATEGY_RESULT`** |
+| `ww2_meas_scalp_{is,oos}_gate_{w1,w5}` | 4 lần đo **cổng entry**: `w1` = chỉ cây trigger cuối (đối chứng), `w5` = mọi cây M1 của nến M5; cùng management nhánh A; **`NOT_STRATEGY_RESULT`** |
 
 `.set` tracked (`InpRequireParity=true`) **không** tạo lệnh — đúng thiết kế S2. Muốn xem đường gửi lệnh thì
 đặt `InpRequireParity=false`, và đó chỉ là bằng chứng **hạ tầng**, **không** phải kết quả chiến lược.
@@ -531,6 +532,21 @@ Mọi nhánh `INSUFFICIENT_SAMPLE` (n < 30). Đọc đúng:
 ⇒ Giả thuyết xếp hạng cho bước (c)/kế tiếp: (1) cổng entry (census §72 cho thấy hai cổng sự kiện một nến
 chồng nhau) là nút thắt chính; (2) hình học SL/TP (TP 1,5R đòi winrate 40%) là ràng buộc thứ hai;
 (3) trailing **không phải** đòn bẩy. Đây là **giả thuyết**, chưa phải kết luận.
+
+#### Kết quả ma trận cổng entry (2026-11-05)
+
+Ma trận thứ hai chỉ đổi **cửa sổ trigger** (`InpTriggerWindowBars`), giữ management nhánh A:
+
+| Cửa sổ | Nhánh | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD | Sample |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| IS | `gate_w1` (đối chứng) | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | `INSUFFICIENT_SAMPLE` |
+| IS | `gate_w5` | 282 | 36,52% | −4.287,54 | −0,10 | 0,83 | 5,95% | OK |
+| OOS | `gate_w1` (đối chứng) | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% | `INSUFFICIENT_SAMPLE` |
+| OOS | `gate_w5` | 298 | 42,62% | +2.601,60 | +0,06 | 1,10 | 2,89% | OK |
+
+`gate_w1` tái lập **chính xác** nhánh A ở cả hai cửa sổ — harness tự chứng minh mặc định `1` không đổi hành
+vi. `gate_w5` tăng số lệnh ~13× và cải thiện expectancy ở cả hai cửa sổ, nhưng IS vẫn âm nên đây **không**
+phải bằng chứng lợi nhuận. Chi tiết: bot page §5.4.
 
 ### Dữ liệu ở đâu
 

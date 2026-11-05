@@ -77,6 +77,7 @@ Input khai theo 6 nhóm của [`input-convention.md`](input-convention.md) — *
 | | `InpWarmupBars` | `300` |
 | | `InpScalpBiasTF`/`InpScalpSetupTF`/`InpScalpTriggerTF` | `M15`/`M5`/`M1` |
 | | `InpSwingBiasTF`/`InpSwingSetupTF`/`InpSwingTriggerTF` | `W1`/`D1`/`H1` |
+| | `InpTriggerWindowBars` | `1` (`1` = chỉ cây trigger cuối, hành vi gốc; `5` = mọi cây M1 của nến M5) |
 | | `InpBreakEvenTriggerR`/`InpTrailTriggerR`/`InpMinTrailStepPoints` | `1.0`/`1.3`/`50.0` |
 | | `InpSwingRrMin`/`InpSwingConfirmBars`/`InpStructureLookbackBars` | `1.8`/`2`/`300` |
 | | `InpEnableStructureTrail`/`InpEnablePsarTrail`/`InpEnableAtrTrail`/`InpEnableStepTrail` | `true`/`false`/`false`/`false` |
@@ -129,7 +130,8 @@ bị chặn gián tiếp qua risk guard.
 **Nhãn trạng thái: `NOT_RUN`.** Compile + cổng tĩnh + hai chứng minh hạ tầng (Strategy Tester headless,
 `terminal64.exe /config:`) + một census tín hiệu + một ma trận đo management (8 lần chạy); **không** có kết
 quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa có phiên demo chart. Chi tiết đầy đủ ở
-[`../PROGRESS.md`](../PROGRESS.md) §71 (bot), §72 (census) và §73 (measurement harness).
+[`../PROGRESS.md`](../PROGRESS.md) §71 (bot), §72 (census), §73 (measurement harness), §74 (parity runbook)
+và §75 (sửa cổng entry).
 
 - **Compile** `0 errors / 0 warnings` (`scripts/deploy_pineport.ps1 -Apply -Force`, gồm cả `WW2CoreTests`).
 - **Cổng tĩnh xanh:** `validate-project.py checks=15 fail=0`, `validate_demo_execution.py checks=14 fail=0`,
@@ -153,6 +155,9 @@ quả chiến lược hợp lệ vì parity Pine ↔ MT5 chưa đạt và chưa 
 - **Cổng parity (bước c):** comparator `compare_pine_exports.py` (+ `pine_parity.py`, 25 test) đã sẵn sàng;
   thêm exit code `3` = `parity=BLOCKED` để tách "thiếu reference" khỏi lỗi schema. Chưa có CSV Pine
   ⇒ `BLOCKED`. Runbook ở §5.3.
+- **Sửa cổng entry (task D, chẩn đoán `NOT_STRATEGY_RESULT`):** `InpTriggerWindowBars` (mặc định `1` =
+  hành vi gốc) — `w5` tăng số lệnh ~13× và cải thiện expectancy ở cả IS lẫn OOS; OOS +0,06R/PF 1,10 nhưng
+  IS vẫn âm. Chi tiết và bảng số ở §5.4.
 - Chạy `Scripts > WW2CoreTests` trên chart demo để kiểm vector thuần logic (kỳ vọng
   `TEST|RESULT|ALL_PASS|pass=N fail=0|ww2=1`).
 
@@ -283,6 +288,40 @@ Các bước:
 > **Bẫy phải xử lý trước khi so:** comparator khớp `symbol` **chính xác**. Broker Exness dùng `XAUUSDm` còn
 > TradingView dùng `XAUUSD`, nên nếu để nguyên, *mọi* dòng thành `missing_in_*`. Phải ghi **cùng một chuỗi**
 > ở cột `symbol` cả hai file (ví dụ sửa cột `symbol` của export Pine thành `XAUUSDm`) trước khi chạy.
+
+### 5.4 Sửa cổng entry — cửa sổ trigger (task D)
+
+Census §5.1 chỉ ra nút thắt: cả ba cổng chỉ đọc `shift=1`, nên cổng M1 đòi **đúng cây M1 cuối cùng**
+của nến M5 vừa đóng phải là cây flip — trong 5 cây M1 của nến M5 chỉ cây thứ 5 được xét. Đó là lý do
+`no_m1_confirm` giết 98,88% số setup.
+
+Sửa: input mới `InpTriggerWindowBars` (mặc định `1` = hành vi gốc; `5` = quét mọi cây M1 của nến M5).
+Hàm `Ww2ReadTriggerWindow()` đọc các cây trigger trong cửa sổ và **lấy cây bắn gần nhất**; nếu không cây
+nào bắn thì giữ nguyên trạng thái "không xác nhận" (cổng vẫn chặn). Cổng M1/`Ww2ScalpEvaluate` không đổi —
+chỉ nguồn dữ liệu trigger đổi. Validator ép `window ≤ số cây trigger trong một nến setup` (5 cho M5/M1,
+24 cho D1/H1).
+
+Đo bằng ma trận sẵn có, **mỗi lượt đổi đúng một biến**, management nhánh A:
+
+| Cửa sổ | Nhánh | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD | Sample |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| IS 2024.01.01→2025.06.30 | `gate_w1` (đối chứng) | 21 | 28,57% | −988,62 | −0,32 | 0,56 | 1,34% | `INSUFFICIENT_SAMPLE` |
+| IS | `gate_w5` | **282** | 36,52% | −4.287,54 | **−0,10** | 0,83 | 5,95% | **OK** |
+| OOS 2025.07.01→2026.10.01 | `gate_w1` (đối chứng) | 25 | 40,00% | −85,45 | −0,01 | 0,96 | 1,54% | `INSUFFICIENT_SAMPLE` |
+| OOS | `gate_w5` | **298** | 42,62% | **+2.601,60** | **+0,06** | 1,10 | 2,89% | **OK** |
+
+Ba điều đọc được:
+
+1. **Đối chứng trùng khớp tuyệt đối** với nhánh A (21 lệnh/−988,62 và 25 lệnh/−85,45): mặc định `1` **không
+   đổi hành vi**, đúng như thiết kế — harness tự xác nhận điều này.
+2. **Số lệnh ×~13** (21→282, 25→298) và **expectancy tốt lên ở cả hai cửa sổ** (−0,32→−0,10 R;
+   −0,01→+0,06 R). OOS vượt 0 với PF 1,10; maxDD 2,89%.
+3. **Vẫn `NOT_STRATEGY_RESULT`** (parity OFF). OOS dương *không* phải bằng chứng lợi nhuận, và **IS vẫn
+   âm** ⇒ chất lượng entry **chưa** được chứng minh; chỉ khẳng định được rằng cửa sổ trigger là nút thắt
+   thật và sửa nó cải thiện rõ rệt. Sample giờ đã `OK` nên harness bắt đầu xếp hạng được.
+
+Giả thuyết kế tiếp (chưa làm): IS âm trong khi winrate 36,52% < 40% (winrate hoà vốn của TP 1,5R) ⇒ biến
+cần thử tiếp là **cổng setup M5** (cửa sổ M5 / setup dạng trạng thái) hoặc **hình học SL/TP**.
 
 ## 6. Giới hạn / quirk đã biết
 

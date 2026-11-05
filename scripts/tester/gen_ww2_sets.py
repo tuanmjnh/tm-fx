@@ -10,6 +10,7 @@ Scenarios:
   ww2_swing_demo_exec  parity OFF      -> same, Swing mode (starts 2018 so W1/D1 EMA200 has history).
   ww2_scalp_census     parity ON, InpDebug ON -> per-bar signal census, zero orders.
   ww2_meas_scalp_<window>_<arm>  8 measurement runs: in/out of sample x ablation arm A..D.
+  ww2_meas_scalp_<window>_gate_<w>  4 entry-gate runs: in/out of sample x trigger window.
 
 Parity is unproven, so every parity-off run is NOT a strategy result. The
 measurement matrix changes ONE variable per arm so the effect of each
@@ -19,6 +20,11 @@ management rule is attributable:
   B  A + break-even at 1.0R
   C  B + structure trail
   D  C + PSAR trail
+
+The gate matrix changes only the trigger window, on the arm-A management:
+
+  gate_w1  last trigger bar only (shipped behaviour, control)
+  gate_w5  any M1 bar of the closed M5 setup bar
 
 Usage:
   .venv\\Scripts\\python.exe scripts\\tester\\gen_ww2_sets.py
@@ -103,6 +109,28 @@ MEASURE_WINDOWS = {
     "oos": ("2025.07.01", "2026.10.01"),
 }
 
+#--- Entry-gate ablation (task D), measured on the SAME base management as arm
+#--- A so the only difference between the runs is the trigger window.
+#--- w1 = control: read only the last trigger bar (shipped behaviour).
+#--- w5 = scan every M1 bar of the closed M5 bar (5 = M5/M1).
+GATE_VARIANTS = {
+    "w1": {"InpTriggerWindowBars": 1},
+    "w5": {"InpTriggerWindowBars": 5},
+}
+
+
+def gate_scenarios() -> tuple:
+    """In-sample / out-of-sample x trigger-window variant, one variable at a time."""
+    out = []
+    for window, (from_date, to_date) in MEASURE_WINDOWS.items():
+        for variant, overrides in GATE_VARIANTS.items():
+            values = dict(MEASURE_BASE)
+            values.update(overrides)
+            name = f"ww2_meas_scalp_{window}_gate_{variant}"
+            _check_measure_arm(name, values)
+            out.append((name, "M5", from_date, to_date, 100000, values))
+    return tuple(out)
+
 
 def _check_measure_arm(name: str, values: dict) -> None:
     """Mirror the EA's OnInit guard so an invalid arm cannot be generated.
@@ -144,6 +172,7 @@ def measure_scenarios() -> tuple:
 
 
 SCENARIOS += measure_scenarios()
+SCENARIOS += gate_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -209,7 +238,12 @@ def main() -> int:
         assert values["InpTakeProfitR"] > 0.0, "mandatory TP"
         assert values["InpMaxPositions"] == 1, "single position"
 
-        if name.startswith("ww2_meas_"):
+        if "_gate_" in name:
+            note = [
+                "; Entry-gate run: parity is unproven, so this is NOT a strategy result.",
+                "; w1 = last trigger bar only (control), w5 = any M1 bar of the M5 setup bar.",
+            ]
+        elif name.startswith("ww2_meas_"):
             note = [
                 "; Measurement arm: parity is unproven, so this is NOT a strategy result.",
                 "; A=base, B=+break-even, C=+structure, D=+PSAR; one variable per arm.",

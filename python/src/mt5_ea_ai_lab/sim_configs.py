@@ -506,6 +506,7 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpSwingBiasTF": Enum(_TIMEFRAMES),
         "InpSwingSetupTF": Enum(_TIMEFRAMES),
         "InpSwingTriggerTF": Enum(_TIMEFRAMES),
+        "InpTriggerWindowBars": Num(minimum=1.0, maximum=100.0, integer=True),
         "InpBreakEvenTriggerR": Num(minimum=0.0),
         "InpTrailTriggerR": Num(minimum=0.0),
         "InpMinTrailStepPoints": Num(minimum=0.0),
@@ -821,6 +822,15 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("scalp timeframes: must be ordered bias > setup > trigger")
         if None in swing or not (swing[0] > swing[1] > swing[2]):
             issues.append("swing timeframes: must be ordered bias > setup > trigger")
+        #--- The trigger window is scanned inside one setup bar, so it cannot be
+        #--- wider than that bar. A wider value would reach into older setups.
+        window = int(inputs["InpTriggerWindowBars"])
+        for label, secs in (("scalp", scalp), ("swing", swing)):
+            if None not in secs and window > secs[1] // secs[2]:
+                issues.append(
+                    f"InpTriggerWindowBars: {label} window must not exceed the "
+                    f"{secs[1] // secs[2]} trigger bars of one setup bar"
+                )
         if int(inputs["InpTradingMode"]) == 2 and \
            float(inputs["InpTakeProfitR"]) < float(inputs["InpSwingRrMin"]):
             issues.append("InpTakeProfitR: SWING mode requires at least InpSwingRrMin")

@@ -47,6 +47,27 @@ def test_trail_arms_arm_the_trail_trigger() -> None:
     assert arms["d"]["InpEnablePsarTrail"] is True
 
 
+def test_gate_matrix_has_four_valid_arms() -> None:
+    module = _load()
+    scenarios = module.gate_scenarios()
+    assert len(scenarios) == 4
+    by_name = {name: values for name, _p, _f, _t, _d, values in scenarios}
+    for name, values in by_name.items():
+        module._check_measure_arm(name, values)
+    #--- The control must reproduce the shipped behaviour exactly...
+    assert by_name["ww2_meas_scalp_is_gate_w1"]["InpTriggerWindowBars"] == 1
+    #--- ...and w5 must differ from it in this one input only.
+    control = by_name["ww2_meas_scalp_is_gate_w1"]
+    window = by_name["ww2_meas_scalp_is_gate_w5"]
+    diff = {k for k in control if control[k] != window[k]}
+    assert diff == {"InpTriggerWindowBars"}
+    assert window["InpTriggerWindowBars"] == 5
+    #--- Gate runs use the arm-A management (no trailing), so only the gate moves.
+    for values in by_name.values():
+        assert values["InpEnableStructureTrail"] is False
+        assert values["InpEnablePsarTrail"] is False
+
+
 def test_rejects_trail_trigger_below_break_even() -> None:
     module = _load()
     with pytest.raises(ValueError, match="rejects this at OnInit"):
