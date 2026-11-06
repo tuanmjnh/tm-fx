@@ -248,11 +248,38 @@ Lượt đo lại (`portref_dump_m5_builtin`): **nhánh tự cài KHÔNG khớp 
 trạng thái up/down khác nhau, tức là **lỗi thật** trong nhánh tự cài (không phải lệch pha: quét độ trễ
 −3..+3 đều ≤1,6%).
 
-Trạng thái: nhánh tự cài **mặc định TẮT**, và indicator in
-`WONDERWHALES|WARN|psar_engine_builtin_unverified` khi ai đó bật nó. **Chưa** dùng được để thay `iSAR`.
-Việc còn lại: tìm lỗi (nghi do `rates_total` của tester lớn hơn vùng dump nên chuỗi PSAR của indicator bắt
-đầu ở nến sớm hơn — cần đối chiếu cùng điểm bắt đầu), rồi đo lại; chỉ khi khớp ~100% mới bàn tới việc đổi
-engine mặc định (và khi đó phải chạy lại toàn bộ ma trận đo).
+#### 11.3.1 Đã tìm ra và sửa (2026-11-06)
+
+Hai lỗi, cả hai đều thật:
+
+1. **Điểm bắt đầu khác nhau.** PSAR là công thức truy hồi: hai chuỗi chỉ khớp khi bắt đầu ở **cùng một nến**.
+   Trong tester, `iSAR` (sub-indicator) được tính trên **toàn bộ lịch sử terminal**, còn `rates_total` mà
+   indicator tự cài nhận được nhỏ hơn `Bars()` của EA ⇒ chuỗi tự cài bắt đầu ở vùng test, lệch pha.
+   *Sửa:* EA dump thêm vùng lịch sử nạp trước; comparator chạy port **từ nến đầu tiên indicator có giá trị**
+   (`aligned_from_row`); và trong indicator, chuỗi tự cài được dựng bằng `CopyRates` trên **đúng** `Bars()`
+   rồi đọc qua `offset = Bars() - rates_total`.
+2. **Cache gồm cả nến đang chạy.** Nến đang chạy đổi OHLC liên tục; vì trạng thái PSAR là **bền** (persistent),
+   đưa nó vào cache sẽ làm hỏng mọi giá trị sau đó.
+   *Sửa:* lưu trạng thái (up/ep/af) **từng nến**, chỉ tính tới nến **đã đóng**, và **tính lại nến vừa đóng**
+   mỗi lần (rewind + chạy tiếp) thay vì cộng dồn mù.
+
+Kết quả sau khi sửa (`portref_dump_m5_builtin`, XAUUSDm M5 2024-01→2025-12, 141.503 nến so sau warm-up):
+
+| Trường | Khớp |
+|---|---|
+| `sar_dir`, `buy_signal`, `sell_signal`, `blocked_buy`, `blocked_sell` | **100%** |
+| `psar` | **100%** trong 1e-4, lệch tuyệt đối tối đa **5e-9** |
+| `fast` / `slow` | 100% trong 1e-4 |
+
+⇒ **Bản cài MQL5 của PSAR tự cài khớp chính xác bản Python độc lập.** Vì vậy chênh lệch 2,3% hướng so với
+`iSAR` (mục 11.1) là **khác biệt thuật toán thật giữa `iSAR` của MT5 và PSAR chuẩn/Pine**, đã được chứng minh
+từ **cả hai phía** — đúng rủi ro D1. Vẫn **không** biết bên nào khớp `ta.sar` của TradingView (cần export thật).
+
+Trạng thái: `WW_PSAR_BUILTIN` **vẫn không phải mặc định** (mặc định `iSAR`, hành vi ship không đổi). Khi bật,
+indicator in `WONDERWHALES|INFO|psar_engine_builtin|port_check=100pct...`. Đổi engine mặc định là **quyết định
+riêng** vì nó đổi **mọi** tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo. Ghi chú hiệu năng: trong tester, lượt
+chạy tự cài mất ~250 s (lịch sử bị nạp lại nhiều lần ⇒ phải dựng lại chuỗi); trên chart thời gian thực chỉ
+tăng thêm mỗi nến mới nên rẻ.
 
 ## 12. Artefact
 

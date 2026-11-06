@@ -114,6 +114,18 @@ def main(argv: list[str] | None = None) -> int:
         print("ERROR: --warmup-bars must be >= 0", file=sys.stderr)
         return 2
 
+    #--- PSAR is a recurrence, so the two series only agree when they start at
+    #--- the same bar. The MQL5 indicator starts at ITS first computable bar,
+    #--- which may be inside the preloaded history; run the port from there.
+    psar_all = _to_number(dump["psar"]).to_numpy()
+    valid_positions = np.where(np.isfinite(psar_all))[0]
+    if valid_positions.size == 0:
+        print("ERROR: dump has no computed MQL5 PSAR to align on", file=sys.stderr)
+        return 2
+    first_valid = int(valid_positions[0])
+    if first_valid > 0:
+        dump = dump.iloc[first_valid:].reset_index(drop=True)
+
     #--- Indicators need valid floats; the dump leaves not-ready prices blank.
     numeric_dump = dump.copy()
     for column in ("open", "high", "low", "close"):
@@ -200,6 +212,7 @@ def main(argv: list[str] | None = None) -> int:
         "symbol": str(dump["symbol"].iloc[0]) if "symbol" in dump else None,
         "timeframe": str(dump["timeframe"].iloc[0]) if "timeframe" in dump else None,
         "mode": args.mode,
+        "aligned_from_row": first_valid,
         "bars": int(len(dump)),
         "skipped": int(start),
         "compared": int(len(dump) - start),

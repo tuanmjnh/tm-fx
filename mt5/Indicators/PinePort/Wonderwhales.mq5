@@ -62,8 +62,14 @@ double g_vol_ma[];
 double g_vol_ratio[];
 
 //--- Built-in PSAR cache (only used when InpPsarEngine == WW_PSAR_BUILTIN).
+//--- The per-bar state is kept so the last closed bar can be recomputed with its
+//--- final OHLC: the forming bar keeps changing, and PSAR's state is persistent,
+//--- so including it would corrupt every later value.
 double       g_psar_builtin[];
-int          g_psar_calc=0;          // number of leading bars already computed
+double       g_psar_up[];
+double       g_psar_ep[];
+double       g_psar_af[];
+int          g_psar_ready=0;         // bars valid up to (excluding) this index
 WwPsarState  g_psar_state;
 
 int g_sar_handle=INVALID_HANDLE;
@@ -76,37 +82,90 @@ int g_bb_handle=INVALID_HANDLE;
 
 WwConfig g_cfg;
 
-//--- Extend the built-in PSAR cache up to `rates_total` bars. The recurrence is
-//--- sequential, so it is computed once per bar and only the new tail is added;
-//--- a shrink (history reload) restarts from scratch. Index 0 is the oldest bar
-//--- and has no value, matching iSAR's warm-up.
-void EnsureBuiltinPsar(const int rates_total,const double &high[],
-                       const double &low[],const double &close[])
-  {
-   if(ArraySize(g_psar_builtin)<rates_total)
-      ArrayResize(g_psar_builtin,rates_total);
-   if(g_psar_calc>rates_total || g_psar_calc<0)
-      g_psar_calc=0;
+//--- Offset between the full terminal series and the OnCalculate window.
+//--- The tester hands the indicator fewer bars than Bars() returns, while the
+//--- iSAR sub-indicator is computed over the full history; the built-in series
+//--- must cover the same range, so it is built from CopyRates and read with this
+//--- offset. Returns -1 when the series is not available yet.
+int g_psar_offset=-1;
+datetime g_psar_first_time=0;
 
-   if(g_psar_calc==0)
+//--- Extend the built-in PSAR cache up to the terminal's full series. The
+//--- recurrence is sequential, so it is computed once per bar and only the new
+//--- tail is added; a shrink (history reload) restarts from scratch.
+void EnsureBuiltinPsar(const int rates_total)
+  {
+   const int total=Bars(_Symbol,_Period);
+   if(total<2)
      {
-      if(rates_total<2)
-         return;
-      WwPsarReset(high[0],low[0],close[0],close[1],g_cfg.psar_start,g_psar_state);
-      g_psar_builtin[0]=EMPTY_VALUE;
-      g_psar_calc=1;
+      g_psar_offset=-1;
+      return;
      }
 
-   for(int i=MathMax(g_psar_calc,1); i<rates_total; i++)
+   if(ArraySize(g_psar_builtin)<total)
+      ArrayResize(g_psar_builtin,total);
+   if(ArraySize(g_psar_up)<total)
+     {
+      ArrayResize(g_psar_up,total);
+      ArrayResize(g_psar_ep,total);
+      ArrayResize(g_psar_af,total);
+     }
+
+   MqlRates rates[];
+   ArraySetAsSeries(rates,false);
+   if(CopyRates(_Symbol,_Period,0,total,rates)!=total)
+     {
+      g_psar_offset=-1;
+      return;
+     }
+
+   //--- The forming bar (index total-1) is excluded and the last closed bar is
+   //--- recomputed on every call, because its OHLC was still changing while it
+   //--- was the forming bar. A re-based series (reload, or older bars prepended
+   //--- while the tester loads history) forces a full rebuild.
+   const int last_closed=total-1;               // first index NOT computed
+   const bool rebased=(rates[0].time!=g_psar_first_time) ||
+                      (g_psar_ready>last_closed) || (g_psar_ready<=0);
+
+   int start=1;
+   if(rebased)
+     {
+      g_psar_first_time=rates[0].time;
+      g_psar_builtin[0]=EMPTY_VALUE;
+      start=1;
+     }
+   else
+      start=MathMax(1,g_psar_ready);
+
+   if(start<=1)
+      WwPsarReset(rates[0].high,rates[0].low,rates[0].close,rates[1].close,
+                  g_cfg.psar_start,g_psar_state);
+   else
+     {
+      g_psar_state.up=(g_psar_up[start-1]>0.5);
+      g_psar_state.extreme=g_psar_ep[start-1];
+      g_psar_state.accel=g_psar_af[start-1];
+      g_psar_state.sar=g_psar_builtin[start-1];
+     }
+
+   for(int i=start; i<last_closed; i++)
      {
       const bool have_prev2=(i>=2);
-      g_psar_builtin[i]=WwPsarStep(have_prev2 ? high[i-2] : high[i-1],
-                                   have_prev2 ? low[i-2]  : low[i-1],
-                                   high[i-1],low[i-1],high[i],low[i],
+      g_psar_builtin[i]=WwPsarStep(have_prev2 ? rates[i-2].high : rates[i-1].high,
+                                   have_prev2 ? rates[i-2].low  : rates[i-1].low,
+                                   rates[i-1].high,rates[i-1].low,
+                                   rates[i].high,rates[i].low,
                                    g_cfg.psar_start,g_cfg.psar_inc,
                                    g_cfg.psar_max,g_psar_state);
-      g_psar_calc=i+1;
+      g_psar_up[i]=(g_psar_state.up ? 1.0 : 0.0);
+      g_psar_ep[i]=g_psar_state.extreme;
+      g_psar_af[i]=g_psar_state.accel;
      }
+   g_psar_ready=last_closed;
+
+   g_psar_offset=total-rates_total;
+   if(g_psar_offset<0)
+      g_psar_offset=0;
   }
 
 int OnInit()
@@ -147,14 +206,14 @@ int OnInit()
       return(INIT_FAILED);
      }
 
-   //--- The built-in engine is opt-in and NOT validated yet: the cross-
-   //--- implementation port check (2026-11-06) found it disagrees with the
-   //--- independent Python port on ~19% of directions, worse than iSAR. Say so
-   //--- loudly instead of letting an operator switch to it unknowingly.
+   //--- The built-in engine is opt-in. It is validated against the independent
+   //--- Python port (100% of 141503 M5 bars, max diff 5e-9) but it is NOT the
+   //--- shipped default, and it disagrees with iSAR on ~2.3% of directions, so
+   //--- switching it changes every signal and every measurement.
    if(InpPsarEngine==WW_PSAR_BUILTIN)
-      PrintFormat("WONDERWHALES|WARN|psar_engine_builtin_unverified|"
-                  "measured=2026-11-06|dir_agreement_vs_port=0.81|"
-                  "action=verify_before_use");
+      PrintFormat("WONDERWHALES|INFO|psar_engine_builtin|"
+                  "port_check=100pct_of_141503_bars|vs_isar_dir_diff=2.3pct|"
+                  "not_the_shipped_default");
 
    if(g_cfg.slow_ema!=InpSlowEma || g_cfg.fast_ema!=InpFastEma)
       PrintFormat("WONDERWHALES|WARN|input_clamped|fast=%d slow=%d fast_safe=%d slow_safe=%d",
@@ -272,7 +331,7 @@ int OnCalculate(const int rates_total,
          return(0);
      }
    else
-      EnsureBuiltinPsar(rates_total,high,low,close);
+      EnsureBuiltinPsar(rates_total);
 
    if(CopyBuffer(g_fast_handle,0,0,count,fast)!=count)
       return(0);
@@ -303,8 +362,15 @@ int OnCalculate(const int rates_total,
       const bool confirmed=(j<rates_total-1);
       const double close_val=close[j];
 
-      const double sar_val=(InpPsarEngine==WW_PSAR_ISAR ? sar[idx]
-                                                       : g_psar_builtin[j]);
+      double sar_val=EMPTY_VALUE;
+      if(InpPsarEngine==WW_PSAR_ISAR)
+         sar_val=sar[idx];
+      else if(g_psar_offset>=0)
+        {
+         const int bi=g_psar_offset+j;
+         if(bi<ArraySize(g_psar_builtin))
+            sar_val=g_psar_builtin[bi];
+        }
       const bool psar_valid=(MathIsValidNumber(sar_val) && sar_val>0.0);
 
       int dir_prev=0;

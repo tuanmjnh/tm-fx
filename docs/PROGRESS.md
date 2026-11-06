@@ -4522,11 +4522,43 @@ Hai chuỗi PSAR lệch **từ nến thứ hai** và ở trạng thái up/down k
 **không phải lệch pha** mà là khác biệt thật giữa bản MQL5 và bản Python. Log xác nhận lượt chạy thật sự dùng
 `psar_engine=BUILTIN`.
 
-### 82.3 Trạng thái và việc còn lại
+**Đã thử sửa bằng căn chỉnh điểm bắt đầu:** EA dump thêm vùng lịch sử nạp trước; comparator chạy port từ nến
+đầu tiên indicator có giá trị (`aligned_from_row`). Kết quả sau căn chỉnh:
 
-- `WW_PSAR_BUILTIN` **mặc định TẮT**, và indicator in `WONDERWHALES|WARN|psar_engine_builtin_unverified`
-  khi được bật ⇒ không thể vô tình dùng.
-- **Chưa** dùng được để thay `iSAR`; chưa đổi preset; chưa đổi engine mặc định.
+| Nhánh | Nến so | `sar_dir` | `psar` (≤1e-4) |
+|---|---:|---:|---:|
+| `iSAR` | 141.503 | 97,70% | 89,29% |
+| `BUILTIN` | 141.503 | **90,63%** | **50,77%** |
+
+**Đã tìm ra và sửa — kết quả cuối: KHỚP 100%.** Hai lỗi thật:
+
+1. **Điểm bắt đầu khác nhau.** PSAR là truy hồi nên hai chuỗi chỉ khớp khi bắt đầu ở cùng nến. Trong tester
+   `iSAR` (sub-indicator) tính trên **toàn bộ lịch sử terminal**, còn `rates_total` của indicator tự cài nhỏ
+   hơn `Bars()` của EA. *Sửa:* EA dump thêm lịch sử nạp trước; comparator chạy port từ nến đầu tiên indicator
+   có giá trị (`aligned_from_row`); và chuỗi tự cài được dựng bằng `CopyRates` trên đúng `Bars()` rồi đọc qua
+   `offset = Bars() - rates_total`.
+2. **Cache gồm cả nến đang chạy.** Nến đang chạy đổi OHLC liên tục và trạng thái PSAR là **bền**, nên đưa nó
+   vào cache làm hỏng mọi giá trị sau. *Sửa:* lưu trạng thái (up/ep/af) từng nến, chỉ tính tới nến **đã đóng**,
+   và **tính lại nến vừa đóng** mỗi lần.
+
+Kết quả `portref_dump_m5_builtin` (141.503 nến so): `sar_dir`/`buy`/`sell`/`blocked_*` = **100%**; `psar` =
+**100%** trong 1e-4 (max lệch **5e-9**); `fast`/`slow` = 100%.
+
+⇒ Bản cài MQL5 của PSAR tự cài khớp chính xác bản Python độc lập; do đó chênh lệch 2,3% hướng so với `iSAR`
+là **khác biệt thuật toán thật** giữa `iSAR` (MT5) và PSAR chuẩn/Pine — đã chứng minh từ cả hai phía (rủi ro
+D1). Vẫn **không** biết bên nào khớp `ta.sar` (cần export TradingView thật).
+
+`WW_PSAR_BUILTIN` **vẫn không phải mặc định** (mặc định `iSAR`, hành vi ship không đổi); bật nó đổi mọi tín
+hiệu ⇒ phải chạy lại toàn bộ ma trận đo. Trong tester lượt tự cài mất ~250 s (lịch sử bị nạp lại nhiều lần);
+trên chart chỉ tăng thêm mỗi nến mới.
+
+### 82.3 Trạng thái
+
+- `WW_PSAR_BUILTIN` **mặc định TẮT**; khi bật, indicator in
+  `WONDERWHALES|INFO|psar_engine_builtin|port_check=100pct_of_141503_bars|vs_isar_dir_diff=2.3pct`.
+- Nhánh tự cài **đã được kiểm chứng** (khớp 100% bản Python độc lập) — nghĩa là **tính năng đã xong**, nhưng
+  **đổi engine mặc định là quyết định riêng** (đổi mọi tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo).
+- Chưa đổi preset; chưa đổi engine mặc định.
 - Nghi vấn cần kiểm: `rates_total` của indicator trong tester lớn hơn vùng dump (nến nạp trước `FromDate`)
   nên chuỗi PSAR tự cài bắt đầu ở nến sớm hơn vùng dump ⇒ phải đối chiếu **cùng điểm bắt đầu** rồi đo lại.
 - Chỉ khi khớp ~100% mới bàn tới việc đổi engine mặc định — và khi đó phải chạy lại **toàn bộ** ma trận đo.
@@ -4534,4 +4566,5 @@ Hai chuỗi PSAR lệch **từ nến thứ hai** và ở trạng thái up/down k
 ### 82.4 Nhãn trung thực
 
 - Parity Pine ↔ MT5 vẫn `BLOCKED`; bot `NOT_RUN`; profit `UNPROVEN`.
-- Nhánh PSAR tự cài là **công việc dở dang đã biết lỗi**, không phải tính năng hoàn chỉnh.
+- Nhánh PSAR tự cài đã kiểm chứng **là bản cài đúng của thuật toán đã chọn**; điều **chưa** biết là liệu thuật
+  toán đó có khớp `ta.sar` của TradingView hay không — chỉ export thật mới trả lời được.

@@ -3,19 +3,20 @@
 //|   MT5 EA & AI Lab - read-only dumper for the cross-implementation |
 //|   port check of the PinePort\\Wonderwhales indicator.             |
 //|                                                                  |
-//| For every CLOSED bar it writes the bar plus the indicator's       |
-//| buffers (PSAR, direction, signal flags, EMAs, ATR%) to a CSV in   |
+//| For every bar it writes the bar plus the indicator's buffers      |
+//| (PSAR, direction, signal flags, EMAs, ATR%) to a CSV in           |
 //| MQL5/Files, so an independent Python port can be run on the exact |
 //| same bars and its output compared bar by bar.                     |
 //|                                                                  |
-//| Reads shift=1 only and never requires BarsCalculated == Bars():    |
-//| inside the Strategy Tester Bars() also counts the history the      |
-//| terminal preloads before FromDate, while the indicator only        |
-//| calculates the tested range. It never trades, never reads account  |
+//| The preloaded history is dumped once at the first tick, because    |
+//| the indicator's PSAR recurrence starts at ITS first bar and a      |
+//| comparison only makes sense when both sides start at the same bar. |
+//| Reads shift-independent absolute indices; never requires           |
+//| BarsCalculated == Bars(). It never trades, never reads account     |
 //| data, and refuses to run outside the tester. No network.           |
 //+------------------------------------------------------------------+
 #property copyright "MT5 EA & AI Lab"
-#property version   "1.00"
+#property version   "1.10"
 #property description "Read-only tester utility: dumps bars + Wonderwhales buffers. No trading."
 
 #include "../Include/PinePort/WonderwhalesContract.mqh"
@@ -38,7 +39,8 @@ input string       InpOutputFile    = "sim_portref_dump.csv"; // CSV in MQL5/Fil
 
 int      g_handle=INVALID_HANDLE;
 int      g_csv=INVALID_HANDLE;
-datetime g_last_current_bar_time=0;
+bool     g_dumped_preload=false;
+datetime g_last_written_time=0;
 long     g_rows=0;
 long     g_skipped=0;
 
@@ -90,12 +92,10 @@ int OnInit()
                    "psar,sar_dir,buy_signal,sell_signal,fast,slow,atr_pct,"
                    "blocked_buy,blocked_sell\r\n");
 
-   datetime current[];
-   if(CopyTime(_Symbol,_Period,0,1,current)==1)
-      g_last_current_bar_time=current[0];
-
-   PrintFormat("WHD|INFO|init|mode=%s|symbol=%s|timeframe=%s|file=%s",
-               WwModeName(InpMode),_Symbol,TimeframeName(_Period),InpOutputFile);
+   PrintFormat("WHD|INFO|init|mode=%s|psar_engine=%s|symbol=%s|timeframe=%s|file=%s",
+               WwModeName(InpMode),
+               (InpPsarEngine==WW_PSAR_ISAR ? "ISAR" : "BUILTIN"),
+               _Symbol,TimeframeName(_Period),InpOutputFile);
    return(INIT_SUCCEEDED);
   }
 
@@ -115,12 +115,84 @@ void OnDeinit(const int reason)
                reason,(int)g_rows,(int)g_skipped);
   }
 
-//--- Append the just-closed bar (shift 1) with its indicator values.
+//--- Copy one buffer aligned to `total` bars, oldest first. Returns the number
+//--- of values obtained and, in `offset`, the index of the first row they cover
+//--- (blank before that). A shorter indicator series therefore stays aligned.
+int CopyAligned(const int buffer_index,const int total,double &values[],
+                int &offset)
+  {
+   offset=0;
+   ArraySetAsSeries(values,false);
+   const int got=CopyBuffer(g_handle,buffer_index,0,total,values);
+   if(got<=0)
+      return(0);
+   offset=total-got;
+   if(offset<0)
+      offset=0;
+   return(got);
+  }
+
+//--- Write the whole series up to (and excluding) the forming bar.
+void DumpPreload(void)
+  {
+   const int total=Bars(_Symbol,_Period);
+   if(total<2)
+      return;
+
+   MqlRates rate[];
+   ArraySetAsSeries(rate,false);
+   if(CopyRates(_Symbol,_Period,0,total,rate)!=total)
+      return;
+
+   double psar[],dir[],buy[],sell[],fast[],slow[],atr[],blk_buy[],blk_sell[];
+   int o_psar,o_dir,o_buy,o_sell,o_fast,o_slow,o_atr,o_bb,o_bs;
+   const int n_psar=CopyAligned(WW_BUF_PSAR,total,psar,o_psar);
+   const int n_dir=CopyAligned(WW_BUF_SAR_DIR,total,dir,o_dir);
+   const int n_buy=CopyAligned(WW_BUF_BUY_SIGNAL,total,buy,o_buy);
+   const int n_sell=CopyAligned(WW_BUF_SELL_SIGNAL,total,sell,o_sell);
+   const int n_fast=CopyAligned(WW_BUF_FAST_EMA,total,fast,o_fast);
+   const int n_slow=CopyAligned(WW_BUF_SLOW_EMA,total,slow,o_slow);
+   const int n_atr=CopyAligned(WW_BUF_ATR_PCT,total,atr,o_atr);
+   const int n_bb=CopyAligned(WW_BUF_BLOCKED_BUY,total,blk_buy,o_bb);
+   const int n_bs=CopyAligned(WW_BUF_BLOCKED_SELL,total,blk_sell,o_bs);
+
+   const string tf=TimeframeName(_Period);
+   for(int i=0; i<total-1; i++)          // exclude the forming bar
+     {
+      const string psar_text=(n_psar>0 && i>=o_psar ? PriceText(psar[i-o_psar]) : "");
+      const string dir_text=(n_dir>0 && i>=o_dir ? IntegerToString((int)dir[i-o_dir]) : "");
+      const string buy_text=(n_buy>0 && i>=o_buy ? StringFormat("%.0f",buy[i-o_buy]) : "");
+      const string sell_text=(n_sell>0 && i>=o_sell ? StringFormat("%.0f",sell[i-o_sell]) : "");
+      const string fast_text=(n_fast>0 && i>=o_fast ? PriceText(fast[i-o_fast]) : "");
+      const string slow_text=(n_slow>0 && i>=o_slow ? PriceText(slow[i-o_slow]) : "");
+      const string atr_text=(n_atr>0 && i>=o_atr ? StringFormat("%.10f",atr[i-o_atr]) : "");
+      const string bb_text=(n_bb>0 && i>=o_bb ? StringFormat("%.0f",blk_buy[i-o_bb]) : "");
+      const string bs_text=(n_bs>0 && i>=o_bs ? StringFormat("%.0f",blk_sell[i-o_bs]) : "");
+
+      FileWriteString(g_csv,StringFormat("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n",
+                       TimeToString(rate[i].time,TIME_DATE|TIME_SECONDS),
+                       _Symbol,tf,
+                       DoubleToString(rate[i].open,8),
+                       DoubleToString(rate[i].high,8),
+                       DoubleToString(rate[i].low,8),
+                       DoubleToString(rate[i].close,8),
+                       (int)rate[i].tick_volume,
+                       psar_text,dir_text,buy_text,sell_text,fast_text,slow_text,
+                       atr_text,bb_text,bs_text));
+      g_rows++;
+      g_last_written_time=rate[i].time;
+     }
+   FileFlush(g_csv);
+  }
+
+//--- Append one closed bar (shift 1) with its indicator values.
 void AppendClosedBar(void)
   {
    MqlRates rate[];
    ArraySetAsSeries(rate,true);
    if(CopyRates(_Symbol,_Period,1,1,rate)!=1)
+      return;
+   if(rate[0].time<=g_last_written_time)   // already covered by the preload dump
       return;
 
    double psar[],dir[],buy[],sell[],fast[],slow[],atr[],blk_buy[],blk_sell[];
@@ -163,6 +235,7 @@ void AppendClosedBar(void)
                     PriceText(fast[0]),PriceText(slow[0]),atr[0],
                     blk_buy[0],blk_sell[0]));
    g_rows++;
+   g_last_written_time=rate[0].time;
    //--- Periodic flush keeps I/O low on a long range; FileClose flushes the rest.
    if((g_rows % 100)==0)
       FileFlush(g_csv);
@@ -170,13 +243,21 @@ void AppendClosedBar(void)
 
 void OnTick()
   {
+   if(!g_dumped_preload)
+     {
+      DumpPreload();
+      g_dumped_preload=true;
+      return;
+     }
+
+   static datetime last_current=0;
    datetime current[];
    if(CopyTime(_Symbol,_Period,0,1,current)!=1)
       return;
 
-   if(current[0]!=g_last_current_bar_time)
+   if(current[0]!=last_current)
      {
-      g_last_current_bar_time=current[0];
+      last_current=current[0];
       AppendClosedBar();
      }
   }
