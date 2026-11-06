@@ -45,6 +45,13 @@ input long   InpMagicNumber         = 25008001;
 input int    InpMaxSlippagePoints   = 30;
 input ENUM_WW2_MODE InpTradingMode  = WW2_SCALP;   // active strategy (SIGNAL_ONLY = observe)
 input ENUM_WW_MODE  InpSignalMode   = WW_MODE_SAR_EMA; // indicator signal mode
+//--- PSAR engine fed to the indicator. ISAR is MT5's built-in and the shipped
+//--- default, so every measurement in docs/PROGRESS.md section 73-82 stays valid.
+//--- BUILTIN is the self-implemented Wilder recurrence (validated 2026-11-06:
+//--- 100% match with the independent Python port over 141503 M5 bars); it differs
+//--- from iSAR on ~2.3% of directions and is much slower inside the tester, so
+//--- switching the default requires re-running the whole matrix first.
+input ENUM_WW_PSAR  InpPsarEngine   = WW_PSAR_ISAR; // PSAR engine
 
 //--- 02 Risk ------------------------------------------------------
 input group "02 Risk"
@@ -1328,27 +1335,27 @@ int CreateHandles(string &error)
    g_h_m1=iCustom(_Symbol,PERIOD_M1,"PinePort\\Wonderwhales",InpSignalMode,
                   InpPsarStart,InpPsarInc,InpPsarMax,InpFastEma,InpSlowEma,
                   InpEma200,InpAtrLen,InpMinAtrPct,InpVolMaLen,InpRsiLen,InpBbLen,
-                  InpBbMult);
+                  InpBbMult,InpPsarEngine);
    g_h_m5=iCustom(_Symbol,PERIOD_M5,"PinePort\\Wonderwhales",InpSignalMode,
                   InpPsarStart,InpPsarInc,InpPsarMax,InpFastEma,InpSlowEma,
                   InpEma200,InpAtrLen,InpMinAtrPct,InpVolMaLen,InpRsiLen,InpBbLen,
-                  InpBbMult);
+                  InpBbMult,InpPsarEngine);
    g_h_m15=iCustom(_Symbol,PERIOD_M15,"PinePort\\Wonderwhales",InpSignalMode,
                    InpPsarStart,InpPsarInc,InpPsarMax,InpFastEma,InpSlowEma,
                    InpEma200,InpAtrLen,InpMinAtrPct,InpVolMaLen,InpRsiLen,InpBbLen,
-                   InpBbMult);
+                   InpBbMult,InpPsarEngine);
    g_h_h1=iCustom(_Symbol,PERIOD_H1,"PinePort\\Wonderwhales",InpSignalMode,
                   InpPsarStart,InpPsarInc,InpPsarMax,InpFastEma,InpSlowEma,
                   InpEma200,InpAtrLen,InpMinAtrPct,InpVolMaLen,InpRsiLen,InpBbLen,
-                  InpBbMult);
+                  InpBbMult,InpPsarEngine);
    g_h_d1=iCustom(_Symbol,PERIOD_D1,"PinePort\\Wonderwhales",InpSignalMode,
                   InpPsarStart,InpPsarInc,InpPsarMax,InpFastEma,InpSlowEma,
                   InpEma200,InpAtrLen,InpMinAtrPct,InpVolMaLen,InpRsiLen,InpBbLen,
-                  InpBbMult);
+                  InpBbMult,InpPsarEngine);
    g_h_w1=iCustom(_Symbol,PERIOD_W1,"PinePort\\Wonderwhales",InpSignalMode,
                   InpPsarStart,InpPsarInc,InpPsarMax,InpFastEma,InpSlowEma,
                   InpEma200,InpAtrLen,InpMinAtrPct,InpVolMaLen,InpRsiLen,InpBbLen,
-                  InpBbMult);
+                  InpBbMult,InpPsarEngine);
    if(g_h_m1==INVALID_HANDLE || g_h_m5==INVALID_HANDLE || g_h_m15==INVALID_HANDLE ||
       g_h_h1==INVALID_HANDLE || g_h_d1==INVALID_HANDLE || g_h_w1==INVALID_HANDLE)
      {

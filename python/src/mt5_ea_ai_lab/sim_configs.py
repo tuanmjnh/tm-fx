@@ -461,6 +461,7 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpDemoOnly": BOOL,
         "InpTradingMode": Enum((0, 1, 2)),
         "InpSignalMode": Enum((0, 1, 2, 3)),
+        "InpPsarEngine": Enum((0, 1)),
         "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
         "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
         "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),

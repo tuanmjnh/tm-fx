@@ -4552,6 +4552,13 @@ D1). Vẫn **không** biết bên nào khớp `ta.sar` (cần export TradingView
 hiệu ⇒ phải chạy lại toàn bộ ma trận đo. Trong tester lượt tự cài mất ~250 s (lịch sử bị nạp lại nhiều lần);
 trên chart chỉ tăng thêm mỗi nến mới.
 
+**Thử đổi mặc định + chạy lại ma trận: CHẶN bởi hiệu năng (đã trả về mặc định `iSAR`).** EA 2-mode tạo **6
+handle** (M1…W1); mỗi handle tự cài gọi `CopyRates(Bars())` và dựng lại chuỗi mỗi lần tester nạp lại lịch sử,
+nên một run kéo dài hàng chục phút (M1 ~1 triệu nến) và 32 run là không khả thi. Đã **trả EA về mặc định
+`iSAR`** (giữ `InpPsarEngine` để chọn theo run) để mọi đo lường trong §73–§82 vẫn còn giá trị. Muốn đổi mặc
+định phải làm trước: tối ưu chuỗi tự cài cho tester (neo cache theo đuôi chuỗi thay vì dựng lại toàn bộ khi
+lịch sử bị nạp trước).
+
 ### 82.3 Trạng thái
 
 - `WW_PSAR_BUILTIN` **mặc định TẮT**; khi bật, indicator in

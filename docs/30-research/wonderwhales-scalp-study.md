@@ -277,9 +277,14 @@ từ **cả hai phía** — đúng rủi ro D1. Vẫn **không** biết bên nà
 
 Trạng thái: `WW_PSAR_BUILTIN` **vẫn không phải mặc định** (mặc định `iSAR`, hành vi ship không đổi). Khi bật,
 indicator in `WONDERWHALES|INFO|psar_engine_builtin|port_check=100pct...`. Đổi engine mặc định là **quyết định
-riêng** vì nó đổi **mọi** tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo. Ghi chú hiệu năng: trong tester, lượt
-chạy tự cài mất ~250 s (lịch sử bị nạp lại nhiều lần ⇒ phải dựng lại chuỗi); trên chart thời gian thực chỉ
-tăng thêm mỗi nến mới nên rẻ.
+riêng** vì nó đổi **mọi** tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo.
+
+**Đã thử đổi mặc định + chạy lại ma trận — CHẶN bởi hiệu năng.** EA 2-mode tạo **6 handle** (M1…W1); mỗi
+handle tự cài gọi `CopyRates(Bars())` và dựng lại toàn bộ chuỗi mỗi khi tester nạp lại lịch sử, nên một run
+kéo dài hàng chục phút (M1 có ~1 triệu nến) — 32 run là bất khả thi. Đã **trả EA về mặc định `iSAR`** (giữ
+input `InpPsarEngine` để chọn theo run) để mọi đo lường ở mục 6–7 vẫn còn giá trị. Việc cần làm **trước** khi
+đổi mặc định: tối ưu chuỗi tự cài cho tester — neo cache theo **đuôi** chuỗi (chỉ cộng thêm nến mới) thay vì
+dựng lại toàn bộ khi lịch sử bị nạp trước; trên chart thời gian thực hiện tại đã rẻ (chỉ thêm mỗi nến mới).
 
 ## 12. Artefact
 
