@@ -19,6 +19,93 @@ enum ENUM_WW_MODE
    WW_MODE_SAR_EMA_ATR  = 3   // SAR + EMA + ATR Filter
   };
 
+//--- Which PSAR implementation feeds the flips.
+//--- ISAR keeps MT5's built-in iSAR (shipped default, unchanged behaviour).
+//--- BUILTIN is the self-implemented Wilder recurrence (clamp to the previous
+//--- two bars) that matches the independent Python port. Measured 2026-11-06:
+//--- iSAR disagrees with that recurrence on ~2.3% of XAUUSDm M5 directions, so
+//--- the two engines are not interchangeable and the choice is explicit.
+enum ENUM_WW_PSAR
+  {
+   WW_PSAR_ISAR    = 0,  // MT5 iSAR (default)
+   WW_PSAR_BUILTIN = 1   // self-implemented Wilder PSAR
+  };
+
+//--- Running state of the built-in PSAR recurrence.
+struct WwPsarState
+  {
+   bool              up;
+   double            sar;
+   double            extreme;
+   double            accel;
+  };
+
+void WwPsarReset(const double high0,const double low0,const double close0,
+                 const double close1,const double psar_start,
+                 WwPsarState &state)
+  {
+   state.up=(close1>=close0);
+   state.sar=(state.up ? low0 : high0);
+   state.extreme=(state.up ? high0 : low0);
+   state.accel=psar_start;
+  }
+
+//--- Advance the recurrence over one bar and return its SAR value.
+//--- `high_prev2`/`low_prev2` are the bar before `high_prev`/`low_prev`; for the
+//--- first step pass the same values twice. The clamp uses the previous two
+//--- bars (not the current one) because that is the variant that best matches
+//--- the documented Pine behaviour (see the port-check write-up).
+double WwPsarStep(const double high_prev2,const double low_prev2,
+                  const double high_prev,const double low_prev,
+                  const double high,const double low,
+                  const double psar_start,const double psar_inc,
+                  const double psar_max,WwPsarState &state)
+  {
+   double sar=state.sar+state.accel*(state.extreme-state.sar);
+
+   if(state.up)
+     {
+      if(low<sar)
+        {
+         state.up=false;
+         sar=state.extreme;
+         state.extreme=low;
+         state.accel=psar_start;
+        }
+      else
+        {
+         if(high>state.extreme)
+           {
+            state.extreme=high;
+            state.accel=MathMin(psar_max,state.accel+psar_inc);
+           }
+         sar=MathMin(sar,MathMin(low_prev,low_prev2));
+        }
+     }
+   else
+     {
+      if(high>sar)
+        {
+         state.up=true;
+         sar=state.extreme;
+         state.extreme=high;
+         state.accel=psar_start;
+        }
+      else
+        {
+         if(low<state.extreme)
+           {
+            state.extreme=low;
+            state.accel=MathMin(psar_max,state.accel+psar_inc);
+           }
+         sar=MathMax(sar,MathMax(high_prev,high_prev2));
+        }
+     }
+
+   state.sar=sar;
+   return(sar);
+  }
+
 enum ENUM_WW_BUFFER
   {
    WW_BUF_PSAR         = 0,

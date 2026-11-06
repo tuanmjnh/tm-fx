@@ -567,6 +567,13 @@ Buffer 3/4/6/7 **luôn** `0` tại nến đang chạy (`j == rates_total-1`); EA
 
 ### 13. Câu hỏi mở và blocker
 
+0. **PSAR engine (MQL5, thêm 2026-11-06):** indicator có input **thứ 14** `InpPsarEngine`
+   (`ENUM_WW_PSAR`) — `WW_PSAR_ISAR` (mặc định, giữ `iSAR`, hành vi ship **không đổi**) và
+   `WW_PSAR_BUILTIN` (PSAR Wilder tự cài, clamp hai nến trước). Input thêm ở **cuối** nên mọi caller
+   `iCustom` 13 tham số cũ dùng giá trị mặc định. `WW_PSAR_BUILTIN` **chưa kiểm chứng**: cross-implementation
+   đo được nó lệch bản Python nhiều hơn `iSAR` (hướng 81% so với 97,7%), và indicator in
+   `WARN|psar_engine_builtin_unverified` khi bật. Chi tiết:
+   `docs/30-research/wonderwhales-scalp-study.md` §11.3.
 1. **License:** cần xác nhận quyền sử dụng source trước khi phân phối. Hiện chỉ port nội bộ.
 2. **Reference CSV (Phase 6):** chưa có export từ Pine. Cần người dùng xuất dữ liệu trên cùng
    symbol/timeframe/timezone/input (gợi ý: dùng Data Window hoặc export chart data cho các plot

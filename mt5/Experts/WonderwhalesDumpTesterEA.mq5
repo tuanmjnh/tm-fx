@@ -33,6 +33,7 @@ input int          InpVolMaLen      = 20;          // Volume MA period
 input int          InpRsiLen        = 14;          // RSI period
 input int          InpBbLen         = 20;          // Bollinger period
 input double       InpBbMult        = 2.0;         // Bollinger deviation
+input ENUM_WW_PSAR InpPsarEngine   = WW_PSAR_ISAR; // PSAR engine fed to the indicator
 input string       InpOutputFile    = "sim_portref_dump.csv"; // CSV in MQL5/Files
 
 int      g_handle=INVALID_HANDLE;
@@ -69,7 +70,8 @@ int OnInit()
                     InpMode,InpPsarStart,InpPsarInc,InpPsarMax,
                     InpFastEma,InpSlowEma,InpEma200,
                     InpAtrLen,InpMinAtrPct,
-                    InpVolMaLen,InpRsiLen,InpBbLen,InpBbMult);
+                    InpVolMaLen,InpRsiLen,InpBbLen,InpBbMult,
+                    InpPsarEngine);
    if(g_handle==INVALID_HANDLE)
      {
       PrintFormat("WHD|ERROR|indicator_create_failed|error=%d",GetLastError());

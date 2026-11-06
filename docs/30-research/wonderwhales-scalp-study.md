@@ -237,6 +237,23 @@ chưa từng có kết quả parity nào chạy được.
   nhất), rồi đo lại cross-implementation; nếu khớp ~100% thì rủi ro chuyển từ "indicator" sang "chưa có
   reference Pine".
 
+### 11.3 PSAR tự cài — đã thêm, **chưa** kiểm chứng (đang chờ xử lý)
+
+Đã thêm vào indicator một input mới `InpPsarEngine` (`ENUM_WW_PSAR`: `WW_PSAR_ISAR` mặc định = hành vi ship
+**không đổi**, `WW_PSAR_BUILTIN` = PSAR Wilder tự cài với clamp hai nến trước) và hàm thuần
+`WwPsarReset/WwPsarStep` trong `WonderwhalesContract.mqh`.
+
+Lượt đo lại (`portref_dump_m5_builtin`): **nhánh tự cài KHÔNG khớp bản Python** — `sar_dir` 81,26%,
+`psar` chỉ 1,60% nến trong 1e-4 (so với 97,69% / 88,70% của `iSAR`). Hai chuỗi lệch **từ nến thứ hai** và ở
+trạng thái up/down khác nhau, tức là **lỗi thật** trong nhánh tự cài (không phải lệch pha: quét độ trễ
+−3..+3 đều ≤1,6%).
+
+Trạng thái: nhánh tự cài **mặc định TẮT**, và indicator in
+`WONDERWHALES|WARN|psar_engine_builtin_unverified` khi ai đó bật nó. **Chưa** dùng được để thay `iSAR`.
+Việc còn lại: tìm lỗi (nghi do `rates_total` của tester lớn hơn vùng dump nên chuỗi PSAR của indicator bắt
+đầu ở nến sớm hơn — cần đối chiếu cùng điểm bắt đầu), rồi đo lại; chỉ khi khớp ~100% mới bàn tới việc đổi
+engine mặc định (và khi đó phải chạy lại toàn bộ ma trận đo).
+
 ## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —

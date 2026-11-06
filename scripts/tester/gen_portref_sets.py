@@ -52,6 +52,7 @@ TIMEFRAMES = ("M1", "M5", "M15")
 #--- and the documented parity runbook use.
 DUMP_INPUTS = {
     "InpMode": 2,               # WW_MODE_SAR_EMA
+    "InpPsarEngine": 0,         # WW_PSAR_ISAR (shipped engine)
     "InpPsarStart": 0.02,
     "InpPsarInc": 0.02,
     "InpPsarMax": 0.20,
@@ -90,6 +91,14 @@ def scenarios() -> list[tuple[str, str, str, dict]]:
         inputs = dict(DUMP_INPUTS)
         inputs["InpOutputFile"] = f"sim_{name}.csv"
         out.append((name, "WonderwhalesDumpTesterEA", tf, inputs))
+
+    #--- Same run on M5 but with the self-implemented PSAR, so the port check can
+    #--- confirm the indicator implements that recurrence consistently.
+    name = "portref_dump_m5_builtin"
+    inputs = dict(DUMP_INPUTS)
+    inputs["InpPsarEngine"] = 1
+    inputs["InpOutputFile"] = f"sim_{name}.csv"
+    out.append((name, "WonderwhalesDumpTesterEA", "M5", inputs))
     return out
 
 

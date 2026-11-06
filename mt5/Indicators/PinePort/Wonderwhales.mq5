@@ -39,6 +39,8 @@ input int          InpVolMaLen     = 20;          // Volume MA period
 input int          InpRsiLen       = 14;          // RSI period (display)
 input int          InpBbLen        = 20;          // Bollinger period (display)
 input double       InpBbMult       = 2.0;         // Bollinger deviation
+//--- Appended last so existing positional iCustom callers keep working.
+input ENUM_WW_PSAR InpPsarEngine   = WW_PSAR_ISAR; // PSAR engine (iSAR = shipped)
 
 double g_psar[];
 double g_buy_marker[];
@@ -59,6 +61,11 @@ double g_bb_lower[];
 double g_vol_ma[];
 double g_vol_ratio[];
 
+//--- Built-in PSAR cache (only used when InpPsarEngine == WW_PSAR_BUILTIN).
+double       g_psar_builtin[];
+int          g_psar_calc=0;          // number of leading bars already computed
+WwPsarState  g_psar_state;
+
 int g_sar_handle=INVALID_HANDLE;
 int g_fast_handle=INVALID_HANDLE;
 int g_slow_handle=INVALID_HANDLE;
@@ -68,6 +75,39 @@ int g_rsi_handle=INVALID_HANDLE;
 int g_bb_handle=INVALID_HANDLE;
 
 WwConfig g_cfg;
+
+//--- Extend the built-in PSAR cache up to `rates_total` bars. The recurrence is
+//--- sequential, so it is computed once per bar and only the new tail is added;
+//--- a shrink (history reload) restarts from scratch. Index 0 is the oldest bar
+//--- and has no value, matching iSAR's warm-up.
+void EnsureBuiltinPsar(const int rates_total,const double &high[],
+                       const double &low[],const double &close[])
+  {
+   if(ArraySize(g_psar_builtin)<rates_total)
+      ArrayResize(g_psar_builtin,rates_total);
+   if(g_psar_calc>rates_total || g_psar_calc<0)
+      g_psar_calc=0;
+
+   if(g_psar_calc==0)
+     {
+      if(rates_total<2)
+         return;
+      WwPsarReset(high[0],low[0],close[0],close[1],g_cfg.psar_start,g_psar_state);
+      g_psar_builtin[0]=EMPTY_VALUE;
+      g_psar_calc=1;
+     }
+
+   for(int i=MathMax(g_psar_calc,1); i<rates_total; i++)
+     {
+      const bool have_prev2=(i>=2);
+      g_psar_builtin[i]=WwPsarStep(have_prev2 ? high[i-2] : high[i-1],
+                                   have_prev2 ? low[i-2]  : low[i-1],
+                                   high[i-1],low[i-1],high[i],low[i],
+                                   g_cfg.psar_start,g_cfg.psar_inc,
+                                   g_cfg.psar_max,g_psar_state);
+      g_psar_calc=i+1;
+     }
+  }
 
 int OnInit()
   {
@@ -86,7 +126,10 @@ int OnInit()
    g_cfg.bb_mult=InpBbMult;
    WwNormalizeConfig(g_cfg);
 
-   g_sar_handle=iSAR(_Symbol,_Period,g_cfg.psar_start,g_cfg.psar_max);
+   //--- Only create the iSAR handle when it is actually used, so the built-in
+   //--- engine never waits on a sub-indicator it does not read.
+   if(InpPsarEngine==WW_PSAR_ISAR)
+      g_sar_handle=iSAR(_Symbol,_Period,g_cfg.psar_start,g_cfg.psar_max);
    g_fast_handle=iMA(_Symbol,_Period,g_cfg.fast_ema,0,MODE_EMA,PRICE_CLOSE);
    g_slow_handle=iMA(_Symbol,_Period,g_cfg.slow_ema,0,MODE_EMA,PRICE_CLOSE);
    g_ema200_handle=iMA(_Symbol,_Period,g_cfg.ema200,0,MODE_EMA,PRICE_CLOSE);
@@ -94,7 +137,8 @@ int OnInit()
    g_rsi_handle=iRSI(_Symbol,_Period,g_cfg.rsi_len,PRICE_CLOSE);
    g_bb_handle=iBands(_Symbol,_Period,g_cfg.bb_len,0,g_cfg.bb_mult,PRICE_CLOSE);
 
-   if(g_sar_handle==INVALID_HANDLE || g_fast_handle==INVALID_HANDLE ||
+   if((InpPsarEngine==WW_PSAR_ISAR && g_sar_handle==INVALID_HANDLE) ||
+      g_fast_handle==INVALID_HANDLE ||
       g_slow_handle==INVALID_HANDLE || g_ema200_handle==INVALID_HANDLE ||
       g_atr_handle==INVALID_HANDLE || g_rsi_handle==INVALID_HANDLE ||
       g_bb_handle==INVALID_HANDLE)
@@ -102,6 +146,15 @@ int OnInit()
       PrintFormat("WONDERWHALES|ERROR|init_handle_failed|error=%d",GetLastError());
       return(INIT_FAILED);
      }
+
+   //--- The built-in engine is opt-in and NOT validated yet: the cross-
+   //--- implementation port check (2026-11-06) found it disagrees with the
+   //--- independent Python port on ~19% of directions, worse than iSAR. Say so
+   //--- loudly instead of letting an operator switch to it unknowingly.
+   if(InpPsarEngine==WW_PSAR_BUILTIN)
+      PrintFormat("WONDERWHALES|WARN|psar_engine_builtin_unverified|"
+                  "measured=2026-11-06|dir_agreement_vs_port=0.81|"
+                  "action=verify_before_use");
 
    if(g_cfg.slow_ema!=InpSlowEma || g_cfg.fast_ema!=InpFastEma)
       PrintFormat("WONDERWHALES|WARN|input_clamped|fast=%d slow=%d fast_safe=%d slow_safe=%d",
@@ -137,8 +190,10 @@ int OnInit()
                                    WwModeName(g_cfg.mode),WW_CONTRACT_VERSION));
    IndicatorSetInteger(INDICATOR_DIGITS,_Digits);
 
-   PrintFormat("WONDERWHALES|INFO|init|mode=%s fast=%d slow=%d ema200=%d atr=%d min_atr_pct=%.3f vol=%d rsi=%d bb=%d/%.2f contract=%s hash=%s",
-               WwModeName(g_cfg.mode),g_cfg.fast_ema,g_cfg.slow_ema,g_cfg.ema200,
+   PrintFormat("WONDERWHALES|INFO|init|mode=%s psar_engine=%s fast=%d slow=%d ema200=%d atr=%d min_atr_pct=%.3f vol=%d rsi=%d bb=%d/%.2f contract=%s hash=%s",
+               WwModeName(g_cfg.mode),
+               (InpPsarEngine==WW_PSAR_ISAR ? "ISAR" : "BUILTIN"),
+               g_cfg.fast_ema,g_cfg.slow_ema,g_cfg.ema200,
                g_cfg.atr_len,g_cfg.min_atr_pct,g_cfg.vol_ma_len,g_cfg.rsi_len,
                g_cfg.bb_len,g_cfg.bb_mult,WW_CONTRACT_VERSION,
                WwConfigHash(g_cfg,0));
@@ -178,7 +233,7 @@ int OnCalculate(const int rates_total,
    if(rates_total<3)
       return(0);
 
-   if(BarsCalculated(g_sar_handle)<rates_total ||
+   if((InpPsarEngine==WW_PSAR_ISAR && BarsCalculated(g_sar_handle)<rates_total) ||
       BarsCalculated(g_fast_handle)<rates_total ||
       BarsCalculated(g_slow_handle)<rates_total ||
       BarsCalculated(g_ema200_handle)<rates_total ||
@@ -211,8 +266,14 @@ int OnCalculate(const int rates_total,
    ArraySetAsSeries(bb_mid,false);
    ArraySetAsSeries(bb_lower,false);
 
-   if(CopyBuffer(g_sar_handle,0,0,count,sar)!=count)
-      return(0);
+   if(InpPsarEngine==WW_PSAR_ISAR)
+     {
+      if(CopyBuffer(g_sar_handle,0,0,count,sar)!=count)
+         return(0);
+     }
+   else
+      EnsureBuiltinPsar(rates_total,high,low,close);
+
    if(CopyBuffer(g_fast_handle,0,0,count,fast)!=count)
       return(0);
    if(CopyBuffer(g_slow_handle,0,0,count,slow)!=count)
@@ -242,7 +303,8 @@ int OnCalculate(const int rates_total,
       const bool confirmed=(j<rates_total-1);
       const double close_val=close[j];
 
-      const double sar_val=sar[idx];
+      const double sar_val=(InpPsarEngine==WW_PSAR_ISAR ? sar[idx]
+                                                       : g_psar_builtin[j]);
       const bool psar_valid=(MathIsValidNumber(sar_val) && sar_val>0.0);
 
       int dir_prev=0;

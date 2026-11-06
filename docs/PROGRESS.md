@@ -4492,3 +4492,46 @@ Báo cáo đầy đủ: [`30-research/wonderwhales-scalp-study.md`](30-research/
 
 - Đây là kiểm chứng **hai bản cài đặt độc lập của cùng một spec**, **không** phải parity với TradingView.
 - Parity Pine ↔ MT5 vẫn **`BLOCKED`**; bot vẫn `NOT_RUN`, profit vẫn `UNPROVEN`; preset không đổi.
+
+## 82. Wonderwhales 2-mode — PSAR tự cài dạng tuỳ chọn: chưa kiểm chứng (task K) — 2026-11-06
+
+Chủ sở hữu chọn "thêm PSAR tự cài dạng tuỳ chọn" (mặc định giữ `iSAR`) rồi đo lại bằng cross-implementation.
+
+### 82.1 Thay đổi
+
+| File | Thay đổi |
+|---|---|
+| `mt5/Include/PinePort/WonderwhalesContract.mqh` | `ENUM_WW_PSAR`, `WwPsarState`, `WwPsarReset()`, `WwPsarStep()` — PSAR Wilder thuần, clamp hai nến trước |
+| `mt5/Indicators/PinePort/Wonderwhales.mq5` | Input **thứ 14** `InpPsarEngine` (thêm ở cuối ⇒ caller 13 tham số giữ hành vi cũ); cache PSAR tự cài tăng dần; chỉ tạo handle `iSAR` khi dùng `iSAR`; log `psar_engine=`; **WARN** khi chọn `BUILTIN` |
+| `mt5/Experts/WonderwhalesDumpTesterEA.mq5` | Input `InpPsarEngine` + truyền tham số thứ 14 |
+| `scripts/tester/gen_portref_sets.py` | Thêm scenario `portref_dump_m5_builtin` |
+| `docs/...` | Study §11.3; `indicators/wonderwhales.md` §13 mục 0 |
+
+Mặc định `WW_PSAR_ISAR` ⇒ hành vi ship **không đổi**; compile **0 errors / 0 warnings**.
+
+### 82.2 Kết quả đo lại — NHÁNH TỰ CÀI KHÔNG KHỚP (lỗi thật)
+
+`portref_dump_m5_builtin`, XAUUSDm M5 2025, mode SAR_EMA, sau 300 nến:
+
+| Nhánh | `sar_dir` | `buy` | `sell` | `psar` (≤1e-4) |
+|---|---:|---:|---:|---:|
+| `iSAR` (mặc định) | 97,69% | 99,50% | 99,71% | 88,70% |
+| `BUILTIN` (tự cài) | **81,26%** | 97,40% | 98,18% | **1,60%** |
+
+Hai chuỗi PSAR lệch **từ nến thứ hai** và ở trạng thái up/down khác nhau. Quét độ trễ −3…+3 đều ≤1,6% ⇒
+**không phải lệch pha** mà là khác biệt thật giữa bản MQL5 và bản Python. Log xác nhận lượt chạy thật sự dùng
+`psar_engine=BUILTIN`.
+
+### 82.3 Trạng thái và việc còn lại
+
+- `WW_PSAR_BUILTIN` **mặc định TẮT**, và indicator in `WONDERWHALES|WARN|psar_engine_builtin_unverified`
+  khi được bật ⇒ không thể vô tình dùng.
+- **Chưa** dùng được để thay `iSAR`; chưa đổi preset; chưa đổi engine mặc định.
+- Nghi vấn cần kiểm: `rates_total` của indicator trong tester lớn hơn vùng dump (nến nạp trước `FromDate`)
+  nên chuỗi PSAR tự cài bắt đầu ở nến sớm hơn vùng dump ⇒ phải đối chiếu **cùng điểm bắt đầu** rồi đo lại.
+- Chỉ khi khớp ~100% mới bàn tới việc đổi engine mặc định — và khi đó phải chạy lại **toàn bộ** ma trận đo.
+
+### 82.4 Nhãn trung thực
+
+- Parity Pine ↔ MT5 vẫn `BLOCKED`; bot `NOT_RUN`; profit `UNPROVEN`.
+- Nhánh PSAR tự cài là **công việc dở dang đã biết lỗi**, không phải tính năng hoàn chỉnh.

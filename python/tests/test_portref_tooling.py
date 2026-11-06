@@ -100,6 +100,7 @@ def test_generator_covers_three_timeframes_and_matches_the_python_side() -> None
     names = [name for name, _e, _p, _i in scenarios]
     assert names == [
         "portref_dump_m1", "portref_dump_m5", "portref_dump_m15",
+        "portref_dump_m5_builtin",
     ]
     for name, expert, period, inputs in scenarios:
         assert name.startswith("portref_dump_")
@@ -109,6 +110,10 @@ def test_generator_covers_three_timeframes_and_matches_the_python_side() -> None
         #--- Must mirror the 2-mode EA: SAR + EMA trend filter.
         assert inputs["InpMode"] == 2
         assert inputs["InpFastEma"] == 20 and inputs["InpSlowEma"] == 50
+    #--- Only the builtin run switches the PSAR engine away from the shipped one.
+    engines = {name: inputs["InpPsarEngine"] for name, _e, _p, inputs in scenarios}
+    assert engines["portref_dump_m5"] == 0
+    assert engines["portref_dump_m5_builtin"] == 1
 
 
 def test_generator_range_and_symbol_are_locked() -> None:
