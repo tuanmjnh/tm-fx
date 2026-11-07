@@ -207,6 +207,36 @@ def quality_scenarios() -> tuple:
     return _variant_matrix(QUALITY_VARIANTS, "qual")
 
 
+#--- Entry-definition research (task N). The signal mode is the cheapest way to
+#--- change WHAT triggers an entry: mode 3 adds the indicator's ATR volatility
+#--- filter on top of SAR+EMA. Both variants use the self-implemented PSAR, so the
+#--- only difference between the control and the variant is the signal mode.
+MODE_BASE = {"InpPsarEngine": 1, "InpTriggerWindowBars": 1, "InpSetupWindowBars": 1}
+MODE_VARIANTS = {
+    "m2": {**MODE_BASE, "InpSignalMode": 2},   # control = SAR + EMA (shipped)
+    "m3": {**MODE_BASE, "InpSignalMode": 3},   # + ATR volatility filter
+}
+
+
+def mode_scenarios() -> tuple:
+    """In-sample / out-of-sample x signal mode; the mode is the only mover."""
+    return _variant_matrix(MODE_VARIANTS, "mode")
+
+
+#--- One long window: the shipped trigger window keeps the sample small (~19
+#--- signals a year), so the only way to grow it is a longer measurement range.
+LONG_WINDOW = ("2018.01.01", "2026.10.01")
+
+
+def long_scenarios() -> tuple:
+    """Baseline over the full available history, on the self-implemented PSAR."""
+    values = dict(MEASURE_BASE)
+    values["InpPsarEngine"] = 1
+    _check_measure_arm("ww2_meas_scalp_long_a", values)
+    return (("ww2_meas_scalp_long_a", "M5", LONG_WINDOW[0], LONG_WINDOW[1],
+             100000, values),)
+
+
 def _check_measure_arm(name: str, values: dict) -> None:
     """Mirror the EA's OnInit guard so an invalid arm cannot be generated.
 
@@ -252,6 +282,8 @@ SCENARIOS += setup_scenarios()
 SCENARIOS += combo_scenarios()
 SCENARIOS += geometry_scenarios()
 SCENARIOS += quality_scenarios()
+SCENARIOS += long_scenarios()
+SCENARIOS += mode_scenarios()
 
 # Tracked operator presets: one per mode (see docs/10-bots/wonderwhales-2mode.md).
 TRACKED_VARIANTS = {
@@ -341,6 +373,16 @@ def main() -> int:
             note = [
                 "; Quality run: parity is unproven, so this is NOT a strategy result.",
                 "; base = (5,5); q0 = SAR filter off (control), q1 = filter on.",
+            ]
+        elif "_mode_" in name:
+            note = [
+                "; Signal-mode run: parity is unproven, so this is NOT a strategy result.",
+                "; m2 = SAR+EMA (control), m3 = SAR+EMA+ATR volatility filter.",
+            ]
+        elif "_long_" in name:
+            note = [
+                "; Long-window run: parity is unproven, so this is NOT a strategy result.",
+                "; baseline (1,1) on the self-implemented PSAR, 2018-2026 to grow the sample.",
             ]
         elif name.startswith("ww2_meas_"):
             note = [

@@ -369,6 +369,28 @@ Nghĩa là: dưới engine chuẩn, **đòn bẩy đúng không phải tham số
 mẫu hiện tại chưa đủ để nhìn thấy nó. Bước hợp lý tiếp theo là **mở rộng mẫu** (lịch sử dài hơn) chứ không phải
 tinh chỉnh tiếp.
 
+### 11.6 Mở rộng mẫu (2018-2026) — và câu trả lời là ÂM
+
+Chạy baseline `(1,1)` với engine tự cài trên **toàn bộ lịch sử có được** (XAUUSDm M5, 2018-01-01 → 2026-10-01;
+run 78,6 phút):
+
+| Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---:|---:|---:|---:|---:|---:|
+| IS 1,5 năm (§11.5) | 22 | 45,45% | +339,41 | **+0,11** | 1,19 | 0,52% |
+| OOS 1,25 năm (§11.5) | 30 | 43,33% | +259,41 | **+0,08** | 1,11 | 1,14% |
+| **2018-2026 (8,75 năm)** | **103** | **39,81%** | **−420,77** | **−0,02** | **0,95** | 1,60% |
+
+**Kết luận: kết quả dương ở §11.5 là nhiễu mẫu nhỏ.** Với 103 lệnh, expectancy ≈ **0 và hơi âm**
+(−0,02R), PF 0,95, winrate 39,81% — **dưới** ngưỡng hoà vốn 40% của TP 1,5R (nhất quán với expectancy âm).
+
+Đây là bằng chứng mạnh nhất trong cả báo cáo: **tín hiệu như đang port không có edge chứng minh được**. Và nó
+cho thấy vấn đề phương pháp: với `InpScalpTriggerWindowBars=1` (mặc định), ~19 tín hiệu/năm là **thiết kế**, nên
+cửa sổ 1,5 năm chỉ có ~22 lệnh — **quá nhỏ để kết luận bất cứ điều gì**; mọi so sánh trong §6.2–§6.4, §11.4–§11.5
+đều nằm trong vùng nhiễu đó.
+
+Hệ quả cho bước tiếp theo: **không tinh chỉnh tham số nữa**. Hoặc (a) thay đổi **định nghĩa entry** để tạo ra
+nhiều tín hiệu/loại tín hiệu khác, hoặc (b) chấp nhận kết luận "không có edge" và dừng.
+
 ## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —

@@ -4687,3 +4687,28 @@ Thêm scenario `portref_dump_{m1,m15}_builtin`; test tooling cập nhật (9 tes
 
 Vẫn là `CROSS_IMPLEMENTATION` (không phải parity với TradingView); parity vẫn `BLOCKED`, bot `NOT_RUN`,
 profit `UNPROVEN`.
+
+## 86. Wonderwhales 2-mode — mở rộng mẫu 2018-2026: kết luận ÂM (task N) — 2026-11-07
+
+Để kiểm tra xem "baseline dương ở cả hai cửa sổ" (§83/§84) có phải edge thật không, chạy baseline `(1,1)` với
+engine tự cài trên **toàn bộ lịch sử có được**: XAUUSDm M5, **2018-01-01 → 2026-10-01** (8,75 năm; run 4.718 s
+≈ 78,6 phút; cần `-TimeoutSec 7200` vì mặc định 1.800 s bị cắt giữa run).
+
+### 86.1 Kết quả
+
+| Cửa sổ | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---:|---:|---:|---:|---:|---:|
+| IS 1,5 năm (§84) | 22 | 45,45% | +339,41 | **+0,11** | 1,19 | 0,52% |
+| OOS 1,25 năm (§84) | 30 | 43,33% | +259,41 | **+0,08** | 1,11 | 1,14% |
+| **2018-2026 (8,75 năm)** | **103** | **39,81%** | **−420,77** | **−0,02** | **0,95** | 1,60% |
+
+### 86.2 Kết luận (mạnh nhất từ trước tới nay)
+
+- **Kết quả dương ở §83/§84 là nhiễu mẫu nhỏ.** Với 103 lệnh, expectancy ≈ 0 và hơi âm (−0,02R), PF 0,95,
+  winrate 39,81% — **dưới** ngưỡng hoà vốn 40% của TP 1,5R.
+- **Tín hiệu như đang port không có edge chứng minh được.**
+- **Bài học phương pháp:** với `InpScalpTriggerWindowBars=1` (mặc định), ~19 tín hiệu/năm là **thiết kế** ⇒ cửa
+  sổ 1,5 năm chỉ ~22 lệnh, **quá nhỏ để kết luận**. Mọi so sánh ở §75–§79 và §83–§84 đều nằm trong vùng nhiễu đó.
+- Hệ quả: **dừng tinh chỉnh tham số**. Chỉ còn hai hướng: đổi **định nghĩa entry** (tạo loại tín hiệu khác), hoặc
+  chấp nhận kết luận âm và dừng.
+- Nhãn không đổi: `NOT_STRATEGY_RESULT` (parity OFF), parity `BLOCKED`, bot `NOT_RUN`, profit `UNPROVEN`.
