@@ -279,15 +279,29 @@ Trạng thái: `WW_PSAR_BUILTIN` **vẫn không phải mặc định** (mặc đ
 indicator in `WONDERWHALES|INFO|psar_engine_builtin|port_check=100pct...`. Đổi engine mặc định là **quyết định
 riêng** vì nó đổi **mọi** tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo.
 
-**Đã tối ưu hiệu năng (2026-11-06).** Bản đầu gọi `CopyRates(Bars())` và dựng lại toàn bộ chuỗi **mỗi lần
-OnCalculate** (chạy theo từng tick), nên một run M5 một-handle mất ~249 s. Bản tối ưu chỉ làm việc khi **có
-nến đóng mới** và chỉ sao thêm **phần đuôi** (kèm 3 nến ngữ cảnh cho clamp hai nến); chuỗi bị nạp lại vẫn
-dựng lại một lần. Sau tối ưu: **100%** vẫn giữ nguyên (141.503 nến, max lệch 5e-9) và thời gian dump M5 giảm
-**249 s → 92 s** (baseline `iSAR` cùng dump ~12 s).
+**Đã tối ưu hiệu năng (2026-11-06).** Ba lỗi/chi phí, theo thứ tự phát hiện:
 
-**Mặc định của EA 2-mode đã đổi sang `WW_PSAR_BUILTIN`** (quyết định của chủ sở hữu) và ma trận đo đang được
-chạy lại; **mọi số ở mục 6–7 là của engine `iSAR`** cho tới khi có bảng mới. Muốn tái lập chúng, đặt
-`InpPsarEngine=WW_PSAR_ISAR`.
+1. Bản đầu gọi `CopyRates(Bars())` và dựng lại toàn bộ chuỗi **mỗi lần OnCalculate** (theo từng tick): dump M5
+   một-handle ~249 s.
+2. Bản "chỉ thêm đuôi" vẫn **đánh địa chỉ theo vị trí cửa sổ**, mà tester lại **chèn nến cũ vào đầu** khi nạp
+   lịch sử ⇒ vị trí không ổn định ⇒ phải kiểm tra **theo thời gian** của nến vừa đóng.
+3. Một lỗi off-by-one coi nến `rates_total-1` (nến **đang chạy**) là nến đã đóng ⇒ lệch cả chuỗi một nến.
+
+Bản cuối là **cache vòng neo theo đuôi chuỗi** (slot mới nhất = nến đã đóng gần nhất): thêm nến là O(1), cửa sổ
+bị tái lập không cần dựng lại, chỉ dựng lại khi chuỗi ngắn đi hoặc có khoảng trống. Kiểm chứng lại: **100%**
+(141.503 nến, max lệch 5e-9) và dump M5 một-handle **249 s → ~18–20 s** (baseline `iSAR` cùng dump ~12 s).
+Đồng thời sửa `run_tester.ps1`: tester chọn agent 3000/3001 tuỳ run ⇒ phải quét **mọi** agent Files dir thay vì
+chỉ cái đầu (trước đó archive rỗng dù CSV đã ghi).
+
+**Chưa đổi được mặc định sang `WW_PSAR_BUILTIN`.** Đã thử (2026-11-06): EA 2-mode tạo **6 handle** (M1…W1) và
+một run với engine tự cài vẫn mất **hàng chục phút** (đo được 18,4 phút/lần ở bản trước; >12 phút ở bản tối ưu),
+so với **~110 s** của `iSAR` — nên ma trận 32 run là bất khả thi. **Mặc định giữ `iSAR`**, giữ input
+`InpPsarEngine` để chọn theo run.
+
+Kết quả đã đạt được cho engine tự cài: **khớp 100% bản Python độc lập** (141.503 nến, max lệch 5e-9) và dump
+M5 **một handle nhanh ~18–20 s** (baseline `iSAR` ~12 s). Phần còn lại để đổi được mặc định: làm chuỗi tự cài rẻ
+hơn nữa với **cửa sổ lớn** (M1 ~1 triệu nến × nhiều handle) — chi phí còn lại nằm ở việc dựng lại chuỗi khi cửa
+sổ bị tái lập, không phải ở phép cộng dồn mỗi nến.
 
 ## 12. Artefact
 

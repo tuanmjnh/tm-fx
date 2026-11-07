@@ -57,7 +57,7 @@ Input khai theo 6 nhóm của [`input-convention.md`](input-convention.md) — *
 | | `InpDemoOnly` | `true` (bắt buộc; `false` → `INIT_PARAMETERS_INCORRECT`) |
 | | `InpAllowedSymbols` / `InpMagicNumber` / `InpMaxSlippagePoints` | `"XAUUSD"` / `25008001` / `30` |
 | | `InpTradingMode` / `InpSignalMode` | `WW2_SCALP` / `WW_MODE_SAR_EMA` |
-| | `InpPsarEngine` | `WW_PSAR_BUILTIN` (PSAR tự cài, **đã kiểm chứng 100%** so với port độc lập; `WW_PSAR_ISAR` = `iSAR` của MT5, khác ~2,3% hướng — dùng nếu muốn tái lập các đo lường cũ ở PROGRESS §73–§82) |
+| | `InpPsarEngine` | `WW_PSAR_ISAR` (mặc định = `iSAR` của MT5, khớp mọi đo lường ở PROGRESS §73–§82; `WW_PSAR_BUILTIN` = PSAR tự cài, **đã kiểm chứng 100%** so với port độc lập nhưng chậm hơn hẳn với EA 6 handle) |
 | `02 Risk` | `InpRiskPercent` / `InpMaxPositions` / `InpCooldownMinutes` | `0.15` / `1` / `20` |
 | | `InpMaxConsecutiveLosses` | `2` |
 | | `InpMaxDailyLossPct` / `InpMaxWeeklyLossPct` / `InpMaxDrawdownPct` | `1.0` / `2.0` / `5.0` |

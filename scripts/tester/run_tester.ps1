@@ -99,9 +99,14 @@ if (-not (Test-Path -LiteralPath (Join-Path $TerminalDataDir "MQL5\Experts"))) {
     throw "$TerminalDataDir does not contain MQL5\Experts"
 }
 
-if (-not $AgentFilesDir) {
-    $agents = @(Get-AgentFilesDirs)
-    if ($agents.Count -gt 0) { $AgentFilesDir = $agents[0] }
+#--- The tester picks an agent (…-3000, …-3001, …) per run, so artefacts can land
+#--- in ANY agent's Files folder. Search them all instead of guessing the first.
+$AgentFilesDirs = @()
+if ($AgentFilesDir) {
+    $AgentFilesDirs = @($AgentFilesDir)
+} else {
+    $AgentFilesDirs = @(Get-AgentFilesDirs)
+    if ($AgentFilesDirs.Count -gt 0) { $AgentFilesDir = $AgentFilesDirs[0] }
 }
 
 $Ini = Join-Path $RunDir "$Scenario.ini"
@@ -131,8 +136,8 @@ if (Test-Path -LiteralPath $setSrc) {
 
 #--- Remove stale artefacts so freshness is unambiguous.
 Get-ChildItem $TerminalDataDir -Filter "$ReportName.*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
-if ($AgentFilesDir) {
-    Get-ChildItem $AgentFilesDir -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+foreach ($dir in $AgentFilesDirs) {
+    Get-ChildItem $dir -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 }
 
 Write-Host "RUN $Scenario  ini=$Ini  report=$ReportName  data=$TerminalDataDir"
@@ -151,9 +156,12 @@ for ($i = 0; $i -lt 60; $i++) {
     if ((Test-Path $htm) -and ((Get-Item $htm).LastWriteTime -gt $started)) { break }
     Start-Sleep -Seconds 2
 }
-if (-not $Contract -and $journalPath) {
+if (-not $Contract) {
     for ($i = 0; $i -lt 60; $i++) {
-        if ((Test-Path $journalPath) -and ((Get-Item $journalPath).LastWriteTime -gt $started)) { break }
+        $fresh = @($AgentFilesDirs | ForEach-Object {
+            Get-ChildItem $_ -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.LastWriteTime -gt $started } })
+        if ($fresh.Count -gt 0) { break }
         Start-Sleep -Seconds 2
     }
 }
@@ -181,9 +189,10 @@ if (Test-Path $htm) {
         Copy-Item -Destination $OutDir -Force
     $copied += "$ReportName.*"
 }
-if (-not $Contract -and $AgentFilesDir) {
-    $csvs = @(Get-ChildItem $AgentFilesDir -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.LastWriteTime -gt $started })
+if (-not $Contract) {
+    $csvs = @($AgentFilesDirs | ForEach-Object {
+        Get-ChildItem $_ -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.LastWriteTime -gt $started } })
     foreach ($csv in $csvs) {
         Copy-Item $csv.FullName (Join-Path $OutDir $csv.Name) -Force
         $copied += $csv.Name

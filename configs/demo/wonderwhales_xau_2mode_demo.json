@@ -16,7 +16,7 @@
     "InpMaxSlippagePoints": 30,
     "InpTradingMode": 1,
     "InpSignalMode": 2,
-    "InpPsarEngine": 1,
+    "InpPsarEngine": 0,
     "InpRiskPercent": 0.15,
     "InpMaxPositions": 1,
     "InpCooldownMinutes": 20,

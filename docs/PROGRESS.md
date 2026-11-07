@@ -4552,13 +4552,19 @@ D1). Vẫn **không** biết bên nào khớp `ta.sar` (cần export TradingView
 hiệu ⇒ phải chạy lại toàn bộ ma trận đo. Trong tester lượt tự cài mất ~250 s (lịch sử bị nạp lại nhiều lần);
 trên chart chỉ tăng thêm mỗi nến mới.
 
-**Tối ưu hiệu năng (2026-11-06).** Bản đầu gọi `CopyRates(Bars())` + dựng lại toàn bộ chuỗi **mỗi lần
-OnCalculate** (theo từng tick) ⇒ dump M5 một-handle mất ~249 s. Bản tối ưu chỉ làm việc khi **có nến đóng mới**
-và chỉ sao thêm **đuôi** chuỗi (kèm 3 nến ngữ cảnh cho clamp); chuỗi bị nạp lại vẫn dựng lại một lần. Sau tối
-ưu: **100%** giữ nguyên (141.503 nến, max lệch 5e-9), dump M5 **249 s → 92 s** (baseline `iSAR` ~12 s).
+**Tối ưu hiệu năng (2026-11-06).** Ba vấn đề: (1) bản đầu sao `Bars()` + dựng lại chuỗi **mỗi lần OnCalculate**
+(theo từng tick) ⇒ dump M5 một-handle ~249 s; (2) bản "chỉ thêm đuôi" vẫn đánh địa chỉ theo **vị trí cửa sổ**,
+mà tester **chèn nến cũ vào đầu** ⇒ phải kiểm tra **theo thời gian**; (3) một off-by-one coi nến đang chạy là
+nến đã đóng. Bản cuối: **cache vòng neo đuôi** (O(1) mỗi nến, không dựng lại khi cửa sổ tái lập). Kiểm chứng:
+**100%** (141.503 nến, max lệch 5e-9), dump M5 **249 s → ~18–20 s** (baseline `iSAR` ~12 s). Kèm sửa
+`run_tester.ps1`: quét **mọi** agent Files dir (tester chọn agent 3000/3001 theo run) — trước đó archive rỗng dù
+CSV đã ghi.
 
-**Mặc định EA 2-mode đã đổi sang `WW_PSAR_BUILTIN`** (chủ sở hữu quyết) và **ma trận đo đang được chạy lại**;
-mọi số ở §73–§82 là của `iSAR` cho tới khi có bảng mới (tái lập bằng `InpPsarEngine=WW_PSAR_ISAR`).
+**CHƯA đổi được mặc định sang `WW_PSAR_BUILTIN`.** EA 2-mode tạo **6 handle** (M1…W1); một run với engine tự
+cài vẫn mất hàng chục phút (18,4 phút ở bản trước, >12 phút ở bản tối ưu) so với ~110 s của `iSAR` ⇒ ma trận 32
+run bất khả thi. **Mặc định giữ `iSAR`** (mọi số §73–§82 còn giá trị), giữ `InpPsarEngine` để chọn theo run.
+Việc còn lại: làm chuỗi tự cài rẻ hơn nữa với **cửa sổ lớn** (chi phí còn lại ở việc dựng lại chuỗi khi cửa sổ
+tái lập, không phải ở phép cộng dồn mỗi nến).
 
 ### 82.3 Trạng thái
 

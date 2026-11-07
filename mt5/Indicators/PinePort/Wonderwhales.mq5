@@ -156,12 +156,16 @@ void EnsureBuiltinPsar(const int rates_total,const datetime &time[],
       g_psar_count=0;
      }
 
-   if(g_psar_count==closed_count && time[last_idx]==g_psar_last_closed)
+   //--- Decisions are made BY TIME only. The tester prepends older bars while it
+   //--- loads history, which changes the window indices and the bar count without
+   //--- adding anything at the tail; comparing counts would force a full rebuild
+   //--- on every such reload.
+   if(g_psar_count>0 && time[last_idx]==g_psar_last_closed)
       return;                                    // nothing new
 
-   //--- Steady state: exactly one more bar closed since the last call.
-   const bool append=(g_psar_count==closed_count-1 && g_psar_count>=1 &&
-                      time[last_idx-1]==g_psar_last_closed);
+   //--- Steady state: the cached newest bar is now the second-newest window bar,
+   //--- so exactly one bar closed since the last call.
+   const bool append=(g_psar_count>0 && time[last_idx-1]==g_psar_last_closed);
 
    if(append)
      {
