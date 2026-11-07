@@ -4664,3 +4664,26 @@ chuẩn. Đã chạy hết, chia 5 chunk (~5,8 phút/run, tổng ~2,6 giờ). B�
 - Đòn bẩy đúng **không phải tham số**: bước hợp lý tiếp theo là **mở rộng mẫu** (lịch sử dài hơn) hoặc đổi
   định nghĩa entry — không phải tinh chỉnh tiếp.
 - Parity Pine ↔ MT5 vẫn `BLOCKED`; bot `NOT_RUN`; profit `UNPROVEN`.
+
+## 85. Wonderwhales — port check đủ 3 khung + bỏ sentinel (task M, phụ) — 2026-11-07
+
+Mở rộng cross-implementation từ M5 sang **cả ba khung** EA dùng (engine tự cài):
+
+| Khung | Nến so | `sar_dir` / tín hiệu / blocked | `psar` (≤1e-4) |
+|---|---:|---:|---:|
+| M15 | 43.865 | **100%** | 100% (max 5e-9) |
+| M5 | 141.503 | **100%** | 100% (max 5e-9) |
+| M1 | 703.411 | **100%** | 100% (max 5e-9) |
+
+**Phát hiện phụ:** nến cũ hơn vùng cache (cache neo đuôi; cửa sổ M1/M15 rất lớn) bị indicator ghi `EMPTY_VALUE`
+(DBL_MAX); EA dump in nguyên chuỗi số khổng lồ đó và trình đọc CSV parse thành ~`1.76e+308`. Đã sửa cả hai phía:
+`WonderwhalesDumpTesterEA::PriceText` bỏ trống khi `|price|>1e12`; `compare_wonderwhales_bars.py::_to_number`
+coi `|v|>1e12` là **thiếu**. Trước khi sửa, sentinel bị đọc thành số và tạo "chênh lệch" giả (max ~1e287,
+M15 tụt còn 96,7% hướng) — sau khi sửa là 100%.
+
+Thêm scenario `portref_dump_{m1,m15}_builtin`; test tooling cập nhật (9 test).
+
+### 85.1 Nhãn trung thực
+
+Vẫn là `CROSS_IMPLEMENTATION` (không phải parity với TradingView); parity vẫn `BLOCKED`, bot `NOT_RUN`,
+profit `UNPROVEN`.

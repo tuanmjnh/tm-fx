@@ -92,13 +92,15 @@ def scenarios() -> list[tuple[str, str, str, dict]]:
         inputs["InpOutputFile"] = f"sim_{name}.csv"
         out.append((name, "WonderwhalesDumpTesterEA", tf, inputs))
 
-    #--- Same run on M5 but with the self-implemented PSAR, so the port check can
-    #--- confirm the indicator implements that recurrence consistently.
-    name = "portref_dump_m5_builtin"
-    inputs = dict(DUMP_INPUTS)
-    inputs["InpPsarEngine"] = 1
-    inputs["InpOutputFile"] = f"sim_{name}.csv"
-    out.append((name, "WonderwhalesDumpTesterEA", "M5", inputs))
+    #--- Same runs with the self-implemented PSAR, so the port check can confirm
+    #--- the indicator implements that recurrence on every timeframe the 2-mode EA
+    #--- uses (M1/M5/M15).
+    for tf in TIMEFRAMES:
+        name = f"portref_dump_{tf.lower()}_builtin"
+        inputs = dict(DUMP_INPUTS)
+        inputs["InpPsarEngine"] = 1
+        inputs["InpOutputFile"] = f"sim_{name}.csv"
+        out.append((name, "WonderwhalesDumpTesterEA", tf, inputs))
     return out
 
 

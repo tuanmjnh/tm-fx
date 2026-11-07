@@ -53,7 +53,15 @@ NUMERIC_FIELDS = ("psar", "fast", "slow")
 
 
 def _to_number(series: pd.Series) -> pd.Series:
-    return pd.to_numeric(series.replace("", np.nan), errors="coerce")
+    """Parse to float, treating blanks and implausible magnitudes as missing.
+
+    An MQL5 EMPTY_VALUE (DBL_MAX) can survive a round trip as a huge float rather
+    than as an empty field, and an XAU price is never near 1e12, so anything that
+    large is really "no value" and must not be compared.
+    """
+
+    numeric = pd.to_numeric(series.replace("", np.nan), errors="coerce")
+    return numeric.mask(numeric.abs() > 1.0e12, np.nan)
 
 
 def explain(report: dict) -> str:

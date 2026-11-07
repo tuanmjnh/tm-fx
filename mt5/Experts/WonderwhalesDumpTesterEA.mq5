@@ -54,7 +54,9 @@ string TimeframeName(const ENUM_TIMEFRAMES timeframe)
 
 string PriceText(const double price)
   {
-   if(price==EMPTY_VALUE || !MathIsValidNumber(price))
+   //--- EMPTY_VALUE (DBL_MAX) and anything unrealistic are written as blank: a
+   //--- sentinel in the CSV is indistinguishable from data once parsed.
+   if(price==EMPTY_VALUE || !MathIsValidNumber(price) || MathAbs(price)>1.0e12)
       return("");
    return(DoubleToString(price,8));
   }

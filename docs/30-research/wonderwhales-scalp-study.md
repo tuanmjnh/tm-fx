@@ -275,6 +275,19 @@ Kết quả sau khi sửa (`portref_dump_m5_builtin`, XAUUSDm M5 2024-01→2025-
 `iSAR` (mục 11.1) là **khác biệt thuật toán thật giữa `iSAR` của MT5 và PSAR chuẩn/Pine**, đã được chứng minh
 từ **cả hai phía** — đúng rủi ro D1. Vẫn **không** biết bên nào khớp `ta.sar` của TradingView (cần export thật).
 
+Kiểm chứng trên **cả ba khung** mà EA dùng (engine tự cài):
+
+| Khung | Nến so | `sar_dir` / tín hiệu / blocked | `psar` (≤1e-4) | `fast`/`slow` |
+|---|---:|---:|---:|---:|
+| M15 | 43.865 | 100% | 100% (max 5e-9) | 100% |
+| M5 | 141.503 | 100% | 100% (max 5e-9) | 100% |
+| M1 | 703.411 | 100% | 100% (max 5e-9) | 100% |
+
+Phát hiện phụ khi mở rộng sang M1/M15: những nến **cũ hơn vùng cache** (cache neo đuôi, còn cửa sổ M1/M15 rất
+lớn) bị indicator ghi `EMPTY_VALUE` (DBL_MAX). Đã sửa **cả hai phía**: EA dump không ghi sentinel
+(`|price|>1e12` → bỏ trống) và comparator coi mọi giá trị `|v|>1e12` là **thiếu** thay vì so sánh. Trước khi
+sửa, sentinel đó bị đọc thành số và tạo ra "chênh lệch" giả (max ~1e287).
+
 Trạng thái: `WW_PSAR_BUILTIN` **vẫn không phải mặc định** (mặc định `iSAR`, hành vi ship không đổi). Khi bật,
 indicator in `WONDERWHALES|INFO|psar_engine_builtin|port_check=100pct...`. Đổi engine mặc định là **quyết định
 riêng** vì nó đổi **mọi** tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo.
