@@ -4582,3 +4582,46 @@ tái lập, không phải ở phép cộng dồn mỗi nến).
 - Parity Pine ↔ MT5 vẫn `BLOCKED`; bot `NOT_RUN`; profit `UNPROVEN`.
 - Nhánh PSAR tự cài đã kiểm chứng **là bản cài đúng của thuật toán đã chọn**; điều **chưa** biết là liệu thuật
   toán đó có khớp `ta.sar` của TradingView hay không — chỉ export thật mới trả lời được.
+
+## 83. Wonderwhales 2-mode — engine PSAR đổi hẳn kết luận (task M, tiếp) — 2026-11-07
+
+### 83.1 Tối ưu cuối cùng
+
+Cache PSAR tự cài được sửa lần cuối: **truy tìm nến cuối theo THỜI GIAN** quanh đuôi cửa sổ thay vì so
+`time[last_idx-1]`, vì tester **chèn nến cũ vào đầu** khi nạp lịch sử nên chỉ số cửa sổ luôn dịch. Quét lùi tối
+đa 5000 nến hấp thụ mọi lần chèn trong vài vòng lặp, đồng thời xử lý luôn khoảng trống cuối tuần/ngày lễ; chỉ
+dựng lại khi nến đã cache **biến mất** khỏi cửa sổ (reload thật).
+
+Thời gian run EA 2-mode (6 handle): **18,4 phút → >12 phút → 348 s (~5,8 phút)**; `iSAR` ~110 s.
+Kiểm chứng lại: **100%** (141.503 nến, max lệch 5e-9).
+
+Kèm sửa `scripts/tester/run_tester.ps1` (quét **mọi** agent Files dir): trước đó archive rỗng dù CSV đã ghi,
+vì tester dùng agent 3000/3001 tuỳ run.
+
+### 83.2 Kết quả 6 cấu hình chính với engine `BUILTIN` (`NOT_STRATEGY_RESULT`)
+
+| Cấu hình | `iSAR`: lệnh / net / exp R / PF | `BUILTIN`: lệnh / net / exp R / PF |
+|---|---|---|
+| `is_a` baseline | 21 / −988,62 / −0,32 / 0,56 | **22 / +339,41 / +0,11 / 1,19** |
+| `oos_a` baseline | 25 / −85,45 / −0,01 / 0,96 | **30 / +259,41 / +0,08 / 1,11** |
+| `is_gate_w5` | 282 / −4.287,54 / −0,10 / 0,83 | 297 / −2.244,07 / −0,05 / 0,92 |
+| `oos_gate_w5` | 298 / +2.601,60 / +0,06 / 1,10 | 309 / +2.790,50 / +0,07 / 1,10 |
+| `is_combo_c5` | 854 / +4.207,65 / +0,03 / 1,06 | 894 / +2.068,59 / +0,02 / 1,03 |
+| `oos_combo_c5` | 841 / +2.517,92 / +0,02 / 1,03 | 885 / +1.034,02 / +0,01 / 1,01 |
+
+**Đọc:** với PSAR chuẩn/Pine, **baseline (không nới cửa sổ) dương ở CẢ HAI cửa sổ** (+0,11R IS / +0,08R OOS),
+còn với `iSAR` nó âm ở cả hai; và **nới cửa sổ trở nên kém hơn baseline**. ⇒ Phần lớn "cải thiện" ở §75–§77
+trước đây là **bù đắp cho PSAR của iSAR**, không phải edge thật của tín hiệu. Đây là lý do engine quan trọng hơn
+mọi tham số đã tinh chỉnh.
+
+**Cảnh báo trung thực:** arm A chỉ **22–30 lệnh** (IS vẫn `INSUFFICIENT_SAMPLE`), PF 1,11–1,19 vừa phải, mọi
+thứ vẫn parity OFF, và chỉ **6/32** cấu hình đã chạy lại ⇒ **không** phải bằng chứng lợi nhuận và **không** đủ
+để đổi mặc định engine.
+
+### 83.3 Trạng thái
+
+- Mặc định ship **giữ `iSAR`** (mọi số §73–§82 còn giá trị); `InpPsarEngine` cho phép chọn `BUILTIN` theo run.
+- Archive trong `reports/` (gitignored) hiện **trộn hai engine**; bảng iSAR gốc ở
+  `reports/build/measure_summary_isar_engine.txt`.
+- Việc còn lại (chờ quyết định): chạy **đủ 32 run** với `BUILTIN` (~3 giờ) để có bảng đầy đủ và so sánh từng
+  đòn bẩy; hoặc chuyển sang đổi **định nghĩa entry**.

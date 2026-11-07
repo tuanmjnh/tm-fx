@@ -298,10 +298,32 @@ một run với engine tự cài vẫn mất **hàng chục phút** (đo đượ
 so với **~110 s** của `iSAR` — nên ma trận 32 run là bất khả thi. **Mặc định giữ `iSAR`**, giữ input
 `InpPsarEngine` để chọn theo run.
 
-Kết quả đã đạt được cho engine tự cài: **khớp 100% bản Python độc lập** (141.503 nến, max lệch 5e-9) và dump
-M5 **một handle nhanh ~18–20 s** (baseline `iSAR` ~12 s). Phần còn lại để đổi được mặc định: làm chuỗi tự cài rẻ
-hơn nữa với **cửa sổ lớn** (M1 ~1 triệu nến × nhiều handle) — chi phí còn lại nằm ở việc dựng lại chuỗi khi cửa
-sổ bị tái lập, không phải ở phép cộng dồn mỗi nến.
+Kết quả đã đạt được cho engine tự cài: **khớp 100% bản Python độc lập** (141.503 nến, max lệch 5e-9); dump M5
+một handle **~18–20 s**; sau khi truy tìm đuôi cache **theo thời gian** (bù việc tester chèn nến cũ vào đầu),
+một run EA 2-mode còn **348 s (~5,8 phút)** so với **~110 s** của `iSAR` — vẫn ~3×, nên ma trận 32 run (~3 giờ)
+mới chỉ chạy **6 cấu hình chính**.
+
+### 11.4 Đổi engine ĐỔI HẲN kết luận (6 cấu hình chính, `NOT_STRATEGY_RESULT`)
+
+| Cấu hình | `iSAR`: lệnh / net / exp R / PF | `BUILTIN`: lệnh / net / exp R / PF |
+|---|---|---|
+| `is_a` baseline | 21 / −988,62 / −0,32 / 0,56 | **22 / +339,41 / +0,11 / 1,19** |
+| `oos_a` baseline | 25 / −85,45 / −0,01 / 0,96 | **30 / +259,41 / +0,08 / 1,11** |
+| `is_gate_w5` | 282 / −4.287,54 / −0,10 / 0,83 | 297 / −2.244,07 / −0,05 / 0,92 |
+| `oos_gate_w5` | 298 / +2.601,60 / +0,06 / 1,10 | 309 / +2.790,50 / +0,07 / 1,10 |
+| `is_combo_c5` | 854 / +4.207,65 / +0,03 / 1,06 | 894 / +2.068,59 / +0,02 / 1,03 |
+| `oos_combo_c5` | 841 / +2.517,92 / +0,02 / 1,03 | 885 / +1.034,02 / +0,01 / 1,01 |
+
+**Đọc:** với PSAR chuẩn/Pine, **baseline (không nới cửa sổ) dương ở CẢ HAI cửa sổ** (+0,11R / +0,08R), trong
+khi với `iSAR` nó âm ở cả hai; và việc **nới cửa sổ trở nên kém hơn baseline**. Nghĩa là phần lớn "cải thiện"
+ở mục 6.2 trước đây là **bù đắp cho PSAR của iSAR**, không phải edge của tín hiệu.
+
+**Cảnh báo:** arm A chỉ có **22–30 lệnh** (IS vẫn `INSUFFICIENT_SAMPLE`), PF 1,11–1,19 là vừa phải, mọi thứ vẫn
+parity OFF (`NOT_STRATEGY_RESULT`), và chỉ 6/32 cấu hình được chạy lại. **Không** được coi đây là bằng chứng lợi
+nhuận, và **không** đủ để đổi mặc định engine.
+
+Lưu ý vận hành: các archive trong `reports/` (gitignored) hiện **trộn hai engine** — 6 scenario chính là
+`BUILTIN`, phần còn lại là `iSAR`; bảng iSAR gốc được giữ ở `reports/build/measure_summary_isar_engine.txt`.
 
 ## 12. Artefact
 
