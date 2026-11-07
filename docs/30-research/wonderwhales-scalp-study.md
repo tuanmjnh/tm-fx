@@ -325,6 +325,37 @@ nhuận, và **không** đủ để đổi mặc định engine.
 Lưu ý vận hành: các archive trong `reports/` (gitignored) hiện **trộn hai engine** — 6 scenario chính là
 `BUILTIN`, phần còn lại là `iSAR`; bảng iSAR gốc được giữ ở `reports/build/measure_summary_isar_engine.txt`.
 
+### 11.5 Ma trận đầy đủ (32 run) với engine `BUILTIN`
+
+Đã chạy lại **cả 32** scenario với `InpPsarEngine=1` (~5,8 phút/run). Bảng đầy đủ ở
+`reports/build/measure_summary_builtin_engine.txt`; các mốc chính (exp R — số dương in đậm):
+
+| Nhóm | IS (exp R) | OOS (exp R) |
+|---|---|---|
+| **baseline `(1,1)`** = `a` = `w1` = `s1` | **+0,11** (22 lệnh, `INSUFFICIENT_SAMPLE`) | **+0,08** (30 lệnh) |
+| trailing `b`/`c`/`d` | +0,11 / +0,07 / +0,07 | +0,01 / +0,01 / +0,01 |
+| trigger `w5` | −0,05 | +0,07 |
+| setup `s5` | −0,11 | −0,02 |
+| combo `(5,5)` | +0,02 | +0,01 |
+| geom `tp10/125/15/20` trên `(1,5)` | −0,04 / −0,05 / −0,05 / −0,04 | −0,02 / +0,01 / +0,07 / **+0,12** |
+| qual `q1` vs `q0` | +0,02 vs +0,02 | +0,01 vs +0,01 |
+
+**Kết luận (trung thực):**
+
+1. **Không đòn bẩy nào thắng baseline** dưới engine chuẩn. Nới cửa sổ trigger/setup, tổ hợp `(5,5)` — tất cả
+   đều **kém hơn** `(1,1)`; trailing/break-even vẫn không đổi kết cục lệnh; bộ lọc chất lượng vẫn vô tác dụng.
+2. **Baseline `(1,1)` là cấu hình duy nhất dương ở cả hai cửa sổ** (+0,11R / +0,08R) — đúng như bảng 11.4.
+3. Nhưng **mẫu quá nhỏ để kết luận edge**: 22 lệnh ở IS (`INSUFFICIENT_SAMPLE`) và 30 ở OOS, PF 1,11–1,19.
+   Với `InpScalpTriggerWindowBars=1` (mặc định), ~19 tín hiệu/năm là **thiết kế**, nên 1,5 năm in-sample chỉ có
+   ~22 lệnh. Muốn tăng mẫu phải **kéo dài cửa sổ đo**, không phải nới cổng tín hiệu (chính việc nới cổng làm
+   edge biến mất).
+4. `oos_geom_tp20` (+0,12R, PF 1,18) là điểm sáng duy nhất về OOS, nhưng IS của nó là −0,04 ⇒ **không nhất
+   quán**, đúng như kết luận hình học TP ở mục 6.3.
+
+Nghĩa là: dưới engine chuẩn, **đòn bẩy đúng không phải tham số** — hoặc tín hiệu này không có edge đủ lớn, hoặc
+mẫu hiện tại chưa đủ để nhìn thấy nó. Bước hợp lý tiếp theo là **mở rộng mẫu** (lịch sử dài hơn) chứ không phải
+tinh chỉnh tiếp.
+
 ## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —

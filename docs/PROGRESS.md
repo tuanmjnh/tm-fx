@@ -4625,3 +4625,42 @@ thứ vẫn parity OFF, và chỉ **6/32** cấu hình đã chạy lại ⇒ **k
   `reports/build/measure_summary_isar_engine.txt`.
 - Việc còn lại (chờ quyết định): chạy **đủ 32 run** với `BUILTIN` (~3 giờ) để có bảng đầy đủ và so sánh từng
   đòn bẩy; hoặc chuyển sang đổi **định nghĩa entry**.
+
+## 84. Wonderwhales 2-mode — ma trận đầy đủ 32 run với PSAR chuẩn (task M, chốt) — 2026-11-07
+
+Chủ sở hữu chốt: chạy **đủ 32 run** với `InpPsarEngine=1` (PSAR tự cài/chuẩn) để so từng đòn bẩy dưới engine
+chuẩn. Đã chạy hết, chia 5 chunk (~5,8 phút/run, tổng ~2,6 giờ). Bảng đầy đủ:
+`reports/build/measure_summary_builtin_engine.txt` (gitignored). Bảng iSAR cũ:
+`reports/build/measure_summary_isar_engine.txt`.
+
+### 84.1 Các mốc chính (exp R; dương in đậm)
+
+| Nhóm | IS | OOS |
+|---|---|---|
+| **baseline `(1,1)`** = `a` = `w1` = `s1` | **+0,11** (22 lệnh, `INSUFFICIENT_SAMPLE`) | **+0,08** (30 lệnh) |
+| trailing `b`/`c`/`d` | +0,11 / +0,07 / +0,07 | +0,01 / +0,01 / +0,01 |
+| trigger `w5` | −0,05 | +0,07 |
+| setup `s5` | −0,11 | −0,02 |
+| combo `(5,5)` | +0,02 | +0,01 |
+| geom `tp10/125/15/20` trên `(1,5)` | −0,04 / −0,05 / −0,05 / −0,04 | −0,02 / +0,01 / +0,07 / **+0,12** |
+| qual `q1` vs `q0` | +0,02 vs +0,02 | +0,01 vs +0,01 |
+
+### 84.2 Kết luận
+
+1. **Không đòn bẩy nào thắng baseline dưới engine chuẩn**: nới cửa sổ (trigger/setup) và tổ hợp `(5,5)` đều
+   **kém hơn** `(1,1)`; trailing/BE vẫn không đổi kết cục lệnh; bộ lọc chất lượng vẫn vô tác dụng.
+2. **Baseline `(1,1)` là cấu hình duy nhất dương ở cả hai cửa sổ** (+0,11R / +0,08R) — khớp §83.2.
+3. **Mẫu quá nhỏ để kết luận edge**: 22 lệnh IS (`INSUFFICIENT_SAMPLE`) và 30 lệnh OOS, PF 1,11–1,19. Với
+   `InpScalpTriggerWindowBars=1` (mặc định), ~19 tín hiệu/năm là **thiết kế** ⇒ 1,5 năm in-sample chỉ ~22 lệnh.
+   Muốn tăng mẫu phải **kéo dài cửa sổ đo**, không phải nới cổng tín hiệu.
+4. `oos_geom_tp20` (+0,12R, PF 1,18) sáng nhất ở OOS nhưng IS là −0,04 ⇒ **không nhất quán**, khớp kết luận
+   hình học TP ở §78.
+5. Toàn bộ vẫn **`NOT_STRATEGY_RESULT`** (parity OFF). Không đủ để đổi mặc định engine.
+
+### 84.3 Trạng thái
+
+- **Mặc định ship giữ `iSAR`**; `InpPsarEngine` cho phép chọn `BUILTIN` theo run. Preset/validator trở về
+  `InpPsarEngine=0`.
+- Đòn bẩy đúng **không phải tham số**: bước hợp lý tiếp theo là **mở rộng mẫu** (lịch sử dài hơn) hoặc đổi
+  định nghĩa entry — không phải tinh chỉnh tiếp.
+- Parity Pine ↔ MT5 vẫn `BLOCKED`; bot `NOT_RUN`; profit `UNPROVEN`.
