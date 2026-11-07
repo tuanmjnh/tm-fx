@@ -156,30 +156,38 @@ void EnsureBuiltinPsar(const int rates_total,const datetime &time[],
       g_psar_count=0;
      }
 
-   //--- Decisions are made BY TIME only. The tester prepends older bars while it
-   //--- loads history, which changes the window indices and the bar count without
-   //--- adding anything at the tail; comparing counts would force a full rebuild
-   //--- on every such reload.
-   if(g_psar_count>0 && time[last_idx]==g_psar_last_closed)
-      return;                                    // nothing new
-
-   //--- Steady state: the cached newest bar is now the second-newest window bar,
-   //--- so exactly one bar closed since the last call.
-   const bool append=(g_psar_count>0 && time[last_idx-1]==g_psar_last_closed);
-
-   if(append)
+   //--- Locate the cached newest bar BY TIME. The tester prepends older bars while
+   //--- it loads history, so its window index keeps moving; a short backward scan
+   //--- absorbs that without ever rebuilding. The scan also covers a multi-bar gap
+   //--- (weekend/holiday) by pushing every bar in between.
+   if(g_psar_count>0)
      {
-      PsarRestoreFromNewest();
-      const bool two=(last_idx>=2);
-      const double sar=WwPsarStep(two ? high[last_idx-2] : high[last_idx-1],
-                                  two ? low[last_idx-2]  : low[last_idx-1],
-                                  high[last_idx-1],low[last_idx-1],
-                                  high[last_idx],low[last_idx],
-                                  g_cfg.psar_start,g_cfg.psar_inc,
-                                  g_cfg.psar_max,g_psar_state);
-      PsarPush(sar,g_psar_state);
-      g_psar_last_closed=time[last_idx];
-      return;
+      const int scan_limit=MathMax(0,last_idx-5000);
+      int pos=-1;
+      for(int i=last_idx; i>=scan_limit; i--)
+         if(time[i]==g_psar_last_closed)
+           {
+            pos=i;
+            break;
+           }
+      if(pos==last_idx)
+         return;                                 // nothing new
+      if(pos>=0)
+        {
+         for(int i=pos+1; i<=last_idx; i++)
+           {
+            PsarRestoreFromNewest();
+            const bool two=(i>=2);
+            const double sar=WwPsarStep(two ? high[i-2] : high[i-1],
+                                        two ? low[i-2]  : low[i-1],
+                                        high[i-1],low[i-1],high[i],low[i],
+                                        g_cfg.psar_start,g_cfg.psar_inc,
+                                        g_cfg.psar_max,g_psar_state);
+            PsarPush(sar,g_psar_state);
+           }
+         g_psar_last_closed=time[last_idx];
+         return;
+        }
      }
 
    //--- Otherwise rebuild the window's closed bars from scratch.
