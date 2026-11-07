@@ -45,13 +45,12 @@ input long   InpMagicNumber         = 25008001;
 input int    InpMaxSlippagePoints   = 30;
 input ENUM_WW2_MODE InpTradingMode  = WW2_SCALP;   // active strategy (SIGNAL_ONLY = observe)
 input ENUM_WW_MODE  InpSignalMode   = WW_MODE_SAR_EMA; // indicator signal mode
-//--- PSAR engine fed to the indicator. ISAR is MT5's built-in and the shipped
-//--- default, so every measurement in docs/PROGRESS.md section 73-82 stays valid.
-//--- BUILTIN is the self-implemented Wilder recurrence (validated 2026-11-06:
-//--- 100% match with the independent Python port over 141503 M5 bars); it differs
-//--- from iSAR on ~2.3% of directions and is much slower inside the tester, so
-//--- switching the default requires re-running the whole matrix first.
-input ENUM_WW_PSAR  InpPsarEngine   = WW_PSAR_ISAR; // PSAR engine
+//--- PSAR engine fed to the indicator. BUILTIN is the self-implemented Wilder
+//--- recurrence: validated 2026-11-06 against the independent Python port (100%
+//--- of 141503 M5 bars) and the owner's choice as the default. ISAR falls back to
+//--- MT5's iSAR, which differs on ~2.3% of directions; the measurements in
+//--- docs/PROGRESS.md sections 73-82 were taken with ISAR.
+input ENUM_WW_PSAR  InpPsarEngine   = WW_PSAR_BUILTIN; // PSAR engine
 
 //--- 02 Risk ------------------------------------------------------
 input group "02 Risk"

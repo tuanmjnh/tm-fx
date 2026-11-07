@@ -279,12 +279,15 @@ Trạng thái: `WW_PSAR_BUILTIN` **vẫn không phải mặc định** (mặc đ
 indicator in `WONDERWHALES|INFO|psar_engine_builtin|port_check=100pct...`. Đổi engine mặc định là **quyết định
 riêng** vì nó đổi **mọi** tín hiệu ⇒ phải chạy lại toàn bộ ma trận đo.
 
-**Đã thử đổi mặc định + chạy lại ma trận — CHẶN bởi hiệu năng.** EA 2-mode tạo **6 handle** (M1…W1); mỗi
-handle tự cài gọi `CopyRates(Bars())` và dựng lại toàn bộ chuỗi mỗi khi tester nạp lại lịch sử, nên một run
-kéo dài hàng chục phút (M1 có ~1 triệu nến) — 32 run là bất khả thi. Đã **trả EA về mặc định `iSAR`** (giữ
-input `InpPsarEngine` để chọn theo run) để mọi đo lường ở mục 6–7 vẫn còn giá trị. Việc cần làm **trước** khi
-đổi mặc định: tối ưu chuỗi tự cài cho tester — neo cache theo **đuôi** chuỗi (chỉ cộng thêm nến mới) thay vì
-dựng lại toàn bộ khi lịch sử bị nạp trước; trên chart thời gian thực hiện tại đã rẻ (chỉ thêm mỗi nến mới).
+**Đã tối ưu hiệu năng (2026-11-06).** Bản đầu gọi `CopyRates(Bars())` và dựng lại toàn bộ chuỗi **mỗi lần
+OnCalculate** (chạy theo từng tick), nên một run M5 một-handle mất ~249 s. Bản tối ưu chỉ làm việc khi **có
+nến đóng mới** và chỉ sao thêm **phần đuôi** (kèm 3 nến ngữ cảnh cho clamp hai nến); chuỗi bị nạp lại vẫn
+dựng lại một lần. Sau tối ưu: **100%** vẫn giữ nguyên (141.503 nến, max lệch 5e-9) và thời gian dump M5 giảm
+**249 s → 92 s** (baseline `iSAR` cùng dump ~12 s).
+
+**Mặc định của EA 2-mode đã đổi sang `WW_PSAR_BUILTIN`** (quyết định của chủ sở hữu) và ma trận đo đang được
+chạy lại; **mọi số ở mục 6–7 là của engine `iSAR`** cho tới khi có bảng mới. Muốn tái lập chúng, đặt
+`InpPsarEngine=WW_PSAR_ISAR`.
 
 ## 12. Artefact
 

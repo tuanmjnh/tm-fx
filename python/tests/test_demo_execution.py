@@ -124,9 +124,10 @@ def test_ww2_event_windows_default_preserve_behaviour() -> None:
     #--- The SAR quality filter is off by default: it may only be enabled from
     #--- measured evidence, never as a shipped default.
     assert config["inputs"]["InpScalpRequireSarAgree"] is False
-    #--- The 2-mode demo still ships MT5's iSAR: the validated self-implemented
-    #--- PSAR is opt-in until the whole measurement matrix is re-run with it.
-    assert config["inputs"]["InpPsarEngine"] == 0
+    #--- The 2-mode demo ships the self-implemented PSAR, validated against the
+    #--- independent port on 141503 bars. ISAR remains available via the input but
+    #--- then the measurements in PROGRESS sections 73-82 no longer apply.
+    assert config["inputs"]["InpPsarEngine"] == 1
     assert validate_preset(config) == []
 
 

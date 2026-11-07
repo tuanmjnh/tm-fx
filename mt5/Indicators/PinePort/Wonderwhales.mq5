@@ -61,17 +61,19 @@ double g_bb_lower[];
 double g_vol_ma[];
 double g_vol_ratio[];
 
-//--- Built-in PSAR cache (only used when InpPsarEngine == WW_PSAR_BUILTIN).
-//--- The per-bar state is kept so the last closed bar can be recomputed with its
-//--- final OHLC: the forming bar keeps changing, and PSAR's state is persistent,
-//--- so including it would corrupt every later value.
-double       g_psar_builtin[];
+//--- Built-in PSAR cache. It is a CIRCULAR buffer anchored to the END of the
+//--- series (slot 0 behind g_psar_head = the last closed bar), so new bars are an
+//--- O(1) push and a re-based series (the tester loads older bars as it runs)
+//--- needs no rebuild at all. The per-bar state is stored so the recurrence can
+//--- continue without recomputation.
+double       g_psar_value[];
 double       g_psar_up[];
-double       g_psar_ep[];
-double       g_psar_af[];
-int          g_psar_ready=0;         // bars valid up to (excluding) this index
-int          g_psar_total=0;         // series length the cache was built for
-datetime     g_psar_last_closed=0;   // last closed bar the cache covers
+double       g_psar_extreme[];
+double       g_psar_accel[];
+int          g_psar_cap=0;
+int          g_psar_head=-1;
+int          g_psar_count=0;
+datetime     g_psar_last_closed=0;
 WwPsarState  g_psar_state;
 
 int g_sar_handle=INVALID_HANDLE;
@@ -89,8 +91,7 @@ WwConfig g_cfg;
 //--- iSAR sub-indicator is computed over the full history; the built-in series
 //--- must cover the same range, so it is built from CopyRates and read with this
 //--- offset. Returns -1 when the series is not available yet.
-int g_psar_offset=-1;
-datetime g_psar_first_time=0;
+
 
 //--- Extend the built-in PSAR cache up to the terminal's full series. The
 //--- recurrence is sequential, so it is computed once per bar and only the new
@@ -100,97 +101,100 @@ datetime g_psar_first_time=0;
 //--- whole series on every tick was the reason the built-in engine was ~20x
 //--- slower in the tester). A re-based series (reload, or older bars prepended
 //--- while the tester loads history) forces one full rebuild.
-void EnsureBuiltinPsar(const int rates_total)
+//--- Slot of the value `back` bars behind the newest cached bar.
+double PsarCached(const int back)
   {
-   const int total=Bars(_Symbol,_Period);
-   if(total<2)
+   if(g_psar_cap<=0 || back<0 || back>=g_psar_count)
+      return(EMPTY_VALUE);
+   const int slot=((g_psar_head-back)%g_psar_cap+g_psar_cap)%g_psar_cap;
+   return(g_psar_value[slot]);
+  }
+
+void PsarPush(const double value,const WwPsarState &state)
+  {
+   if(g_psar_cap<=0)
+      return;
+   g_psar_head=(g_psar_head+1)%g_psar_cap;
+   g_psar_value[g_psar_head]=value;
+   g_psar_up[g_psar_head]=(state.up ? 1.0 : 0.0);
+   g_psar_extreme[g_psar_head]=state.extreme;
+   g_psar_accel[g_psar_head]=state.accel;
+   if(g_psar_count<g_psar_cap)
+      g_psar_count++;
+  }
+
+void PsarRestoreFromNewest(void)
+  {
+   g_psar_state.up=(g_psar_up[g_psar_head]>0.5);
+   g_psar_state.extreme=g_psar_extreme[g_psar_head];
+   g_psar_state.accel=g_psar_accel[g_psar_head];
+   g_psar_state.sar=g_psar_value[g_psar_head];
+  }
+
+//--- Keep the cache covering the window's CLOSED bars: indices 0..rates_total-2.
+//--- The tester prepends older bars as it loads history, so a bar's window index is
+//--- not stable; the tail is therefore validated BY TIME. In the steady state one
+//--- bar closes per call and the work is O(1); a gap or a reload reseeds once.
+void EnsureBuiltinPsar(const int rates_total,const datetime &time[],
+                       const double &high[],const double &low[],
+                       const double &close[])
+  {
+   const int last_idx=rates_total-2;             // last CLOSED bar; rates_total-1 is forming
+   if(last_idx<1)
+      return;
+
+   const int closed_count=last_idx+1;
+
+   if(g_psar_cap<closed_count)
      {
-      g_psar_offset=-1;
+      g_psar_cap=closed_count+64;
+      ArrayResize(g_psar_value,g_psar_cap);
+      ArrayResize(g_psar_up,g_psar_cap);
+      ArrayResize(g_psar_extreme,g_psar_cap);
+      ArrayResize(g_psar_accel,g_psar_cap);
+      g_psar_head=-1;
+      g_psar_count=0;
+     }
+
+   if(g_psar_count==closed_count && time[last_idx]==g_psar_last_closed)
+      return;                                    // nothing new
+
+   //--- Steady state: exactly one more bar closed since the last call.
+   const bool append=(g_psar_count==closed_count-1 && g_psar_count>=1 &&
+                      time[last_idx-1]==g_psar_last_closed);
+
+   if(append)
+     {
+      PsarRestoreFromNewest();
+      const bool two=(last_idx>=2);
+      const double sar=WwPsarStep(two ? high[last_idx-2] : high[last_idx-1],
+                                  two ? low[last_idx-2]  : low[last_idx-1],
+                                  high[last_idx-1],low[last_idx-1],
+                                  high[last_idx],low[last_idx],
+                                  g_cfg.psar_start,g_cfg.psar_inc,
+                                  g_cfg.psar_max,g_psar_state);
+      PsarPush(sar,g_psar_state);
+      g_psar_last_closed=time[last_idx];
       return;
      }
-   g_psar_offset=total-rates_total;
-   if(g_psar_offset<0)
-      g_psar_offset=0;
 
-   //--- Early-out on every tick: nothing to do until a new bar closes.
-   datetime time_buf[];
-   if(CopyTime(_Symbol,_Period,1,1,time_buf)!=1)
-      return;
-   if(time_buf[0]==g_psar_last_closed && g_psar_last_closed>0)
-      return;
-
-   datetime oldest[];
-   const datetime first_time=(CopyTime(_Symbol,_Period,total-1,1,oldest)==1
-                              ? oldest[0] : 0);
-   const int last_closed=total-1;               // first index NOT computed
-   const bool rebased=(first_time!=g_psar_first_time) ||
-                      (g_psar_total<=0) || (total<g_psar_total);
-
-   if(ArraySize(g_psar_builtin)<total)
-      ArrayResize(g_psar_builtin,total);
-   if(ArraySize(g_psar_up)<total)
+   //--- Otherwise rebuild the window's closed bars from scratch.
+   g_psar_head=-1;
+   g_psar_count=0;
+   WwPsarReset(high[0],low[0],close[0],close[1],g_cfg.psar_start,g_psar_state);
+   PsarPush(EMPTY_VALUE,g_psar_state);
+   for(int i=1; i<=last_idx; i++)
      {
-      ArrayResize(g_psar_up,total);
-      ArrayResize(g_psar_ep,total);
-      ArrayResize(g_psar_af,total);
+      PsarRestoreFromNewest();
+      const bool two=(i>=2);
+      const double sar=WwPsarStep(two ? high[i-2] : high[i-1],
+                                  two ? low[i-2]  : low[i-1],
+                                  high[i-1],low[i-1],high[i],low[i],
+                                  g_cfg.psar_start,g_cfg.psar_inc,
+                                  g_cfg.psar_max,g_psar_state);
+      PsarPush(sar,g_psar_state);
      }
-
-   MqlRates rates[];
-   ArraySetAsSeries(rates,false);
-   int rate_base=0;                             // absolute index of rates[0]
-   int start=1;
-
-   if(rebased)
-     {
-      if(CopyRates(_Symbol,_Period,0,total,rates)!=total)
-         return;
-      rate_base=0;
-      start=1;
-      g_psar_first_time=first_time;
-      g_psar_builtin[0]=EMPTY_VALUE;
-      WwPsarReset(rates[0].high,rates[0].low,rates[0].close,rates[1].close,
-                  g_cfg.psar_start,g_psar_state);
-     }
-   else
-     {
-      //--- Copy only the appended bars, plus three bars of context so the
-      //--- two-bar clamp of the first recomputed bar is fully available.
-      const int fresh=total-g_psar_total;
-      const int want=MathMin(total,fresh+3);
-      if(CopyRates(_Symbol,_Period,0,want,rates)!=want)
-         return;
-      rate_base=total-want;
-      start=MathMax(1,g_psar_ready);
-      g_psar_state.up=(g_psar_up[start-1]>0.5);
-      g_psar_state.extreme=g_psar_ep[start-1];
-      g_psar_state.accel=g_psar_af[start-1];
-      g_psar_state.sar=g_psar_builtin[start-1];
-     }
-
-   int computed_upto=start;
-   for(int i=start; i<last_closed; i++)
-     {
-      const int k=i-rate_base;                  // index into rates[]
-      if(k<1)
-         break;                                 // not enough context at all
-      //--- i==1 has no bar i-2; the clamp then uses low[i-1] only, exactly as
-      //--- the reference implementation does for the second bar.
-      const bool two=(k>=2);
-      g_psar_builtin[i]=WwPsarStep(two ? rates[k-2].high : rates[k-1].high,
-                                   two ? rates[k-2].low  : rates[k-1].low,
-                                   rates[k-1].high,rates[k-1].low,
-                                   rates[k].high,rates[k].low,
-                                   g_cfg.psar_start,g_cfg.psar_inc,
-                                   g_cfg.psar_max,g_psar_state);
-      g_psar_up[i]=(g_psar_state.up ? 1.0 : 0.0);
-      g_psar_ep[i]=g_psar_state.extreme;
-      g_psar_af[i]=g_psar_state.accel;
-      computed_upto=i+1;
-     }
-
-   g_psar_ready=computed_upto;
-   g_psar_total=total;
-   g_psar_last_closed=time_buf[0];
+   g_psar_last_closed=time[last_idx];
   }
 
 int OnInit()
@@ -356,7 +360,7 @@ int OnCalculate(const int rates_total,
          return(0);
      }
    else
-      EnsureBuiltinPsar(rates_total);
+      EnsureBuiltinPsar(rates_total,time,high,low,close);
 
    if(CopyBuffer(g_fast_handle,0,0,count,fast)!=count)
       return(0);
@@ -390,12 +394,8 @@ int OnCalculate(const int rates_total,
       double sar_val=EMPTY_VALUE;
       if(InpPsarEngine==WW_PSAR_ISAR)
          sar_val=sar[idx];
-      else if(g_psar_offset>=0)
-        {
-         const int bi=g_psar_offset+j;
-         if(bi<ArraySize(g_psar_builtin))
-            sar_val=g_psar_builtin[bi];
-        }
+      else
+         sar_val=PsarCached((rates_total-2)-j);
       const bool psar_valid=(MathIsValidNumber(sar_val) && sar_val>0.0);
 
       int dir_prev=0;
