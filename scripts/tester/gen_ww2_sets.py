@@ -229,12 +229,20 @@ LONG_WINDOW = ("2018.01.01", "2026.10.01")
 
 
 def long_scenarios() -> tuple:
-    """Baseline over the full available history, on the self-implemented PSAR."""
-    values = dict(MEASURE_BASE)
-    values["InpPsarEngine"] = 1
-    _check_measure_arm("ww2_meas_scalp_long_a", values)
-    return (("ww2_meas_scalp_long_a", "M5", LONG_WINDOW[0], LONG_WINDOW[1],
-             100000, values),)
+    """Baseline over the full available history, with and without the ATR filter.
+
+    The long window is the only one big enough to judge an entry change: ~19
+    signals a year means the 1.5-year in-sample window holds about 22 trades.
+    """
+    out = []
+    for tag, extra in (("a", {}), ("a_m3", {"InpSignalMode": 3})):
+        values = dict(MEASURE_BASE)
+        values["InpPsarEngine"] = 1
+        values.update(extra)
+        name = f"ww2_meas_scalp_long_{tag}"
+        _check_measure_arm(name, values)
+        out.append((name, "M5", LONG_WINDOW[0], LONG_WINDOW[1], 100000, values))
+    return tuple(out)
 
 
 def _check_measure_arm(name: str, values: dict) -> None:

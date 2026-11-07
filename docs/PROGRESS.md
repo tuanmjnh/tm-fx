@@ -4712,3 +4712,38 @@ engine tự cài trên **toàn bộ lịch sử có được**: XAUUSDm M5, **20
 - Hệ quả: **dừng tinh chỉnh tham số**. Chỉ còn hai hướng: đổi **định nghĩa entry** (tạo loại tín hiệu khác), hoặc
   chấp nhận kết luận âm và dừng.
 - Nhãn không đổi: `NOT_STRATEGY_RESULT` (parity OFF), parity `BLOCKED`, bot `NOT_RUN`, profit `UNPROVEN`.
+
+## 87. Wonderwhales 2-mode — mode ATR trên M5: cổng vô hiệu, 0 lệnh (task N) — 2026-11-07
+
+Thử thay đổi định nghĩa entry theo cách rẻ nhất: `InpSignalMode=3` (`WW_MODE_SAR_EMA_ATR`, thêm cổng biến động
+ATR — đã có sẵn trong contract đã kiểm chứng), chạy trên **cùng cửa sổ dài** để so với baseline 103 lệnh
+(`ww2_meas_scalp_long_a_m3`, 2018-2026, engine tự cài, 4.744 s ≈ 79 phút).
+
+### 87.1 Kết quả
+
+| Cấu hình (2018-2026) | Lệnh | Net (USD) | Exp (R) | PF |
+|---|---:|---:|---:|---:|
+| mode 2 SAR+EMA (baseline) | 103 | −420,77 | −0,02 | 0,95 |
+| **mode 3 SAR+EMA+ATR** (`InpMinAtrPct=0,5`) | **0** | 0,00 | — | — |
+
+### 87.2 Nguyên nhân (đo được)
+
+Cổng là `ATR% ≥ InpMinAtrPct = 0,5`, nhưng ATR% trên **XAUUSDm M5** (141.804 nến, lấy từ dump port-check):
+
+| percentile | 5% | 25% | 50% | 75% | 95% | max |
+|---|---:|---:|---:|---:|---:|---:|
+| ATR% | 0,032 | 0,051 | **0,069** | 0,098 | 0,169 | 0,550 |
+
+⇒ Ngưỡng `0,5` là mặc định **cấp D1/W1** (giá trị gốc của Pine) và trên M5 chặn **~100%** nến ⇒ mode 3 với mặc
+định là **ngõ cụt** trên Scalp. Muốn kiểm định giả thuyết ATR-regime trên M5 phải dùng ngưỡng theo thang M5
+(ví dụ `0,12`, ~tứ phân vị trên).
+
+**Bài học parity:** hằng số mặc định của Pine **không** tự động có nghĩa ở mọi khung. EA 2-mode Scalp dùng mode 2
+nên không bị ảnh hưởng, nhưng bật mode 3 với mặc định ⇒ bot im lặng vĩnh viễn.
+
+### 87.3 Trạng thái
+
+- Kết luận chính không đổi: tín hiệu như đang port **không có edge chứng minh được** trên 8,75 năm (§86).
+- Việc còn lại (chờ quyết định): chạy `mode 3` với `InpMinAtrPct` theo thang M5 (~0,12) trên cửa sổ dài (~79
+  phút) để kiểm định thật giả thuyết ATR-regime; hoặc chốt báo cáo và dừng.
+- Không đổi preset, không đổi mặc định engine. Parity `BLOCKED`, bot `NOT_RUN`, profit `UNPROVEN`.

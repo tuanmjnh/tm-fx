@@ -391,6 +391,30 @@ cửa sổ 1,5 năm chỉ có ~22 lệnh — **quá nhỏ để kết luận b�
 Hệ quả cho bước tiếp theo: **không tinh chỉnh tham số nữa**. Hoặc (a) thay đổi **định nghĩa entry** để tạo ra
 nhiều tín hiệu/loại tín hiệu khác, hoặc (b) chấp nhận kết luận "không có edge" và dừng.
 
+### 11.7 Thử đổi định nghĩa entry bằng mode ATR — và phát hiện cổng ATR vô hiệu trên M5
+
+Thử rẻ nhất: đổi `InpSignalMode` sang `WW_MODE_SAR_EMA_ATR` (3) — thêm cổng biến động ATR, đã có sẵn trong
+contract đã kiểm chứng. Chạy trên **cùng cửa sổ dài** để so với baseline 103 lệnh (run 79 phút):
+
+| Cấu hình (cửa sổ 2018-2026) | Lệnh | Net (USD) | Exp (R) | PF |
+|---|---:|---:|---:|---:|
+| mode 2 SAR+EMA (baseline) | 103 | −420,77 | −0,02 | 0,95 |
+| **mode 3 SAR+EMA+ATR** (`InpMinAtrPct=0,5`) | **0** | 0,00 | — | — |
+
+**0 lệnh trong 8,75 năm.** Nguyên nhân đo được: cổng là `ATR% ≥ InpMinAtrPct = 0,5`, nhưng phân bố ATR% trên
+XAUUSDm **M5** (141.804 nến) là:
+
+| percentile | 5% | 25% | 50% | 75% | 95% | max |
+|---|---:|---:|---:|---:|---:|---:|
+| ATR% | 0,032 | 0,051 | **0,069** | 0,098 | 0,169 | 0,550 |
+
+⇒ `0,5` là mặc định **cấp D1/W1** (giá trị gốc của Pine cho use-case khung cao); trên M5 nó chặn **~100%** nến.
+Muốn kiểm định giả thuyết "chỉ vào lệnh khi biến động đủ lớn" trên M5 phải đặt ngưỡng theo thang M5 — ví dụ
+`0,12` (khoảng tứ phân vị trên) để giữ ~25% nến mạnh nhất.
+
+Đây cũng là một bài học parity: hằng số mặc định của Pine **không** tự động có nghĩa ở mọi khung; EA 2-mode
+Scalp dùng mode 2 nên không bị ảnh hưởng, nhưng nếu ai bật mode 3 với mặc định thì bot sẽ im lặng mãi mãi.
+
 ## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —
