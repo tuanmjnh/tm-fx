@@ -500,8 +500,12 @@ Cổng tĩnh tại commit cuối: `validate-project checks=15 fail=0`, `validate
 ### 13.4 Việc còn lại (theo thứ tự khuyến nghị)
 
 1. **Parity** — export CSV reference thật từ TradingView (runbook: [`../10-bots/wonderwhales-2mode.md`](../10-bots/wonderwhales-2mode.md)
-   §5.3). Không có TradingView Pro thì **`CROSS_IMPLEMENTATION`** (§11) là mức kiểm chứng cao nhất hiện có, và nó
-   **không** được dùng để gỡ `InpRequireParity`.
+   §5.3). Phần chuẩn bị đã xong để việc này thành **drop-in một lệnh**:
+   `scripts/ww2_parity_check.py` kiểm tra trước (schema/`symbol`/`timeframe`/số tín hiệu), gọi comparator, và in
+   `ALLOW_FLIP`/`KEEP_BLOCKED` theo đúng luật quyết định đã chốt (kèm `ww2_parity_decision.txt`). Việc còn lại chỉ
+   là **file export của bạn** (agent không mở TradingView, repo không có TradingView Pro). Không có export thật thì
+   **`CROSS_IMPLEMENTATION`** (§11) là mức kiểm chứng cao nhất hiện có, và nó **không** được dùng để gỡ
+   `InpRequireParity`.
 2. **Luật entry mới** — nếu tiếp tục tìm edge: đổi tần suất/loại tín hiệu (M15 crossover event, break-of-structure
    trên M5), thiết kế mẫu đủ lớn ngay từ đầu, đo bằng harness sẵn có.
 3. **Chấp nhận kết luận âm** — với dữ liệu hiện có, **không tinh chỉnh thêm**.

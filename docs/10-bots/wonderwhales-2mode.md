@@ -277,17 +277,22 @@ Các bước:
    bộ psar/ema/atr/warmup; EA ghi `MQL5\Files\pine_signal_log.csv`. So trên log của **indicator** (không
    phải journal của EA) để phép so là hàm thuần của chuỗi nến: EA 2-mode đọc chính indicator đó ở `shift=1`,
    nên parity indicator là điều kiện cần cho tín hiệu của EA.
-3. **So:**
+3. **So — một lệnh (`scripts/ww2_parity_check.py`), đã kèm luật quyết định:**
    ```powershell
-   .venv\Scripts\python.exe scripts\compare_pine_exports.py `
+   .venv\Scripts\python.exe scripts\ww2_parity_check.py `
      --pine reports\pine_parity\pine_reference.csv `
      --mql5 "$env:APPDATA\MetaQuotes\Terminal\53785E099C927DB68A545C249CDBCE06\MQL5\Files\pine_signal_log.csv" `
      --out-dir reports\pine_parity --mql5-offset-minutes 180 `
      --warmup-bars 300 --bar-times reports\pine_parity\bars.csv
    ```
+   Nó kiểm tra trước (schema, `symbol`, `timeframe`, số tín hiệu), cảnh báo bẫy `symbol` nếu hai file khác
+   nhãn, chạy comparator bên dưới, rồi in **`DECISION: ALLOW_FLIP`** hoặc **`KEEP_BLOCKED`** kèm lý do và ghi
+   `ww2_parity_decision.txt`. Bên dưới nó gọi `scripts/compare_pine_exports.py` (cùng bộ tham số), nên vẫn có
+   thể chạy comparator trực tiếp nếu muốn kiểm soát chi tiết.
 4. **Luật quyết định:** chỉ khi report có `status=match` **và** `mismatch_count=0` **và** số tín hiệu so
-   `≥ 100` mới được đặt `InpRequireParity=false`; lưu JSON report làm bằng chứng. Mọi trường hợp khác giữ
-   `true`. Exit code: `0` match, `1` mismatch, `2` lỗi schema/đối số, **`3` = `BLOCKED`** (thiếu file).
+   `≥ 100` mới được đặt `InpRequireParity=false`; lưu JSON report **và** `ww2_parity_decision.txt` làm bằng
+   chứng. Mọi trường hợp khác giữ `true`. Exit code: `0` `ALLOW_FLIP`, `1` `KEEP_BLOCKED`, `2` lỗi
+   schema/đối số, **`3` = `BLOCKED`** (thiếu file).
 
 > **Bẫy phải xử lý trước khi so:** comparator khớp `symbol` **chính xác**. Broker Exness dùng `XAUUSDm` còn
 > TradingView dùng `XAUUSD`, nên nếu để nguyên, *mọi* dòng thành `missing_in_*`. Phải ghi **cùng một chuỗi**

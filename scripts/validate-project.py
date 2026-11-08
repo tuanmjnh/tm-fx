@@ -178,6 +178,7 @@ REQUIRED_FILES = (
     "scripts/tester/gen_portref_sets.py",
     "scripts/build_wonderwhales_reference.py",
     "scripts/compare_wonderwhales_bars.py",
+    "scripts/ww2_parity_check.py",
     "scripts/tester/analyse_census.py",
     "scripts/tester/analyse_measure.py",
     "scripts/tester/README.md",
