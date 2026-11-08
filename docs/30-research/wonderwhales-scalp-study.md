@@ -1,11 +1,32 @@
 # Wonderwhales XAU 2-mode — nghiên cứu cải thiện Scalp (a → h)
 
-> Báo cáo tổng hợp một mạch, tự chứa. Chi tiết theo ngày nằm ở [`../PROGRESS.md`](../PROGRESS.md) §71–§79.
+> Báo cáo tổng hợp một mạch, tự chứa. Chi tiết theo ngày nằm ở [`../PROGRESS.md`](../PROGRESS.md) §71–§88.
 > Nhật ký quyết định nội bộ (git-ignored): `.superpowers/sdd/ww2-scalp-improvement/progress.md`.
 
 **Trạng thái cuối: `NOT_RUN` (bot) · `BLOCKED` (parity) · `UNPROVEN` (lợi nhuận).**
 Mọi số liệu trong báo cáo là **`NOT_STRATEGY_RESULT`**: chạy Strategy Tester với parity Pine ↔ MT5 **OFF**, nên
 chúng xếp hạng cấu hình chứ **không** phải bằng chứng lợi nhuận.
+
+> ## Kết luận chốt (đọc trước)
+>
+> **Tín hiệu như đang port KHÔNG có edge chứng minh được.** Bằng chứng mạnh nhất: baseline trên 8,75 năm
+> (XAUUSDm M5, 2018-2026) cho **103 lệnh, winrate 39,81%, expectancy −0,02R, PF 0,95** (§11.6) — còn *dưới*
+> ngưỡng hoà vốn 40% của TP 1,5R. Kết quả dương ở các cửa sổ ngắn (+0,11R / +0,08R — §11.5) là **nhiễu mẫu nhỏ**.
+>
+> **Đã loại hết các đòn bẩy tham số:** trailing/break-even không đổi kết cục lệnh nào; nới cửa sổ trigger/setup
+> và tổ hợp đều **kém hơn** baseline dưới engine chuẩn; hình học TP không nhất quán; bộ lọc chất lượng SAR vô tác
+> dụng; entry bằng mode ATR không kiểm định được (0 lệnh với mặc định, 3 lệnh với ngưỡng M5).
+>
+> **Ba bài học lớn hơn cả chiến lược:**
+> 1. **Chọn engine quan trọng hơn mọi tham số.** `iSAR` của MT5 khác PSAR chuẩn/Pine ~2,3% hướng, và nó *đảo
+>    dấu* kết luận của gần như mọi so sánh (§11.4).
+> 2. **Cỡ mẫu phải được thiết kế trước.** Với ~19 tín hiệu/năm, cửa sổ 1,5 năm chỉ có ~22 lệnh — mọi so sánh
+>    trong §6 và §11.4–11.5 nằm trong vùng nhiễu.
+> 3. **Hằng số mặc định của Pine không có nghĩa ở mọi khung** (ngưỡng ATR `0,5` hợp D1/W1 nhưng chặn ~100% nến M5).
+>
+> **Việc còn lại:** (a) export thật từ TradingView để giải quyết parity (hiện `BLOCKED`, mọi kết luận đứng trên
+> tín hiệu chưa xác minh); (b) thiết kế **luật entry mới** để đổi tần suất/loại tín hiệu; (c) chấp nhận kết luận
+> âm. Chi tiết ở §13.
 
 ---
 
@@ -441,3 +462,55 @@ Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —
 
 Cổng tĩnh tại commit cuối: `validate-project checks=15 fail=0`, `validate_demo_execution checks=14 fail=0`,
 `check_docs_links broken=0`, `pytest 480 passed`, compile `0 errors / 0 warnings`.
+
+## 13. Kết luận chốt và việc còn lại
+
+### 13.1 Điều đã chứng minh được
+
+- **Cơ chế gây "rất ít lệnh" (có số liệu):** hai cổng sự kiện một-nến chồng nhau (flip M5 và flip M1). Cổng M1
+  chỉ nhìn **1 trong 5** nến M1 của nến M5; census cho thấy nó giết **98,88%** số setup (§4).
+- **EMA của port khớp hoàn toàn** với bản Python độc lập trên M1/M5/M15 (max lệch ~5e-9, 100% nến trong 1e-4).
+- **PSAR tự cài khớp 100%** bản Python độc lập trên cả ba khung (M1 703.411 · M5 141.503 · M15 43.865 nến, §11.3.1).
+- **`iSAR` của MT5 KHÁC PSAR chuẩn/Pine ~2,3% hướng** — đo từ cả hai phía; đây là rủi ro D1 đã được định lượng.
+- **Trailing/break-even không đóng góp gì** ở cấu hình này (dưới cả hai engine).
+- **Không đòn bẩy tham số nào thắng baseline** dưới engine chuẩn (§11.5).
+- **Không có edge chứng minh được** trên 8,75 năm: 103 lệnh, −0,02R, PF 0,95 (§11.6).
+
+### 13.2 Điều CHƯA chứng minh được (không được suy diễn)
+
+- **Parity Pine ↔ MT5 vẫn `BLOCKED`**: chưa có CSV reference do TradingView xuất. Mọi kết luận về chiến lược
+  đứng trên một tín hiệu **chưa xác minh với bản gốc**. Đây là điều kiện tiên quyết số một.
+- Bên nào đúng (`iSAR` hay PSAR chuẩn) — **không biết**; chỉ export thật mới trả lời được.
+- Không có bằng chứng lợi nhuận nào; bot `NOT_RUN`, profit `UNPROVEN`.
+- Bộ dữ liệu: một symbol (`XAUUSDm`), một broker (Exness), một khung (M5 setup).
+
+### 13.3 Bài học phương pháp (giữ lại cho các nghiên cứu sau)
+
+1. **Cỡ mẫu thiết kế trước.** Với ~19 tín hiệu/năm, 1,5 năm = ~22 lệnh: không đủ. Phải dài ≥ 8 năm, hoặc thiết
+   kế luật có tần suất cao hơn ngay từ đầu.
+2. **Kiểm chứng port trước khi tinh chỉnh.** Chọn PSAR đảo dấu kết luận; tinh chỉnh tham số trên một tín hiệu
+   chưa xác minh là vô nghĩa.
+3. **Đo độ nhạy theo engine.** Mọi so sánh nên chạy trên ≥ 2 engine/hai bản cài đặt để biết kết luận có phụ
+   thuộc implementation không.
+4. **Trong tester, mọi thứ phải neo theo THỜI GIAN, không theo chỉ số**: tester **chèn nến cũ vào đầu** cửa sổ
+   khi nạp lịch sử, làm chỉ số trôi; `Bars()` cũng lớn hơn `rates_total` mà indicator nhận.
+5. **Sentinel không được vào CSV**: `EMPTY_VALUE` (DBL_MAX) bị đọc thành số ⇒ tạo chênh lệch giả (§85).
+6. **Hằng số Pine mặc định không có nghĩa ở mọi khung** (ATR 0,5 hợp D1/W1, chặn ~100% nến M5 — §11.7).
+
+### 13.4 Việc còn lại (theo thứ tự khuyến nghị)
+
+1. **Parity** — export CSV reference thật từ TradingView (runbook: [`../10-bots/wonderwhales-2mode.md`](../10-bots/wonderwhales-2mode.md)
+   §5.3). Không có TradingView Pro thì **`CROSS_IMPLEMENTATION`** (§11) là mức kiểm chứng cao nhất hiện có, và nó
+   **không** được dùng để gỡ `InpRequireParity`.
+2. **Luật entry mới** — nếu tiếp tục tìm edge: đổi tần suất/loại tín hiệu (M15 crossover event, break-of-structure
+   trên M5), thiết kế mẫu đủ lớn ngay từ đầu, đo bằng harness sẵn có.
+3. **Chấp nhận kết luận âm** — với dữ liệu hiện có, **không tinh chỉnh thêm**.
+4. Việc mở cũ vẫn treo: magic `25006001` trên demo chưa xác nhận đã đóng; file state của InfiniteRunner chưa xoá;
+   5 bot demo cũ vẫn `UNPROVEN` (`../PROGRESS.md` §70.4).
+
+### 13.5 Nhãn trung thực (không nâng)
+
+- Bot `NOT_RUN` · parity `BLOCKED` · profit `UNPROVEN`.
+- Mọi số trong báo cáo là `NOT_STRATEGY_RESULT` (parity OFF), trừ khi ghi rõ khác.
+- Preset ship giữ mặc định: `InpTriggerWindowBars=1`, `InpSetupWindowBars=1`, `InpScalpRequireSarAgree=false`,
+  `InpPsarEngine=WW_PSAR_ISAR` (engine tự cài đã kiểm chứng nhưng **chậm hơn** với EA 6 handle).

@@ -4771,3 +4771,38 @@ M1) vốn chỉ ~19 tín hiệu/năm; nhân thêm điều kiện ATR ⇒ vài l�
 - Chỉ còn hai hướng: **thiết kế luật entry mới** (tạo tần suất/loại tín hiệu khác — cần code + test + đo dài),
   hoặc **chấp nhận kết luận âm** và chốt báo cáo.
 - Không đổi preset, không đổi mặc định engine. Parity `BLOCKED`, bot `NOT_RUN`, profit `UNPROVEN`.
+
+## 89. Wonderwhales XAU 2-mode — CHỐT báo cáo nghiên cứu Scalp (a→n) — 2026-11-08
+
+Chủ sở hữu chốt: dừng tinh chỉnh, viết bản chốt của báo cáo nghiên cứu. Báo cáo tự chứa:
+[`30-research/wonderwhales-scalp-study.md`](30-research/wonderwhales-scalp-study.md) — nay có **"Kết luận chốt (đọc
+trước)"** ở đầu và **§13 Kết luận chốt và việc còn lại**.
+
+### 89.1 Kết luận chốt
+
+**Tín hiệu như đang port KHÔNG có edge chứng minh được.** Bằng chứng mạnh nhất: baseline trên 8,75 năm
+(XAUUSDm M5, 2018-2026, engine PSAR tự cài) = **103 lệnh, winrate 39,81%, expectancy −0,02R, PF 0,95, maxDD
+1,60%** — dưới ngưỡng hoà vốn 40% của TP 1,5R. Kết quả dương ở cửa sổ ngắn (+0,11R / +0,08R) là **nhiễu mẫu nhỏ**.
+
+Đã loại hết đòn bẩy tham số: trailing/BE (không đổi kết cục lệnh), nới cửa sổ trigger/setup và tổ hợp (kém hơn
+baseline dưới engine chuẩn), hình học TP (không nhất quán), bộ lọc chất lượng SAR (vô tác dụng), entry bằng mode
+ATR (0 lệnh với mặc định; 3 lệnh với ngưỡng M5 ⇒ không kiểm định được).
+
+### 89.2 Điều đã chứng minh / chưa chứng minh
+
+- **Đã:** cơ chế "rất ít lệnh" (hai cổng sự kiện một-nến); EMA của port khớp 100% trên M1/M5/M15; PSAR tự cài
+  khớp 100% port độc lập (M1 703.411 · M5 141.503 · M15 43.865 nến); `iSAR` khác PSAR chuẩn ~2,3% hướng (đo từ
+  cả hai phía); trailing vô dụng; không đòn bẩy tham số nào thắng baseline; không có edge trên 8,75 năm.
+- **Chưa:** parity Pine ↔ MT5 (`BLOCKED`, cần CSV reference thật); bên nào đúng giữa `iSAR` và PSAR chuẩn; không
+  có bằng chứng lợi nhuận nào.
+
+### 89.3 Bài học phương pháp
+
+Cỡ mẫu phải thiết kế trước (≥ 8 năm với ~19 tín hiệu/năm); kiểm chứng port trước khi tinh chỉnh (chọn engine đảo
+dấu kết luận); trong tester mọi thứ neo theo **thời gian** chứ không theo chỉ số (tester chèn nến cũ vào đầu,
+`Bars()` > `rates_total`); sentinel không được vào CSV; hằng số Pine mặc định không có nghĩa ở mọi khung.
+
+### 89.4 Việc còn lại
+
+Parity (export TradingView) → luật entry mới (nếu tiếp tục) → hoặc chấp nhận kết luận âm. Không tinh chỉnh thêm.
+Nhãn không đổi: bot `NOT_RUN`, parity `BLOCKED`, profit `UNPROVEN`; preset ship không đổi.
