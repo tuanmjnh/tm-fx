@@ -505,8 +505,14 @@ Cổng tĩnh tại commit cuối: `validate-project checks=15 fail=0`, `validate
 2. **Luật entry mới** — nếu tiếp tục tìm edge: đổi tần suất/loại tín hiệu (M15 crossover event, break-of-structure
    trên M5), thiết kế mẫu đủ lớn ngay từ đầu, đo bằng harness sẵn có.
 3. **Chấp nhận kết luận âm** — với dữ liệu hiện có, **không tinh chỉnh thêm**.
-4. Việc mở cũ vẫn treo: magic `25006001` trên demo chưa xác nhận đã đóng; file state của InfiniteRunner chưa xoá;
-   5 bot demo cũ vẫn `UNPROVEN` (`../PROGRESS.md` §70.4).
+4. **Việc mở cũ (§70.4, cập nhật 2026-11-08 — xem `../PROGRESS.md` §90):**
+   - Tester IR **đã chạy có bằng chứng** (101 entry/101 exit, net +1,70; §90.2) và ba lỗi của `run_tester.ps1`
+     đã được sửa (§90.3).
+   - Vị thế lạc magic `25006001` trên demo **vẫn đang mở** theo journal (`entries=1|exits=0`, ticket
+     `-1507758291`) ⇒ state file **không được xoá**; chỉ terminal/demo mới xác nhận được đã đóng.
+   - Lợi nhuận 5 bot demo cũ vẫn `UNPROVEN` (chỉ phiên demo thật mới nâng được).
+5. **Việc treo duy nhất còn lại trong cây làm việc:** `docs/superpowers/specs/2026-11-04-data-reset-and-regeneration-design.md`
+   vẫn **untracked** (spec chưa từng được duyệt). Chủ sở hữu chọn **giữ nguyên, không commit** (2026-11-08).
 
 ### 13.5 Nhãn trung thực (không nâng)
 
