@@ -127,6 +127,11 @@ input int InpSetupWindowBars        = 1;      // setup bars scanned for the flip
 //--- agree, so a setup window older flip that has since reversed is rejected.
 //--- Only bites while InpSetupWindowBars > 1 (a fresh flip always agrees).
 input bool InpScalpRequireSarAgree  = false;  // Scalp: SAR must still agree
+//--- Entry definition (task O): true keeps the shipped chain (bias + M5 flip +
+//--- M1 confirmation); false drops the M1 gate, so an aligned M5 flip is enough.
+//--- The census showed the M1 gate removed 98.88% of setups, so this is the knob
+//--- that actually changes trade frequency.
+input bool InpScalpRequireTrigger    = true;  // Scalp: require the M1 confirmation
 input double InpBreakEvenTriggerR   = 1.0;
 input double InpTrailTriggerR       = 1.3;
 input double InpMinTrailStepPoints  = 50.0;
@@ -907,7 +912,8 @@ void CensusBar(const datetime bar_time)
          return;
       Ww2ScalpGates g;
       const bool signal=Ww2ScalpEvaluate(g_sig_bias,g_sig_setup,g_sig_trigger,g,
-                                         SetupSarAgree());
+                                         SetupSarAgree(),
+                                         InpScalpRequireTrigger);
       Ww2CensusWrite(g_census,bar_time,InpTradingMode,
                      g.bias_valid,g.bias_buy,g.bias_sell,
                      g.setup_valid,g.setup_buy,g.setup_sell,g.setup_align,
@@ -999,11 +1005,14 @@ bool TryEnter(const datetime bar_time)
          return(false);
       if(!Ww2ReadSignal(g_h_m5,_Symbol,InpScalpSetupTF,1,g_sig_setup_now))
          return(false);
+      //--- With the trigger gate off the M1 series is not needed, so an
+      //--- unreadable M1 must not block the entry path either.
       if(!Ww2ReadSignalWindow(g_h_m1,_Symbol,InpScalpTriggerTF,
-                              TriggerWindow(),g_sig_trigger))
+                              TriggerWindow(),g_sig_trigger) &&
+         InpScalpRequireTrigger)
          return(false);
       if(!Ww2ScalpEntry(g_sig_bias,g_sig_setup,g_sig_trigger,is_buy,
-                        SetupSarAgree()))
+                        SetupSarAgree(),InpScalpRequireTrigger))
          return(false);
      }
    else

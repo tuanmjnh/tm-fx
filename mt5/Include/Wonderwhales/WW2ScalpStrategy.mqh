@@ -69,9 +69,15 @@ void Ww2ResetScalpGates(Ww2ScalpGates &g)
 //--- every existing caller keeps the original behaviour. The EA computes it
 //--- from the CURRENT M5 bar, which catches a trend that already flipped back
 //--- since the (possibly older) setup bar fired.
+//---
+//--- `require_trigger` is the entry-definition switch (task O): when false the M1
+//--- confirmation gate is dropped, so a bias-aligned M5 flip is enough. Default
+//--- true keeps the shipped chain, and the census still records the trigger
+//--- fields so the M1 gate can be counted.
 bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
                       const Ww2Signal &m1,Ww2ScalpGates &g,
-                      const bool sar_agree=true)
+                      const bool sar_agree=true,
+                      const bool require_trigger=true)
   {
    Ww2ResetScalpGates(g);
    g.bias_valid=m15.valid;
@@ -94,7 +100,7 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
       g.reason="setup_invalid";
       return(false);
      }
-   if(!m1.valid)
+   if(require_trigger && !m1.valid)
      {
       g.reason="trigger_invalid";
       return(false);
@@ -115,7 +121,7 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
             g.reason="no_sar_agree";
             return(false);
            }
-         if(m1.buy)
+         if(!require_trigger || m1.buy)
            {
             g.is_buy=true;
             g.reason="signal";
@@ -137,7 +143,7 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
          g.reason="no_sar_agree";
          return(false);
         }
-      if(m1.sell)
+      if(!require_trigger || m1.sell)
         {
          g.is_buy=false;
          g.reason="signal";
@@ -153,10 +159,11 @@ bool Ww2ScalpEvaluate(const Ww2Signal &m15,const Ww2Signal &m5,
 //--- Decision-only wrapper kept for the entry path and the core tests.
 bool Ww2ScalpEntry(const Ww2Signal &m15,const Ww2Signal &m5,
                    const Ww2Signal &m1,bool &is_buy,
-                   const bool sar_agree=true)
+                   const bool sar_agree=true,
+                   const bool require_trigger=true)
   {
    Ww2ScalpGates g;
-   const bool ok=Ww2ScalpEvaluate(m15,m5,m1,g,sar_agree);
+   const bool ok=Ww2ScalpEvaluate(m15,m5,m1,g,sar_agree,require_trigger);
    is_buy=(ok ? g.is_buy : false);
    return(ok);
   }

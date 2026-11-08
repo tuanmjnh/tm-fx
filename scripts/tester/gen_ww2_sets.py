@@ -242,6 +242,9 @@ def long_scenarios() -> tuple:
             #--- M5-appropriate threshold (upper quartile, ~0.098 => keeps ~25%).
             ("a_m3", {"InpSignalMode": 3}),
             ("a_m3_atr012", {"InpSignalMode": 3, "InpMinAtrPct": 0.12}),
+            #--- E-A: the new entry definition that targets a large sample by
+            #--- dropping the M1 confirmation gate (census: it removed 98.88%).
+            ("a_notrigger", {"InpScalpRequireTrigger": False}),
     ):
         values = dict(MEASURE_BASE)
         values["InpPsarEngine"] = 1

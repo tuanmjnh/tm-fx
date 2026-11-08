@@ -454,6 +454,27 @@ với n=3 điều đó vô nghĩa.
 chuỗi entry hiện tại ở cỡ mẫu có ý nghĩa. Chỉ còn: thiết kế **luật entry mới** (tạo tần suất tín hiệu khác) hoặc
 **chấp nhận kết luận âm** và dừng.
 
+### 11.9 Định nghĩa entry mới (E-A: bỏ cổng M1) — mẫu LỚN, kết quả vẫn ÂM
+
+Luật mới đúng vào nút thắt mà census chỉ ra: `InpScalpRequireTrigger=false` **bỏ xác nhận M1**, chỉ cần bias M15
++ flip M5 cùng phía. Đây là thí nghiệm được thiết kế để có **mẫu lớn ngay từ đầu** (dự kiến ~1.000–1.700
+lệnh/năm). Chạy cùng cửa sổ dài 2018-2026, engine PSAR tự cài (55 phút):
+
+| Cấu hình (2018-2026) | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---:|---:|---:|---:|---:|---:|
+| baseline `(1,1)` | 103 | 39,81% | −420,77 | −0,02 | 0,95 | 1,60% |
+| **E-A: bỏ cổng M1** | **5.378** | **39,05%** | **−26.872,11** | **−0,04** | **0,93** | **31,67%** |
+
+**Mẫu 5.378 lệnh ⇒ kết luận chắc chắn: E-A làm mọi chỉ số xấu đi.** Expectancy −0,04R (so với −0,02R), PF 0,93
+(so với 0,95), winrate 39,05% (dưới ngưỡng hoà vốn 40%), và drawdown 31,67% vì số lệnh khổng lồ.
+
+**Đọc:** cổng M1 **không** che mất edge — nó đang **lọc nhiễu**. Bỏ nó tăng tần suất nhưng hạ chất lượng/đơn vị
+rủi ro. Điều này khép lại hướng "đổi định nghĩa entry để tăng tần suất": **không tạo ra edge**, chỉ khuếch đại
+kết quả âm.
+
+Ba lần thử theo hướng entry (mode ATR, ngưỡng ATR theo M5, bỏ cổng M1) **đều âm hoặc không kiểm định được**.
+Với dữ liệu hiện có, kết luận **không có edge** là kết luận duy nhất được dữ liệu ủng hộ.
+
 ## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —

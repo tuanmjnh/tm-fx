@@ -4859,3 +4859,27 @@ Thêm 1 test contract cho tên report từ `.ini` (tổng 3 test cho runner).
 
 - Nhãn lợi nhuận 5 bot demo vẫn `UNPROVEN` (không thể giải quyết bằng tester; chỉ phiên demo thật mới nâng được).
 - Không đổi preset, không đổi engine mặc định của bất kỳ bot nào.
+
+## 91. Wonderwhales 2-mode — luật entry mới E-A (bỏ cổng M1): mẫu lớn, vẫn ÂM (task O) — 2026-11-08
+
+Chủ sở hữu chọn E-A: bỏ **cổng xác nhận M1** — đúng nút thắt mà census chỉ ra (cổng này giết 98,88% setup) —
+để có **mẫu lớn ngay từ đầu**. Hiện thực: input mới `InpScalpRequireTrigger` (mặc định `true` = chuỗi gốc
+không đổi) + tham số tuỳ chọn `require_trigger` trong `Ww2ScalpEvaluate`/`Ww2ScalpEntry`; đường entry chịu được
+M1 không đọc được khi cổng tắt. Preset 75 → **76 key**.
+
+### 91.1 Kết quả (cửa sổ dài 2018-2026, engine PSAR tự cài, 3.322 s ≈ 55 phút)
+
+| Cấu hình | Lệnh | Winrate | Net (USD) | Exp (R) | PF | MaxDD |
+|---|---:|---:|---:|---:|---:|---:|
+| baseline `(1,1)` | 103 | 39,81% | −420,77 | −0,02 | 0,95 | 1,60% |
+| **E-A: bỏ cổng M1** | **5.378** | **39,05%** | **−26.872,11** | **−0,04** | **0,93** | **31,67%** |
+
+### 91.2 Kết luận
+
+- **Mẫu đủ lớn (5.378 lệnh) ⇒ kết luận chắc:** E-A làm **mọi chỉ số xấu đi** (exp −0,04R so với −0,02R; PF 0,93
+  so với 0,95; winrate 39,05% dưới hoà vốn 40%; DD 31,67%).
+- **Cổng M1 không che edge — nó đang lọc nhiễu.** Bỏ nó tăng tần suất nhưng hạ chất lượng.
+- Ba lần thử theo hướng entry (mode ATR mặc định, ngưỡng ATR theo M5, bỏ cổng M1) **đều âm/không kiểm định
+  được** ⇒ khép lại hướng này: **không tinh chỉnh/thay entry trên tín hiệu hiện tại nữa**.
+- Không đổi preset ship (`InpScalpRequireTrigger=true` mặc định). Parity `BLOCKED`, bot `NOT_RUN`, profit
+  `UNPROVEN`.

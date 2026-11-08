@@ -81,6 +81,7 @@ Input khai theo 6 nhóm của [`input-convention.md`](input-convention.md) — *
 | | `InpTriggerWindowBars` | `1` (`1` = chỉ cây trigger cuối, hành vi gốc; `5` = mọi cây M1 của nến M5) |
 | | `InpSetupWindowBars` | `1` (`1` = chỉ nến setup cuối, hành vi gốc; `5` = flip trong 5 nến setup gần nhất) |
 | | `InpScalpRequireSarAgree` | `false` (bật = đòi hướng PSAR của khung setup **còn** đồng ý lúc trigger; chỉ chặn khi `InpSetupWindowBars>1`) |
+| | `InpScalpRequireTrigger` | `true` (bật = chuỗi gốc: bias M15 + flip M5 + **xác nhận M1**; tắt = bỏ cổng M1, chỉ cần flip M5 cùng bias — đổi định nghĩa entry, tăng mạnh số lệnh) |
 | | `InpBreakEvenTriggerR`/`InpTrailTriggerR`/`InpMinTrailStepPoints` | `1.0`/`1.3`/`50.0` |
 | | `InpSwingRrMin`/`InpSwingConfirmBars`/`InpStructureLookbackBars` | `1.8`/`2`/`300` |
 | | `InpEnableStructureTrail`/`InpEnablePsarTrail`/`InpEnableAtrTrail`/`InpEnableStepTrail` | `true`/`false`/`false`/`false` |

@@ -510,6 +510,7 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpTriggerWindowBars": Num(minimum=1.0, maximum=100.0, integer=True),
         "InpSetupWindowBars": Num(minimum=1.0, maximum=100.0, integer=True),
         "InpScalpRequireSarAgree": BOOL,
+        "InpScalpRequireTrigger": BOOL,
         "InpBreakEvenTriggerR": Num(minimum=0.0),
         "InpTrailTriggerR": Num(minimum=0.0),
         "InpMinTrailStepPoints": Num(minimum=0.0),

@@ -256,6 +256,22 @@ void TestStrategies(void)
    Check(!Ww2ScalpEvaluate(bad_bias,m5,m1,sg) && sg.reason=="bias_invalid",
          "scalp_census_bias_invalid");
 
+   //--- Entry definition (task O): with the trigger switch off, a bias-aligned M5
+   //--- flip is enough; the default (on) must keep blocking without the M1 flip.
+   m1.buy=false;
+   m1.sell=false;
+   Check(!Ww2ScalpEvaluate(m15,m5,m1,sg) && sg.reason=="no_m1_confirm",
+         "scalp_require_trigger_default_blocks");
+   Check(Ww2ScalpEvaluate(m15,m5,m1,sg,true,false) && sg.reason=="signal" &&
+         sg.is_buy,"scalp_require_trigger_off_signals");
+   //--- With the trigger off an unreadable M1 must not block either.
+   Ww2Signal bad_m1=m1;
+   bad_m1.valid=false;
+   Check(Ww2ScalpEvaluate(m15,m5,bad_m1,sg,true,false) && sg.reason=="signal",
+         "scalp_require_trigger_off_tolerates_bad_m1");
+   Check(!Ww2ScalpEvaluate(m15,m5,bad_m1,sg) && sg.reason=="trigger_invalid",
+         "scalp_require_trigger_on_rejects_bad_m1");
+
    //--- Quality filter (task H): a setup that passed is still rejected when the
    //--- current SAR direction no longer agrees. The default must keep the old
    //--- behaviour, so the third call omits the argument entirely.

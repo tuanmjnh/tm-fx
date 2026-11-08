@@ -128,6 +128,9 @@ def test_ww2_event_windows_default_preserve_behaviour() -> None:
     #--- validated (100% vs the independent port on 141503 bars) but this EA drives
     #--- six handles and a BUILTIN run is still far slower than ISAR's ~3 minutes.
     assert config["inputs"]["InpPsarEngine"] == 0
+    #--- The shipped entry chain keeps the M1 confirmation gate; dropping it is an
+    #--- experiment (task O) that has to be enabled per run.
+    assert config["inputs"]["InpScalpRequireTrigger"] is True
     assert validate_preset(config) == []
 
 
