@@ -415,6 +415,24 @@ Muốn kiểm định giả thuyết "chỉ vào lệnh khi biến động đủ
 Đây cũng là một bài học parity: hằng số mặc định của Pine **không** tự động có nghĩa ở mọi khung; EA 2-mode
 Scalp dùng mode 2 nên không bị ảnh hưởng, nhưng nếu ai bật mode 3 với mặc định thì bot sẽ im lặng mãi mãi.
 
+### 11.8 Thử lại với ngưỡng ATR theo thang M5 — vẫn bế tắc vì mẫu
+
+Đặt `InpMinAtrPct = 0,12` (tứ phân vị trên của M5) với `InpSignalMode=3`, cùng cửa sổ dài (run 81 phút):
+
+| Cấu hình (2018-2026) | Lệnh | Net (USD) | Winrate | Exp (R) |
+|---|---:|---:|---:|---:|
+| mode 2 SAR+EMA (baseline) | 103 | −420,77 | 39,81% | −0,02 |
+| mode 3, `MinAtrPct=0,5` (mặc định) | 0 | 0,00 | — | — |
+| **mode 3, `MinAtrPct=0,12`** | **3** | +543,80 | 100% | +1,50 |
+
+**3 lệnh trong 8,75 năm ⇒ không kết luận được gì.** Lý do: chuỗi entry (bias M15 + flip M5 + xác nhận M1) vốn đã
+chỉ cho ~19 tín hiệu/năm; nhân thêm điều kiện ATR ~15% số nến ⇒ vài lệnh mỗi thập kỷ. Cả 3 lệnh đều thắng, nhưng
+với n=3 điều đó vô nghĩa.
+
+⇒ **Các thí nghiệm entry "rẻ" (dùng mode có sẵn) đã hết.** Giả thuyết ATR-regime không thể kiểm định được bằng
+chuỗi entry hiện tại ở cỡ mẫu có ý nghĩa. Chỉ còn: thiết kế **luật entry mới** (tạo tần suất tín hiệu khác) hoặc
+**chấp nhận kết luận âm** và dừng.
+
 ## 12. Artefact
 
 Gitignored (chỉ có trên máy chạy): `reports/build/tester-reports/` —

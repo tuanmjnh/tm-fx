@@ -4747,3 +4747,27 @@ nên không bị ảnh hưởng, nhưng bật mode 3 với mặc định ⇒ bot
 - Việc còn lại (chờ quyết định): chạy `mode 3` với `InpMinAtrPct` theo thang M5 (~0,12) trên cửa sổ dài (~79
   phút) để kiểm định thật giả thuyết ATR-regime; hoặc chốt báo cáo và dừng.
 - Không đổi preset, không đổi mặc định engine. Parity `BLOCKED`, bot `NOT_RUN`, profit `UNPROVEN`.
+
+## 88. Wonderwhales 2-mode — ATR-regime với ngưỡng M5: vẫn bế tắc vì mẫu (task N) — 2026-11-08
+
+Thí nghiệm entry "rẻ" cuối cùng: giữ `InpSignalMode=3` nhưng đặt `InpMinAtrPct=0,12` (tứ phân vị trên của M5,
+tức giữ ~25% nến mạnh nhất) và chạy trên cùng cửa sổ dài (`ww2_meas_scalp_long_a_m3_atr012`, 2018-2026, engine
+tự cài, 4.853 s ≈ 81 phút).
+
+| Cấu hình (2018-2026) | Lệnh | Net (USD) | Winrate | Exp (R) |
+|---|---:|---:|---:|---:|
+| mode 2 SAR+EMA (baseline) | 103 | −420,77 | 39,81% | −0,02 |
+| mode 3, `MinAtrPct=0,5` (mặc định) | 0 | 0,00 | — | — |
+| **mode 3, `MinAtrPct=0,12`** | **3** | +543,80 | 100% | +1,50 |
+
+**3 lệnh / 8,75 năm ⇒ `INSUFFICIENT_SAMPLE`, không kết luận được gì.** Chuỗi entry (bias M15 + flip M5 + xác nhận
+M1) vốn chỉ ~19 tín hiệu/năm; nhân thêm điều kiện ATR ⇒ vài lệnh mỗi thập kỷ. Cả 3 lệnh thắng nhưng n=3 vô nghĩa.
+
+### 88.1 Kết luận
+
+- **Các thí nghiệm entry "rẻ" (dùng mode có sẵn) đã hết.** Giả thuyết ATR-regime không kiểm định được bằng chuỗi
+  entry hiện tại ở cỡ mẫu có ý nghĩa.
+- Giữ nguyên kết luận chính (§86): tín hiệu như đang port **không có edge chứng minh được** trên 8,75 năm.
+- Chỉ còn hai hướng: **thiết kế luật entry mới** (tạo tần suất/loại tín hiệu khác — cần code + test + đo dài),
+  hoặc **chấp nhận kết luận âm** và chốt báo cáo.
+- Không đổi preset, không đổi mặc định engine. Parity `BLOCKED`, bot `NOT_RUN`, profit `UNPROVEN`.

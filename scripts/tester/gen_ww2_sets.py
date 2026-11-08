@@ -235,7 +235,14 @@ def long_scenarios() -> tuple:
     signals a year means the 1.5-year in-sample window holds about 22 trades.
     """
     out = []
-    for tag, extra in (("a", {}), ("a_m3", {"InpSignalMode": 3})):
+    for tag, extra in (
+            ("a", {}),
+            #--- Mode 3 with the Pine default MinAtrPct=0.5 blocks ~100% of M5 bars
+            #--- (M5 ATR% has median 0.069). atr012 is the same feature at an
+            #--- M5-appropriate threshold (upper quartile, ~0.098 => keeps ~25%).
+            ("a_m3", {"InpSignalMode": 3}),
+            ("a_m3_atr012", {"InpSignalMode": 3, "InpMinAtrPct": 0.12}),
+    ):
         values = dict(MEASURE_BASE)
         values["InpPsarEngine"] = 1
         values.update(extra)
