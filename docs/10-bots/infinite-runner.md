@@ -1,7 +1,7 @@
 # Infinite Runner XAU V2 — bot demo thứ tư
 
 **EA demo:** `mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5` · **magic** `25006001` · **nhãn** `NOT_RUN`
-(chưa compile-tester có lệnh, chưa có phiên demo). Nguồn chưng cất:
+(tester đã có lệnh từ 2026-11-08, **chưa** có phiên demo thật). Nguồn chưng cất:
 [`../99-archive/MT5_EA_Lab_V2/STRATEGIES/InfiniteRunner_XAU_Upgrade_Pack/README.md`](../99-archive/MT5_EA_Lab_V2/STRATEGIES/InfiniteRunner_XAU_Upgrade_Pack/README.md)
 + [`.../INFINITERUNNER_XAU_REVIEW_AND_UPGRADE_SPEC.md`](../99-archive/MT5_EA_Lab_V2/STRATEGIES/InfiniteRunner_XAU_Upgrade_Pack/INFINITERUNNER_XAU_REVIEW_AND_UPGRADE_SPEC.md),
 [`../90-decisions/0005-infiniterunner-xau-demo-bot.md`](../90-decisions/0005-infiniterunner-xau-demo-bot.md).
@@ -89,7 +89,8 @@ cùng lúc).
 
 ## 5. Bằng chứng
 
-Nhãn: **`NOT_RUN`** — mọi phiên demo/tester của bot này chưa ghi kết quả có lệnh (§65–§67).
+Nhãn: **`NOT_RUN`** — chưa có phiên **demo thật** nào ghi kết quả; tester đã có kết quả có lệnh từ 2026-11-08
+(§90, xem dưới) nhưng đó là backtest, không phải phiên demo.
 
 - §65: hai luồng song song ghi đè nhau trước ADR — alt A mất, lưu trữ nguyên trạng; canonical = alt B.
 - §66: ADR 0005 Accepted, đăng ký validator/preset/test xong; tester lần đầu (user chạy tay) **0 trades**
@@ -98,7 +99,11 @@ Nhãn: **`NOT_RUN`** — mọi phiên demo/tester của bot này chưa ghi kết
   `EvaluateRisk(0.0,…)` trước sizing → guard block `volume_to_add_invalid` → HALT vĩnh viễn mọi phiên
   (halt_on_breach). Sau fix, guard thường không còn giết phiên. Backtest lại V2 với `.set` mới là việc
   tiếp theo của chủ dự án.
-- Chưa có net/DD/DD nào ghi nhận cho bot này; lợi nhuận `UNPROVEN`.
+- §90 (2026-11-08): **tester đã chạy có lệnh** — `infinite_runner_demo_exec`, XAUUSDm M5, 2026.01.05→2026.10.01,
+  deposit 10.000 → `entries=101|exits=101|wins=81|losses=20|blocks=52462|sl_updates=113|realized=+1,70|
+  halted=ACTIVE`, equity cuối 10.001,70. Với state sạch, tester **không** tái hiện chẩn đoán "vị thế lạc chiếm
+  slot". Bằng chứng: `reports/build/tester-reports/infinite_runner_demo_exec/` (gitignored).
+- Chưa có phiên **demo thật** có lệnh; lợi nhuận vẫn `UNPROVEN` (backtest không thay được phiên demo).
 
 ## 6. Giới hạn / quirk đã biết
 

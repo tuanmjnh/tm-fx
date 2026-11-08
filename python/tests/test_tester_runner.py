@@ -22,6 +22,21 @@ def test_runner_fails_closed_when_no_bars_loaded() -> None:
     assert "Bars:</td>" in text
     assert "loaded no bars" in text
     assert "archive left untouched" in text
+    #--- Regression: on 2026-11-08 a valid 101-trade run was rejected because the
+    #--- report was read while MT5 was still writing it, so the runner must wait
+    #--- for the statistics block instead of judging a partial file.
+    assert "writes the report in stages" in text
+    wait_loop = text.index("for ($i = 0; $i -lt 30; $i++)")
+    assert wait_loop < text.index("loaded no bars")
+
+
+def test_runner_honours_the_ini_report_name() -> None:
+    #--- Regression: infinite_runner_demo_exec.ini sets Report=tester_ir_demo_exec,
+    #--- which does not follow tester_<scenario>, so the runner's derived name
+    #--- never matched and the run was rejected and never archived.
+    text = _text()
+    assert "Report=(.+)" in text
+    assert "Honour the ini's Report= field" in text
 
 
 def test_runner_clears_the_archive_only_after_validation() -> None:

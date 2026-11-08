@@ -114,11 +114,22 @@ if (-not (Test-Path -LiteralPath $Ini)) { throw "missing ini: $Ini" }
 if (-not (Test-Path -LiteralPath $Exe)) { throw "missing terminal: $Exe" }
 
 $ReportName = if ($Contract) { "contract_$($Scenario -replace '^contract_', '')" } else { "tester_$Scenario" }
+#--- Honour the ini's Report= field: the legacy hand-written scenarios (e.g.
+#--- infinite_runner_demo_exec) use a name that does NOT follow tester_<scenario>,
+#--- and the terminal writes the report under the ini name. Without this the
+#--- guard looked for a file that never exists and rejected a valid run.
+if (-not $Contract) {
+    $iniText = Get-Content -LiteralPath $Ini -Raw
+    $reportMatch = [regex]::Match($iniText, '(?m)^Report=(.+)$')
+    if ($reportMatch.Success) { $ReportName = $reportMatch.Groups[1].Value.Trim() }
+}
 $OutDir = Join-Path $OutRoot $Scenario
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-#--- A scenario writes more than one CSV: the 18-column journal, the census and
-#--- the telemetry file all share the sim_<scenario> prefix.
+#--- CSVs are matched as sim_*.csv in the agent Files dir and filtered by
+#--- freshness (LastWriteTime > start), because the EA chooses its own log name
+#--- from InpLogFile: the legacy scenarios write sim_ir_demo_exec.csv, which does
+#--- NOT follow sim_<scenario>.csv. Freshness keeps a single run's artefacts exact.
 $journalPath = if ($AgentFilesDir) { Join-Path $AgentFilesDir "sim_$Scenario.csv" } else { $null }
 
 #--- A running terminal ignores /config:, so refuse to start in that case.
@@ -137,7 +148,7 @@ if (Test-Path -LiteralPath $setSrc) {
 #--- Remove stale artefacts so freshness is unambiguous.
 Get-ChildItem $TerminalDataDir -Filter "$ReportName.*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 foreach ($dir in $AgentFilesDirs) {
-    Get-ChildItem $dir -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+    Get-ChildItem $dir -Filter "sim_*.csv" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 }
 
 Write-Host "RUN $Scenario  ini=$Ini  report=$ReportName  data=$TerminalDataDir"
@@ -159,7 +170,7 @@ for ($i = 0; $i -lt 60; $i++) {
 if (-not $Contract) {
     for ($i = 0; $i -lt 60; $i++) {
         $fresh = @($AgentFilesDirs | ForEach-Object {
-            Get-ChildItem $_ -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue |
+            Get-ChildItem $_ -Filter "sim_*.csv" -File -ErrorAction SilentlyContinue |
                 Where-Object { $_.LastWriteTime -gt $started } })
         if ($fresh.Count -gt 0) { break }
         Start-Sleep -Seconds 2
@@ -169,11 +180,17 @@ if (-not $Contract) {
 #--- Fail closed on a silently aborted run. The tester writes a report even when
 #--- it never loaded history (History Quality n/a, Bars 0, Ticks 0) and exits 0,
 #--- which on 2026-11-05 made a 12-second non-run look like a finished scenario.
+#--- MT5 writes the report in stages, so a fresh file can still lack the
+#--- statistics block; wait until the Bars row is present before judging. A run
+#--- that genuinely loaded no history never produces it.
 $bars = 0
-if (Test-Path $htm) {
-    $html = Get-Content -LiteralPath $htm -Raw -Encoding UTF8
-    $m = [regex]::Match($html, 'Bars:</td>\s*<td[^>]*><b>([0-9,]+)</b>')
-    if ($m.Success) { $bars = [double]($m.Groups[1].Value -replace '[^0-9]', '') }
+for ($i = 0; $i -lt 30; $i++) {
+    if (Test-Path $htm) {
+        $html = Get-Content -LiteralPath $htm -Raw -Encoding UTF8
+        $m = [regex]::Match($html, 'Bars:</td>\s*<td[^>]*><b>([0-9,]+)</b>')
+        if ($m.Success) { $bars = [double]($m.Groups[1].Value -replace '[^0-9]', ''); break }
+    }
+    Start-Sleep -Seconds 2
 }
 if ($bars -le 0) {
     throw "tester loaded no bars for $Scenario (report=$htm); run aborted, archive left untouched"
@@ -191,7 +208,7 @@ if (Test-Path $htm) {
 }
 if (-not $Contract) {
     $csvs = @($AgentFilesDirs | ForEach-Object {
-        Get-ChildItem $_ -Filter "sim_$Scenario*.csv" -File -ErrorAction SilentlyContinue |
+        Get-ChildItem $_ -Filter "sim_*.csv" -File -ErrorAction SilentlyContinue |
             Where-Object { $_.LastWriteTime -gt $started } })
     foreach ($csv in $csvs) {
         Copy-Item $csv.FullName (Join-Path $OutDir $csv.Name) -Force

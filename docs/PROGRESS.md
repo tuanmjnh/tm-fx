@@ -3806,9 +3806,18 @@ InfiniteRunnerXAUV2DemoEA (chưa compile); Grid/DCA tester (chờ terminal đón
 
 ### 70.4 Còn mở (trung thực)
 
-- Dọn vị thế lạc magic 25006001 trên chart demo: **chưa xác nhận đã đóng**; state file
-  `MQL5\Files\infinite_runner_demo_state.csv` **chưa xóa**.
-- Chạy lại tester IR để lấy bằng chứng sau chẩn đoán "vị thế lạc chiếm slot": **`NOT_RUN`**.
+> **Cập nhật 2026-11-08 (xem §90):** hai mục đầu đã được xử lý tới mức có thể xác minh bằng dữ liệu trên đĩa;
+> mục "nhãn lợi nhuận" vẫn giữ `UNPROVEN` (không thể giải quyết bằng tester).
+
+- ~~Dọn vị thế lạc magic 25006001 trên chart demo~~ → **KHÔNG xoá state file**: journal demo
+  (`infinite_runner_demo.csv`) kết thúc bằng `ENTRY SELL ticket=-1507758291 … entries=1|exits=0` ⇒ vị thế **vẫn
+  đang mở** khi bot dừng; state `MQL5\Files\infinite_runner_demo_state.csv` đang giữ đúng vị thế đó (ticket
+  `-1507758291`, SL 3953.81, TP 3848.81). Xoá file này lúc này sẽ làm bot mất dấu vị thế. Chỉ xác nhận được đã
+  đóng khi có terminal/demo; chưa làm.
+- ~~Chạy lại tester IR~~ → **ĐÃ CHẠY** (§90): `infinite_runner_demo_exec`, XAUUSDm M5, 2026.01.05→2026.10.01,
+  deposit 10.000 → journal 105.343 dòng, `entries=101|exits=101|wins=81|losses=20|blocks=52462|sl_updates=113|
+  realized=+1.70|halted=ACTIVE`, equity cuối 10.001,70. Với state sạch, tester **không** tái hiện chẩn đoán "vị
+  thế lạc chiếm slot". Bằng chứng: `reports/build/tester-reports/infinite_runner_demo_exec/`.
 - Nhãn lợi nhuận của cả 5 bot demo vẫn là `UNPROVEN`; không có kết luận mới về hiệu quả chiến lược.
 
 ---
@@ -4806,3 +4815,47 @@ dấu kết luận); trong tester mọi thứ neo theo **thời gian** chứ kh�
 
 Parity (export TradingView) → luật entry mới (nếu tiếp tục) → hoặc chấp nhận kết luận âm. Không tinh chỉnh thêm.
 Nhãn không đổi: bot `NOT_RUN`, parity `BLOCKED`, profit `UNPROVEN`; preset ship không đổi.
+
+## 90. Dọn các việc treo §70.4 + hai lỗi tooling của runner — 2026-11-08
+
+### 90.1 Vị thế lạc magic 25006001 trên demo — xác minh bằng journal, KHÔNG xoá state
+
+Đọc `MQL5\Files\infinite_runner_demo.csv` (journal của bot IR trên demo, kết thúc 2026.11.03 02:57): dòng cuối
+là `ENTRY SELL price=3948.76000 volume=0.01000 sl=3953.81000 tp=3848.81000 ticket=-1507758291` và
+`SUMMARY … entries=1|exits=0|halted=ACTIVE`. Tức **vị thế vẫn đang mở** khi bot dừng, và
+`infinite_runner_demo_state.csv` đang giữ đúng vị thế đó (`pos_ticket=-1507758291`, `pos_initial_sl=3953.81`).
+
+⇒ **Xoá state file lúc này là SAI**: bot sẽ mất dấu vị thế đang mở. Việc "dọn vị thế lạc" chỉ xác nhận được khi
+có terminal/demo (không tự động hoá theo ràng buộc repo). Ghi nhận trung thực: **chưa xong**, kèm bằng chứng vì sao
+không nên xoá. (File `infinite_runner_demo_state_v3.csv` thì rỗng/zero ⇒ vô hại, nhưng để nguyên cả hai.)
+
+### 90.2 Chạy lại tester IR — ĐÃ CÓ BẰNG CHỨNG
+
+`run_tester.ps1 -Scenario infinite_runner_demo_exec` (XAUUSDm M5, 2026.01.05→2026.10.01, deposit 10.000):
+
+| Chỉ số | Giá trị |
+|---|---|
+| Journal | 105.343 dòng (`sim_ir_demo_exec.csv`, 25,8 MB) |
+| Entries / exits | 101 / 101 |
+| Wins / losses | 81 / 20 (winrate 80,2%) |
+| Blocks / sl_updates | 52.462 / 113 |
+| Realized | **+1,70** (equity cuối 10.001,70) |
+| Halted | `ACTIVE` |
+
+Với **state sạch** (không có state file trong agent Files), tester **không** tái hiện chẩn đoán "vị thế lạc chiếm
+slot". Bằng chứng lưu ở `reports/build/tester-reports/infinite_runner_demo_exec/` (gitignored).
+
+### 90.3 Hai lỗi tooling của `run_tester.ps1` (đã sửa, đều ảnh hưởng trực tiếp §70.4)
+
+| Lỗi | Triệu chứng | Sửa |
+|---|---|---|
+| Đọc report khi MT5 còn đang ghi | Report chỉ có phần settings ⇒ chốt fail-closed báo `loaded no bars` cho một lượt **hợp lệ** (run 101 lệnh bị từ chối) | Chờ tối đa 30×2 s cho tới khi dòng `Bars:` xuất hiện rồi mới kết luận |
+| Suy tên report là `tester_<scenario>` | `.ini` cũ đặt `Report=tester_ir_demo_exec` ⇒ runner **không bao giờ** tìm thấy report ⇒ mọi lượt IR bị từ chối và **không archive** — chính là lý do §70.4 mãi `NOT_RUN` | Đọc `Report=` từ `.ini` và dùng tên đó |
+| Lọc CSV theo `sim_<scenario>*.csv` | EA tự chọn tên log từ `InpLogFile`; IR ghi `sim_ir_demo_exec.csv` ⇒ journal 25,8 MB **không được archive** | Archive **mọi** `sim_*.csv` mới trong lượt chạy (lọc theo `LastWriteTime > start`) |
+
+Thêm 1 test contract cho tên report từ `.ini` (tổng 3 test cho runner).
+
+### 90.4 Không đổi
+
+- Nhãn lợi nhuận 5 bot demo vẫn `UNPROVEN` (không thể giải quyết bằng tester; chỉ phiên demo thật mới nâng được).
+- Không đổi preset, không đổi engine mặc định của bất kỳ bot nào.
