@@ -4933,3 +4933,45 @@ Bắt đầu nghiên cứu/nâng cấp `InfiniteRunnerXAUV2DemoEA` (magic 250060
 - U1 chỉ **sửa lỗi vận hành**, không đổi chiến lược/entry/exit. Evidence `NOT_RUN`, profit `UNPROVEN`.
 - Kế tiếp (chủ dự án chốt "làm đủ cả 3 theo thứ tự"): baseline dài 2018-2026 → U2 exit (để winner chạy) →
   U3 đo edge entry (SL/TP 1R) → mode `IR_DIR_EMA_MTF`.
+
+## 93. InfiniteRunner XAU V2 — đo edge trên cửa sổ dài 2018-2026: entry KHÔNG có edge — 2026-11-09
+
+Tiếp §92: sau khi sửa deadlock (U1), đo nghiêm túc trên cửa sổ dài để trả lời "tín hiệu này có edge không".
+
+### 93.1 Kết quả (XAUUSDm M5, Model=1, deposit 10.000, lot 0.01; khoá daily/DD tắt để chạy trọn cửa sổ)
+
+| # | Cấu hình | Lệnh | Winrate | Net | Exp R | PF | MaxDD |
+|---|---|---:|---:|---:|---:|---:|---:|
+| shipped (khoá bật) | 2.406 | 71,07% | −793,01 | −0,066 | 0,77 | 8% → **halt 2020.06.23** |
+| A | baseline (step trailing ship) | 26.130 | 72,97% | −685,40 | −0,005 | 0,98 | 22,48% |
+| B | U2 để winner chạy (fixed trail) | 34.238 | 59,76% | −2.077,69 | −0,012 | 0,97 | 32,21% |
+| C | U3 1:1 (SL/TP 5000, không trail) | 26.143 | **48,07%** | −5.796,01 | −0,044 | 0,92 | 58,29% |
+| D | U3 1:1,5 (TP 7500) | 18.407 | **38,65%** | −3.839,00 | −0,042 | 0,93 | 38,77% |
+| E | `IR_DIR_EMA_MTF` | 31 | 74,19% | −21,18 | −0,137 | 0,49 | 0,23% |
+| F | U3 1:1 **sạch** (mọi guard off) | 33.668 | **48,08%** | −7.158,96 | −0,043 | 0,92 | 71,94% |
+
+### 93.2 Kết luận
+
+- **Entry không có edge.** Ở 1:1 hoà vốn cần 50%; đo được **48,07–48,08%** trên ≥33k lệnh (nhất quán khi
+  bật/tắt guard streak). Ở 1:1,5 hoà vốn cần 40%; đo được **38,65%**. Tức tín hiệu EMA 21/50 "legacy" **không
+  tốt hơn tung đồng xu**, hơi âm đúng bằng spread.
+- **Exit không cứu được.** Step trailing giữ winrate 73% nhưng cắt thắng ở ~0,36R (p90=0,70R); cho winner chạy
+  tăng avg_win nhưng hạ winrate và **net tệ hơn + DD lớn hơn**; bỏ trail về winrate 48% và lỗ sâu hơn.
+- **"Lãi" chỉ là may mắn đuôi:** cửa sổ 2026 dương nhờ 39 lệnh chạm TP 20R; cửa sổ dài cũng chỉ đỡ nhờ 75
+  TP-hit, bỏ ra thì −$8.157.
+- **Lỗi thứ hai ghi nhận (không sửa):** khoá `InpMaxDrawdownPct=8` là **halt vĩnh viễn** (manual reset) — preset
+  ship tự tắt 2020.06.23 sau 2,5 năm. Là hàng rào an toàn có chủ ý, không phải lỗi.
+- **Mode MTF vô dụng:** 31 lệnh/8,75 năm (H1+M15+M5 pullback-reclaim quá chặt).
+
+### 93.3 Ghi chú kỹ thuật
+
+- Đơn vị: Exness `XAUUSDm` 3 chữ số ⇒ **1 point = 0.001**; `InpInitialSlPoints=5000` = 5,00 giá = **1R ≈ $5**
+  ở lot 0.01; `InpSafetyTpPoints=100000` = **20R**.
+- Công cụ mới `reports/build/ir_analyse.py` (streaming — journal tới 190 MB) in nền kinh tế + `net_without_tp`.
+
+### 93.4 Báo cáo & trạng thái
+
+- Báo cáo chốt: [`30-research/infinite-runner-study.md`](30-research/infinite-runner-study.md).
+- **Chỉ ship U1** (sửa lỗi vận hành). Không đổi chiến lược/entry/exit/preset. Evidence `NOT_RUN`, profit
+  `UNPROVEN`. Khuyến nghị: **chấp nhận kết luận âm và dừng tinh chỉnh** trên tín hiệu hiện tại (như WW2), hoặc
+  thiết kế entry mới nếu chủ dự án muốn tiếp.

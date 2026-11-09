@@ -114,6 +114,10 @@ Nhãn: **`NOT_RUN`** — chưa có phiên **demo thật** nào ghi kết quả; 
   expectancy ≈ 0 (winrate 80,2% là *sản phẩm của exit*, không phải edge). Sửa: thêm
   `InpLossStreakCooldownMinutes=240` (cooldown, hết hạn tự xoá streak) qua module thuần `IRRisk.mqh`.
 - Chưa có phiên **demo thật** có lệnh; lợi nhuận vẫn `UNPROVEN` (backtest không thay được phiên demo).
+- §93 (2026-11-09): **nghiên cứu đầy đủ** — [`../30-research/infinite-runner-study.md`](../30-research/infinite-runner-study.md).
+  Đo trên 2018–2026 (khoá daily/DD tắt): entry ở 1:1 winrate **48,08%** (< 50%) trên 33.668 lệnh ⇒ **không có
+  edge**; ba định nghĩa exit (step trail / trail rộng / không trail) **đều âm**; mode `IR_DIR_EMA_MTF` chỉ 31
+  lệnh/8,75 năm; preset ship tự halt ở DD 8% ngày 2020.06.23. Kết luận: không tinh chỉnh thêm trên tín hiệu này.
 
 ## 6. Giới hạn / quirk đã biết
 

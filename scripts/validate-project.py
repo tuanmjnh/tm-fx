@@ -102,6 +102,7 @@ REQUIRED_FILES = (
     "docs/30-research/risk.md",
     "docs/30-research/release.md",
     "docs/30-research/wonderwhales-scalp-study.md",
+    "docs/30-research/infinite-runner-study.md",
     "configs/project.example.json",
     "configs/sim/runner_trailing.json",
     "configs/sim/grid_lab.json",
