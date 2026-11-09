@@ -4883,3 +4883,53 @@ M1 không đọc được khi cổng tắt. Preset 75 → **76 key**.
   được** ⇒ khép lại hướng này: **không tinh chỉnh/thay entry trên tín hiệu hiện tại nữa**.
 - Không đổi preset ship (`InpScalpRequireTrigger=true` mặc định). Parity `BLOCKED`, bot `NOT_RUN`, profit
   `UNPROVEN`.
+
+## 92. InfiniteRunner XAU V2 — sửa deadlock loss-streak (U1) — 2026-11-09
+
+Bắt đầu nghiên cứu/nâng cấp `InfiniteRunnerXAUV2DemoEA` (magic 25006001) bằng **chẩn đoán từ dữ liệu** (journal
+101 lệnh), thay vì đoán tham số — cùng phương pháp đã dùng cho WW2.
+
+### 92.1 Chẩn đoán (journal `infinite_runner_demo_exec`, 101 lệnh)
+
+- Cả 101 lệnh chỉ nằm trong **3 ngày đầu** (2026.01.05–01.07, chạm trần 50 lệnh/ngày); từ 2026.01.07 lệnh thua
+  thứ 3 liên tiếp đặt `streak=3`, và `EntryThrottlesOk` **chặn mọi entry vĩnh viễn** (`blocks=52.462`, trong đó
+  51.937 là `loss_streak`) suốt 9 tháng còn lại.
+- **Lỗi thật:** `g_streak_losses` **chỉ reset khi có lệnh thắng** (EA ~dòng 1049) và `InpCooldownMinutes=0` ⇒ bot
+  chặn entry ⇒ không bao giờ thắng ⇒ **deadlock**. Nhánh `Halt()` dành cho streak không bao giờ chạy.
+- Kinh tế 101 lệnh: thắng TB **+$1,26 (0,25R)** vs thua đủ **−$5,00 (1R)** ⇒ expectancy ≈ 0. Winrate 80,2% là
+  *sản phẩm của exit* (step trailing cắt thắng ở ~0,25R), **không phải edge**.
+
+### 92.2 Sửa (U1) — hồi phục bằng cooldown
+
+- Input mới `InpLossStreakCooldownMinutes` (mặc định **240**): chạm chuỗi thua → chặn thêm cooldown phút → hết hạn
+  **xoá streak và vào lại**; `0` giữ hành vi cũ (khoá vĩnh viễn, escape hatch có chủ ý). EA 59→60 input.
+- Module thuần `mt5/Include/InfiniteRunner/IRRisk.mqh` (`IRLossStreakDecide`: ALLOW/BLOCK/RECOVER) + test thuần
+  `mt5/Scripts/IRCoreTests.mq5` (loss-streak, step trailing, BE, monotonic, band).
+- State lưu `streak_cooldown_until`; panel hiện `STREAK_COOLDOWN`; fingerprint thêm
+  `risk.loss_streak_cooldown_minutes`.
+- Guardrail: preset không được `InpMaxConsecutiveLosses>0` mà cooldown `<=0` (`sim_configs.py` +
+  `validate_demo_execution.py` + pytest). Thêm input vào preset JSON + mọi `.set` (demo_exec, legacy_exec,
+  v1_parity, `docs/20-operations/presets/infinite_runner_v2.set`).
+- Đã ghi sửa đổi vào ADR 0005 (mục "Sửa đổi 2026-11-09") theo đúng quy tắc "ADR trước, code sau".
+
+### 92.3 Kiểm chứng U1 (fixcheck, đúng cửa sổ gốc 2026.01.05→2026.10.01)
+
+| Cấu hình | Lệnh | Winrate | Net (USD) | Exp (R) | Ghi chú |
+|---|---:|---:|---:|---:|---|
+| bản cũ | 101 | 80,2% | +1,70 | +0,003 | chết sau 2 ngày |
+| **sau fix U1** | **8.364** | **72,2%** | **+763,55** | **+0,018** | đủ 9 tháng, `streak=0`, không halt |
+
+**Cảnh báo quan trọng:** toàn bộ lãi đến từ **39 lệnh (0,47%) chạm "TP an toàn" 20R**; bỏ 39 lệnh này net ≈
+**−$3.136** ⇒ edge mong manh, phải đo trên cửa sổ dài mới kết luận. Block sau fix: `max_trades_day` 15.235,
+`loss_streak_cooldown` 6.288 (cooldown chạy và hồi phục — hết deadlock).
+
+### 92.4 Gates
+
+- compile `0 errors / 0 warnings` (gồm `IRCoreTests`); pytest **488**; validate-project 15/0;
+  validate_demo_execution 14/0; validate_pineport 32/0; check_docs_links 0 broken (439).
+
+### 92.5 Trạng thái
+
+- U1 chỉ **sửa lỗi vận hành**, không đổi chiến lược/entry/exit. Evidence `NOT_RUN`, profit `UNPROVEN`.
+- Kế tiếp (chủ dự án chốt "làm đủ cả 3 theo thứ tự"): baseline dài 2018-2026 → U2 exit (để winner chạy) →
+  U3 đo edge entry (SL/TP 1R) → mode `IR_DIR_EMA_MTF`.

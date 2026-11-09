@@ -148,6 +148,7 @@ REQUIRED_FILES = (
     "mt5/Experts/WonderwhalesDemoEA.mq5",
     "mt5/Experts/WonderwhalesXAU2ModeEA.mq5",
     "mt5/Scripts/WW2CoreTests.mq5",
+    "mt5/Scripts/IRCoreTests.mq5",
     "mt5/Include/Wonderwhales/WW2Types.mqh",
     "mt5/Include/Wonderwhales/WW2SignalReader.mqh",
     "mt5/Include/Wonderwhales/WW2RiskSizer.mqh",
@@ -375,6 +376,7 @@ def check_exec_structure(root: Path) -> list[str]:
             "InpRiskPercent",
             "InpMaxDrawdownPct",
             "InpMaxConsecutiveLosses",
+            "InpLossStreakCooldownMinutes",
         ),
         #--- ADR 0007: one Wonderwhales position with a mandatory TP at
         #--- InpTakeProfitR and risk sizing at the initial stop.

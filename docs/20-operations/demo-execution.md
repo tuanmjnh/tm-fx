@@ -96,7 +96,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-mql5.ps1 `
 
 Thay vì copy tay, dùng deploy script cho toàn bộ cây nguồn (nó copy `Include\Sim`, `Include\TrendRider`,
 `Include\Exec`, `Include\InfiniteRunner` và compile mọi `.mq5` liên quan — bao gồm
-`InfiniteRunnerXAUV2DemoEA` và ba include `IRTypes`/`IRDirection`/`IRTrailing`):
+`InfiniteRunnerXAUV2DemoEA`, script test `IRCoreTests` và các include
+`IRTypes`/`IRDirection`/`IRTrailing`/`IRRisk`):
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\deploy_pineport.ps1 -Apply
@@ -239,6 +240,9 @@ Runner quyết định theo **nến đã đóng** với mô hình ba khung `InpH
 `InpDirectionMode=0` (EMA parity kiểu V1). Preset mặc định: `InpDirectionMode=1`,
 `InpEntryTF=M5`, SL cố định 5000 điểm (≈ $5.00 cỡ lot 0.01 theo contract Exness XAUUSDm),
 TP an toàn xa 100000 điểm, trail cố định 2500 điểm sau khi lợi nhuận vượt `InpTrailStartPts=3000`.
+Chuỗi thua (`InpMaxConsecutiveLosses=3`) **không còn khoá vĩnh viễn**: sau `InpLossStreakCooldownMinutes`
+(mặc định 240 phút) bot tự xoá chuỗi và vào lại (đặt `0` = khoá vĩnh viễn, không khuyến nghị). Trước khi
+gắn EA lên chart, chạy `Scripts > IRCoreTests` và kỳ vọng `TEST|RESULT|ALL_PASS|pass=N fail=0|ir=1`.
 
 1. **Transform đúng chart**: `XAUUSDm`, khung chart đề nghị **M5** (khớp `InpEntryTF`; logic
    đọc tự ba khung input, không phụ thuộc khung chart).
@@ -254,7 +258,7 @@ TP an toàn xa 100000 điểm, trail cố định 2500 điểm sau khi lợi nhu
 | `cooldown_active` / `min_bars` / `max_trades_per_day` | Khoảng cách vào lệnh | Tăng `InpCooldownMinutes`/`InpMaxTradesPerDay` nếu dẫn chứng hợp lệ |
 | `spread_blocked` | Spread vượt `InpMaxSpreadPoints=600` (kiểm luôn `InpMaxSpreadAtrRatio` nếu >0) | Mặc định 600 đã mở rộng; Exness XAUUSDm thường ~150–300 pts — nếu vẫn chặn, đọc `spread=` trong CSV |
 | `atr_abnormal` | ATR vượt `InpAbnormalAtrRatio` × baseline | Bộ lọc biến động; giữ nguyên trừ khi hiểu rõ |
-| `risk_locked:daily_loss` / `max_drawdown` / `consecutive_losses` | Khoá rủi ro đã chạm trần | Khối bảo hiểm — không nới để "cho có lệnh" |
+| `risk_locked:daily_loss` / `max_drawdown` / `consecutive_losses` | Khoá rủi ro đã chạm trần | Khối bảo hiểm — không nới để "cho có lệnh"; riêng chuỗi thua tự hồi phục sau `InpLossStreakCooldownMinutes` |
 | `kill_switch_active` | File kill switch còn tồn tại | Xoá file theo §5.1 |
 | `timeframe_order_invalid` (OnInit) | `InpH1TF ≤ InpM15TF ≤ InpEntryTF` | Sắp lại H1 > M15 > M5 |
 

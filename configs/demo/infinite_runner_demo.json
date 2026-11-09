@@ -46,6 +46,7 @@
     "InpMaxDailyLossPct": 1.0,
     "InpMaxDrawdownPct": 8.0,
     "InpMaxConsecutiveLosses": 3,
+    "InpLossStreakCooldownMinutes": 240,
     "InpHaltOnBreach": true,
     "InpManualResetDrawdown": false,
     "InpSlMode": 0,

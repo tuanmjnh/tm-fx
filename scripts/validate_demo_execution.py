@@ -666,6 +666,12 @@ def check_presets(root: Path) -> list[str]:
         issues.append(f"{ir_name}: InpMaxPositions must be 1")
     if not float(ir_inputs.get("InpMinStopPoints", 0.0)) > 0.0:
         issues.append(f"{ir_name}: InpMinStopPoints must be positive")
+    if ir_inputs.get("InpMaxConsecutiveLosses", 0) and \
+       not float(ir_inputs.get("InpLossStreakCooldownMinutes", 0.0)) > 0.0:
+        issues.append(
+            f"{ir_name}: InpLossStreakCooldownMinutes must be positive when a "
+            "loss-streak limit is set (a permanent lock deadlocks the bot)"
+        )
     issues.extend(
         f"{ir_name}: {item}" for item in sim_configs.validate_preset(ir)
     )

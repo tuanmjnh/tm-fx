@@ -122,3 +122,27 @@ trong `scripts/deploy_pineport.ps1`, scenario tester `infinite_runner_demo_exec.
 - Không đời nào ghi trong tài liệu rằng EA đã chạy demo thật trước khi có bằng chứng
   (journal/CSV/deal history) — mọi bằng chứng sẽ được liệt kê đường dẫn kèm thời gian.
   Hiện trạng thái evidence của cả 4 bot vẫn là `NOT_RUN`; kết quả chiến lược `UNPROVEN`.
+
+## Sửa đổi (2026-11-09) — hồi phục loss-streak (sửa deadlock)
+
+**Bối cảnh:** chẩn đoán journal 101 lệnh của `infinite_runner_demo_exec` (2026.01.05→2026.10.01) cho thấy
+cả 101 lệnh chỉ nằm trong **3 ngày đầu**; từ 2026.01.07 lệnh thua thứ 3 liên tiếp đặt `streak=3` và
+`EntryThrottlesOk` **chặn mọi entry vĩnh viễn** (`blocks=52.462`, 51.937 là `loss_streak`) — vì streak chỉ
+reset khi có lệnh **thắng**, mà bot bị chặn thì không có lệnh nào. Đây là một **deadlock**, không phải hành
+vi "halt" như thiết kế (panel ghi `halted=ACTIVE`; `Halt()` không bao giờ chạy cho nhánh streak).
+
+**Quyết định (chủ dự án chấp thuận 2026-11-09, "hồi phục bằng cooldown"):** biến circuit-breaker loss-streak
+thành **có hồi phục**:
+
+1. Thêm input `InpLossStreakCooldownMinutes` (mặc định **240**). Khi `streak >= InpMaxConsecutiveLosses`,
+   entry bị chặn thêm `InpLossStreakCooldownMinutes` phút; hết hạn thì **xoá streak và vào lại**.
+   `0` giữ hành vi cũ (khoá vĩnh viễn) như một escape hatch có chủ ý.
+2. Logic thuần đặt ở `mt5/Include/InfiniteRunner/IRRisk.mqh` (block/arm/khôi phục) — **khác** file
+   `IRRisk.mqh` đã lưu trữ của alt A, không liên quan.
+3. State file lưu thêm `streak_cooldown_until`; panel hiện `STREAK_COOLDOWN`; fingerprint thêm
+   `risk.loss_streak_cooldown_minutes`.
+4. Guardrail: preset `configs/demo/infinite_runner_demo.json` không được có `InpMaxConsecutiveLosses>0`
+   mà `InpLossStreakCooldownMinutes<=0` (validator + `sim_configs.py` + pytest).
+
+**Phạm vi:** sửa lỗi vận hành; **không** đổi chiến lược/entry/exit. Trạng thái evidence vẫn `NOT_RUN`,
+kết quả chiến lược `UNPROVEN`.

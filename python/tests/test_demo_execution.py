@@ -261,6 +261,22 @@ def test_runner_demo_keeps_runner_guards() -> None:
     assert ir["InpMaxStopPoints"] >= ir["InpMinStopPoints"] > 0.0
     assert ir["InpMaxConsecutiveLosses"] >= 0
     assert ir["InpHaltOnBreach"] is True
+    #--- The loss-streak guard must be able to recover: a permanent lock stops
+    #--- the bot forever, because the streak only clears on a winning trade and
+    #--- a blocked bot never places one (measured on the 2026 journal).
+    if ir["InpMaxConsecutiveLosses"] > 0:
+        assert ir["InpLossStreakCooldownMinutes"] > 0
+
+
+def test_runner_loss_streak_guard_must_recover() -> None:
+    """A loss-streak limit with no recovery cooldown deadlocks the bot: the
+    streak only clears on a win, and a blocked bot never places one. The
+    validator must reject that combination."""
+    config = _json(REPO_ROOT / "configs" / "demo" / "infinite_runner_demo.json")
+    config["inputs"]["InpLossStreakCooldownMinutes"] = 0
+    assert any(
+        "InpLossStreakCooldownMinutes" in issue for issue in validate_preset(config)
+    )
 
 
 def test_demo_state_file_has_single_state_prefix() -> None:

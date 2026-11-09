@@ -138,6 +138,9 @@ InpMaxDrawdownPct=8.0
 InpMaxConsecutiveLosses=3
 ; Số lệnh lỗ liên tiếp tối đa cho phép trước khi kích hoạt tạm dừng
 
+InpLossStreakCooldownMinutes=240
+; Thời gian chờ (phút) sau khi chạm chuỗi thua; hết chờ bot tự xóa chuỗi rồi vào lại (0 = khóa vĩnh viễn, không khuyến nghị)
+
 InpHaltOnBreach=true
 ; true = Tự động đóng lệnh và ngừng chạy ngay khi chạm một trong các giới hạn rủi ro trên
 

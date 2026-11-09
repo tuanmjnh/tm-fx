@@ -27,6 +27,8 @@ SL+TP trên mọi lệnh. Có thêm step trailing 3 nấc khoá lợi nhuận (`
 | `mt5/Include/InfiniteRunner/IRTypes.mqh` | Enums (direction/SL/trail/lot mode), reason codes |
 | `mt5/Include/InfiniteRunner/IRDirection.mqh` | Bộ xác định hướng (legacy EMA / EMA MTF) |
 | `mt5/Include/InfiniteRunner/IRTrailing.mqh` | BE + trailing từ initial R, monotonic SL |
+| `mt5/Include/InfiniteRunner/IRRisk.mqh` | Circuit-breaker loss-streak thuần: block / arm cooldown / khôi phục |
+| `mt5/Scripts/IRCoreTests.mq5` | Test thuần logic (loss-streak guard, step trailing, BE, monotonic, band) |
 | `mt5/Include/Exec/ExecBroker.mqh` | Điểm gửi lệnh duy nhất (không `OrderSend` trực tiếp) |
 | `mt5/Include/Sim/SimRiskGuard.mqh`, `SimLogger.mqh` | Guard rủi ro và journal CSV |
 
@@ -35,7 +37,7 @@ thành EA giao dịch; alt A đã lưu trữ (xem ADR 0005).
 
 ## 3. Bảng input
 
-59 input khai báo — các nhóm chính (giá trị mặc định):
+60 input khai báo — các nhóm chính (giá trị mặc định):
 
 | Nhóm | Input (tên hiện tại) | Giá trị mặc định | Tên chuẩn (phase C) |
 |---|---|---|---|
@@ -62,6 +64,7 @@ thành EA giao dịch; alt A đã lưu trữ (xem ADR 0005).
 | | `InpAtrPeriod` / `InpAtrBaselineBars` | 14 / 100 | giữ |
 | | `InpMaxDailyLossPct` / `InpMaxDrawdownPct` | 1.0 / 8.0 | giữ |
 | | `InpMaxConsecutiveLosses` / `InpHaltOnBreach` / `InpManualResetDrawdown` | 3 / `true` / `false` | giữ |
+| | `InpLossStreakCooldownMinutes` | 240 | giữ (mới 2026-11-09: hồi phục sau chuỗi thua; `0` = khoá vĩnh viễn) |
 | Initial SL | `InpSlMode` / `InpInitialSlPoints` / `InpSlAtrMultiplier` | `IR_SL_FIXED` / 5000 / 3.0 | giữ |
 | | `InpMinStopPoints` / `InpMaxStopPoints` | 500 / 20000 | giữ |
 | Trailing | `InpTrailMode` | `IR_TRAIL_FIXED` | giữ |
@@ -103,6 +106,13 @@ Nhãn: **`NOT_RUN`** — chưa có phiên **demo thật** nào ghi kết quả; 
   deposit 10.000 → `entries=101|exits=101|wins=81|losses=20|blocks=52462|sl_updates=113|realized=+1,70|
   halted=ACTIVE`, equity cuối 10.001,70. Với state sạch, tester **không** tái hiện chẩn đoán "vị thế lạc chiếm
   slot". Bằng chứng: `reports/build/tester-reports/infinite_runner_demo_exec/` (gitignored).
+- §92 (2026-11-09): **chẩn đoán từ chính journal 101 lệnh** — cả 101 lệnh chỉ nằm trong **3 ngày đầu**
+  (2026.01.05–01.07, chạm trần 50 lệnh/ngày); từ 2026.01.07 lệnh thua thứ 3 liên tiếp đặt `streak=3` và
+  `EntryThrottlesOk` **chặn mọi entry vĩnh viễn** (`blocks=52.462`, trong đó 51.937 là `loss_streak`) vì
+  streak chỉ reset khi có lệnh **thắng** — mà bot bị chặn thì không có lệnh nào. Đây là **deadlock**, không
+  phải chiến lược. Kinh tế trong 101 lệnh: thắng TB **+$1,26 (0,25R)** so với thua đủ **−$5,00 (1R)** ⇒
+  expectancy ≈ 0 (winrate 80,2% là *sản phẩm của exit*, không phải edge). Sửa: thêm
+  `InpLossStreakCooldownMinutes=240` (cooldown, hết hạn tự xoá streak) qua module thuần `IRRisk.mqh`.
 - Chưa có phiên **demo thật** có lệnh; lợi nhuận vẫn `UNPROVEN` (backtest không thay được phiên demo).
 
 ## 6. Giới hạn / quirk đã biết
@@ -118,5 +128,9 @@ Nhãn: **`NOT_RUN`** — chưa có phiên **demo thật** nào ghi kết quả; 
   hầu như không chặn ở giá trị mặc định.
 - `InpCooldownMinutes=0` mặc định — khoảng cách entry chỉ còn do `InpMinBarsBetweenEntries=1` và
   `InpMaxTradesPerDay=50`.
+- **Deadlock loss-streak (đã sửa 2026-11-09):** trước đây `InpMaxConsecutiveLosses=3` chặn entry **vĩnh
+  viễn** (streak chỉ xoá khi thắng) nên bot tự tắt sau ~2 ngày và không bao giờ vào lại. Nay
+  `InpLossStreakCooldownMinutes` (>0) cho bot tự hồi phục sau cooldown; đặt `0` quay lại hành vi khoá vĩnh
+  viễn (chỉ dùng khi cố ý).
 - Lợi nhuận `UNPROVEN`; chưa có SELL/BUY nào của V2 trên demo; parity với V1 trên nến đóng là mục đích
   của mode `IR_DIR_LEGACY_EMA` chứ chưa được đối chiếu số.

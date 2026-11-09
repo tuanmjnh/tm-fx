@@ -118,6 +118,7 @@ $files += @(
     [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesDemoEA.mq5"; Target = "MQL5\Experts\WonderwhalesDemoEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesXAU2ModeEA.mq5"; Target = "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\WW2CoreTests.mq5"; Target = "MQL5\Scripts\WW2CoreTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\IRCoreTests.mq5"; Target = "MQL5\Scripts\IRCoreTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
     [pscustomobject]@{ Source = "mt5\Scripts\TrendRiderContractTests.mq5"; Target = "MQL5\Scripts\TrendRiderContractTests.mq5" },
@@ -162,7 +163,8 @@ $compileTargets = @(
     "MQL5\Experts\WonderwhalesDemoEA.mq5",
     "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5",
     "MQL5\Experts\WonderwhalesDumpTesterEA.mq5",
-    "MQL5\Scripts\WW2CoreTests.mq5"
+    "MQL5\Scripts\WW2CoreTests.mq5",
+    "MQL5\Scripts\IRCoreTests.mq5"
 )
 
 function Get-TerminalCandidates {

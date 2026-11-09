@@ -392,6 +392,7 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
         "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
         "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
+        "InpLossStreakCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
         "InpHaltOnBreach": BOOL,
         "InpManualResetDrawdown": BOOL,
         "InpSlMode": Enum((0, 1)),
@@ -716,6 +717,11 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
             issues.append("InpMaxLots: exposure cap must be positive")
         if inputs["InpMaxTradesPerDay"] < 1:
             issues.append("InpMaxTradesPerDay: must be at least 1")
+        if inputs["InpMaxConsecutiveLosses"] > 0 and inputs["InpLossStreakCooldownMinutes"] <= 0:
+            issues.append(
+                "InpLossStreakCooldownMinutes: a loss-streak guard needs a "
+                "recovery cooldown (0 is a permanent dead end)"
+            )
         if inputs["InpEnableStepTrailing"]:
             steps = (
                 (inputs["InpStep1_TriggerPoints"], inputs["InpStep1_LockPoints"]),

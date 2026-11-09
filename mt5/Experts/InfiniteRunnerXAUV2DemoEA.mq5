@@ -36,6 +36,7 @@
 #include "../Include/InfiniteRunner/IRTypes.mqh"
 #include "../Include/InfiniteRunner/IRDirection.mqh"
 #include "../Include/InfiniteRunner/IRTrailing.mqh"
+#include "../Include/InfiniteRunner/IRRisk.mqh"
 
 input group "Demo execution"
 input bool   InpEnableExecution     = true;                     // false = dry-run, no orders (ADR 0006: true by default)
@@ -83,6 +84,11 @@ input int    InpAtrBaselineBars       = 100;
 input double InpMaxDailyLossPct       = 1.0;
 input double InpMaxDrawdownPct        = 8.0;
 input int    InpMaxConsecutiveLosses  = 3;
+//--- Loss-streak breaker recovery: the streak counter only clears on a win, so
+//--- a permanent block is a dead end. After the limit is hit, entries pause for
+//--- this many minutes, then the counter is cleared and the bot may trade again
+//--- (0 = legacy permanent lock, kept as an explicit escape hatch).
+input int    InpLossStreakCooldownMinutes = 240;
 input bool   InpHaltOnBreach         = true;
 input bool   InpManualResetDrawdown  = false;                     // log-kept manual DD reset
 
@@ -140,6 +146,7 @@ long     g_day_key=0;
 bool     g_dd_locked=false;
 int      g_streak_losses=0;
 datetime g_cooldown_until=0;
+datetime g_streak_cooldown_until=0;   // loss-streak breaker recovery window
 int      g_trades_today=0;
 bool     g_halted=false;
 string   g_halt_reason="";
@@ -306,6 +313,11 @@ bool ValidateInputs(string &error)
       error="max_consecutive_losses_must_be_non_negative";
       return(false);
      }
+   if(InpLossStreakCooldownMinutes<0)
+     {
+      error="loss_streak_cooldown_minutes_must_be_non_negative";
+      return(false);
+     }
    if(InpSlMode==IR_SL_FIXED && InpInitialSlPoints<=0)
      {
       error="initial_sl_points_must_be_positive";
@@ -415,6 +427,8 @@ string BuildConfigHash(void)
                                         InpMaxDrawdownPct,4)+
                SimFormatFingerprintPartInt("risk.max_consecutive_losses",
                                            InpMaxConsecutiveLosses)+
+               SimFormatFingerprintPartInt("risk.loss_streak_cooldown_minutes",
+                                           InpLossStreakCooldownMinutes)+
                SimFormatFingerprintPartInt("risk.halt_on_breach",
                                            (InpHaltOnBreach ? 1 : 0))+
                SimFormatFingerprintPartInt("sl.mode",(int)InpSlMode)+
@@ -561,6 +575,7 @@ void SaveState(void)
    FileWriteString(handle,"dd_locked="+(g_dd_locked ? "1" : "0")+"\r\n");
    FileWriteString(handle,"streak_losses="+IntegerToString(g_streak_losses)+"\r\n");
    FileWriteString(handle,"cooldown_until="+IntegerToString((int)g_cooldown_until)+"\r\n");
+   FileWriteString(handle,"streak_cooldown_until="+IntegerToString((int)g_streak_cooldown_until)+"\r\n");
    FileWriteString(handle,"trades_today="+IntegerToString(g_trades_today)+"\r\n");
    FileWriteString(handle,"last_signal_bar="+IntegerToString((int)g_last_signal_bar)+"\r\n");
    FileWriteString(handle,"last_entry_bar="+IntegerToString((int)g_last_entry_bar)+"\r\n");
@@ -594,6 +609,7 @@ bool ReadStateFile(bool &restored)
    bool dd_locked=false;
    int streak=0;
    datetime cooldown=0;
+   datetime streak_cooldown=0;
    int trades_today=0;
    datetime last_signal=0,last_entry=0;
    ulong pos_ticket=0;
@@ -626,6 +642,8 @@ bool ReadStateFile(bool &restored)
          streak=(int)StringToInteger(value);
       else if(key=="cooldown_until")
          cooldown=(datetime)StringToInteger(value);
+      else if(key=="streak_cooldown_until")
+         streak_cooldown=(datetime)StringToInteger(value);
       else if(key=="trades_today")
          trades_today=(int)StringToInteger(value);
       else if(key=="last_signal_bar")
@@ -662,6 +680,7 @@ bool ReadStateFile(bool &restored)
    if(streak>0)
       g_streak_losses=streak;
    g_cooldown_until=cooldown;
+   g_streak_cooldown_until=streak_cooldown;
    g_trades_today=trades_today;
    g_last_signal_bar=last_signal;
    g_last_entry_bar=last_entry;
@@ -812,9 +831,28 @@ bool EntryThrottlesOk(const datetime bar_time,string &block_reason)
 
    if(InpMaxConsecutiveLosses>0 && g_streak_losses>=InpMaxConsecutiveLosses)
      {
-      block_reason=StringFormat("loss_streak|count=%d|limit=%d",
-                                g_streak_losses,InpMaxConsecutiveLosses);
-      return(false);
+      datetime next_cooldown=0;
+      string streak_reason="";
+      const ENUM_IR_STREAK_ACTION action=
+         IRLossStreakDecide(g_streak_losses,InpMaxConsecutiveLosses,
+                            InpLossStreakCooldownMinutes,now,
+                            g_streak_cooldown_until,next_cooldown,
+                            streak_reason);
+      g_streak_cooldown_until=next_cooldown;
+      if(action==IR_STREAK_RECOVER)
+        {
+         //--- Cooldown served: clear the streak so entries can resume. Without
+         //--- this the counter could never return below the limit (it only
+         //--- clears on a win, and there are no entries to produce one).
+         g_streak_losses=0;
+         PrintFormat("LAB|INFO|ir_v2|loss_streak_recovered|cooldown_minutes=%d",
+                     InpLossStreakCooldownMinutes);
+        }
+      else
+        {
+         block_reason=streak_reason;
+         return(false);
+        }
      }
    if(CooldownActive(now))
      {
@@ -1047,6 +1085,7 @@ void FinalizeClosedPosition(void)
         {
          g_wins++;
          g_streak_losses=0;
+         g_streak_cooldown_until=0;
         }
      }
 
@@ -1373,10 +1412,8 @@ void ProcessEntryBar(const datetime bar_time,const string data_reason)
       g_blocks++;
       return;
      }
-   if(InpMaxConsecutiveLosses>0 && g_streak_losses>=InpMaxConsecutiveLosses)
-     {
-      //--- Reported through EntryThrottlesOk below as well; keep order clear.
-     }
+   //--- The loss-streak guard (with its recovery cooldown) is reported through
+   //--- EntryThrottlesOk below, so it is not duplicated here.
    if(!EntryThrottlesOk(bar_time,reason))
      {
       LogEvent("BLOCKED",is_buy,spread_points,0.0,0.0,0.0,0.0,reason);
@@ -1481,6 +1518,7 @@ void UpdatePanel(const double bid,const double ask)
    string state="NORMAL";
    if(g_dd_locked)          state="DD_LOCK";
    else if(g_halted)        state="HALTED";
+   else if(g_streak_cooldown_until>TimeCurrent()) state="STREAK_COOLDOWN";
    else if(CooldownActive(TimeCurrent())) state="COOLDOWN";
    else if(g_sl_missing)    state="SAFE_MODE_SL_MISSING";
 
