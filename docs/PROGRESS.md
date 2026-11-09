@@ -4967,9 +4967,18 @@ Tiếp §92: sau khi sửa deadlock (U1), đo nghiêm túc trên cửa sổ dài
 
 - Đơn vị: Exness `XAUUSDm` 3 chữ số ⇒ **1 point = 0.001**; `InpInitialSlPoints=5000` = 5,00 giá = **1R ≈ $5**
   ở lot 0.01; `InpSafetyTpPoints=100000` = **20R**.
-- Công cụ mới `reports/build/ir_analyse.py` (streaming — journal tới 190 MB) in nền kinh tế + `net_without_tp`.
+- Công cụ mới (đều tracked): `scripts/tester/analyse_ir.py` (streaming — journal tới 190 MB, có `net_without_tp`)
+  và `scripts/tester/gen_ir_sets.py` (sinh 10 scenario IR từ JSON nguồn sự thật).
 
-### 93.4 Báo cáo & trạng thái
+### 93.4 Bằng chứng lên git (chủ dự án chốt)
+
+- **Evidence pack nhỏ** (0,09 MB) đã commit: `docs/30-research/evidence/infinite-runner/` gồm PNG đường vốn +
+  JSON metric từng scenario + `summary.csv` + README, dựng lại bằng `scripts/tester/build_ir_evidence.py`.
+- Dữ liệu thô (journal CSV tới ~190 MB, HTM) **vẫn gitignore** theo `reports/README.md`; repo không phình.
+- Thêm test `python/tests/test_gen_ir_sets.py` (8 check: ma trận 10 scenario, mỗi arm đổi đúng 1 biến,
+  invariant EA-valid).
+
+### 93.5 Báo cáo & trạng thái
 
 - Báo cáo chốt: [`30-research/infinite-runner-study.md`](30-research/infinite-runner-study.md).
 - **Chỉ ship U1** (sửa lỗi vận hành). Không đổi chiến lược/entry/exit/preset. Evidence `NOT_RUN`, profit

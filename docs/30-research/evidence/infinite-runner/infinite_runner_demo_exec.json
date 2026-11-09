@@ -1,0 +1,55 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_demo_exec\\sim_ir_demo_exec.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 52563,
+    "ENTRY": 101,
+    "SL_UPDATE": 113,
+    "EXIT": 101,
+    "BLOCKED": 52462,
+    "SUMMARY": 1
+  },
+  "trades": 101,
+  "wins": 81,
+  "losses": 20,
+  "flats": 0,
+  "winrate": 80.1980198019802,
+  "net": 1.7000000000000455,
+  "expectancy_usd": 0.01683168316831728,
+  "expectancy_r": 0.0033663366336634565,
+  "avg_win": 1.2555555555555569,
+  "avg_loss": -5.0,
+  "profit_factor": 1.017000000000001,
+  "max_drawdown_pct": 0.48634009181558874,
+  "peak_equity": 10050.58,
+  "trough_equity": 10001.7,
+  "risk_per_trade": 5.0,
+  "tp_hits": 0,
+  "tp_contrib": 0.0,
+  "net_without_tp": 1.7000000000000455,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 0.7
+  },
+  "entries_by_year": {
+    "2026": 101
+  },
+  "exits_by_year": {
+    "2026": 101
+  },
+  "blocks": {
+    "loss_streak": 51937,
+    "atr_spiked": 265,
+    "max_trades_day": 244,
+    "spread_wide": 16
+  },
+  "source": {
+    "journal": "sim_ir_demo_exec.csv",
+    "journal_sha256": "2a70ffdc68a6a67e054c1c943be679d37567fb38407926e1278c422ab03453b3",
+    "report_sha256": "c11ffc8abe5c55d1545e151e17dfebea246253bf8c7a044868807df4cc5d4a19",
+    "png_sha256": "a0b7a26a2b0e26ad04e3398081485307503609d54234fdee8f7d147fa03419cb"
+  },
+  "description": "shipped preset, 2026.01.05-10.01 (the run that deadlocked after 2 days, 101 trades)"
+}

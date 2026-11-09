@@ -1,0 +1,72 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_fixedrr\\sim_ir_long_fixedrr.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 134595,
+    "ENTRY": 26144,
+    "EXIT": 26143,
+    "BLOCKED": 107165,
+    "ERROR": 1286,
+    "SUMMARY": 1
+  },
+  "trades": 26143,
+  "wins": 12566,
+  "losses": 13577,
+  "flats": 0,
+  "winrate": 48.066404008721264,
+  "net": -5796.009999999875,
+  "expectancy_usd": -0.22170408904868893,
+  "expectancy_r": -0.04434081780973779,
+  "avg_win": 4.970743275505323,
+  "avg_loss": -5.027500184134943,
+  "profit_factor": 0.9150871900398411,
+  "max_drawdown_pct": 58.2856,
+  "peak_equity": 10000.0,
+  "trough_equity": 4171.44,
+  "risk_per_trade": 5.0,
+  "tp_hits": 0,
+  "tp_contrib": 0.0,
+  "net_without_tp": -5796.009999999875,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": -1.0,
+    "p90": 1.0,
+    "max": 1.000000000000091
+  },
+  "entries_by_year": {
+    "2018": 568,
+    "2019": 877,
+    "2020": 2479,
+    "2021": 1743,
+    "2022": 2031,
+    "2023": 1686,
+    "2024": 2925,
+    "2025": 6379,
+    "2026": 7456
+  },
+  "exits_by_year": {
+    "2018": 567,
+    "2019": 877,
+    "2020": 2480,
+    "2021": 1742,
+    "2022": 2032,
+    "2023": 1685,
+    "2024": 2925,
+    "2025": 6380,
+    "2026": 7455
+  },
+  "blocks": {
+    "loss_streak_cooldown": 92979,
+    "spread_wide": 5069,
+    "atr_spiked": 3961,
+    "max_trades_day": 3088,
+    "loss_streak_armed": 2068
+  },
+  "source": {
+    "journal": "sim_ir_long_fixedrr.csv",
+    "journal_sha256": "527d63b557d33eea6f880443a6f7a5ffd0748483ce858337daa5c8e11a41593b",
+    "report_sha256": "97838e8af8b902233395cb3c2cb5b30935adc2f2a34dfc08791fa1b25cc758fd",
+    "png_sha256": "63478320e7d51a5257da20ddd3cc4c706806db0dead4ecb3bfc6aeb1f20c87a2"
+  },
+  "description": "U3: no trail, SL 1R / TP 1R -> raw entry edge (break-even winrate 50%)"
+}

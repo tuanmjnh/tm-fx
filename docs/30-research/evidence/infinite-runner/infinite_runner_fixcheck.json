@@ -1,0 +1,57 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_fixcheck\\sim_ir_fixcheck.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 30529,
+    "ENTRY": 8364,
+    "SL_UPDATE": 8426,
+    "EXIT": 8364,
+    "BLOCKED": 21872,
+    "ERROR": 850,
+    "SUMMARY": 1
+  },
+  "trades": 8364,
+  "wins": 6035,
+  "losses": 2329,
+  "flats": 0,
+  "winrate": 72.15447154471545,
+  "net": 763.5500000001111,
+  "expectancy_usd": 0.0912900526064217,
+  "expectancy_r": 0.01825801052128434,
+  "avg_win": 2.0563413421707732,
+  "avg_loss": -5.0006311721769,
+  "profit_factor": 1.065560637686837,
+  "max_drawdown_pct": 5.900251821768969,
+  "peak_equity": 11361.21,
+  "trough_equity": 10690.87,
+  "risk_per_trade": 5.0,
+  "tp_hits": 39,
+  "tp_contrib": 3891.640000000001,
+  "net_without_tp": -3128.0899999998896,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 20.0
+  },
+  "entries_by_year": {
+    "2026": 8364
+  },
+  "exits_by_year": {
+    "2026": 8364
+  },
+  "blocks": {
+    "max_trades_day": 15235,
+    "loss_streak_cooldown": 6288,
+    "atr_spiked": 199,
+    "loss_streak_armed": 136,
+    "spread_wide": 14
+  },
+  "source": {
+    "journal": "sim_ir_fixcheck.csv",
+    "journal_sha256": "eb044dcd6b8f20bd2d8c53ba1f8bd8bac0139d2bdc67bbcceb440a67e3b85b08",
+    "report_sha256": "d378eb8cc1405c3203d55a60da97c7241b1494073c95124eb4adb34045958561",
+    "png_sha256": "8de685bfab1581b9fa6537938b33e5c6609444dbacca5ca29cd601243f68f04b"
+  },
+  "description": "U1 fix on the SAME window: trades all 9 months instead of deadlocking"
+}

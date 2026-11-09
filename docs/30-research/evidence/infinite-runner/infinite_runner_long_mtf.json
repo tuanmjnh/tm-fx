@@ -1,0 +1,63 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_mtf\\sim_ir_long_mtf.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 616853,
+    "ENTRY": 31,
+    "SL_UPDATE": 32,
+    "EXIT": 31,
+    "SUMMARY": 1
+  },
+  "trades": 31,
+  "wins": 23,
+  "losses": 8,
+  "flats": 0,
+  "winrate": 74.19354838709677,
+  "net": -21.180000000000003,
+  "expectancy_usd": -0.683225806451613,
+  "expectancy_r": -0.13664516129032261,
+  "avg_win": 0.8826086956521738,
+  "avg_loss": -5.1850000000000005,
+  "profit_factor": 0.4893924783027964,
+  "max_drawdown_pct": 0.23255162926111586,
+  "peak_equity": 10002.08,
+  "trough_equity": 9978.82,
+  "risk_per_trade": 5.0,
+  "tp_hits": 0,
+  "tp_contrib": 0.0,
+  "net_without_tp": -21.180000000000003,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.3,
+    "max": 0.7
+  },
+  "entries_by_year": {
+    "2018": 5,
+    "2019": 5,
+    "2020": 3,
+    "2021": 5,
+    "2022": 2,
+    "2023": 6,
+    "2024": 3,
+    "2025": 2
+  },
+  "exits_by_year": {
+    "2018": 5,
+    "2019": 5,
+    "2020": 3,
+    "2021": 5,
+    "2022": 2,
+    "2023": 6,
+    "2024": 3,
+    "2025": 2
+  },
+  "blocks": {},
+  "source": {
+    "journal": "sim_ir_long_mtf.csv",
+    "journal_sha256": "d9239a0ccfe942f9b0af6a87b1aa0888d97680772cca8fe2dd8b68ae5064208c",
+    "report_sha256": "17c462ade886cb070f488aba9cf7b840668daf43179b66825790ada8dddfe461",
+    "png_sha256": "547130bc168f2c1575859a43e40156fae1fc3867a5a2729a7e1f7a5b48bfab0b"
+  },
+  "description": "2018-2026 with InpDirectionMode=1 (IR_DIR_EMA_MTF): 31 trades / 8.75 years"
+}

@@ -26,8 +26,10 @@ phải kết quả chiến lược); evidence vẫn `NOT_RUN`, lợi nhuận `UN
 
 Đọc journal Strategy Tester (18 cột SimLogger) thay vì đoán tham số; mỗi lần đổi **một biến**; so sánh bằng
 **expectancy sau chi phí + drawdown**, không bằng winrate. Đo trên cửa sổ dài 2018-01-01 → 2026-10-01,
-XAUUSDm M5, Model=1 (1 phút OHLC), deposit 10.000, lot cố định 0.01. Công cụ: `reports/build/ir_analyse.py`
-(streaming) và `reports/build/ir_diag.py`.
+XAUUSDm M5, Model=1 (1 phút OHLC), deposit 10.000, lot cố định 0.01. Công cụ (đều tracked):
+`scripts/tester/gen_ir_sets.py` (sinh scenario), `scripts/tester/analyse_ir.py` (phân tích streaming),
+`scripts/tester/build_ir_evidence.py` (dựng evidence pack). Bằng chứng nhỏ gọn đã commit:
+[`evidence/infinite-runner/`](evidence/infinite-runner/README.md) (PNG đường vốn + JSON metric từng scenario).
 
 Quy ước đơn vị (Exness `XAUUSDm`, 3 chữ số): **1 point = 0.001**; `InpInitialSlPoints=5000` ⇒ SL cách entry
 **5,00 giá** = **1R ≈ $5,00** ở lot 0.01 (contract 100 oz). "TP an toàn" `InpSafetyTpPoints=100000` = 100 giá
@@ -132,14 +134,26 @@ nhờ kỳ vọng dương.
 
 ## 9. Tái lập
 
+Scenario được **sinh từ `configs/demo/infinite_runner_demo.json`** (nguồn sự thật) — không sửa tay `.set`:
+
 ```powershell
-# U1 fixcheck + các đo lường (đều gitignored, chỉ chạy trong Strategy Tester)
-scripts\tester\run_tester.ps1 -Scenario infinite_runner_fixcheck      -TimeoutSec 10800
-scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_base_nolock -TimeoutSec 10800
-scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_exit_run    -TimeoutSec 10800
-scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_fixedrr     -TimeoutSec 10800
-scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_fixedrr15   -TimeoutSec 10800
+# 1. Sinh .set/.ini cho mọi scenario (ghi vào reports/build, gitignored)
+.venv\Scripts\python.exe scripts\tester\gen_ir_sets.py
+
+# 2. Chạy Strategy Tester (mỗi scenario ~15-30 phút)
+scripts\tester\run_tester.ps1 -Scenario infinite_runner_fixcheck          -TimeoutSec 10800
+scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_base_nolock  -TimeoutSec 10800
+scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_exit_run     -TimeoutSec 10800
+scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_fixedrr      -TimeoutSec 10800
+scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_fixedrr15    -TimeoutSec 10800
 scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_fixedrr_clean -TimeoutSec 10800
-scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_mtf         -TimeoutSec 10800
-.venv\Scripts\python.exe reports\build\ir_analyse.py reports\build\tester-reports\<scenario>\sim_*.csv
+scripts\tester\run_tester.ps1 -Scenario infinite_runner_long_mtf          -TimeoutSec 10800
+
+# 3. Phân tích (in nền kinh tế) + dựng lại evidence pack đã commit
+.venv\Scripts\python.exe scripts\tester\analyse_ir.py reports\build\tester-reports\<scenario>\sim_*.csv
+.venv\Scripts\python.exe scripts\tester\build_ir_evidence.py
 ```
+
+Dữ liệu thô (journal CSV tới ~190 MB, báo cáo HTM) ở `reports/build/tester-reports/<scenario>/` và **bị
+gitignore** theo `reports/README.md`; chỉ PNG đường vốn + JSON metric (0,09 MB) được commit vào
+[`evidence/infinite-runner/`](evidence/infinite-runner/README.md).

@@ -1,0 +1,63 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_baseline\\sim_ir_long_baseline.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 9427,
+    "ENTRY": 2406,
+    "EXIT": 2406,
+    "SL_UPDATE": 2776,
+    "BLOCKED": 6969,
+    "ERROR": 2407,
+    "HALT": 1,
+    "HALT_EXIT": 1,
+    "SUMMARY": 1
+  },
+  "trades": 2406,
+  "wins": 1710,
+  "losses": 696,
+  "flats": 0,
+  "winrate": 71.07231920199501,
+  "net": -793.0099999999991,
+  "expectancy_usd": -0.3295968412302573,
+  "expectancy_r": -0.06591936824605146,
+  "avg_win": 1.532801169590625,
+  "avg_loss": -4.905316091954023,
+  "profit_factor": 0.7677250226999702,
+  "max_drawdown_pct": 7.937188836459599,
+  "peak_equity": 10000.77,
+  "trough_equity": 9206.99,
+  "risk_per_trade": 5.0,
+  "tp_hits": 3,
+  "tp_contrib": 299.51,
+  "net_without_tp": -1092.519999999999,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 20.0
+  },
+  "entries_by_year": {
+    "2018": 438,
+    "2019": 707,
+    "2020": 1261
+  },
+  "exits_by_year": {
+    "2018": 437,
+    "2019": 707,
+    "2020": 1262
+  },
+  "blocks": {
+    "spread_wide": 4495,
+    "loss_streak_cooldown": 1751,
+    "atr_spiked": 351,
+    "max_trades_day": 329,
+    "loss_streak_armed": 43
+  },
+  "source": {
+    "journal": "sim_ir_long_baseline.csv",
+    "journal_sha256": "f908ec70a85be5c4e45f904573a88da3a8b5d5154abfa986251a03180139c9a4",
+    "report_sha256": "bc380a7fc98e421e946a5053d041a9306c16553e7fea93a37e3302b777333e40",
+    "png_sha256": "62130ec77609bfd2101c14a360c3501174ef01c134208d4549c6f3025aebae45"
+  },
+  "description": "2018-2026 shipped inputs; halts permanently at 8% drawdown on 2020.06.23"
+}
