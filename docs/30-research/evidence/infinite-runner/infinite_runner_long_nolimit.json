@@ -1,0 +1,86 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_nolimit\\sim_ir_long_nolimit.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 59102,
+    "ENTRY": 30552,
+    "EXIT": 30551,
+    "SL_UPDATE": 33531,
+    "BLOCKED": 28086,
+    "ERROR": 14371,
+    "SUMMARY": 1
+  },
+  "trades": 30551,
+  "wins": 22250,
+  "losses": 8282,
+  "flats": 19,
+  "winrate": 72.82903996595856,
+  "net": 2191.8999999998946,
+  "expectancy_usd": 0.071745605708484,
+  "expectancy_usd_ci95": [
+    0.0006208471081142795,
+    0.1561660011128932
+  ],
+  "expectancy_r": 0.0143491211416968,
+  "expectancy_r_ci95": [
+    -0.0017423324932080812,
+    0.03063767143465037
+  ],
+  "avg_win": 1.943020224718924,
+  "avg_loss": -4.955361023907265,
+  "profit_factor": 1.053408478982758,
+  "break_even_winrate": 71.83367873287844,
+  "winrate_gap_pp": 0.9953612330801178,
+  "spread_price": 0.19,
+  "spread_cost_total": 5804.689999997425,
+  "gross": 7996.589999997319,
+  "net_spread_x2": -3612.7899999975302,
+  "max_drawdown_pct": 22.411896695851123,
+  "peak_equity": 12374.25,
+  "trough_equity": 7759.4,
+  "risk_per_trade": 5.0,
+  "tp_hits": 116,
+  "tp_contrib": 11561.5,
+  "net_without_tp": -9369.600000000106,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 20.00000000000091
+  },
+  "entries_by_year": {
+    "2018": 438,
+    "2019": 707,
+    "2020": 2593,
+    "2021": 1553,
+    "2022": 1668,
+    "2023": 1773,
+    "2024": 2672,
+    "2025": 7194,
+    "2026": 11954
+  },
+  "exits_by_year": {
+    "2018": 437,
+    "2019": 707,
+    "2020": 2593,
+    "2021": 1553,
+    "2022": 1668,
+    "2023": 1773,
+    "2024": 2672,
+    "2025": 7195,
+    "2026": 11953
+  },
+  "blocks": {
+    "loss_streak_cooldown": 21084,
+    "spread_wide": 4602,
+    "atr_spiked": 1932,
+    "loss_streak_armed": 468
+  },
+  "source": {
+    "journal": "sim_ir_long_nolimit.csv",
+    "journal_sha256": "7cd51a1deb043f582d06bfd552bade49277a0b16c4f69f6cbafb19ff8094ff83",
+    "report_sha256": "51ea624dd8270877d3df558a920c61ab427bbb31de91b2c66542b464069fc121",
+    "png_sha256": "74dafd67e93716832c0b1ecadbdf1e79c4373d964225e692886ee70dde322120"
+  },
+  "description": "2018-2026, entry throttles removed (MaxTradesPerDay 5000, MinBarsBetweenEntries 0)"
+}

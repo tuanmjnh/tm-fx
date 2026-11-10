@@ -27,6 +27,8 @@ Every number is `NOT_STRATEGY_RESULT` (operational/measurement); evidence
 | `infinite_runner_long_fixedrr15` | U3 cross-check: SL 1R / TP 1.5R (break-even winrate 40%) | 18407 | 38.65% | -3839.00 | -0.0417 | 0.932 | 38.77% | 0 |
 | `infinite_runner_long_fixedrr_clean` | U3 definitive: 1:1 with every guard off (no censoring) | 33668 | 48.08% | -7158.96 | -0.0425 | 0.918 | 71.94% | 0 |
 | `infinite_runner_long_mtf` | 2018-2026 with InpDirectionMode=1 (IR_DIR_EMA_MTF): 31 trades / 8.75 years | 31 | 74.19% | -21.18 | -0.1366 | 0.489 | 0.23% | 0 |
+| `infinite_runner_long_nolimit` | 2018-2026, entry throttles removed (MaxTradesPerDay 5000, MinBarsBetweenEntries 0) | 30551 | 72.83% | 2191.90 | 0.0143 | 1.053 | 22.41% | 116 |
+| `infinite_runner_long_spread200` | 2018-2026, cost filter: no entries when spread > 200 points (was 600) | 14387 | 73.11% | 219.40 | 0.0030 | 1.012 | 17.16% | 44 |
 
 ## Experiment E1 — gross decomposition (side x year x tail)
 

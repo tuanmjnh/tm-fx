@@ -5087,3 +5087,38 @@ tần suất/số lệnh, nên H-A không làm.)
 
 - `scripts/run_gates.py` → **5/5 PASS**: pytest **512**; validate-project 15/0; validate_demo_execution 14/0;
   validate_pineport 32/0; check_docs_links broken=0 (checked=471).
+
+## 97. InfiniteRunner — bỏ giới hạn tần suất + lọc chi phí (H-C), và ML T4.1/T4.2 — 2026-11-10
+
+### 97.1 Đo: bỏ giới hạn tần suất và lọc spread (2018-2026, khoá daily/DD tắt)
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | net_without_tp | MaxDD |
+|---|---:|---:|---:|---|---:|---:|
+| `long_base_nolock` (giới hạn cũ) | 26.130 | 72,97% | −685 | −0,005 [−0,020..+0,011] | −8.157 | 22,48% |
+| `long_nolimit` (bỏ trần lệnh/ngày + khoảng cách nến) | 30.551 | 72,83% | **+2.192** | +0,014 [−0,002..+0,031] | **−9.370** | 22,41% |
+| `long_spread200` (H-C: không vào khi spread > 200) | 14.387 | 73,11% | +219 | +0,003 [−0,018..+0,027] | −4.164 | **17,16%** |
+
+- **Bỏ giới hạn tần suất** chỉ **+17% số lệnh** (một vị thế + cấm vào lại cùng nến M5 vẫn giới hạn); net chuyển
+  dương nhẹ nhưng **do 116 lệnh chạm TP 20R** (`net_without_tp` = −9.370) và **âm ở spread×2** ⇒ không edge bền.
+- **Lọc chi phí (H-C)** halved số lệnh, **DD 22,5%→17,2%**, net ≈ 0 (CI bao 0) ⇒ *chỉ giảm lỗ/biến động*.
+- **KHÔNG đổi preset ship:** đo cho thấy không cải thiện; đổi base còn vô hiệu hoá chính scenario so sánh. (Nếu
+  chủ dự án vẫn muốn bỏ trần trong preset ship, đổi `configs/demo/infinite_runner_demo.json` + v2 `.set`.)
+
+### 97.2 ML T4.1/T4.2 (nhãn sau chi phí + đường cơ sở bắt buộc)
+
+- **T4.1** `python/src/mt5_ea_ai_lab/labels/cost_adjusted.py`: nhãn **triple-barrier trừ spread**
+  (`stop/target/timeout`), `net_r = (outcome − spread − slippage)/stop`; export qua `labels/__init__`. Test
+  `python/tests/test_cost_adjusted_labels.py` (6 check, gồm "một nến chạm cả hai barrier ⇒ tính stop").
+- **T4.2** `python/src/mt5_ea_ai_lab/evaluation/ml.py::gate_baselines`: so model với **"luôn vào"** và **"cổng
+  ngẫu nhiên cùng số lệnh"** (mean + p5/p95), seed cố định; cờ `has_value` chỉ khi thắng cả hai. Test
+  `python/tests/test_gate_baselines.py` (5 check).
+- Nhãn/đường cơ sở mới chưa nối vào CLI `scripts/train_ml_baseline.py` (việc nối E2E để sau); hàm đã có test.
+
+### 97.3 Gates
+
+- Chạy cuối batch: xem commit. Đã thêm 2 scenario IR (12 tổng) + 11 test mới (labels/baselines).
+
+### 97.4 Ghi chú
+
+- Study long-run: thêm §5.2 (kết quả) + §8 đánh dấu H-C ✅ và biến thể ngược H-A.
+- Evidence pack: thêm `long_nolimit`, `long_spread200` (PNG + JSON).

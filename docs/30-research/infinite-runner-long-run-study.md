@@ -162,6 +162,29 @@ luỹ theo thời gian giữ lệnh*. Vì vậy cấu trúc "ít lệnh, giữ l
 chi phí tính theo R (`s/SL`: 0,038R ở SL 5 → 0,013R ở SL 15) nhưng giảm cả lãi gộp tính theo R; chỉ phần *thời gian giữ lâu
 hơn* mới đổi tỉ số lãi-gộp/chi-phí.
 
+### 5.2 Lọc chi phí (H-C) và biến thể bỏ giới hạn tần suất — đã đo (2026-11-10)
+
+H-C và một biến thể **ngược H-A** (bỏ giới hạn tần suất, theo yêu cầu chủ dự án), chạy trên cửa sổ đầy đủ
+2018-2026 (khoá daily/DD tắt như §3; engine = step trailing shipped). Bằng chứng:
+`evidence/infinite-runner/infinite_runner_long_{nolimit,spread200}.json`.
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | gross | net spread×2 | net_without_tp | MaxDD |
+|---|---:|---:|---:|---|---:|---:|---:|---:|
+| `long_base_nolock` (giới hạn cũ, tham chiếu) | 26.130 | 72,97% | −685 | −0,005 [−0,020..+0,011] | +4.279 | −5.650 | −8.157 | 22,48% |
+| `long_nolimit` (bỏ trần lệnh/ngày + khoảng cách nến) | 30.551 | 72,83% | **+2.192** | +0,014 [−0,002..+0,031] | +7.997 | −3.613 | **−9.370** | 22,41% |
+| `long_spread200` (không vào khi spread > 200) | 14.387 | 73,11% | +219 | +0,003 [−0,018..+0,027] | +2.953 | −2.514 | −4.164 | **17,16%** |
+
+**Đọc (đúng tiêu chí bác bỏ của H-A/H-C):**
+
+- **Bỏ giới hạn tần suất** chỉ tăng ~17% số lệnh (một vị thế + cấm vào lại trong cùng nến M5 vẫn giới hạn),
+  net chuyển dương nhẹ nhưng **vẫn nhờ 116 lệnh chạm TP 20R** (`net_without_tp` = −9.370) và **âm ở spread×2**;
+  CI của R bao 0 ⇒ không phải edge bền ⇒ *giảm giới hạn ≠ tạo lãi*.
+- **Lọc chi phí (spread ≤ 200)** halved số lệnh và **giảm DD mạnh (22,5%→17,2%)** nhưng net ≈ 0 (CI bao 0) ⇒
+  *lọc chi phí chỉ giảm lỗ/biến động, không tạo lãi* — kết quả vẫn hữu ích: một cấu hình ít lệnh, ít đau hơn.
+
+Cả hai xác nhận lại kết luận §5.1: phần dương luôn nằm ở đuôi và nhỏ hơn chi phí; **không cấu hình nào tạo ra
+expectancy dương bền**.
+
 ## 6. Khoảng cách backtest ↔ chạy thật
 
 | Rủi ro | Hiện trạng trong repo | Việc cần |
@@ -203,9 +226,9 @@ cửa sổ ngoài mẫu. Dưới đây ID `E*` là thí nghiệm không cần/í
 | **E1** ✅ | Phân rã lãi gộp ở §5 (**đã chạy 2026-11-10**, xem §5.1) | từ journal `long_exit_run`/`long_base_nolock`: tách theo **hướng** (BUY/SELL) × **năm** × **phân vị lệnh** | gộp > 0 chỉ ở BUY, hoặc chỉ ở 1–2 năm, hoặc biến mất khi bỏ 0,5% lệnh tốt nhất ⇒ là beta/may mắn, không phải edge. **Kết quả: biến mất khi bỏ 0,5% ⇒ bác bỏ** |
 | **E2** | Kiểm spread theo giờ | thêm cột spread vào journal; nhóm lệnh theo giờ server | lãi gộp/lệnh không khác giữa giờ rẻ và giờ đắt |
 | **E3** | Port U1 vào V3, rồi đo V3 trên cửa sổ đầy đủ với BE ∈ {0, 1,0, 1,5R} | theo quy trình Giai đoạn B của guide V3 (`99-archive/MT5_EA_Lab_V3/EA/InfiniteRunnerXAUV3_UpgradeGuide_Vietnamese.md`) | V3 net không tốt hơn `long_exit_run` (−2.078) ngoài sai số ⇒ structure trailing không thêm giá trị |
-| **H-A** | **Giảm tần suất**: vào lệnh tối đa 1–3 lần/ngày, `InpCooldownMinutes` ≥ 60 | chỉ đổi giới hạn entry (input có sẵn) | tổng chi phí giảm nhưng gộp/lệnh không tăng ⇒ chỉ giảm lỗ, không tạo lãi (kết quả vẫn hữu ích: đây là biến kiểm soát) |
+| **H-A** | **Giảm tần suất**: vào lệnh tối đa 1–3 lần/ngày, `InpCooldownMinutes` ≥ 60 | chỉ đổi giới hạn entry (input có sẵn) | tổng chi phí giảm nhưng gộp/lệnh không tăng ⇒ chỉ giảm lỗ, không tạo lãi (kết quả vẫn hữu ích: đây là biến kiểm soát). *Biến thể ngược (bỏ giới hạn) đã đo 2026-11-10 → §5.2* |
 | **H-B** | **Giữ lâu**: SL theo ATR khung H1, trail theo cấu trúc M15/H1 | dùng `IR_SL_ATR`/`IR_TRAIL_ATR` có sẵn hoặc structure của V3 | gộp/lệnh (đơn vị giá) không tăng theo thời gian giữ |
-| **H-C** | **Lọc chi phí**: không vào lệnh khi spread > ngưỡng hoặc giờ roll-over | `InpMaxSpreadPoints` hạ từ 600 xuống ~200–250 (hiện gần như không chặn); thêm lọc giờ | lệnh bị loại không kém lệnh giữ lại |
+| **H-C** ✅ | **Lọc chi phí**: không vào lệnh khi spread > ngưỡng hoặc giờ roll-over | `InpMaxSpreadPoints` hạ 600→200 (**đã đo 2026-11-10** → §5.2); lọc giờ chưa làm | lệnh bị loại không kém lệnh giữ lại. **Kết quả: halved lệnh, DD 22,5%→17,2%, net ≈ 0 ⇒ chỉ giảm lỗ** |
 | **H-D** | **Entry theo regime khung lớn** (H1/H4 EMA + breakout ngày), 1 lệnh/regime | spec mới + `IRDirection.mqh` thêm mode; **không** sửa mode hiện có | OOS expectancy cận dưới CI ≤ 0 |
 | **H-E** | **Hồi phục sau khoá DD** (thay halt vĩnh viễn bằng pause + giảm risk) | cần ADR riêng vì nới hàng rào an toàn | DD tối đa vượt 15% hoặc halt tái diễn |
 | **H-F** | Mean-reversion sau ngày biến động bất thường | spec mới; một nghiên cứu học thuật thấy hiệu ứng contrarian ngày kế tiếp ở vàng nhưng *giới hạn theo thời gian* (§10) | không tái lập ngoài mẫu |

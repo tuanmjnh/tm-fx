@@ -102,6 +102,19 @@ SCENARIOS = (
      {"InpLogFile": "sim_ir_long_mtf.csv",
       "InpStateFile": "infinite_runner_demo_state.csv",
       **LONG, "InpDirectionMode": 1}),
+    #--- Owner preference: no frequency / trade-count limit. Removes the two
+    #--- entry throttles; one position, one entry per M5 bar still apply.
+    ("infinite_runner_long_nolimit", "M5", "2018.01.01", "2026.10.01", 10000,
+     "tester_infinite_runner_long_nolimit",
+     {"InpLogFile": "sim_ir_long_nolimit.csv",
+      "InpStateFile": "infinite_runner_demo_state.csv",
+      "InpMaxTradesPerDay": 5000, "InpMinBarsBetweenEntries": 0, **LONG}),
+    #--- H-C: cost filter, block entries when spread > 200 points (was 600).
+    ("infinite_runner_long_spread200", "M5", "2018.01.01", "2026.10.01", 10000,
+     "tester_infinite_runner_long_spread200",
+     {"InpLogFile": "sim_ir_long_spread200.csv",
+      "InpStateFile": "infinite_runner_demo_state.csv",
+      "InpMaxSpreadPoints": 200.0, **LONG}),
 )
 
 

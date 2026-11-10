@@ -1,0 +1,87 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_spread200\\sim_ir_long_spread200.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 255928,
+    "ENTRY": 14387,
+    "EXIT": 14387,
+    "SL_UPDATE": 16538,
+    "BLOCKED": 241310,
+    "ERROR": 4527,
+    "SUMMARY": 1
+  },
+  "trades": 14387,
+  "wins": 10519,
+  "losses": 3857,
+  "flats": 11,
+  "winrate": 73.11461736289706,
+  "net": 219.4000000002024,
+  "expectancy_usd": 0.015249878362424578,
+  "expectancy_usd_ci95": [
+    -0.10078351984430392,
+    0.12253023562938758
+  ],
+  "expectancy_r": 0.0030499756724849153,
+  "expectancy_r_ci95": [
+    -0.017483943838187216,
+    0.02731921178842014
+  ],
+  "avg_win": 1.8271033368192333,
+  "avg_loss": -4.926082447498056,
+  "profit_factor": 1.0115474291970754,
+  "break_even_winrate": 72.94457171514135,
+  "winrate_gap_pp": 0.17004564775571396,
+  "spread_price": 0.19,
+  "spread_cost_total": 2733.5300000006323,
+  "gross": 2952.9300000008348,
+  "net_spread_x2": -2514.13000000043,
+  "max_drawdown_pct": 17.1648633046966,
+  "peak_equity": 10276.61,
+  "trough_equity": 8294.1,
+  "risk_per_trade": 5.0,
+  "tp_hits": 44,
+  "tp_contrib": 4383.0,
+  "net_without_tp": -4163.599999999798,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 20.0
+  },
+  "entries_by_year": {
+    "2018": 528,
+    "2019": 29,
+    "2020": 10,
+    "2021": 652,
+    "2022": 1475,
+    "2023": 1338,
+    "2024": 2502,
+    "2025": 6461,
+    "2026": 1392
+  },
+  "exits_by_year": {
+    "2018": 527,
+    "2019": 30,
+    "2020": 10,
+    "2021": 651,
+    "2022": 1475,
+    "2023": 1338,
+    "2024": 2502,
+    "2025": 6462,
+    "2026": 1392
+  },
+  "blocks": {
+    "spread_wide": 225259,
+    "max_trades_day": 8020,
+    "loss_streak_cooldown": 7023,
+    "atr_spiked": 794,
+    "loss_streak_armed": 214
+  },
+  "source": {
+    "journal": "sim_ir_long_spread200.csv",
+    "journal_sha256": "c51110ec07106186cc1cf228407d4644de13f7b61d7c99080b6959ac9cf42446",
+    "report_sha256": "7052f3b7653e923a8f0a030ce4d5d7a425bc7f8bff4713e6ad7fb0a15651d21c",
+    "png_sha256": "af9da3f2cb63cf358ef7f53c3d117774ce7a882a186a1c254ebcd321fa8c6c26"
+  },
+  "description": "2018-2026, cost filter: no entries when spread > 200 points (was 600)"
+}

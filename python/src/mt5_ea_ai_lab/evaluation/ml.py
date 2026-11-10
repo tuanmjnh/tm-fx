@@ -112,3 +112,68 @@ def select_threshold(
     best["grid_size"] = len(thresholds)
     best["tie_break"] = "closest to 0.5"
     return best
+
+
+def gate_baselines(
+    net_r: np.ndarray,
+    selected: np.ndarray,
+    n_random: int = 2000,
+    seed: int = 12345,
+) -> dict[str, Any]:
+    """Compare a gate's trades with the two mandatory baselines (T4.2).
+
+    ``net_r``    realised R per candidate trade (after cost), one value each.
+    ``selected`` boolean mask: True where the model would enter.
+
+    Baselines:
+      * ``always_in``  mean(net_r) over every candidate - "always enter";
+      * ``random``     distribution of mean(net_r) over ``n_random`` random
+                       subsets of the SAME size as ``selected`` (its p5/p95 give
+                       the band a real gate has to clear).
+
+    A model has value only if its mean beats BOTH the always-in mean and the
+    random 95th percentile. Deterministic for a given seed.
+    """
+
+    values = np.asarray(net_r, dtype=float)
+    mask = np.asarray(selected, dtype=bool)
+    if values.shape != mask.shape:
+        raise ModelError("net_r and selected must have the same shape")
+    if values.size == 0:
+        raise ModelError("gate_baselines needs a non-empty sample")
+    if not np.isfinite(values).all():
+        raise ModelError("net_r contains non-finite values")
+    n_selected = int(mask.sum())
+
+    always_in = float(values.mean())
+    model = float(values[mask].mean()) if n_selected else float("nan")
+
+    if n_selected == 0 or n_selected == values.size or n_random <= 0:
+        random_stats = {"mean": always_in, "p5": always_in, "p95": always_in}
+    else:
+        rng = np.random.default_rng(seed)
+        means = np.empty(n_random, dtype=float)
+        for i in range(n_random):
+            means[i] = values[rng.choice(values.size, size=n_selected, replace=False)].mean()
+        p5, p95 = np.percentile(means, [5.0, 95.0])
+        random_stats = {"mean": float(means.mean()), "p5": float(p5), "p95": float(p95)}
+
+    beats_always_in = bool(n_selected > 0 and model > always_in)
+    beats_random = bool(n_selected > 0 and model > random_stats["p95"])
+    return {
+        "candidates": int(values.size),
+        "selected": n_selected,
+        "selected_rate": float(n_selected / values.size),
+        "model_net_r": model,
+        "always_in_net_r": always_in,
+        "random_net_r_mean": random_stats["mean"],
+        "random_net_r_p5": random_stats["p5"],
+        "random_net_r_p95": random_stats["p95"],
+        "delta_vs_always_in": (model - always_in) if n_selected else None,
+        "delta_vs_random_p95": (model - random_stats["p95"]) if n_selected else None,
+        "beats_always_in": beats_always_in,
+        "beats_random_p95": beats_random,
+        "has_value": beats_always_in and beats_random,
+        "n_random": int(n_random),
+        "seed": int(seed),
+    }

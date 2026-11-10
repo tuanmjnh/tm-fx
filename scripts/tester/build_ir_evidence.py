@@ -40,6 +40,8 @@ SCENARIOS = (
     "infinite_runner_long_fixedrr15",
     "infinite_runner_long_fixedrr_clean",
     "infinite_runner_long_mtf",
+    "infinite_runner_long_nolimit",
+    "infinite_runner_long_spread200",
 )
 
 DESCRIPTIONS = {
@@ -52,6 +54,8 @@ DESCRIPTIONS = {
     "infinite_runner_long_fixedrr15": "U3 cross-check: SL 1R / TP 1.5R (break-even winrate 40%)",
     "infinite_runner_long_fixedrr_clean": "U3 definitive: 1:1 with every guard off (no censoring)",
     "infinite_runner_long_mtf": "2018-2026 with InpDirectionMode=1 (IR_DIR_EMA_MTF): 31 trades / 8.75 years",
+    "infinite_runner_long_nolimit": "2018-2026, entry throttles removed (MaxTradesPerDay 5000, MinBarsBetweenEntries 0)",
+    "infinite_runner_long_spread200": "2018-2026, cost filter: no entries when spread > 200 points (was 600)",
 }
 
 #--- Experiment E1: decompose the faint positive gross of the two "let winners
