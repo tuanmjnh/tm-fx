@@ -20,6 +20,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import importlib.util
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -53,18 +54,29 @@ DESCRIPTIONS = {
     "infinite_runner_long_mtf": "2018-2026 with InpDirectionMode=1 (IR_DIR_EMA_MTF): 31 trades / 8.75 years",
 }
 
+#--- Experiment E1: decompose the faint positive gross of the two "let winners
+#--- run" journals by side x year x tail (see the long-run study section 5).
+E1_SCENARIOS = ("infinite_runner_long_base_nolock", "infinite_runner_long_exit_run")
+
 CSV_COLUMNS = ("scenario", "trades", "wins", "losses", "winrate", "net",
                "expectancy_r", "expectancy_usd", "profit_factor",
                "max_drawdown_pct", "tp_hits", "net_without_tp")
 
 
-def _load_analyse_ir():
-    path = Path(__file__).with_name("analyse_ir.py")
-    spec = importlib.util.spec_from_file_location("analyse_ir", path)
+def _load(path: Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_analyse_ir():
+    return _load(Path(__file__).with_name("analyse_ir.py"), "analyse_ir")
+
+
+def _load_ir_breakdown():
+    return _load(Path(__file__).with_name("ir_breakdown.py"), "ir_breakdown")
 
 
 def _sha256(path: Path) -> str:
@@ -105,7 +117,6 @@ def main() -> int:
         if png:
             shutil.copyfile(png, EVIDENCE / f"{scenario}.png")
 
-        import json
         (EVIDENCE / f"{scenario}.json").write_text(
             json.dumps(result, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8", newline="\n")
@@ -130,6 +141,19 @@ def main() -> int:
         writer = csv.DictWriter(fh, fieldnames=list(CSV_COLUMNS))
         writer.writeheader()
         writer.writerows(rows)
+
+    #--- E1: split the gross edge of the two "let winners run" journals.
+    e1 = {}
+    breakdown = _load_ir_breakdown()
+    for scenario in E1_SCENARIOS:
+        journal = _find(REPORTS / scenario, "sim_*.csv")
+        if journal is None:
+            continue
+        e1[scenario] = breakdown.breakdown(journal, 0.19, 0.005)
+        (EVIDENCE / f"e1_{scenario}.json").write_text(
+            json.dumps(e1[scenario], indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8", newline="\n")
+        print(f"WROTE e1_{scenario}.json")
 
     lines = [
         "# InfiniteRunner evidence pack",
@@ -160,6 +184,25 @@ def main() -> int:
             f"{row['trades']} | {row['winrate']:.2f}% | {row['net']:.2f} | "
             f"{row['expectancy_r']:.4f} | {row['profit_factor']:.3f} | "
             f"{row['max_drawdown_pct']:.2f}% | {row['tp_hits']} |")
+    if e1:
+        lines += [
+            "",
+            "## Experiment E1 — gross decomposition (side x year x tail)",
+            "",
+            "Gross per trade = net P&L + spread cost (`--spread-price` 0.19). A broad",
+            "edge survives on both sides and across years AND does not vanish when the",
+            "best 0.5% of trades are removed. Anything else is luck / drift.",
+            "",
+            "| scenario | overall gross R | BUY gross R | SELL gross R | gross R without best 0.5% |",
+            "|---|---:|---:|---:|---:|",
+        ]
+        for scenario, r in e1.items():
+            by_side = r["by_side"]
+            lines.append(
+                f"| `{scenario}` | {r['overall']['gross_r']:+.4f} | "
+                f"{by_side.get('BUY', {}).get('gross_r', 0.0):+.4f} | "
+                f"{by_side.get('SELL', {}).get('gross_r', 0.0):+.4f} | "
+                f"{r['tail']['kept']['gross_r']:+.4f} |")
     lines.append("")
     (EVIDENCE / "README.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"WROTE {EVIDENCE / 'summary.csv'} ({len(rows)} rows)")

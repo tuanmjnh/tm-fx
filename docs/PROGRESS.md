@@ -5018,3 +5018,36 @@ Coi là đo ở môi trường khác.
 ### 94.3 Trạng thái
 
 - Chỉ **tài liệu**; không đổi code/chiến lược/nhãn. Mọi nhãn vẫn `NOT_RUN`/`UNPROVEN`/`NOT_STRATEGY_RESULT`.
+
+## 95. InfiniteRunner — E1: lãi gộp khi cho winner chạy là may mắn/đuôi (bác bỏ edge) — 2026-11-10
+
+Theo kế hoạch T2.1/T3.1 và nghiên cứu long-run §5/§8: phân rã lãi gộp +0,03R/lệnh của hai lần chạy "cho winner
+chạy" theo **hướng × năm × đuôi** để biết là trend-persistence thật hay beta/may mắn. Không cần MT5 (chỉ đọc
+journal đã archive).
+
+### 95.1 Công cụ
+- `scripts/tester/ir_breakdown.py` (tracked, streaming): tách gross theo side × year × tail; `--spread-price`
+  (mặc định 0.19) tái tạo lãi trước spread; nhãn `NOT_STRATEGY_RESULT`.
+- Test `python/tests/test_ir_breakdown.py` (5 check trên journal tổng hợp).
+
+### 95.2 Kết quả
+
+| Journal | n | gross (R/lệnh) | BUY | SELL | gross bỏ 0,5% tốt nhất |
+|---|---:|---:|---:|---:|---:|
+| `long_base_nolock` | 26.130 | +0,0328 | +0,0399 | +0,0258 | **−0,0411** (đảo dấu) |
+| `long_exit_run` | 34.238 | +0,0259 | +0,0269 | +0,0249 | **+0,0048** (gần 0) |
+
+### 95.3 Kết luận (E1 **bác bỏ**)
+
+- Gross dương ở **cả hai hướng** ⇒ không phải beta chỉ-mua.
+- Nhưng **biến mất khi bỏ 0,5% lệnh tốt nhất** ⇒ **may mắn/đuôi**, không phải trend-persistence.
+- Và +0,026–0,033R **< spread (~0,038R)** ⇒ net vẫn âm ngay cả khi giữ nguyên.
+
+⇒ Giả thuyết trend (a) không được dữ liệu ủng hộ; (b) cũng không đứng vững (edge không nằm riêng phía BUY).
+Không đầu tư tiếp vào biến thể trend (H-B/H-D) trên tín hiệu entry hiện tại.
+
+### 95.4 Ghi nhận
+
+- Cập nhật nghiên cứu long-run §5.1 + §8 (E1 ✅) + §11.
+- Evidence pack thêm `e1_*.json` + bảng E1 trong README.
+- Chỉ thêm công cụ/evidence; **không** đổi code EA/chiến lược/nhãn.

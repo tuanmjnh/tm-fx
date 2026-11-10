@@ -130,7 +130,7 @@ lại ≈ chi phí. Hệ quả:
 
 ## 5. Phần chưa giải thích: +0,03R/lệnh gộp khi cho winner chạy
 
-Hai khả năng, **chưa phân biệt được bằng dữ liệu hiện có**:
+Hai khả năng:
 
 - **(a) Trend-persistence thật của vàng ở khung giờ–ngày**, thứ mà trailing rộng khai thác. Văn liệu ủng hộ
   time-series momentum ở chân trời dài (Moskowitz, Ooi & Pedersen 2012) nhưng với giao dịch trong ngày thì thường *không*
@@ -138,7 +138,23 @@ Hai khả năng, **chưa phân biệt được bằng dữ liệu hiện có**:
 - **(b) Beta của thị trường tăng**: vàng tăng mạnh 2018–2026, rule "fast ≥ slow ⇒ BUY" thiên về mua; lệnh giữ lâu hưởng
   drift. Đây không phải edge — là cược vào xu hướng tăng dài hạn, và sẽ biến mất/đảo chiều theo regime.
 
-Thí nghiệm **E1** (§8) phân rã bằng journal đã có (không cần chạy lại tester) và quyết định hướng đi.
+### 5.1 E1 đã chạy (2026-11-10) — và nó **bác bỏ** giả thuyết có edge
+
+Công cụ: [`scripts/tester/ir_breakdown.py`](../../scripts/tester/ir_breakdown.py) (streaming, tách theo **hướng ×
+năm × đuôi**, một lần đọc journal; nhãn `NOT_STRATEGY_RESULT`). Bằng chứng:
+[`evidence/infinite-runner/`](evidence/infinite-runner/README.md) (`e1_*.json`). Gross/lệnh = net + chi phí spread
+(`--spread-price 0.19`, tức ~0,038R ở SL 1R = 5,00 giá).
+
+| Journal | n | gross (R/lệnh) | BUY | SELL | gross **bỏ 0,5% lệnh tốt nhất** |
+|---|---:|---:|---:|---:|---:|
+| `long_base_nolock` | 26.130 | +0,0328 | +0,0399 | +0,0258 | **−0,0411** (đảo dấu) |
+| `long_exit_run` | 34.238 | +0,0259 | +0,0269 | +0,0249 | **+0,0048** (gần 0) |
+
+**Đọc:** gross dương **ở cả hai hướng** ⇒ *không* phải beta chỉ-mua; **nhưng biến mất khi bỏ 0,5% lệnh tốt nhất**
+⇒ theo tiêu chí bác bỏ ghi trước ở §8, đây là **may mắn/đuôi chứ không phải trend-persistence đáng tin**. Và ngay
+cả khi giữ nguyên, +0,026–0,033R **nhỏ hơn spread (~0,038R)** nên net vẫn âm. Kết luận: **giả thuyết (a) không
+được dữ liệu ủng hộ** ⇒ không đầu tư tiếp vào biến thể trend (H-B/H-D) trên tín hiệu entry hiện tại; (b) cũng
+không đứng vững vì edge không nằm riêng ở phía BUY.
 
 **Điều quan trọng cho mục tiêu của bạn:** chi phí là *cố định theo lệnh* (~$0,19 / 0,01 lot), còn lãi gộp (nếu thật) *tích
 luỹ theo thời gian giữ lệnh*. Vì vậy cấu trúc "ít lệnh, giữ lâu, SL/trail theo khung lớn" có logic nội tại; cấu trúc hiện tại
@@ -184,7 +200,7 @@ cửa sổ ngoài mẫu. Dưới đây ID `E*` là thí nghiệm không cần/í
 
 | ID | Việc | Cách làm | Bác bỏ nếu |
 |---|---|---|---|
-| **E1** | Phân rã lãi gộp ở §5 | từ journal `long_exit_run`/`long_base_nolock`: tách theo **hướng** (BUY/SELL) × **năm** × **phân vị lệnh** | gộp > 0 chỉ ở BUY, hoặc chỉ ở 1–2 năm, hoặc biến mất khi bỏ 0,5% lệnh tốt nhất ⇒ là beta/may mắn, không phải edge |
+| **E1** ✅ | Phân rã lãi gộp ở §5 (**đã chạy 2026-11-10**, xem §5.1) | từ journal `long_exit_run`/`long_base_nolock`: tách theo **hướng** (BUY/SELL) × **năm** × **phân vị lệnh** | gộp > 0 chỉ ở BUY, hoặc chỉ ở 1–2 năm, hoặc biến mất khi bỏ 0,5% lệnh tốt nhất ⇒ là beta/may mắn, không phải edge. **Kết quả: biến mất khi bỏ 0,5% ⇒ bác bỏ** |
 | **E2** | Kiểm spread theo giờ | thêm cột spread vào journal; nhóm lệnh theo giờ server | lãi gộp/lệnh không khác giữa giờ rẻ và giờ đắt |
 | **E3** | Port U1 vào V3, rồi đo V3 trên cửa sổ đầy đủ với BE ∈ {0, 1,0, 1,5R} | theo quy trình Giai đoạn B của guide V3 (`99-archive/MT5_EA_Lab_V3/EA/InfiniteRunnerXAUV3_UpgradeGuide_Vietnamese.md`) | V3 net không tốt hơn `long_exit_run` (−2.078) ngoài sai số ⇒ structure trailing không thêm giá trị |
 | **H-A** | **Giảm tần suất**: vào lệnh tối đa 1–3 lần/ngày, `InpCooldownMinutes` ≥ 60 | chỉ đổi giới hạn entry (input có sẵn) | tổng chi phí giảm nhưng gộp/lệnh không tăng ⇒ chỉ giảm lỗ, không tạo lãi (kết quả vẫn hữu ích: đây là biến kiểm soát) |
@@ -225,7 +241,8 @@ Tra cứu 2026-11-09. Chỉ dùng để *đặt giả thuyết*, không phải b
 ## 11. Việc cần chủ dự án quyết
 
 1. **Chấp nhận khung:** V3 là *phòng thí nghiệm exit* (đo MFE capture), không phải bản thay V2 — đồng ý?
-2. Cho phép chạy **E1** trước (không tốn tester, trả lời câu hỏi §5). Kết quả quyết định đầu tư tiếp vào trend hay dừng.
+2. ~~Cho phép chạy **E1** trước~~ — **E1 đã chạy 2026-11-10 và bác bỏ edge** (§5.1); quyết định còn lại là
+   *đầu tư tiếp vào hướng khác hay dừng*.
 3. Quyết định chính sách **khoá DD** (H-E): giữ halt vĩnh viễn (an toàn, bot không chạy lâu) hay pause + giảm risk (cần ADR).
 4. Đặt **equity demo và risk %** hợp lý với §2/§7 (nếu equity < $2.000, V3 theo risk-lot sẽ bỏ qua mọi lệnh).
 
