@@ -179,6 +179,7 @@ REQUIRED_FILES = (
     "docs/10-bots/wonderwhales-2mode.md",
     "docs/20-operations/demo-execution.md",
     "scripts/validate_demo_execution.py",
+    "scripts/run_gates.py",
     "scripts/tester/run_tester.ps1",
     "scripts/tester/gen_ww2_sets.py",
     "scripts/tester/gen_portref_sets.py",

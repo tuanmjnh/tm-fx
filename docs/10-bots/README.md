@@ -1,7 +1,8 @@
 # Bots — danh mục 16 EA
 
-Dự án có **16 EA** trong `mt5/Experts/`: 6 EA demo (gửi lệnh thật trên tài khoản demo qua
-`mt5/Include/Exec/*`), 6 EA mô phỏng (vị thế ảo, không API lệnh), 3 EA tín hiệu và 1 EA inference ONNX.
+Dự án có **16 EA**: 6 EA demo (gửi lệnh thật trên tài khoản demo qua `mt5/Include/Exec/*`), 6 EA mô phỏng
+(vị thế ảo, không API lệnh), 3 EA tín hiệu và 1 EA inference ONNX. Thư mục `mt5/Experts/` có **17** file
+`.mq5`: 16 EA trên cộng `WonderwhalesDumpTesterEA.mq5` — EA dump phục vụ Strategy Tester, **không** tính là bot.
 Trạng thái bằng chứng ghi theo nhãn dự án (`PASS` / `PARTIAL` / `NOT_RUN` / `UNPROVEN`); định nghĩa nhãn
 xem `docs/PROGRESS.md` và `20-operations/evidence.md`.
 

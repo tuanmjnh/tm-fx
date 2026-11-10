@@ -5051,3 +5051,39 @@ Không đầu tư tiếp vào biến thể trend (H-B/H-D) trên tín hiệu ent
 - Cập nhật nghiên cứu long-run §5.1 + §8 (E1 ✅) + §11.
 - Evidence pack thêm `e1_*.json` + bảng E1 trong README.
 - Chỉ thêm công cụ/evidence; **không** đổi code EA/chiến lược/nhãn.
+
+## 96. Hạ tầng: T2.2 (CI/p* cho analyse_ir) + T1.1 (đồng bộ số EA) + T5.2 (run_gates) — 2026-11-10
+
+Theo kế hoạch [`./00-start/ai-upgrade-plan.md`](00-start/ai-upgrade-plan.md). (Chủ dự án chọn **không** giới hạn
+tần suất/số lệnh, nên H-A không làm.)
+
+### 96.1 T2.2 — mở rộng `analyse_ir.py` (công thức khớp nghiên cứu §3–§4)
+
+- Thêm: winrate hoà vốn `p* = L/(W+L)` + khe hở (pp); mô hình spread `gross = net + N·spread_cost`; độ nhạy
+  `net_spread_x2 = net − N·spread_cost` (`--spread-price`, mặc định 0.19); **CI bootstrap 95%** cho expectancy
+  (USD và R) với seed cố định (`--ci-samples`/`--ci-seed`) ⇒ tái lập.
+- Test `python/tests/test_analyse_ir.py` (5 check số học trên journal tổng hợp). Ví dụ thật (`long_base_nolock`):
+  expectancy_r −0,0052, **CI95 [−0,0203..+0,0114]** (bao 0 ⇒ không ý nghĩa), p*=73,36%, gap −0,39pp, gross=+4.279,
+  net_spread_x2=−5.650.
+- Evidence pack regenerate: JSON từng scenario giờ có các field mới (CI, p*, gross, net_spread_x2).
+
+### 96.2 T1.1 — đồng bộ số EA/demo về một quy ước
+
+- Quy ước: **16 EA** (6 demo + 6 sim + 3 signal + 1 inference) + 1 EA dump tester (không tính là bot) ⇒
+  `mt5/Experts/` có **17** file `.mq5`; `configs/demo/` có 6 preset.
+- Sửa: `README.md`, `docs/README.md` (**thêm dòng `WonderwhalesXAU2ModeEA` còn thiếu**; 15→16 EA; 5→6 demo),
+  `docs/10-bots/README.md` (ghi rõ 17 file = 16 EA + helper), `docs/00-start/roadmap.md` (5→6 EA demo).
+- Bảng "Trạng thái cổng" trong `docs/README.md`: bỏ số dễ trôi (checked=397, checks=13, pytest 436), trỏ
+  `scripts/run_gates.py` + kỳ vọng cấu trúc (15/14/32, broken=0).
+- Test `python/tests/test_docs_counts.py` (3 check): đếm thật từ cây, mọi doc catalog dùng đúng số, không còn
+  số cũ (`5 EA demo`/`15 EA`).
+
+### 96.3 T5.2 — `scripts/run_gates.py`
+
+- Một lệnh chạy 5 cổng Python, in bảng PASS/FAIL, `exit≠0` nếu có cổng đỏ; compile MQL5 ghi chú là thủ công.
+- Test `python/tests/test_run_gates.py` (3 check, dùng lệnh tầm thường nên không cần MT5).
+
+### 96.4 Gates
+
+- `scripts/run_gates.py` → **5/5 PASS**: pytest **512**; validate-project 15/0; validate_demo_execution 14/0;
+  validate_pineport 32/0; check_docs_links broken=0 (checked=471).

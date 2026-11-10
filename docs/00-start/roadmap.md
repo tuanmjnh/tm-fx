@@ -52,7 +52,7 @@ chốt trạng thái hiện tại. Định nghĩa đủ 9 nhãn: [`glossary.md`]
 | Pipeline Python end-to-end (validate → backtest → ML → store → report) | Phase 9, chạy thật trên dataset synthetic, hai run lưu vào experiment store |
 | ONNX inference runtime MQL5 | `LabOnnxInference` nạp model, 24/24 hàng fixture khớp tolerance, provider CPU |
 | Hạ tầng demo execution | `mt5/Include/Exec/*`: guard, kill switch, magic duy nhất, SL/TP bắt buộc; `ExecDemoProbe` khớp lệnh thật trên tài khoản demo |
-| 5 EA demo compile + đăng ký validator/preset | Build 0 errors, 0 warnings (build 6292); preset JSON trong `configs/demo/` |
+| 6 EA demo compile + đăng ký validator/preset | Build 0 errors, 0 warnings; preset JSON trong `configs/demo/` |
 | Strategy Tester cho PA + WW demo exec | `pa_trendrider_demo_exec`, `ww_demo_exec` — CSV + `.htm` + journal 18 cột lưu trong `reports/build/tester-reports/` |
 | Tái cấu trúc tài liệu theo mục đích | ADR 0008; cây `00-start`…`99-archive`, entry layer, link checker `scripts/check_docs_links.py` |
 | Viết lại link toàn repo, cổng link-check xanh | Rewrite link theo `docs/99-archive/LINK_MAP.md`; checker nối vào `validate-project.py`; `check_docs_links.py` → `broken=0 external=0 checked=397`, `validate-project.py` → `checks=15 fail=0` (PROGRESS §70.2) |
@@ -62,7 +62,7 @@ chốt trạng thái hiện tại. Định nghĩa đủ 9 nhãn: [`glossary.md`]
 
 | Việc | Đã kiểm | Chưa kiểm |
 |---|---|---|
-| Chuẩn hoá input (phase B) | Đặc tả duyệt + bảng gap đã quét từ source 2026-11-03 trong `../10-bots/input-convention.md` | Sửa 5 EA demo theo 6 nhóm input, mỗi EA một commit |
+| Chuẩn hoá input (phase B) | Đặc tả duyệt + bảng gap đã quét từ source 2026-11-03 trong `../10-bots/input-convention.md` | Sửa 6 EA demo theo 6 nhóm input, mỗi EA một commit |
 | Demo forward | Hạ tầng chạy được, probe PASS, tester PA/WW có lệnh | `ENTRY` demo do chiến lược của từng bot trên tài khoản demo |
 | Parity Pine ↔ MQL5 | Comparator + test PASS trên dữ liệu tổng hợp | CSV reference thật xuất từ Pine — thiếu là `BLOCKED`, không tạo CSV giả |
 
@@ -70,7 +70,7 @@ chốt trạng thái hiện tại. Định nghĩa đủ 9 nhãn: [`glossary.md`]
 
 | Việc | Điều kiện bắt đầu |
 |---|---|
-| Suite demo XAUUSD tự động (5 bot × tester + chart demo) | Phase A + B xong, cả 3 lệnh cổng xanh |
+| Suite demo XAUUSD tự động (6 bot × tester + chart demo) | Phase A + B xong, cả 3 lệnh cổng xanh |
 | Đánh giá out-of-sample / walk-forward protocol | Suite demo cho số liệu forward thật, dữ liệu tách rõ train/test |
 | Nghiên cứu AI (backlog) | Chỉ mở khi các mục trên xong và chủ dự án duyệt |
 
@@ -91,7 +91,7 @@ chốt trạng thái hiện tại. Định nghĩa đủ 9 nhãn: [`glossary.md`]
 
 ### Phase B — Chuẩn hóa input theo `input-convention.md`
 
-Áp dụng chuẩn 6 nhóm input cho từng EA demo — **mỗi EA một commit**, không chạm 5 EA trong một commit,
+Áp dụng chuẩn 6 nhóm input cho từng EA demo — **mỗi EA một commit**, không chạm 6 EA trong một commit,
 theo thứ tự migration mục 7 của [`../10-bots/input-convention.md`](../10-bots/input-convention.md).
 Thứ tự EA khuyến nghị: PA → Grid → DCA → IR → WW (PA trước vì có 2 input thiếu riêng; IR cuối để gom
 đổi `Pts`→`Points` một lần).
@@ -100,9 +100,9 @@ Thứ tự EA khuyến nghị: PA → Grid → DCA → IR → WW (PA trước v�
   đúng thứ tự; đổi `Pts`→`Points` (chỉ IR, gom bước cuối); cập nhật preset JSON + `.set` **cùng lúc**;
   chạy `validate-project.py` (`fail=0`) + `scripts/build-mql5.ps1` (`0 errors, 0 warnings`); ghi mục
   mới vào `../PROGRESS.md` kèm `config_hash` mới nếu preset đổi.
-- **Phạm vi:** 5 EA demo + preset + validator. Không đụng EA mô phỏng, không đổi logic chiến lược,
+- **Phạm vi:** 6 EA demo + preset + validator. Không đụng EA mô phỏng, không đổi logic chiến lược,
   không đổi magic number.
-- **Xong khi:** cả 5 EA demo khai input đúng chuẩn 6 nhóm; validator ép đủ "preset đủ key, không
+- **Xong khi:** cả 6 EA demo khai input đúng chuẩn 6 nhóm; validator ép đủ "preset đủ key, không
   thừa/thiếu"; ma trận gap mục 5 của `input-convention.md` không còn ô "thiếu".
 
 ### Phase C — Suite demo XAUUSD
