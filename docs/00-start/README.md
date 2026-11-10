@@ -1,6 +1,6 @@
 # Bắt đầu
 
-Ba file của mục này trả lời ba câu hỏi, theo thứ tự đọc khuyến nghị:
+Bốn file của mục này trả lời bốn câu hỏi, theo thứ tự đọc khuyến nghị:
 
 1. [`first-run.md`](first-run.md) — *"Tôi chưa từng dùng MT5, làm sao chạy được một con bot và nhìn
    thấy nó vận hành?"* Hướng dẫn từng bước từ cài đặt tới đọc journal CSV.
@@ -8,6 +8,8 @@ Ba file của mục này trả lời ba câu hỏi, theo thứ tự đọc khuy�
    trung thực theo từng mảng, không nâng nhãn khi chưa có bằng chứng.
 3. [`glossary.md`](glossary.md) — *"Từ này nghĩa là gì?"* 30 thuật ngữ trong repo và 9 nhãn trạng
    thái dùng trong toàn bộ tài liệu.
+4. [`ai-upgrade-plan.md`](ai-upgrade-plan.md) — *"Nâng cấp tổng thể thì làm gì, theo thứ tự nào, ranh giới nào?"*
+   Bản đồ việc cho AI agent và người duy trì: hợp đồng bất biến, hiện trạng đo được, backlog có tiêu chí chấp nhận.
 
 Sau khi đọc xong, chuyển tới [`../10-bots/README.md`](../10-bots/README.md) để chọn bot, hoặc
 [`../README.md`](../README.md) nếu muốn quay lại bảng mục lục tổng.

@@ -32,6 +32,8 @@ Nhật ký bằng chứng append-only: [`PROGRESS.md`](PROGRESS.md) (giữ nguy�
 | Bot không vào lệnh | [`20-operations/troubleshooting.md`](20-operations/troubleshooting.md) |
 | Đổi preset | [`20-operations/presets.md`](20-operations/presets.md) |
 | Hiểu thuật ngữ | [`00-start/glossary.md`](00-start/glossary.md) |
+| Giao việc nâng cấp cho AI agent | [`00-start/ai-upgrade-plan.md`](00-start/ai-upgrade-plan.md) |
+| Hiểu vì sao InfiniteRunner chưa có edge và hướng đi dài hạn | [`30-research/infinite-runner-long-run-study.md`](30-research/infinite-runner-long-run-study.md) |
 
 ## 5 bot demo
 

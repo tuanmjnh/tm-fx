@@ -4984,3 +4984,37 @@ Tiếp §92: sau khi sửa deadlock (U1), đo nghiêm túc trên cửa sổ dài
 - **Chỉ ship U1** (sửa lỗi vận hành). Không đổi chiến lược/entry/exit/preset. Evidence `NOT_RUN`, profit
   `UNPROVEN`. Khuyến nghị: **chấp nhận kết luận âm và dừng tinh chỉnh** trên tín hiệu hiện tại (như WW2), hoặc
   thiết kế entry mới nếu chủ dự án muốn tiếp.
+
+## 94. Land bộ tài liệu nâng cấp (ai-upgrade-plan + IR long-run study) — 2026-11-10
+
+Chủ dự án đưa 3 artefact (`docs/00-start/ai-upgrade-plan.md` qua `docs/ai-upgrade-plan.md`,
+`docs/30-research/infinite-runner-long-run-study.md` qua `docs/infinite-runner-long-run-study.md`, và
+`tm-fx-docs-upgrade.patch`) và yêu cầu **kiểm tra rồi áp**.
+
+### 94.1 Kiểm tra (trước khi áp)
+
+- Patch áp sạch: `git apply --check` OK (7 file, +447/−1).
+- Hai file phẳng ở `docs/` **trùng khít nội dung** patch (byte-identical theo từng dòng) — chỉ **đặt sai chỗ**
+  (`docs/` thay vì `docs/00-start/` và `docs/30-research/`), nên link tương đối sẽ hỏng nếu để nguyên.
+- Mọi path được tham chiếu **tồn tại**: `archive/wip/2026-11-03_InfiniteRunnerXAUV3/`,
+  `docs/99-archive/MT5_EA_Lab_V3/EA/…`, `20-operations/evidence.md`, `00-start/roadmap.md`, `ai-integration.md`,
+  `ml-baseline.md`, `risk.md`, `testing.md`, `install.md`…
+- Số liệu **khớp evidence đã commit**: 48,07% / 48,08% / 38,65%; net −685 / −2.078; n=26.130 / 34.238.
+- Khẳng định "hiện trạng" **đúng**: `mt5/Experts` có **17** `.mq5`; `CloseDemoPosition.mq5` gọi `OrderSend`
+  trực tiếp (dòng 38, không kiểm demo/tester); `docs/README.md` ghi `checked=397`/`checks=13`/"15 EA";
+  `docs/10-bots/README.md` ghi "16 EA / 6 demo".
+
+**Khác biệt ghi nhận (không sửa doc):** hai số "đo 2026-11-09" không khớp máy này — `ruff` **không có** trong
+`.venv`/PATH/requirements (nên "165 lỗi" chưa kiểm chứng được), và `.venv` là **Python 3.11.9** (plan ghi 3.12.3).
+Coi là đo ở môi trường khác.
+
+### 94.2 Đã làm
+
+- Áp `tm-fx-docs-upgrade.patch`: đưa `docs/00-start/ai-upgrade-plan.md` và
+  `docs/30-research/infinite-runner-long-run-study.md` vào đúng chỗ; cập nhật `AGENTS.md`,
+  `docs/README.md`, `docs/00-start/README.md`, `docs/10-bots/infinite-runner.md`, `docs/30-research/README.md`.
+- Xoá 2 bản phẳng trùng ở `docs/` và file `.patch` (nội dung đã nằm trong repo + git history).
+
+### 94.3 Trạng thái
+
+- Chỉ **tài liệu**; không đổi code/chiến lược/nhãn. Mọi nhãn vẫn `NOT_RUN`/`UNPROVEN`/`NOT_STRATEGY_RESULT`.

@@ -119,6 +119,8 @@ Nhãn: **`NOT_RUN`** — chưa có phiên **demo thật** nào ghi kết quả; 
   edge**; ba định nghĩa exit (step trail / trail rộng / không trail) **đều âm**; mode `IR_DIR_EMA_MTF` chỉ 31
   lệnh/8,75 năm; preset ship tự halt ở DD 8% ngày 2020.06.23. Kết luận: không tinh chỉnh thêm trên tín hiệu này.
 
+- Nghiên cứu hướng dài hạn (so sánh V2/V3, mô hình chi phí, thí nghiệm tiếp theo): [`../30-research/infinite-runner-long-run-study.md`](../30-research/infinite-runner-long-run-study.md). V3 vẫn `BLOCKED` ở `archive/wip/` và **chưa** có bản sửa deadlock U1.
+
 ## 6. Giới hạn / quirk đã biết
 
 - **Quirk hậu tố:** bot này dùng `Pts` (`InpTrailStartPts`, `InpTrailStepPts`) trong khi 4 EA demo còn

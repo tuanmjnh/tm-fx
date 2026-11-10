@@ -16,6 +16,11 @@ Guidance for AI coding agents working in this repository.
 - **Execution Boundary**: Every bot may place real orders on a **demo account** only (ADR 0004 + ADR 0005). The demo EAs are `mt5/Experts/PATrendRiderXAUv1DemoEA.mq5`, `mt5/Experts/GridDemoEA.mq5`, `mt5/Experts/DCADemoEA.mq5` and `mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5` (magic 25006001, includes under `mt5/Include/InfiniteRunner/*`), all built on `mt5/Include/Exec/*`. Each must accept only `ACCOUNT_TRADE_MODE_DEMO` or the Strategy Tester, ship with execution enabled by default (`InpEnableExecution=true`, ADR 0006 — owner decision 2026-10-30; dry-run is the explicit `false` override), put mandatory SL/TP on every order, keep a per-magic risk ledger with hard caps (max levels/adds, exposure, risk %, daily loss, drawdown, consecutive losses), honour the kill switch, and route every order through `ExecBroker` (the single order-send point). Grid/DCA position adds are bounded, never unbounded martingale. Real/live accounts stay forbidden; do not add login, credential or `WebRequest`/socket code. Simulation EAs remain simulation-only.
 - **Testing & Parity**: Verify numerical parity when porting logic between Python, Pine Script, and MQL5.
 
+## Upgrade Plan
+
+Backlog nâng cấp tổng thể, hợp đồng bất biến và quy trình cho agent: `docs/00-start/ai-upgrade-plan.md`.
+Nghiên cứu InfiniteRunner dài hạn: `docs/30-research/infinite-runner-long-run-study.md`.
+
 ## Testing & Verification
 
 ```powershell
