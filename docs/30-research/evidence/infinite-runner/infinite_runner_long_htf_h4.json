@@ -1,0 +1,86 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_htf_h4\\sim_ir_long_htf_h4.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 764,
+    "ENTRY": 539,
+    "SL_UPDATE": 3774,
+    "EXIT": 538,
+    "BLOCKED": 225,
+    "ERROR": 3599,
+    "SUMMARY": 1
+  },
+  "trades": 538,
+  "wins": 288,
+  "losses": 250,
+  "flats": 0,
+  "winrate": 53.531598513011154,
+  "net": 1350.77,
+  "expectancy_usd": 2.510724907063197,
+  "expectancy_usd_ci95": [
+    -2.063206319702602,
+    7.321716078066913
+  ],
+  "expectancy_r": 0.02427580282391291,
+  "expectancy_r_ci95": [
+    -0.058604908194437505,
+    0.12265220523997977
+  ],
+  "avg_win": 42.935381944444444,
+  "avg_loss": -44.05847999999998,
+  "profit_factor": 1.1226342806197585,
+  "break_even_winrate": 50.64550419446417,
+  "winrate_gap_pp": 2.8860943185469807,
+  "spread_price": 0.19,
+  "spread_cost_total": 102.21999999999926,
+  "gross": 1452.9899999999993,
+  "net_spread_x2": 1248.5500000000006,
+  "max_drawdown_pct": 12.763790254733227,
+  "peak_equity": 11350.77,
+  "trough_equity": 8907.07,
+  "risk_per_trade": 103.42500000000018,
+  "tp_hits": 0,
+  "tp_contrib": 0.0,
+  "net_without_tp": 1350.77,
+  "r_quantiles": {
+    "p10": -1.0741757562266567,
+    "p50": 0.36744407425035713,
+    "p90": 1.3565174497471988,
+    "max": 4.464080261401851
+  },
+  "entries_by_year": {
+    "2018": 59,
+    "2019": 52,
+    "2020": 53,
+    "2021": 48,
+    "2022": 68,
+    "2023": 58,
+    "2024": 70,
+    "2025": 71,
+    "2026": 60
+  },
+  "exits_by_year": {
+    "2018": 58,
+    "2019": 52,
+    "2020": 53,
+    "2021": 49,
+    "2022": 67,
+    "2023": 58,
+    "2024": 70,
+    "2025": 71,
+    "2026": 60
+  },
+  "blocks": {
+    "spread_wide": 84,
+    "stops_invalid": 84,
+    "loss_streak_armed": 36,
+    "atr_spiked": 21
+  },
+  "source": {
+    "journal": "sim_ir_long_htf_h4.csv",
+    "journal_sha256": "cf53ff2d53a9c0b44a02fd64b6aad0971a5c7da6f7b25af5f9bd296ae27b8fa5",
+    "report_sha256": "86aa5765f6aa9cc9c6a02cfb5a8ab5f8d8f65e6dcbffdd869fc7cb8a86fb48bc",
+    "png_sha256": "bbbdf816b59cf639ec33162138a6822a2830ca13e4d0e18e5a981856b507b5a3"
+  },
+  "description": "2018-2026, H-B higher-timeframe trend: H4 entry + ATR SL/trail"
+}

@@ -42,7 +42,7 @@ def _diff(a: dict, b: dict) -> set[str]:
 def test_matrix_shape() -> None:
     scenarios = _load().SCENARIOS
     names = [s[0] for s in scenarios]
-    assert len(names) == 13
+    assert len(names) == 15
     assert len(set(names)) == len(names)
     for _name, _period, from_date, to_date, deposit, _report, _ov in scenarios:
         assert from_date < to_date

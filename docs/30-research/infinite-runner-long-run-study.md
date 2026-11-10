@@ -199,6 +199,26 @@ expectancy dương bền**.
 **expectancy vẫn âm** (−0,027R), gross gần 0 (+185 ≈ +0,011R/lệnh) và **âm ở spread×2**. Theo tiêu chí bác bỏ
 trong spec ("trong mẫu < 0 sau chi phí") ⇒ **H-D bị bác bỏ**: entry theo regime **không tạo edge** trên dữ liệu này.
 
+### 5.4 H-B (trend khung lớn + ATR) đã đo (2026-11-10) — dương nhưng là **BETA**
+
+Config-only trên EA hiện có: entry H1/H4 (legacy), SL `ATR×3`, trail `ATR×2`, step off, khoá daily/DD tắt. Bằng
+chứng: `evidence/infinite-runner/infinite_runner_long_htf_{h1,h4}.json`.
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | net spread×2 | tp_hits | MaxDD |
+|---|---:|---:|---:|---|---:|---:|---:|
+| `long_htf_h1` | 1.828 | 49,56% | +1.381 | +0,018 [−0,054..+0,050] | **+1.034** | 0 | 11,8% |
+| `long_htf_h4` | 538 | 53,53% | +1.351 | +0,024 [−0,059..+0,123] | **+1.249** | 0 | 12,8% |
+
+**Đây là ứng viên DUY NHẤT tới nay dương, KHÔNG phụ thuộc đuôi** (`net_without_tp` = net, `tp_hits` = 0) **và vẫn
+dương ở spread×2**. Nhưng **E1 phá vỡ nó**:
+
+- **Chỉ dương ở BUY**: `htf_h1` BUY +0,071R vs SELL −0,011R; `htf_h4` BUY +0,113R vs SELL −0,029R.
+- **Tập trung theo năm**: `htf_h1` **âm cả 2018–2022**, chỉ dương 2023–2026; `htf_h4` dồn vào **2026** (+0,236R,
+  60 lệnh) và 2025 âm.
+
+Theo tiêu chí bác bỏ đã ghi trước của E1 ("gộp > 0 chỉ ở BUY, hoặc chỉ 1–2 năm ⇒ beta/may mắn"), H-B là **beta
+của uptrend vàng 2018–2026**, không phải edge — OOS 2018–2022 đã âm ngay trong bảng theo năm. CI của R vẫn bao 0.
+
 ## 6. Khoảng cách backtest ↔ chạy thật
 
 | Rủi ro | Hiện trạng trong repo | Việc cần |
@@ -241,7 +261,7 @@ cửa sổ ngoài mẫu. Dưới đây ID `E*` là thí nghiệm không cần/í
 | **E2** | Kiểm spread theo giờ | thêm cột spread vào journal; nhóm lệnh theo giờ server | lãi gộp/lệnh không khác giữa giờ rẻ và giờ đắt |
 | **E3** | Port U1 vào V3, rồi đo V3 trên cửa sổ đầy đủ với BE ∈ {0, 1,0, 1,5R} | theo quy trình Giai đoạn B của guide V3 (`99-archive/MT5_EA_Lab_V3/EA/InfiniteRunnerXAUV3_UpgradeGuide_Vietnamese.md`) | V3 net không tốt hơn `long_exit_run` (−2.078) ngoài sai số ⇒ structure trailing không thêm giá trị |
 | **H-A** | **Giảm tần suất**: vào lệnh tối đa 1–3 lần/ngày, `InpCooldownMinutes` ≥ 60 | chỉ đổi giới hạn entry (input có sẵn) | tổng chi phí giảm nhưng gộp/lệnh không tăng ⇒ chỉ giảm lỗ, không tạo lãi (kết quả vẫn hữu ích: đây là biến kiểm soát). *Biến thể ngược (bỏ giới hạn) đã đo 2026-11-10 → §5.2* |
-| **H-B** | **Giữ lâu**: SL theo ATR khung H1, trail theo cấu trúc M15/H1 | dùng `IR_SL_ATR`/`IR_TRAIL_ATR` có sẵn hoặc structure của V3 | gộp/lệnh (đơn vị giá) không tăng theo thời gian giữ |
+| **H-B** ✅ | **Giữ lâu**: SL theo ATR khung H1, trail theo cấu trúc M15/H1 | `IR_SL_ATR`/`IR_TRAIL_ATR` (**đã đo 2026-11-10** → §5.4) | gộp/lệnh không tăng theo thời gian giữ. **Kết quả: dương + bền spread×2 nhưng BUY-only + theo năm ⇒ beta, bác bỏ** |
 | **H-C** ✅ | **Lọc chi phí**: không vào lệnh khi spread > ngưỡng hoặc giờ roll-over | `InpMaxSpreadPoints` hạ 600→200 (**đã đo 2026-11-10** → §5.2); lọc giờ chưa làm | lệnh bị loại không kém lệnh giữ lại. **Kết quả: halved lệnh, DD 22,5%→17,2%, net ≈ 0 ⇒ chỉ giảm lỗ** |
 | **H-D** ✅ | **Entry theo regime** (H1 context + M5 breakout K nến), 1 lệnh/regime | spec: [infinite-runner-regime-entry-spec.md](infinite-runner-regime-entry-spec.md); `IR_DIR_REGIME` mới, **không** sửa mode hiện có | OOS expectancy cận dưới CI ≤ 0. **Kết quả: −0,027R (CI bao 0), gross ≈ 0 ⇒ bác bỏ** |
 | **H-E** | **Hồi phục sau khoá DD** (thay halt vĩnh viễn bằng pause + giảm risk) | cần ADR riêng vì nới hàng rào an toàn | DD tối đa vượt 15% hoặc halt tái diễn |
@@ -308,3 +328,28 @@ for name in ("long_base_nolock", "long_exit_run", "long_fixedrr", "long_fixedrr1
 
 Spread suy ra từ lần chạy SL/TP cố định: `s = A − p × (A + B)` với `A = 5,0`; `B = 5,0` (1:1) hoặc `7,5` (1:1,5). Số trong §3
 dùng `s = 0,19`. Lệch lớn giữa `N × s` và net đo được là dấu hiệu cần phân rã (E1), không phải bằng chứng edge.
+
+## 13. Kết luận & "cách tốt nhất" (khuyến nghị)
+
+Bảy hướng entry/exit đã đo — legacy M5, E-A (bỏ cổng M1), exit step/trail-rộng/không-trail, `IR_DIR_EMA_MTF`, H-D
+(regime), H-B (trend khung lớn + ATR) — **đều không tạo edge**; mọi cấu hình dương đều là **đuôi** (kiểm bằng
+`net_without_tp`) hoặc **beta** (kiểm bằng spread×2 và E1 hướng × năm). Ứng viên "đẹp" nhất (H-B, §5.4) dương và
+bền spread×2 nhưng **chỉ ở BUY và theo năm** ⇒ là beta của uptrend vàng, không phải lợi thế giao dịch.
+
+**Cách tốt nhất để KIỂM TRA (đã áp dụng cho mọi arm):** một ứng viên chỉ đáng tin khi qua **cả ba** — (1) net > 0
+**khi nhân đôi spread**; (2) `net_without_tp` không âm mạnh (không phải đuôi); (3) E1 hướng × năm: dương ở **cả
+hai hướng** và **nhiều năm**. Hạ tầng miễn phí, chạy lại được: `scripts/tester/analyse_ir.py` (CI/`p*`/spread),
+`scripts/tester/ir_breakdown.py` (E1), `scripts/run_gates.py`, và evidence pack nhỏ đã commit.
+
+**Cách tốt nhất để NÂNG CẤP (khuyến nghị, theo thứ tự):**
+
+1. **Dừng tinh chỉnh tín hiệu hiện tại.** Bảy hướng, 0 edge: dữ liệu không ủng hộ thêm tham số/exit nào. Giữ
+   **U1** (sửa deadlock) làm lợi ích vận hành thực — robot không còn tự chết.
+2. **Nếu muốn tiếp: đổi DỮ LIỆU/Ý TƯỞNG, không đổi tham số.**
+   - **Đa tài sản / đa khung**: chạy cùng logic trên nhiều symbol (EURUSD, XAGUSD, chỉ số…) để tăng **mẫu độc
+     lập** — cách thực tế nhất để kết luận nhanh.
+   - **H-F** (đảo chiều sau ngày bất thường, có nguồn học thuật §10): cần **spec + code mới**, mẫu lớn, OOS.
+   - **Cổng ML (T4)**: chỉ có nghĩa khi tín hiệu nền đã có **gross edge**; hiện chưa có, nên **chưa nên** làm.
+3. **Cổng chấp nhận G1–G4 (§9)** áp cho mọi ứng viên mới; **không nâng nhãn** `UNPROVEN` khi chưa có forward demo.
+
+Nói ngắn: **giá trị của InfiniteRunner là hạ tầng demo (đã chứng minh), không phải chiến lược (chưa chứng minh).**

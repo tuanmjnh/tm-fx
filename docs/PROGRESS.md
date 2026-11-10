@@ -5152,3 +5152,31 @@ và **âm ở spread×2** ⇒ theo tiêu chí bác bỏ trong spec ⇒ **H-D b�
 
 - Study long-run: §5.3 (kết quả) + §8 H-D ✅. Evidence pack: thêm `long_regime` (PNG + JSON), 12 scenario.
 - Không đổi preset ship (mode mặc định vẫn 0). Gates: xem commit.
+
+## 99. InfiniteRunner — H-B (trend khung lớn + ATR): dương & bền spread×2, NHƯNG là beta — 2026-11-10
+
+Nghiên cứu "cách nào tốt nhất": thay vì thêm biến thể EMA, thử hướng có cơ sở lý thuyết nhất còn rẻ — **trend
+khung lớn (H-B)**: entry H1/H4 + SL `ATR×3` + trail `ATR×2` (config-only trên EA hiện có; khoá daily/DD tắt).
+
+### 99.1 Kết quả (2018-2026)
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | net spread×2 | tp_hits | MaxDD |
+|---|---:|---:|---:|---|---:|---:|---:|
+| `long_htf_h1` | 1.828 | 49,56% | +1.381 | +0,018 [−0,054..+0,050] | **+1.034** | 0 | 11,8% |
+| `long_htf_h4` | 538 | 53,53% | +1.351 | +0,024 [−0,059..+0,123] | **+1.249** | 0 | 12,8% |
+
+Đây là **ứng viên duy nhất tới nay dương, không do đuôi** (`net_without_tp`=net, `tp_hits`=0) **và vẫn dương ở
+spread×2**. Nhưng **E1 bác bỏ**: lãi **chỉ ở BUY** (h1 +0,071R vs SELL −0,011R; h4 +0,113 vs −0,029) và **tập
+trung theo năm** (h1 âm 2018–2022, dương 2023–2026; h4 dồn vào 2026) ⇒ **beta của uptrend vàng**, không phải edge.
+
+### 99.2 Kết luận "cách tốt nhất" (đã ghi vào study §13)
+
+- **Kiểm tra** một ứng viên phải qua **ba** cổng: spread×2, `net_without_tp`, E1 hướng×năm — không chỉ net dương.
+- **Nâng cấp:** **dừng tinh chỉnh tín hiệu hiện tại** (7 hướng, 0 edge). Nếu tiếp: **đổi dữ liệu/ý tưởng** (đa tài
+  sản để tăng mẫu độc lập; hoặc H-F đảo chiều sau ngày bất thường — cần spec+code; cổng ML chỉ khi có gross edge,
+  hiện chưa). Mọi ứng viên mới qua G1–G4 trước khi nâng nhãn.
+- Giữ **U1** (sửa deadlock) làm lợi ích vận hành thực.
+
+### 99.3 Trạng thái
+- Study: §5.4 (kết quả) + §8 H-B ✅ + §13 (khuyến nghị). Evidence pack: thêm `htf_h1`/`htf_h4` (14 scenario).
+- Không đổi preset ship. Gates: xem commit.

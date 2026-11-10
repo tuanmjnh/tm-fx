@@ -121,6 +121,26 @@ SCENARIOS = (
      {"InpLogFile": "sim_ir_long_regime.csv",
       "InpStateFile": "infinite_runner_demo_state.csv",
       **LONG, "InpDirectionMode": 2}),
+    #--- H-B: higher-timeframe trend with an ATR stop + ATR trail (longer holds,
+    #--- fewer trades). Legacy direction on the entry TF; the H1/M15 inputs only
+    #--- satisfy the timeframe ordering (legacy ignores them). Wide stop band so
+    #--- an H4 ATR stop is not refused.
+    ("infinite_runner_long_htf_h1", "H1", "2018.01.01", "2026.10.01", 10000,
+     "tester_infinite_runner_long_htf_h1",
+     {"InpLogFile": "sim_ir_long_htf_h1.csv",
+      "InpStateFile": "infinite_runner_demo_state.csv",
+      "InpH1TF": 16388, "InpM15TF": 16385, "InpEntryTF": 16385,
+      "InpSlMode": 1, "InpSlAtrMultiplier": 3.0,
+      "InpTrailMode": 1, "InpTrailAtrMultiplier": 2.0,
+      "InpMaxStopPoints": 200000, "InpEnableStepTrailing": False, **LONG}),
+    ("infinite_runner_long_htf_h4", "H4", "2018.01.01", "2026.10.01", 10000,
+     "tester_infinite_runner_long_htf_h4",
+     {"InpLogFile": "sim_ir_long_htf_h4.csv",
+      "InpStateFile": "infinite_runner_demo_state.csv",
+      "InpH1TF": 16408, "InpM15TF": 16388, "InpEntryTF": 16388,
+      "InpSlMode": 1, "InpSlAtrMultiplier": 3.0,
+      "InpTrailMode": 1, "InpTrailAtrMultiplier": 2.0,
+      "InpMaxStopPoints": 200000, "InpEnableStepTrailing": False, **LONG}),
 )
 
 

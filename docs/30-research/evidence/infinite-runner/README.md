@@ -30,6 +30,8 @@ Every number is `NOT_STRATEGY_RESULT` (operational/measurement); evidence
 | `infinite_runner_long_nolimit` | 2018-2026, entry throttles removed (MaxTradesPerDay 5000, MinBarsBetweenEntries 0) | 30551 | 72.83% | 2191.90 | 0.0143 | 1.053 | 22.41% | 116 |
 | `infinite_runner_long_spread200` | 2018-2026, cost filter: no entries when spread > 200 points (was 600) | 14387 | 73.11% | 219.40 | 0.0030 | 1.012 | 17.16% | 44 |
 | `infinite_runner_long_regime` | 2018-2026, H-D regime entry (IR_DIR_REGIME: H1 context + M5 breakout K=12) | 3260 | 71.60% | -434.10 | -0.0266 | 0.900 | 5.09% | 8 |
+| `infinite_runner_long_htf_h1` | 2018-2026, H-B higher-timeframe trend: H1 entry + ATR SL/trail | 1828 | 49.56% | 1381.10 | 0.0184 | 1.069 | 11.77% | 0 |
+| `infinite_runner_long_htf_h4` | 2018-2026, H-B higher-timeframe trend: H4 entry + ATR SL/trail | 538 | 53.53% | 1350.77 | 0.0243 | 1.123 | 12.76% | 0 |
 
 ## Experiment E1 — gross decomposition (side x year x tail)
 
