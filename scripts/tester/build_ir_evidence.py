@@ -42,6 +42,7 @@ SCENARIOS = (
     "infinite_runner_long_mtf",
     "infinite_runner_long_nolimit",
     "infinite_runner_long_spread200",
+    "infinite_runner_long_regime",
 )
 
 DESCRIPTIONS = {
@@ -56,6 +57,7 @@ DESCRIPTIONS = {
     "infinite_runner_long_mtf": "2018-2026 with InpDirectionMode=1 (IR_DIR_EMA_MTF): 31 trades / 8.75 years",
     "infinite_runner_long_nolimit": "2018-2026, entry throttles removed (MaxTradesPerDay 5000, MinBarsBetweenEntries 0)",
     "infinite_runner_long_spread200": "2018-2026, cost filter: no entries when spread > 200 points (was 600)",
+    "infinite_runner_long_regime": "2018-2026, H-D regime entry (IR_DIR_REGIME: H1 context + M5 breakout K=12)",
 }
 
 #--- Experiment E1: decompose the faint positive gross of the two "let winners

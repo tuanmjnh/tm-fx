@@ -64,6 +64,8 @@ input int    InpEmaSlow             = 50;
 input int    InpSlopeBars           = 5;
 input int    InpSlowSlopeTolPoints  = 100;
 input int    InpPullbackTolPoints   = 100;
+//--- IR_DIR_REGIME (H-D): breakout lookback on the entry TF (closed bars).
+input int    InpBreakoutBars        = 12;
 
 input group "Entry control"
 input int    InpMaxPositions        = 1;                         // fixed to 1 by validation
@@ -240,6 +242,11 @@ bool ValidateInputs(string &error)
       error="slope_tolerances_must_be_non_negative";
       return(false);
      }
+   if(InpBreakoutBars<2 || InpBreakoutBars>240)
+     {
+      error="breakout_bars_must_be_between_2_and_240";
+      return(false);
+     }
    if(PeriodSeconds(InpH1TF)<=PeriodSeconds(InpM15TF) ||
       PeriodSeconds(InpM15TF)<PeriodSeconds(InpEntryTF))
      {
@@ -403,6 +410,7 @@ string BuildConfigHash(void)
                                            InpSlowSlopeTolPoints)+
                SimFormatFingerprintPartInt("dir.pullback_tol_points",
                                            InpPullbackTolPoints)+
+               SimFormatFingerprintPartInt("dir.breakout_bars",InpBreakoutBars)+
                SimFormatFingerprintPartInt("entry.max_positions",InpMaxPositions)+
                SimFormatFingerprintPartInt("entry.cooldown_minutes",
                                            InpCooldownMinutes)+
@@ -766,7 +774,7 @@ bool RefreshMarketData(string &reason)
    else
       g_atr_baseline=0.0;
 
-   if(InpDirectionMode==IR_DIR_EMA_MTF)
+   if(InpDirectionMode==IR_DIR_EMA_MTF || InpDirectionMode==IR_DIR_REGIME)
      {
       double h1_fast[],h1_slow[],m15_fast[],m15_slow[];
       if(!CopySeries(g_ema_h1_fast,need,h1_fast,"ema_h1_fast",reason) ||
@@ -1334,6 +1342,23 @@ void ProcessEntryBar(const datetime bar_time,const string data_reason)
 
    if(InpDirectionMode==IR_DIR_LEGACY_EMA)
       IRLegacyDecision(g_m5_fast[0],g_m5_slow[0],g_decision);
+   else if(InpDirectionMode==IR_DIR_REGIME)
+      {
+       //--- Breakout channel = the K closed bars BEFORE the trigger bar
+       //--- (shift 2..K+1); the trigger bar is shift 1.
+       const double close_last=iClose(_Symbol,InpEntryTF,1);
+       double highs[],lows[];
+       double breakout_high=0.0,breakout_low=0.0;
+       if(CopyHigh(_Symbol,InpEntryTF,2,InpBreakoutBars,highs)==InpBreakoutBars &&
+          CopyLow(_Symbol,InpEntryTF,2,InpBreakoutBars,lows)==InpBreakoutBars)
+         {
+          breakout_high=highs[ArrayMaximum(highs)];
+          breakout_low=lows[ArrayMinimum(lows)];
+         }
+       IRRegimeDecision(g_h1_fast,g_h1_slow,InpSlopeBars,g_point,
+                        InpSlowSlopeTolPoints,breakout_high,breakout_low,
+                        close_last,g_decision);
+      }
    else
       {
        const double close_prev=iClose(_Symbol,InpEntryTF,2);
@@ -1625,7 +1650,7 @@ int OnInit(void)
       PrintFormat("LAB|ERROR|ir_v2|indicator_init_failed|error=%d",GetLastError());
       return(INIT_FAILED);
      }
-   if(InpDirectionMode==IR_DIR_EMA_MTF)
+   if(InpDirectionMode==IR_DIR_EMA_MTF || InpDirectionMode==IR_DIR_REGIME)
      {
       g_ema_h1_fast=iMA(_Symbol,InpH1TF,InpEmaFast,0,MODE_EMA,PRICE_CLOSE);
       g_ema_h1_slow=iMA(_Symbol,InpH1TF,InpEmaSlow,0,MODE_EMA,PRICE_CLOSE);
@@ -1772,7 +1797,8 @@ int OnInit(void)
                          "direction=%s|sl=%s|trail=%s|lot=%s|equity=%.2f",
                          mode,_Symbol,InpAllowedSymbols,(int)InpMagicNumber,
                          g_config_hash,
-                         (InpDirectionMode==IR_DIR_EMA_MTF ? "EMA_MTF" : "LEGACY"),
+                         (InpDirectionMode==IR_DIR_EMA_MTF ? "EMA_MTF" :
+                          (InpDirectionMode==IR_DIR_REGIME ? "REGIME" : "LEGACY")),
                          (InpSlMode==IR_SL_FIXED ? "fixed" : "atr"),
                          (InpTrailMode==IR_TRAIL_FIXED ? "fixed" : "atr"),
                          (InpLotMode==IR_LOT_FIXED ? "fixed" : "risk"),
@@ -1819,7 +1845,7 @@ void OnTick(void)
    const int warmup=InpAtrPeriod+InpAtrBaselineBars+InpSlopeBars+10;
    if(Bars(_Symbol,InpEntryTF)<warmup)
       return;
-   if(InpDirectionMode==IR_DIR_EMA_MTF &&
+   if((InpDirectionMode==IR_DIR_EMA_MTF || InpDirectionMode==IR_DIR_REGIME) &&
       Bars(_Symbol,InpH1TF)<InpSlopeBars+3)
       return;
 

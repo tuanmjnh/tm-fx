@@ -5122,3 +5122,33 @@ tần suất/số lệnh, nên H-A không làm.)
 
 - Study long-run: thêm §5.2 (kết quả) + §8 đánh dấu H-C ✅ và biến thể ngược H-A.
 - Evidence pack: thêm `long_nolimit`, `long_spread200` (PNG + JSON).
+
+## 98. InfiniteRunner — H-D: entry theo regime (spec + hiện thực + đo) ⇒ bác bỏ — 2026-11-10
+
+### 98.1 Spec (trước khi code)
+
+`docs/30-research/infinite-runner-regime-entry-spec.md`: `IR_DIR_REGIME` = H1 context (EMA21/50 + slope) + M5
+**breakout** đỉnh/đáy `K=InpBreakoutBars` (mặc định 12) nến đã đóng; một vị thế; exit giữ nguyên; tiêu chí bác bỏ
+ghi trước.
+
+### 98.2 Hiện thực (mode 3, không sửa mode 0/1)
+
+- `IRTypes.mqh`: `IR_DIR_REGIME = 2`. `IRDirection.mqh`: hàm thuần `IRRegimeDecision(...)`.
+- EA: input `InpBreakoutBars` (2..240), nhánh mode 2 trong `ProcessEntryBar` (channel qua `CopyHigh/CopyLow`),
+  tạo handle H1 + warmup + fingerprint cho mode 2. Test `IRCoreTests.mq5` (5 vector regime). Compile **0/0**.
+- `sim_configs.py`: enum `(0,1,2)` + input mới; preset JSON + `v2.set` + `gen_ir_sets` scenario
+  `infinite_runner_long_regime`. EA 60→61 input.
+
+### 98.3 Đo (2018-2026, khoá daily/DD tắt)
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | gross | net spread×2 | MaxDD |
+|---|---:|---:|---:|---|---:|---:|---:|
+| `long_regime` (H-D) | 3.260 | 71,60% | **−434** | −0,027 [−0,067..+0,020] | +185 | −1.054 | **5,09%** |
+
+Ít lệnh hơn nhiều (3.260 vs 26.130) và **DD rất nhỏ (5,1%)**, nhưng **expectancy vẫn âm** (−0,027R), gross gần 0
+và **âm ở spread×2** ⇒ theo tiêu chí bác bỏ trong spec ⇒ **H-D bị bác bỏ: regime entry không tạo edge**.
+
+### 98.4 Trạng thái
+
+- Study long-run: §5.3 (kết quả) + §8 H-D ✅. Evidence pack: thêm `long_regime` (PNG + JSON), 12 scenario.
+- Không đổi preset ship (mode mặc định vẫn 0). Gates: xem commit.

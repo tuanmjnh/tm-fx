@@ -29,6 +29,7 @@ Every number is `NOT_STRATEGY_RESULT` (operational/measurement); evidence
 | `infinite_runner_long_mtf` | 2018-2026 with InpDirectionMode=1 (IR_DIR_EMA_MTF): 31 trades / 8.75 years | 31 | 74.19% | -21.18 | -0.1366 | 0.489 | 0.23% | 0 |
 | `infinite_runner_long_nolimit` | 2018-2026, entry throttles removed (MaxTradesPerDay 5000, MinBarsBetweenEntries 0) | 30551 | 72.83% | 2191.90 | 0.0143 | 1.053 | 22.41% | 116 |
 | `infinite_runner_long_spread200` | 2018-2026, cost filter: no entries when spread > 200 points (was 600) | 14387 | 73.11% | 219.40 | 0.0030 | 1.012 | 17.16% | 44 |
+| `infinite_runner_long_regime` | 2018-2026, H-D regime entry (IR_DIR_REGIME: H1 context + M5 breakout K=12) | 3260 | 71.60% | -434.10 | -0.0266 | 0.900 | 5.09% | 8 |
 
 ## Experiment E1 — gross decomposition (side x year x tail)
 

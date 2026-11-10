@@ -83,6 +83,9 @@ InpSlowSlopeTolPoints=100
 InpPullbackTolPoints=100
 ; Khoảng cách tối đa cho phép giá hồi về gần đường EMA để mở lệnh ở chế độ MTF
 
+InpBreakoutBars=12
+; Chế độ IR_DIR_REGIME (mode 2): số nến M5 để lấy kênh breakout (đỉnh/đáy K nến trước)
+
 ; ------------------------------------------------------------------------------
 ; 4. KIỂM SOÁT TẦN SUẤT & VỊ THẾ (Position & Entry Control)
 ; ------------------------------------------------------------------------------

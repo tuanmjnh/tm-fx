@@ -308,6 +308,68 @@ void IRMtfDecision(const double &h1_fast[],const double &h1_slow[],
      }
   }
 
+//+------------------------------------------------------------------+
+//| DIR_REGIME (H-D) - H1 context + M5 breakout of the last K bars    |
+//| Long only when H1 is bullish AND the just-closed M5 bar closes     |
+//| above the highest of the previous K closed bars (mirror for short).|
+//| Intraday trend-following entry: fewer, regime-aligned trades.      |
+//+------------------------------------------------------------------+
+void IRRegimeDecision(const double &h1_fast[],const double &h1_slow[],
+                      const int slope_bars,const double point,
+                      const double slow_tol_points,
+                      const double m5_breakout_high,const double m5_breakout_low,
+                      const double m5_close_last,IRDecision &decision)
+  {
+   IRClearDecision(decision);
+   const int need=slope_bars+1;
+   if(ArraySize(h1_fast)<need || ArraySize(h1_slow)<need)
+     {
+      decision.decision=IR_DEC_DATA_NOT_READY;
+      decision.reason="regime|series_too_short";
+      return;
+     }
+   if(!(m5_close_last>0.0) || !(m5_breakout_high>0.0) || !(m5_breakout_low>0.0))
+     {
+      decision.decision=IR_DEC_DATA_NOT_READY;
+      decision.reason="regime|channel_invalid";
+      return;
+     }
+
+   string bull_reason="",bear_reason="";
+   const bool bull=IRBullishAlign(h1_fast,h1_slow,slope_bars,point,
+                                  slow_tol_points,bull_reason);
+   const bool bear=IRBearishAlign(h1_fast,h1_slow,slope_bars,point,
+                                  slow_tol_points,bear_reason);
+   if(!bull && !bear)
+     {
+      decision.decision=IR_DEC_NO_TRADE;
+      decision.reason="regime|h1_no_context";
+      return;
+     }
+   if(bull)
+     {
+      if(m5_close_last>m5_breakout_high)
+        {
+         decision.decision=IR_DEC_BUY;
+         decision.is_buy=true;
+         decision.reason="regime|h1_bull|breakout_up";
+         return;
+        }
+      decision.decision=IR_DEC_NO_TRADE;
+      decision.reason="regime|h1_bull|no_breakout";
+      return;
+     }
+   if(m5_close_last<m5_breakout_low)
+     {
+      decision.decision=IR_DEC_SELL;
+      decision.is_buy=false;
+      decision.reason="regime|h1_bear|breakout_down";
+      return;
+     }
+   decision.decision=IR_DEC_NO_TRADE;
+   decision.reason="regime|h1_bear|no_breakout";
+  }
+
 //--- Volatility gate: ATR of the just-closed bar against the mean ATR of a
 //--- longer window, both closed bars. `cap_ratio` <= 0 disables the gate.
 bool IRVolatilityBlocked(const double atr_last,const double atr_baseline,

@@ -115,6 +115,12 @@ SCENARIOS = (
      {"InpLogFile": "sim_ir_long_spread200.csv",
       "InpStateFile": "infinite_runner_demo_state.csv",
       "InpMaxSpreadPoints": 200.0, **LONG}),
+    #--- H-D: regime entry (H1 context + M5 breakout), shipped exit.
+    ("infinite_runner_long_regime", "M5", "2018.01.01", "2026.10.01", 10000,
+     "tester_infinite_runner_long_regime",
+     {"InpLogFile": "sim_ir_long_regime.csv",
+      "InpStateFile": "infinite_runner_demo_state.csv",
+      **LONG, "InpDirectionMode": 2}),
 )
 
 

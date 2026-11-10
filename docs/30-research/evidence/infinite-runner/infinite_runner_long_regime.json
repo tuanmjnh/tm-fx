@@ -1,0 +1,86 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_regime\\sim_ir_long_regime.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 480592,
+    "ENTRY": 3260,
+    "SL_UPDATE": 3693,
+    "EXIT": 3260,
+    "BLOCKED": 230,
+    "ERROR": 1794,
+    "SUMMARY": 1
+  },
+  "trades": 3260,
+  "wins": 2334,
+  "losses": 919,
+  "flats": 7,
+  "winrate": 71.59509202453988,
+  "net": -434.10000000001105,
+  "expectancy_usd": -0.13315950920245737,
+  "expectancy_usd_ci95": [
+    -0.33985506134969323,
+    0.09578911042944778
+  ],
+  "expectancy_r": -0.026631901840491475,
+  "expectancy_r_ci95": [
+    -0.06694478527607357,
+    0.020415184049079736
+  ],
+  "avg_win": 1.6712082262210413,
+  "avg_loss": -4.716757344940155,
+  "profit_factor": 0.8998546612222087,
+  "break_even_winrate": 73.83817731006883,
+  "winrate_gap_pp": -2.2430852855289487,
+  "spread_price": 0.19,
+  "spread_cost_total": 619.4000000000252,
+  "gross": 185.30000000001417,
+  "net_spread_x2": -1053.5000000000364,
+  "max_drawdown_pct": 5.088130094950838,
+  "peak_equity": 10006.23,
+  "trough_equity": 9497.1,
+  "risk_per_trade": 5.0,
+  "tp_hits": 8,
+  "tp_contrib": 798.0,
+  "net_without_tp": -1232.100000000011,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 20.0
+  },
+  "entries_by_year": {
+    "2018": 165,
+    "2019": 224,
+    "2020": 336,
+    "2021": 345,
+    "2022": 363,
+    "2023": 245,
+    "2024": 423,
+    "2025": 575,
+    "2026": 584
+  },
+  "exits_by_year": {
+    "2018": 164,
+    "2019": 225,
+    "2020": 336,
+    "2021": 345,
+    "2022": 363,
+    "2023": 245,
+    "2024": 423,
+    "2025": 575,
+    "2026": 584
+  },
+  "blocks": {
+    "loss_streak_cooldown": 131,
+    "loss_streak_armed": 53,
+    "atr_spiked": 30,
+    "spread_wide": 16
+  },
+  "source": {
+    "journal": "sim_ir_long_regime.csv",
+    "journal_sha256": "f9a37ccd1542f3e2110310f7c8ceb6c6ee831cc04aae2cac277e6143b7d05451",
+    "report_sha256": "bb60d02ecfb20f8f5d80cecdcf489f37969a251e575e92d34e8ed03b6e882a89",
+    "png_sha256": "f2861e3f28621748f387a7617bdf2b8d3cec9b8f07c57db2aa335b8f887f9601"
+  },
+  "description": "2018-2026, H-D regime entry (IR_DIR_REGIME: H1 context + M5 breakout K=12)"
+}

@@ -42,7 +42,7 @@ def _diff(a: dict, b: dict) -> set[str]:
 def test_matrix_shape() -> None:
     scenarios = _load().SCENARIOS
     names = [s[0] for s in scenarios]
-    assert len(names) == 12
+    assert len(names) == 13
     assert len(set(names)) == len(names)
     for _name, _period, from_date, to_date, deposit, _report, _ov in scenarios:
         assert from_date < to_date
@@ -89,6 +89,14 @@ def test_mtf_only_switches_the_direction_engine() -> None:
                  eff["infinite_runner_long_mtf"])
     assert diff == {"InpDirectionMode"}
     assert eff["infinite_runner_long_mtf"]["InpDirectionMode"] == 1
+
+
+def test_regime_only_switches_the_direction_engine() -> None:
+    eff = _effective()
+    diff = _diff(eff["infinite_runner_long_base_nolock"],
+                 eff["infinite_runner_long_regime"])
+    assert diff == {"InpDirectionMode"}
+    assert eff["infinite_runner_long_regime"]["InpDirectionMode"] == 2
 
 
 def test_nolimit_removes_only_the_entry_throttles() -> None:

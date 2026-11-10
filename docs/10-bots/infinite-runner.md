@@ -10,8 +10,9 @@
 
 "Runner" một vị thế chạy liên tục: giữ lệnh bằng trailing SL thay vì TP gần (khác V1 có TP=0). V2 quyết
 định **chỉ trên nến đã đóng** (EMA/ATR đọc ở shift 1) — sửa lỗi quyết định trên nến đang chạy của V1.
-Hai chế độ hướng: `IR_DIR_LEGACY_EMA` (EMA nhanh ngược chiều, parity V1 làm baseline A/B) và
-`IR_DIR_EMA_MTF` (H1 context + M15 xác nhận + M5 pullback-reclaim); `NO_TRADE`/`REVERSAL_WATCH`/
+Ba chế độ hướng: `IR_DIR_LEGACY_EMA` (EMA nhanh ngược chiều, parity V1 làm baseline A/B),
+`IR_DIR_EMA_MTF` (H1 context + M15 xác nhận + M5 pullback-reclaim) và `IR_DIR_REGIME` (H1 context + M5
+breakout K nến, H-D); `NO_TRADE`/`REVERSAL_WATCH`/
 `*_BLOCKED` là quyết định hợp lệ, không ép vào lệnh. Vào lệnh một vị thế theo hướng; thoát bằng
 trailing/break-even: SL ban đầu theo mode fixed points hoặc ATR × hệ số (band `[InpMinStopPoints,
 InpMaxStopPoints]`), BE ở `InpBreakEvenTriggerR`, trailing `InpTrailStartPts`/`InpTrailDistancePts`/
@@ -37,7 +38,7 @@ thành EA giao dịch; alt A đã lưu trữ (xem ADR 0005).
 
 ## 3. Bảng input
 
-60 input khai báo — các nhóm chính (giá trị mặc định):
+61 input khai báo — các nhóm chính (giá trị mặc định):
 
 | Nhóm | Input (tên hiện tại) | Giá trị mặc định | Tên chuẩn (phase C) |
 |---|---|---|---|
@@ -54,6 +55,7 @@ thành EA giao dịch; alt A đã lưu trữ (xem ADR 0005).
 | | `InpH1TF` / `InpM15TF` / `InpEntryTF` | H1 / M15 / M5 | giữ |
 | | `InpEmaFast` / `InpEmaSlow` | 21 / 50 | giữ |
 | | `InpSlopeBars` / `InpSlowSlopeTolPoints` / `InpPullbackTolPoints` | 5 / 100 / 100 | giữ |
+| | `InpBreakoutBars` | 12 | mode 2 (`IR_DIR_REGIME`): kênh breakout K nến M5 |
 | Entry control | `InpMaxPositions` | 1 | giữ |
 | | `InpCooldownMinutes` / `InpMinBarsBetweenEntries` / `InpMaxTradesPerDay` | 0 / 1 / 50 | giữ |
 | Risk | `InpLotMode` / `InpLots` | `IR_LOT_FIXED` / 0.01 | giữ |

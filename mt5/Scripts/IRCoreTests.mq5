@@ -11,6 +11,7 @@
 #property description "Pure-logic contract tests for the InfiniteRunner V2 modules."
 
 #include "../Include/InfiniteRunner/IRTypes.mqh"
+#include "../Include/InfiniteRunner/IRDirection.mqh"
 #include "../Include/InfiniteRunner/IRTrailing.mqh"
 #include "../Include/InfiniteRunner/IRRisk.mqh"
 
@@ -154,6 +155,60 @@ void TestBreakEvenAndMonotonic(void)
          StringFind(reason,"stop_too_wide")==0,"band_rejects_too_wide");
   }
 
+void TestRegimeEntry(void)
+  {
+   //--- slope_bars-1 arrays, index 0 = last closed bar.
+   const int n=6;
+   const double point=0.001;
+   const double tol=100.0;
+   double hf[],hs[];
+   ArrayResize(hf,n);
+   ArrayResize(hs,n);
+   for(int i=0;i<n;i++)
+     {
+      hf[i]=2010.0-i;   // fast above slow, fast rising
+      hs[i]=2000.0-i;
+     }
+   IRDecision d;
+
+   //--- bullish H1 + close above the channel high -> BUY.
+   IRRegimeDecision(hf,hs,5,point,tol,2000.0,1990.0,2010.0,d);
+   Check(d.decision==IR_DEC_BUY && d.is_buy,"regime_bull_breakout_buy");
+
+   //--- bullish H1 but close inside the channel -> NO_TRADE.
+   IRRegimeDecision(hf,hs,5,point,tol,2000.0,1990.0,1995.0,d);
+   Check(d.decision==IR_DEC_NO_TRADE,"regime_bull_no_breakout");
+
+   //--- bearish H1 + close below the channel low -> SELL.
+   double bf[],bs[];
+   ArrayResize(bf,n);
+   ArrayResize(bs,n);
+   for(int i=0;i<n;i++)
+     {
+      bf[i]=1990.0-i;   // fast below slow, fast falling
+      bs[i]=2000.0-i;
+     }
+   IRRegimeDecision(bf,bs,5,point,tol,2005.0,1990.0,1980.0,d);
+   Check(d.decision==IR_DEC_SELL && !d.is_buy,"regime_bear_breakout_sell");
+
+   //--- flat H1 -> NO_TRADE.
+   double ff[],fs2[];
+   ArrayResize(ff,n);
+   ArrayResize(fs2,n);
+   for(int i=0;i<n;i++)
+     {
+      ff[i]=2000.0;
+      fs2[i]=2000.0;
+     }
+   IRRegimeDecision(ff,fs2,5,point,tol,2005.0,1990.0,2010.0,d);
+   Check(d.decision==IR_DEC_NO_TRADE && StringFind(d.reason,"h1_no_context")>=0,
+         "regime_flat_no_context");
+
+   //--- an invalid channel must not force a trade.
+   IRRegimeDecision(hf,hs,5,point,tol,0.0,0.0,2010.0,d);
+   Check(d.decision==IR_DEC_DATA_NOT_READY,"regime_channel_invalid");
+  }
+
 void OnStart(void)
   {
    g_pass=0;
@@ -161,6 +216,7 @@ void OnStart(void)
    TestLossStreakGuard();
    TestStepTrailing();
    TestBreakEvenAndMonotonic();
+   TestRegimeEntry();
    if(g_fail==0)
       PrintFormat("TEST|RESULT|ALL_PASS|pass=%d fail=0|ir=1",g_pass);
    else

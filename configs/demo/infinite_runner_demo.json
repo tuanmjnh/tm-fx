@@ -30,6 +30,7 @@
     "InpSlopeBars": 5,
     "InpSlowSlopeTolPoints": 100,
     "InpPullbackTolPoints": 100,
+    "InpBreakoutBars": 12,
     "InpMaxPositions": 1,
     "InpCooldownMinutes": 0,
     "InpMinBarsBetweenEntries": 1,
@@ -73,7 +74,8 @@
   "enum_map": {
     "InpDirectionMode": {
       "0": "IR_DIR_LEGACY_EMA",
-      "1": "IR_DIR_EMA_MTF"
+      "1": "IR_DIR_EMA_MTF",
+      "2": "IR_DIR_REGIME"
     },
     "InpSlMode": {
       "0": "IR_SL_FIXED",

@@ -103,6 +103,7 @@ REQUIRED_FILES = (
     "docs/30-research/release.md",
     "docs/30-research/wonderwhales-scalp-study.md",
     "docs/30-research/infinite-runner-study.md",
+    "docs/30-research/infinite-runner-regime-entry-spec.md",
     "docs/30-research/evidence/infinite-runner/README.md",
     "docs/30-research/evidence/infinite-runner/summary.csv",
     "docs/30-research/evidence/infinite-runner/e1_infinite_runner_long_base_nolock.json",

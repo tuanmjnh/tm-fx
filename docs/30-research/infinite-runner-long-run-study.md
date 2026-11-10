@@ -185,6 +185,20 @@ H-C và một biến thể **ngược H-A** (bỏ giới hạn tần suất, the
 Cả hai xác nhận lại kết luận §5.1: phần dương luôn nằm ở đuôi và nhỏ hơn chi phí; **không cấu hình nào tạo ra
 expectancy dương bền**.
 
+### 5.3 H-D (entry theo regime) đã đo (2026-11-10) — bác bỏ
+
+`IR_DIR_REGIME` = H1 context + M5 breakout K=12 (spec:
+[infinite-runner-regime-entry-spec.md](infinite-runner-regime-entry-spec.md)), engine exit shipped, cửa sổ đầy đủ
+2018-2026 (khoá daily/DD tắt). Bằng chứng: `evidence/infinite-runner/infinite_runner_long_regime.json`.
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | gross | net spread×2 | net_without_tp | MaxDD |
+|---|---:|---:|---:|---|---:|---:|---:|---:|
+| `long_regime` (H-D) | 3.260 | 71,60% | **−434** | −0,027 [−0,067..+0,020] | +185 | −1.054 | −1.232 | 5,09% |
+
+**Đọc:** ít lệnh hơn nhiều (3.260 vs 26.130) và **DD rất nhỏ (5,1%)** — đúng tinh thần "ít lệnh, bớt đau" — nhưng
+**expectancy vẫn âm** (−0,027R), gross gần 0 (+185 ≈ +0,011R/lệnh) và **âm ở spread×2**. Theo tiêu chí bác bỏ
+trong spec ("trong mẫu < 0 sau chi phí") ⇒ **H-D bị bác bỏ**: entry theo regime **không tạo edge** trên dữ liệu này.
+
 ## 6. Khoảng cách backtest ↔ chạy thật
 
 | Rủi ro | Hiện trạng trong repo | Việc cần |
@@ -229,7 +243,7 @@ cửa sổ ngoài mẫu. Dưới đây ID `E*` là thí nghiệm không cần/í
 | **H-A** | **Giảm tần suất**: vào lệnh tối đa 1–3 lần/ngày, `InpCooldownMinutes` ≥ 60 | chỉ đổi giới hạn entry (input có sẵn) | tổng chi phí giảm nhưng gộp/lệnh không tăng ⇒ chỉ giảm lỗ, không tạo lãi (kết quả vẫn hữu ích: đây là biến kiểm soát). *Biến thể ngược (bỏ giới hạn) đã đo 2026-11-10 → §5.2* |
 | **H-B** | **Giữ lâu**: SL theo ATR khung H1, trail theo cấu trúc M15/H1 | dùng `IR_SL_ATR`/`IR_TRAIL_ATR` có sẵn hoặc structure của V3 | gộp/lệnh (đơn vị giá) không tăng theo thời gian giữ |
 | **H-C** ✅ | **Lọc chi phí**: không vào lệnh khi spread > ngưỡng hoặc giờ roll-over | `InpMaxSpreadPoints` hạ 600→200 (**đã đo 2026-11-10** → §5.2); lọc giờ chưa làm | lệnh bị loại không kém lệnh giữ lại. **Kết quả: halved lệnh, DD 22,5%→17,2%, net ≈ 0 ⇒ chỉ giảm lỗ** |
-| **H-D** | **Entry theo regime khung lớn** (H1/H4 EMA + breakout ngày), 1 lệnh/regime | spec mới + `IRDirection.mqh` thêm mode; **không** sửa mode hiện có | OOS expectancy cận dưới CI ≤ 0 |
+| **H-D** ✅ | **Entry theo regime** (H1 context + M5 breakout K nến), 1 lệnh/regime | spec: [infinite-runner-regime-entry-spec.md](infinite-runner-regime-entry-spec.md); `IR_DIR_REGIME` mới, **không** sửa mode hiện có | OOS expectancy cận dưới CI ≤ 0. **Kết quả: −0,027R (CI bao 0), gross ≈ 0 ⇒ bác bỏ** |
 | **H-E** | **Hồi phục sau khoá DD** (thay halt vĩnh viễn bằng pause + giảm risk) | cần ADR riêng vì nới hàng rào an toàn | DD tối đa vượt 15% hoặc halt tái diễn |
 | **H-F** | Mean-reversion sau ngày biến động bất thường | spec mới; một nghiên cứu học thuật thấy hiệu ứng contrarian ngày kế tiếp ở vàng nhưng *giới hạn theo thời gian* (§10) | không tái lập ngoài mẫu |
 

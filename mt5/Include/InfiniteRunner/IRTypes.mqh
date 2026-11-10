@@ -13,7 +13,8 @@
 enum ENUM_IR_DIRECTION_MODE
   {
    IR_DIR_LEGACY_EMA = 0,   // V1 parity: opposite-EMA on closed bars, always in
-   IR_DIR_EMA_MTF    = 1    // H1 context + M15 confirm + M5 pullback-reclaim
+   IR_DIR_EMA_MTF    = 1,   // H1 context + M15 confirm + M5 pullback-reclaim
+   IR_DIR_REGIME     = 2    // H1 context + M5 breakout of the last K bars (H-D)
   };
 
 //--- ATR usage flags for the volatility gate (pure input, no API).
