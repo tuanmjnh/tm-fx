@@ -89,7 +89,10 @@ cùng lúc).
   band SL 500–20000, `InpSafetyTpPoints=100000`, `InpMaxPositions=1`.
 - Preset `.set`: [`docs/20-operations/presets/infinite_runner_v2.set`](../20-operations/presets/infinite_runner_v2.set)
   (dành cho `InfiniteRunnerXAUV2DemoEA`, M5).
-- Kill switch: `INFINITE_RUNNER_DEMO_STOP.txt`; state file `infinite_runner_demo_state.csv`.
+- Preset **chạy demo** (forward test): [`docs/20-operations/presets/infinite_runner_v2_demo_run.set`](../20-operations/presets/infinite_runner_v2_demo_run.set)
+  — giống preset trên nhưng **log/state riêng** (`infinite_runner_v2*.csv`) và lot cố định 0.01 (~$5 rủi ro/lệnh).
+- Kill switch: `INFINITE_RUNNER_DEMO_STOP.txt`; state file `infinite_runner_demo_state.csv`
+  (preset chạy demo dùng `infinite_runner_v2_state.csv`).
 - Không có EA sim riêng (không bắt buộc theo ADR 0005).
 
 ## 5. Bằng chứng
@@ -140,5 +143,12 @@ Nhãn: **`NOT_RUN`** — chưa có phiên **demo thật** nào ghi kết quả; 
   viễn** (streak chỉ xoá khi thắng) nên bot tự tắt sau ~2 ngày và không bao giờ vào lại. Nay
   `InpLossStreakCooldownMinutes` (>0) cho bot tự hồi phục sau cooldown; đặt `0` quay lại hành vi khoá vĩnh
   viễn (chỉ dùng khi cố ý).
+- **Va chạm với V3:** `InfiniteRunnerXAUV3DemoEA` (bản thử trong `archive/wip/…V3`) dùng **cùng magic
+  `25006001` + cùng symbol `XAUUSDm`** và (trước đây) cùng file state/journal ⇒ **không gắn V2 và V3 cùng
+  lúc** trên một tài khoản. Preset chạy demo của V2 dùng file riêng để tránh lẫn state.
+- **Tài khoản nhỏ:** với lot cố định 0.01, rủi ro ~$5/lệnh (SL 5000 points); trần `InpMaxDailyLossPct=1%`
+  nghĩa là tài khoản càng nhỏ càng dễ chạm trần sau 1–2 lệnh lỗ. Lot theo rủi ro (`InpLotMode=1`, 0.25%)
+  cần equity **≥ ~$2.000** mới vào được (dưới ngưỡng bot bỏ qua lệnh). Khoá `InpMaxDrawdownPct=8%` là
+  **halt vĩnh viễn** (mở bằng tay).
 - Lợi nhuận `UNPROVEN`; chưa có SELL/BUY nào của V2 trên demo; parity với V1 trên nến đóng là mục đích
   của mode `IR_DIR_LEGACY_EMA` chứ chưa được đối chiếu số.

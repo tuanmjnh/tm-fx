@@ -197,3 +197,22 @@ InpBreakEvenBufferPts=100
 InpSafetyTpPoints=100000
 ; Mức Take Profit an toàn tối đa (100000 points = 100 giá Vàng) đề phòng rớt mạng
 ; Infinite Runner chủ yếu chốt lời tự động bằng Trailing Stop khi thị trường quay đầu
+
+; ------------------------------------------------------------------------------
+; 7. STEP TRAILING (khoá lợi nhuận theo nấc) — mặc định BẬT
+; ------------------------------------------------------------------------------
+InpEnableStepTrailing=true
+; true = khoá lợi nhuận theo 3 nấc dưới đây (thay cho trailing cố định)
+
+InpStep1_TriggerPoints=1500.0
+; Nấc 1: khi lãi đạt 1500 points (1.5 giá) thì bắt đầu khoá
+InpStep1_LockPoints=200.0
+; Nấc 1: khoá 200 points (0.2 giá) so với giá vào
+InpStep2_TriggerPoints=3000.0
+; Nấc 2: khi lãi đạt 3000 points (3.0 giá)
+InpStep2_LockPoints=1500.0
+; Nấc 2: khoá 1500 points (1.5 giá)
+InpStep3_TriggerPoints=5000.0
+; Nấc 3: khi lãi đạt 5000 points (5.0 giá = 1R)
+InpStep3_LockPoints=3500.0
+; Nấc 3: khoá 3500 points (3.5 giá)
