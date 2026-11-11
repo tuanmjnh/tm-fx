@@ -7,12 +7,11 @@ trang này lệch nhau, trang chuyên thắng — báo để sửa từ điển 
 ## 1. Thuật ngữ
 
 **EA (Expert Advisor)** — Con bot MQL5 chạy trong MetaTrader 5, được gọi mỗi tick/nến để quyết định
-mở/đóng/bỏ qua vị thế. Repo có 15 EA: 5 demo, 6 sim, 3 signal, 1 inference (danh mục:
-[`../10-bots/README.md`](../10-bots/README.md)).
+mở/đóng/bỏ qua vị thế. Repo hiện chỉ còn **một EA demo**: `InfiniteRunnerXAUV2DemoEA`
+([`../10-bots/infinite-runner.md`](../10-bots/infinite-runner.md)).
 
-**Magic number** — Số định danh duy nhất của mỗi bot gắn lên mọi lệnh, để bot nhận "vị thế của mình"
-và validator ép không trùng: PA 25002001, Grid 25004001, DCA 25005001, IR 25006001, WW 25007001.
-Script probe kiểm tra dùng 25002002 nhưng là script, không phải EA, không tính vào danh sách bot.
+**Magic number** — Số định danh của bot gắn lên mọi lệnh, để bot nhận "vị thế của mình": InfiniteRunner
+`25006001` (`XAUUSDm`).
 
 **Preset JSON** — Nguồn sự thật của cấu hình một bot, nằm ở `configs/demo/*.json`; key trong JSON
 trùng đúng tên `input` trong EA (không có lớp dịch tên ở giữa). Đổi cấu hình bao giờ cũng đổi JSON
@@ -90,11 +89,10 @@ quân và cập nhật lại sau mỗi tầng; chạm daily loss/kill switch →
 **Runner** — Kiểu bot "một vị thế chạy liên tục" của InfiniteRunner: giữ lệnh bằng trailing SL thay
 vì TP gần, để bắt trend dài; TP chỉ là mốc an toàn xa (`InpSafetyTpPoints`), không phải mục tiêu chính.
 
-**PSAR** — Parabolic SAR, chỉ báo theo dõi stop (`iSAR`); trong repo dùng làm một trong ba mode đặt
-SL ban đầu của Wonderwhales (`WW_STOP_PSAR` — stop lấy từ PSAR của nến tín hiệu).
+**PSAR** — Parabolic SAR, chỉ báo theo dõi stop (`iSAR`). Repo hiện **không** dùng; bot InfiniteRunner dùng
+EMA + ATR.
 
-**ONNX** — Định dạng model ML chạy được trong MQL5; `LabOnnxInference` nạp model, chạy fixture và đối
-chiếu số với Python — parity 24/24 hàng, max abs `4.927e-08` với tolerance `1e-5`, provider CPU.
+**ONNX** — Định dạng model ML chạy được trong MQL5 (parity với Python cần thiết bị kiểm riêng).
 
 **Parity** — Tính chất "cùng input → cùng output số" khi port logic giữa Python, Pine Script và MQL5.
 Parity Pine ↔ MQL5 (Track B) hiện `BLOCKED` vì thiếu CSV reference thật xuất từ Pine; comparator chỉ

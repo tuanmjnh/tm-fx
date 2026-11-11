@@ -1,5 +1,7 @@
 # Testing — quy ước, metric và test plan
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 > Tài liệu tổng hợp, giữ nguyên nội dung gốc; tiêu đề đã hạ một cấp để thống nhất một cây tài liệu. Nguồn: `testing-guide.md`, `TEST_PLAN.md`.
 
 Nội dung:
@@ -145,8 +147,8 @@ Bounded basket CLI ghi cùng thư mục `outputs.report_dir` (không có `--stor
 | `signals.csv`, `validation.json/csv` | Như backtest thường |
 | `equity.png` | Tùy chọn khi `outputs.plot: true` |
 
-Metric trong `summary.json` tính trên per-layer trades, không phải per-basket. Chi tiết quy tắc và giới
-hạn: [`bounded-basket.md`](bounded-basket.md).
+Metric trong `summary.json` tính trên per-layer trades, không phải per-basket. Bộ mô phỏng bounded
+basket đã gỡ khỏi repo.
 
 ### 2. Hợp đồng thời gian
 
@@ -224,7 +226,7 @@ hạn: [`bounded-basket.md`](bounded-basket.md).
   đúng lỗ ròng. Gap có thể vượt cap; đọc `hard_limits.loss_cap_overshoot`.
 - Tín hiệu ngược chiều đóng basket nếu `close_on_opposite_signal: true`; nếu false thì bỏ qua.
 - `trades.csv` là per-layer; metric `trade_count`/`win_rate`/`profit_factor` không phải per-basket.
-- Chi tiết, công thức, config và demo: [`bounded-basket.md`](bounded-basket.md).
+- Chi tiết, công thức, config và demo nằm trong tài liệu bounded-basket đã gỡ khỏi repo.
 
 ### 5. Định nghĩa metric
 
@@ -624,7 +626,7 @@ Kỳ vọng: toàn bộ pass. Test dùng dữ liệu tổng hợp trong thư m�
 
 ### 9. T8 — Parity
 
-Xem [`PINE_PARITY_Wonderwhales.md`](indicators/parity.md). Cần CSV reference thật từ Pine.
+Xem `PINE_PARITY_Wonderwhales.md` (đã gỡ cùng indicator PinePort). Cần CSV reference thật từ Pine.
 Không tạo CSV giả. Trạng thái hiện tại: `BLOCKED`.
 
 ### 10. Tiêu chí dừng

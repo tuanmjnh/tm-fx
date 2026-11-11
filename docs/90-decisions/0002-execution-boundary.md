@@ -1,5 +1,7 @@
 # ADR 0002 — Ranh giới execution và chạy trên Exness MT5
 
+> Cập nhật 2026-11-11: repo nay chỉ còn bot InfiniteRunner; phần còn lại là lịch sử.
+
 > **Cập nhật 2026-10-29:** ADR [0003](0003-demo-execution-scope.md) đã thay thế **mục 1, 2 và 6** của
 > ADR này: repository có execution **chỉ trên tài khoản demo/Strategy Tester**, qua
 > `PATrendRiderXAUv1DemoEA` + `mt5/Include/Exec/*`. Các mục còn lại (không tài khoản live, không

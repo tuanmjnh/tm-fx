@@ -1,24 +1,19 @@
 """Static validation of the demo-only execution scope (ADR 0004).
 
-Asserts the guardrails that separate demo execution from live trading:
+The repository ships a single demo bot, ``InfiniteRunnerXAUV2DemoEA``. This script
+asserts the guardrails that separate demo execution from live trading:
 
-* every demo EA (TrendRider, Grid, DCA, InfiniteRunner, Wonderwhales) only
-  accepts a demo or Strategy Tester account and fails closed on anything else;
-* execution is enabled by default in both code and presets (ADR 0006) and a dry-run
+* the demo EA only accepts a demo or Strategy Tester account and fails closed on
+  anything else;
+* execution is enabled by default in both code and preset (ADR 0006) and a dry-run
   is the explicit InpEnableExecution=false override used for comparison runs;
-* every order carries a mandatory SL/TP; the TrendRider EA keeps one position,
-  while Grid/DCA baskets stay bounded in level count, volume and loss budget;
-* a kill-switch file exists for each bot and a basket is flattened on breach;
-* trading APIs live only in the Exec sources (guard, broker, shared basket
-  helpers, the five demo EAs, contract tests, order probe); the simulation EAs
-  and presets are untouched and still refuse orders;
+* one runner position, a mandatory far safety TP and a hardened stop band;
+* a kill-switch file exists and the loss-streak guard can recover;
+* trading APIs live only in the Exec sources (guard, broker, shared helpers, the
+  demo EA, contract tests, order probe);
 * the order probe stays confirm-gated, tester-refusing and on its own magic;
 * the demo journal watcher stays read-only and mirrors the EA's CSV contract;
 * no network, socket or credential API is used anywhere in the Exec scope.
-
-This script never compiles, never starts MetaTrader, never logs in and never
-sends an order. Real behaviour is proven only by running the EA on a demo
-account and keeping its journal.
 
 This script never compiles, never starts MetaTrader, never logs in and never
 sends an order. Real behaviour is proven only by running the EA on a demo
@@ -43,17 +38,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 ADR = "docs/90-decisions/0004-all-bots-demo-execution.md"
 ADR_0003 = "docs/90-decisions/0003-demo-execution-scope.md"
-ADR_0007 = "docs/90-decisions/0007-wonderwhales-demo-bot.md"
-ADR_0009 = "docs/90-decisions/0009-wonderwhales-xau-2mode-demo-bot.md"
 GUIDE = "docs/20-operations/demo-execution.md"
-DEMO_EA = "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5"
-GRID_DEMO_EA = "mt5/Experts/GridDemoEA.mq5"
-DCA_DEMO_EA = "mt5/Experts/DCADemoEA.mq5"
 IR_DEMO_EA = "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5"
-WW_DEMO_EA = "mt5/Experts/WonderwhalesDemoEA.mq5"
-WW2_DEMO_EA = "mt5/Experts/WonderwhalesXAU2ModeEA.mq5"
-SIM_EA = "mt5/Experts/PATrendRiderXAUv1SimEA.mq5"
-WW_SIM_EA = "mt5/Experts/WonderwhalesSimEA.mq5"
 EXEC_GUARD = "mt5/Include/Exec/ExecGuard.mqh"
 EXEC_BROKER = "mt5/Include/Exec/ExecBroker.mqh"
 EXEC_COMMON = "mt5/Include/Exec/ExecDemoCommon.mqh"
@@ -61,31 +47,18 @@ EXEC_TESTS = "mt5/Scripts/ExecGuardTests.mq5"
 EXEC_PROBE = "mt5/Scripts/ExecDemoProbe.mq5"
 SIM_LOGGER = "mt5/Include/Sim/SimLogger.mqh"
 JOURNAL_WATCHER = "scripts/watch_demo_journal.py"
-DEMO_PRESET = "configs/demo/pa_trendrider_xau_demo.json"
-GRID_DEMO_PRESET = "configs/demo/grid_demo.json"
-DCA_DEMO_PRESET = "configs/demo/dca_demo.json"
 IR_DEMO_PRESET = "configs/demo/infinite_runner_demo.json"
-WW_DEMO_PRESET = "configs/demo/wonderwhales_demo.json"
-WW2_DEMO_PRESET = "configs/demo/wonderwhales_xau_2mode_demo.json"
-SIM_PRESET = "configs/sim/pa_trendrider_xau.json"
 
-#--- ADR 0004 + ADR 0005 + ADR 0007: one demo EA per strategy, each with its
-#--- own shape.
+#--- ADR 0005: one demo EA, one runner shape.
 DEMO_EAS = {
-    DEMO_EA: "single_position",
-    GRID_DEMO_EA: "bounded_basket",
-    DCA_DEMO_EA: "bounded_basket",
     IR_DEMO_EA: "runner_trailing",
-    WW_DEMO_EA: "single_position",
-    #--- ADR 0009: sixth demo bot, one magic, Scalp/Swing modes.
-    WW2_DEMO_EA: "single_position",
 }
 
 EXEC_SOURCES = (
     EXEC_GUARD,
     EXEC_BROKER,
     EXEC_COMMON,
-    *DEMO_EAS,
+    IR_DEMO_EA,
     EXEC_TESTS,
     EXEC_PROBE,
 )
@@ -144,28 +117,13 @@ def check_files(root: Path) -> list[str]:
         for relative in (
             ADR,
             ADR_0003,
-            ADR_0007,
-            ADR_0009,
             GUIDE,
-            DEMO_EA,
-            GRID_DEMO_EA,
-            DCA_DEMO_EA,
             IR_DEMO_EA,
-            WW_DEMO_EA,
-            WW2_DEMO_EA,
-            SIM_EA,
-            WW_SIM_EA,
             EXEC_GUARD,
             EXEC_BROKER,
             EXEC_COMMON,
             EXEC_TESTS,
-            DEMO_PRESET,
-            GRID_DEMO_PRESET,
-            DCA_DEMO_PRESET,
             IR_DEMO_PRESET,
-            WW_DEMO_PRESET,
-            WW2_DEMO_PRESET,
-            SIM_PRESET,
             EXEC_PROBE,
             JOURNAL_WATCHER,
         )
@@ -191,26 +149,10 @@ def check_adr(root: Path) -> list[str]:
     adr3 = _read(root, ADR_0003)
     if "0004-all-bots-demo-execution.md" not in adr3:
         issues.append("ADR 0003 must point at the superseding ADR 0004")
-
-    adr7 = _read(root, ADR_0007)
-    if "Accepted" not in adr7:
-        issues.append("ADR 0007 must be Accepted")
-    for token in ("WonderwhalesDemoEA", "WonderwhalesSimEA", "25007001",
-                  "DEMO_ONLY", "NOT_RUN"):
-        if token not in adr7:
-            issues.append(f"ADR 0007 must mention {token}")
-
-    adr9 = _read(root, ADR_0009)
-    if "Accepted" not in adr9:
-        issues.append("ADR 0009 must be Accepted")
-    for token in ("WonderwhalesXAU2ModeEA", "25008001", "DEMO_ONLY", "NOT_RUN",
-                  "parity"):
-        if token not in adr9:
-            issues.append(f"ADR 0009 must mention {token}")
     return issues
 
 
-def check_demo_ea(root: Path, relative: str = DEMO_EA) -> list[str]:
+def check_demo_ea(root: Path, relative: str = IR_DEMO_EA) -> list[str]:
     issues: list[str] = []
     text = _read(root, relative)
     label = Path(relative).name
@@ -237,202 +179,36 @@ def check_demo_ea(root: Path, relative: str = DEMO_EA) -> list[str]:
     if "OrderSend" in _code_only(text):
         issues.append(f"{label}: must route orders through ExecBroker, not OrderSend")
 
-    if relative == DEMO_EA:
-        tp = _input_default(text, "InpTakeProfitR")
-        if tp is None:
-            issues.append("InpTakeProfitR is missing")
-        else:
-            try:
-                if float(tp) <= 0.0:
-                    issues.append("InpTakeProfitR must be positive")
-            except ValueError:
-                issues.append("InpTakeProfitR must be numeric")
-        if _input_default(text, "InpMaxPositions") not in (None, "1"):
-            issues.append("InpMaxPositions must be fixed to 1")
-        for token in (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "ExecTakeProfitPrice",
-            "ExecRiskBudgetOk",
-        ):
-            if token not in text:
-                issues.append(f"DemoEA must call {token}")
-        for token in (
-            "InpMaxGridLevels",
-            "InpMaxDcaAdds",
-            "InpVolumeMultiplier",
-            "InpAddVolumeMultiplier",
-        ):
-            if token in text:
-                issues.append(f"DemoEA must not expose {token} (single position)")
-
-    if relative == IR_DEMO_EA:
-        #--- ADR 0005: the runner must keep its mandatory far safety TP, its
-        #--- stop band and its monotonic trail inputs.
-        tp = _input_default(text, "InpSafetyTpPoints")
-        if tp is None:
-            issues.append("InpSafetyTpPoints is missing")
-        else:
-            try:
-                if float(tp) <= 0.0:
-                    issues.append("InpSafetyTpPoints must be positive")
-            except ValueError:
-                issues.append("InpSafetyTpPoints must be numeric")
-        if _input_default(text, "InpMaxPositions") not in (None, "1"):
-            issues.append("InpMaxPositions must be fixed to 1")
-        for token in (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "ExecCalcProfit",
-            "ExecMarginRequired",
-            "ExecClosedPnl",
-            "IRMonotonicBetter",
-        ):
-            if token not in text:
-                issues.append(f"InfiniteRunner demo EA must use {token}")
-        for token in (
-            "InpMaxGridLevels",
-            "InpMaxDcaAdds",
-            "ExecDemoBasketClose",
-        ):
-            if token in text:
-                issues.append(f"InfiniteRunner demo EA must not expose {token} (runner)")
-
-    if relative == WW_DEMO_EA:
-        #--- ADR 0007: Wonderwhales keeps one guarded position, a mandatory
-        #--- TP on every order and risk sizing at the initial stop.
-        tp = _input_default(text, "InpTakeProfitR")
-        if tp is None:
-            issues.append("Wonderwhales InpTakeProfitR is missing")
-        else:
-            try:
-                if float(tp) <= 0.0:
-                    issues.append("Wonderwhales InpTakeProfitR must be positive")
-            except ValueError:
-                issues.append("Wonderwhales InpTakeProfitR must be numeric")
-        for token in (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "ExecCalcProfit",
-            "ExecMarginRequired",
-            "ExecClosedPnl",
-            "ExecTakeProfitPrice",
-            "ExecTakeProfitValid",
-            "ExecStopsRespectBroker",
-            "WonderwhalesContract.mqh",
-        ):
-            if token not in text:
-                issues.append(f"Wonderwhales demo EA must use {token}")
-        for token in (
-            "InpMaxGridLevels",
-            "InpMaxDcaAdds",
-            "ExecDemoBasketClose",
-        ):
-            if token in text:
-                issues.append(f"Wonderwhales demo EA must not expose {token} (single position)")
-
-    if relative == WW2_DEMO_EA:
-        #--- ADR 0009: the 2-mode Wonderwhales demo keeps one guarded position,
-        #--- one magic, a mandatory TP, a parity gate and risk sizing at the stop.
-        tp = _input_default(text, "InpTakeProfitR")
-        if tp is None:
-            issues.append("WonderwhalesXAU2ModeEA InpTakeProfitR is missing")
-        else:
-            try:
-                if float(tp) <= 0.0:
-                    issues.append("WonderwhalesXAU2ModeEA InpTakeProfitR must be positive")
-            except ValueError:
-                issues.append("WonderwhalesXAU2ModeEA InpTakeProfitR must be numeric")
-        if _input_default(text, "InpMaxPositions") not in (None, "1"):
-            issues.append("WonderwhalesXAU2ModeEA InpMaxPositions must be fixed to 1")
-        if _input_default(text, "InpDemoOnly") != "true":
-            issues.append("WonderwhalesXAU2ModeEA InpDemoOnly must default to true")
-        if _input_default(text, "InpRequireParity") != "true":
-            issues.append("WonderwhalesXAU2ModeEA InpRequireParity must default to true")
-        for token in (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "ExecCalcProfit",
-            "ExecMarginRequired",
-            "ExecClosedPnl",
-            "ExecTakeProfitPrice",
-            "ExecTakeProfitValid",
-            "ExecStopsRespectBroker",
-            "WonderwhalesContract.mqh",
-            "Ww2BestStop",
-            "parity_blocked",
-        ):
-            if token not in text:
-                issues.append(f"WonderwhalesXAU2ModeEA must use {token}")
-        for token in (
-            "InpMaxGridLevels",
-            "InpMaxDcaAdds",
-            "ExecDemoBasketClose",
-        ):
-            if token in text:
-                issues.append(f"WonderwhalesXAU2ModeEA must not expose {token} (single position)")
-    return issues
-
-
-def check_bounded_baskets(root: Path) -> list[str]:
-    """Grid/DCA demo EAs may hold several positions, so their caps are the
-    guardrail: bounded count, bounded volume, bounded loss at the basket stop,
-    a mandatory basket SL/TP and a flush on halt."""
-    issues: list[str] = []
-    expectations = {
-        GRID_DEMO_EA: (
-            "InpMaxGridLevels",
-            "InpMaxLevelVolume",
-            "InpVolumeMultiplier",
-            "InpBasketStopPoints",
-            "InpBasketTargetPoints",
-            "InpMaxExposure",
-            "InpMaxBasketLossPct",
-            "InpMaxConsecutiveLosses",
-            "InpMaxDailyLossPct",
-            "InpMaxDrawdownPct",
-        ),
-        DCA_DEMO_EA: (
-            "InpMaxDcaAdds",
-            "InpMaxAddVolume",
-            "InpAddVolumeMultiplier",
-            "InpBasketStopPoints",
-            "InpBasketTargetPoints",
-            "InpMaxExposure",
-            "InpMaxBasketLossPct",
-            "InpMaxConsecutiveLosses",
-            "InpMaxDailyLossPct",
-            "InpMaxDrawdownPct",
-        ),
-    }
-    for relative, inputs in expectations.items():
-        text = _read(root, relative)
-        for name in inputs:
-            if _input_default(text, name) is None:
-                issues.append(f"{relative}: missing cap input {name}")
-        for token in (
-            "ExecDemoBasketClose",
-            "ExecDemoBasketSetStops",
-            "BasketLossBudgetOk",
-            "ExecDemoBasketLossMoney",
-            "ExecRiskBudgetOk",
-            "ExecDemoKillSwitchPresent",
-            "ExecDemoHistoryPnl",
-        ):
-            if token not in text:
-                issues.append(f"{relative}: must use {token}")
-        #--- A basket must always be flattened when a hard cap trips.
-        for token in ("CloseBasket(\"RISK_HALT\")", "CloseBasket(\"KILL_SWITCH\")"):
-            if token not in text:
-                issues.append(f"{relative}: must flatten the basket on {token}")
-        if not re.search(r"InpMaxExposure\s*=\s*[\d.]+", text):
-            issues.append(f"{relative}: InpMaxExposure must have a finite default")
-
-    common = _code_only(_read(root, EXEC_COMMON))
-    if "OrderSend" in common:
-        issues.append("ExecDemoCommon must not call OrderSend directly")
-    if "ExecClosePosition" not in common or "ExecModifyStops" not in common:
-        issues.append("ExecDemoCommon must route through ExecClosePosition/ExecModifyStops")
+    #--- ADR 0005: the runner must keep its mandatory far safety TP, its
+    #--- stop band and its monotonic trail inputs.
+    tp = _input_default(text, "InpSafetyTpPoints")
+    if tp is None:
+        issues.append("InpSafetyTpPoints is missing")
+    else:
+        try:
+            if float(tp) <= 0.0:
+                issues.append("InpSafetyTpPoints must be positive")
+        except ValueError:
+            issues.append("InpSafetyTpPoints must be numeric")
+    if _input_default(text, "InpMaxPositions") not in (None, "1"):
+        issues.append("InpMaxPositions must be fixed to 1")
+    for token in (
+        "ExecFindOwnPosition",
+        "ExecModifyStops",
+        "ExecCalcProfit",
+        "ExecMarginRequired",
+        "ExecClosedPnl",
+        "IRMonotonicBetter",
+    ):
+        if token not in text:
+            issues.append(f"InfiniteRunner demo EA must use {token}")
+    for token in (
+        "InpMaxGridLevels",
+        "InpMaxDcaAdds",
+        "ExecDemoBasketClose",
+    ):
+        if token in text:
+            issues.append(f"InfiniteRunner demo EA must not expose {token} (runner)")
     return issues
 
 
@@ -461,14 +237,6 @@ def check_exec_sources(root: Path) -> list[str]:
         issues.append("ExecBroker must own the guarded OrderSend call")
     if "OrderSend" in _read(root, EXEC_GUARD):
         issues.append("ExecGuard must stay pure")
-
-    for relative in (SIM_EA, WW_SIM_EA):
-        sim_text = _read(root, relative)
-        for token in ("OrderSend(", "MqlTradeRequest", "PositionSelect("):
-            if token in sim_text:
-                issues.append(
-                    f"{Path(relative).name} must remain simulation-only; found {token}"
-                )
     return issues
 
 
@@ -501,7 +269,7 @@ def check_probe(root: Path) -> list[str]:
     if "ExecBroker.mqh" not in _read(root, EXEC_PROBE):
         issues.append("probe must include ExecBroker.mqh")
 
-    ea_code = _code_only(_read(root, DEMO_EA))
+    ea_code = _code_only(_read(root, IR_DEMO_EA))
     probe_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", code)
     ea_magic = re.search(r"InpMagicNumber\s*=\s*(\d+)", ea_code)
     if probe_magic is None or ea_magic is None:
@@ -545,7 +313,7 @@ def check_journal_watcher(root: Path) -> list[str]:
     elif tuple(declared.group(1).split(",")) != tuple(module.EXPECTED_HEADER):
         issues.append("watcher columns must equal the SimLogger CSV header")
 
-    ea_code = _code_only(_read(root, DEMO_EA))
+    ea_code = _code_only(_read(root, IR_DEMO_EA))
     for constant, input_name in (
         ("JOURNAL_NAME", "InpLogFile"),
         ("KILL_SWITCH_NAME", "InpKillSwitchFile"),
@@ -557,10 +325,6 @@ def check_journal_watcher(root: Path) -> list[str]:
         elif got != want.strip('"'):
             issues.append(f"watcher {constant} must match the DemoEA {input_name}")
 
-    emitted = set(re.findall(r'Event\("([A-Z_]+)"', ea_code))
-    for event in module.ALERT_EVENTS:
-        if event not in emitted:
-            issues.append(f"watcher alerts on {event}, which the DemoEA never emits")
     for event in ("ENTRY", "EXIT"):
         if event not in module.ALERT_KINDS:
             issues.append(f"watcher must alert on real {event} rows")
@@ -571,82 +335,6 @@ def check_journal_watcher(root: Path) -> list[str]:
 
 def check_presets(root: Path) -> list[str]:
     issues: list[str] = []
-    demo = json.loads(_read(root, DEMO_PRESET))
-    sim = json.loads(_read(root, SIM_PRESET))
-
-    if demo.get("ea") != "PATrendRiderXAUv1DemoEA":
-        issues.append("demo preset must target PATrendRiderXAUv1DemoEA")
-    if demo.get("execution_mode") != "DEMO_ONLY":
-        issues.append("demo preset execution_mode must be DEMO_ONLY")
-    if demo.get("allow_live_trading") is not False:
-        issues.append("demo preset allow_live_trading must be false")
-    if demo.get("symbol") != "XAUUSDm":
-        issues.append("demo preset symbol must be XAUUSDm")
-
-    demo_inputs = demo.get("inputs", {})
-    sim_inputs = sim.get("inputs", {})
-    if demo_inputs.get("InpEnableExecution") is not True:
-        issues.append("demo preset must ship with InpEnableExecution=true (ADR 0006)")
-    if demo_inputs.get("InpMaxPositions") != 1:
-        issues.append("demo preset InpMaxPositions must be 1")
-    if not float(demo_inputs.get("InpTakeProfitR", 0.0)) > 0.0:
-        issues.append("demo preset InpTakeProfitR must be positive")
-    if "XAUUSD" not in str(demo_inputs.get("InpAllowedSymbols", "")):
-        issues.append("demo preset InpAllowedSymbols must allow XAUUSD")
-    if demo_inputs.get("InpMagicNumber") == sim_inputs.get("InpMagicNumber"):
-        issues.append("demo magic must differ from the simulation magic")
-
-    if sim.get("execution_mode") != "SIMULATION_ONLY":
-        issues.append("simulation preset must stay SIMULATION_ONLY")
-    if "InpEnableExecution" in sim_inputs or "InpTakeProfitR" in sim_inputs:
-        issues.append("simulation preset must not gain execution inputs")
-
-    source_dir = REPO_ROOT / "python" / "src"
-    if str(source_dir) not in sys.path:
-        sys.path.insert(0, str(source_dir))
-    from mt5_ea_ai_lab import sim_configs
-
-    issues.extend(
-        f"demo preset: {item}" for item in sim_configs.validate_preset(demo)
-    )
-    issues.extend(
-        f"simulation preset: {item}" for item in sim_configs.validate_preset(sim)
-    )
-
-    #--- ADR 0004: the Grid/DCA demo presets must be fail-closed too and must
-    #--- keep their bounded-basket caps explicit.
-    for relative, expected_ea in (
-        (GRID_DEMO_PRESET, "GridDemoEA"),
-        (DCA_DEMO_PRESET, "DCADemoEA"),
-    ):
-        name = Path(relative).name
-        preset = json.loads(_read(root, relative))
-        inputs = preset.get("inputs", {})
-        if preset.get("ea") != expected_ea:
-            issues.append(f"{name}: must target {expected_ea}")
-        if preset.get("execution_mode") != "DEMO_ONLY":
-            issues.append(f"{name}: execution_mode must be DEMO_ONLY")
-        if preset.get("allow_live_trading") is not False:
-            issues.append(f"{name}: allow_live_trading must be false")
-        if inputs.get("InpEnableExecution") is not True:
-            issues.append(f"{name}: must ship with InpEnableExecution=true (ADR 0006)")
-        if "XAUUSD" not in str(inputs.get("InpAllowedSymbols", "")):
-            issues.append(f"{name}: InpAllowedSymbols must allow XAUUSD")
-        if not float(inputs.get("InpBasketStopPoints", 0.0)) > 0.0:
-            issues.append(f"{name}: basket stop must be positive (mandatory SL)")
-        if not float(inputs.get("InpMaxBasketLossPct", 0.0)) > 0.0:
-            issues.append(f"{name}: basket loss budget must be positive")
-        if not float(inputs.get("InpMaxExposure", 0.0)) > 0.0:
-            issues.append(f"{name}: exposure cap must be positive")
-        if inputs.get("InpHaltOnBreach") is not True:
-            issues.append(f"{name}: InpHaltOnBreach must be true")
-        issues.extend(
-            f"{name}: {item}" for item in sim_configs.validate_preset(preset)
-        )
-
-    #--- ADR 0005: the InfiniteRunner demo preset is fail-closed too and pins
-    #--- the runner-specific guards (single position, mandatory far safety TP,
-    #--- hardened stop band).
     ir_name = Path(IR_DEMO_PRESET).name
     ir = json.loads(_read(root, IR_DEMO_PRESET))
     ir_inputs = ir.get("inputs", {})
@@ -672,58 +360,14 @@ def check_presets(root: Path) -> list[str]:
             f"{ir_name}: InpLossStreakCooldownMinutes must be positive when a "
             "loss-streak limit is set (a permanent lock deadlocks the bot)"
         )
+
+    source_dir = REPO_ROOT / "python" / "src"
+    if str(source_dir) not in sys.path:
+        sys.path.insert(0, str(source_dir))
+    from mt5_ea_ai_lab import sim_configs
+
     issues.extend(
         f"{ir_name}: {item}" for item in sim_configs.validate_preset(ir)
-    )
-
-    #--- ADR 0007: the Wonderwhales demo preset is fail-closed, ships with
-    #--- execution enabled and pins the mandatory TP and exposure cap.
-    ww_name = Path(WW_DEMO_PRESET).name
-    ww = json.loads(_read(root, WW_DEMO_PRESET))
-    ww_inputs = ww.get("inputs", {})
-    if ww.get("ea") != "WonderwhalesDemoEA":
-        issues.append(f"{ww_name}: must target WonderwhalesDemoEA")
-    if ww.get("execution_mode") != "DEMO_ONLY":
-        issues.append(f"{ww_name}: execution_mode must be DEMO_ONLY")
-    if ww.get("allow_live_trading") is not False:
-        issues.append(f"{ww_name}: allow_live_trading must be false")
-    if ww_inputs.get("InpEnableExecution") is not True:
-        issues.append(f"{ww_name}: must ship with InpEnableExecution=true (ADR 0006)")
-    if "XAUUSD" not in str(ww_inputs.get("InpAllowedSymbols", "")):
-        issues.append(f"{ww_name}: InpAllowedSymbols must allow XAUUSD")
-    if not float(ww_inputs.get("InpTakeProfitR", 0.0)) > 0.0:
-        issues.append(f"{ww_name}: InpTakeProfitR must be positive (mandatory TP)")
-    if not float(ww_inputs.get("InpMaxLots", 0.0)) > 0.0:
-        issues.append(f"{ww_name}: InpMaxLots must be positive")
-    if not float(ww_inputs.get("InpMinStopPoints", 0.0)) > 0.0:
-        issues.append(f"{ww_name}: InpMinStopPoints must be positive")
-    issues.extend(
-        f"{ww_name}: {item}" for item in sim_configs.validate_preset(ww)
-    )
-
-    #--- ADR 0009: the 2-mode Wonderwhales demo preset is fail-closed, ships
-    #--- with execution enabled and pins the parity gate and exposure cap.
-    ww2_name = Path(WW2_DEMO_PRESET).name
-    ww2 = json.loads(_read(root, WW2_DEMO_PRESET))
-    ww2_inputs = ww2.get("inputs", {})
-    if ww2.get("ea") != "WonderwhalesXAU2ModeEA":
-        issues.append(f"{ww2_name}: must target WonderwhalesXAU2ModeEA")
-    if ww2.get("execution_mode") != "DEMO_ONLY":
-        issues.append(f"{ww2_name}: execution_mode must be DEMO_ONLY")
-    if ww2.get("allow_live_trading") is not False:
-        issues.append(f"{ww2_name}: allow_live_trading must be false")
-    if ww2_inputs.get("InpEnableExecution") is not True:
-        issues.append(f"{ww2_name}: must ship with InpEnableExecution=true (ADR 0006)")
-    if "XAUUSD" not in str(ww2_inputs.get("InpAllowedSymbols", "")):
-        issues.append(f"{ww2_name}: InpAllowedSymbols must allow XAUUSD")
-    if not float(ww2_inputs.get("InpTakeProfitR", 0.0)) > 0.0:
-        issues.append(f"{ww2_name}: InpTakeProfitR must be positive (mandatory TP)")
-    if not float(ww2_inputs.get("InpMaxExposure", 0.0)) > 0.0:
-        issues.append(f"{ww2_name}: InpMaxExposure must be positive")
-    if ww2_inputs.get("InpRequireParity") is not True:
-        issues.append(f"{ww2_name}: InpRequireParity must be true")
-    issues.extend(
-        f"{ww2_name}: {item}" for item in sim_configs.validate_preset(ww2)
     )
     return issues
 
@@ -772,17 +416,11 @@ def main(argv: list[str] | None = None) -> int:
 
     report("demo execution files", [])
     report("ADR 0004 scope", check_adr(root))
-    report("demo EA guardrails", check_demo_ea(root))
-    report("grid demo EA guardrails", check_demo_ea(root, GRID_DEMO_EA))
-    report("dca demo EA guardrails", check_demo_ea(root, DCA_DEMO_EA))
-    report("infinite runner demo EA guardrails", check_demo_ea(root, IR_DEMO_EA))
-    report("wonderwhales demo EA guardrails", check_demo_ea(root, WW_DEMO_EA))
-    report("wonderwhales 2-mode demo EA guardrails", check_demo_ea(root, WW2_DEMO_EA))
-    report("bounded grid/DCA baskets", check_bounded_baskets(root))
+    report("infinite runner demo EA guardrails", check_demo_ea(root))
     report("exec sources", check_exec_sources(root))
     report("demo order probe", check_probe(root))
     report("demo journal watcher", check_journal_watcher(root))
-    report("demo and simulation presets", check_presets(root))
+    report("demo preset", check_presets(root))
     report("demo guide", check_guide(root))
 
     print(f"SUMMARY: checks={checks} fail={failures}")

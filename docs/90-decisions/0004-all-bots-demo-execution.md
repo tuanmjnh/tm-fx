@@ -1,5 +1,7 @@
 # ADR 0004 — Mọi bot được execution đầy đủ trên tài khoản demo
 
+> Cập nhật 2026-11-11: repo nay chỉ còn bot InfiniteRunner; phần còn lại là lịch sử.
+
 - **Ngày:** 2026-10-30
 - **Trạng thái:** Accepted (chủ dự án chấp thuận 2026-10-30); **được sửa đổi bởi
   [ADR 0006](0006-demo-default-execution-enabled.md)** — mặc định `InpEnableExecution=true`

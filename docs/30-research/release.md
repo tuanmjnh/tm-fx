@@ -1,5 +1,7 @@
 # Internal release checklist — MT5 EA & AI Lab
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 - **Ngày:** 2026-10-29 (bổ sung scope demo execution theo ADR 0003)
 - **Phạm vi:** bản nghiên cứu offline (Phase 0–9 + trailing stop + bounded DCA/grid + 5 EA mô phỏng) và
   **demo execution có guardrail** (`PATrendRiderXAUv1DemoEA`). Không phải sản phẩm giao dịch; không có

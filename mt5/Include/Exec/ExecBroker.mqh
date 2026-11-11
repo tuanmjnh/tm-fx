@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                   ExecBroker.mqh |
-//|      Demo-only order routing for PATrendRiderXAUv1DemoEA          |
+//|      Demo-only order routing for the demo EA                      |
 //|                                                                  |
 //| The only file that calls OrderSend/OrderCalcMargin. It never      |
 //| reads credentials, never uses WebRequest/sockets and never opens  |

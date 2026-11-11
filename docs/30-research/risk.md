@@ -1,5 +1,7 @@
 # Rủi ro và giới hạn
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 - **Ngày:** 2026-10-28
 - **Phạm vi:** toàn bộ dự án, cập nhật ở Phase 9, trailing stop, bounded DCA/grid và ranh giới execution
   (ADR 0002).

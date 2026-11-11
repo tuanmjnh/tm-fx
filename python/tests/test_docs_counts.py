@@ -1,7 +1,7 @@
-"""T1.1: the EA/demo counts in the catalog docs must match the tree.
+"""The EA/demo counts in the catalog docs must match the tree.
 
-One convention, enforced: 16 EA (6 demo + 10 lab) plus one dump-tester helper, so
-mt5/Experts has 17 .mq5 and configs/demo has one preset per demo EA.
+The repository is IR-only: ``mt5/Experts`` has exactly one ``.mq5``
+(``InfiniteRunnerXAUV2DemoEA.mq5``) and ``configs/demo`` has exactly one preset.
 """
 from __future__ import annotations
 
@@ -18,46 +18,37 @@ CATALOG_DOCS = (
     "docs/00-start/roadmap.md",
 )
 
+REMOVED_BOT_NAMES = (
+    "Wonderwhales",
+    "PATrendRider",
+    "GridDemoEA",
+    "DCADemoEA",
+)
+
 
 def _text(relative: str) -> str:
     return (REPO_ROOT / relative).read_text(encoding="utf-8")
 
 
-def _demo_eas() -> set[str]:
-    names = set()
-    for preset in DEMO_PRESETS.glob("*.json"):
-        names.add(json.loads(preset.read_text(encoding="utf-8"))["ea"])
-    return names
+def test_experts_has_only_the_infinite_runner() -> None:
+    experts = sorted(p.name for p in EXPERTS.glob("*.mq5"))
+    assert experts == ["InfiniteRunnerXAUV2DemoEA.mq5"]
 
 
 def test_demo_presets_map_to_experts() -> None:
-    demo = _demo_eas()
-    assert len(demo) == 6
-    for ea in demo:
-        assert (EXPERTS / f"{ea}.mq5").is_file(), ea
+    presets = sorted(DEMO_PRESETS.glob("*.json"))
+    assert [p.name for p in presets] == ["infinite_runner_demo.json"]
+    config = json.loads(presets[0].read_text(encoding="utf-8"))
+    assert config["ea"] == "InfiniteRunnerXAUV2DemoEA"
+    assert (EXPERTS / "InfiniteRunnerXAUV2DemoEA.mq5").is_file()
 
 
-def test_expert_count_and_helper() -> None:
-    experts = sorted(p.name for p in EXPERTS.glob("*.mq5"))
-    demo = _demo_eas()
-    assert len(experts) == 17
-    #--- 16 EA = 6 demo + 10 lab, plus exactly one dump-tester helper.
-    assert len(experts) == len(demo) + 10 + 1
-    assert "WonderwhalesDumpTesterEA.mq5" in experts
-
-
-def test_catalog_docs_use_the_canonical_counts() -> None:
+def test_catalog_docs_describe_an_ir_only_repo() -> None:
     for relative in CATALOG_DOCS:
         text = _text(relative)
-        assert "5 bot demo" not in text, relative
-        assert "5 EA demo" not in text, relative
-        assert "15 EA" not in text, relative
-    for relative, needle in (
-        ("README.md", "6 bot demo"),
-        ("README.md", "16 EA"),
-        ("docs/README.md", "6 bot demo"),
-        ("docs/README.md", "16 EA"),
-        ("docs/10-bots/README.md", "16 EA"),
-        ("docs/10-bots/README.md", "6 EA demo"),
-    ):
-        assert needle in _text(relative), f"{relative} missing {needle!r}"
+        assert "InfiniteRunner" in text, f"{relative} must describe the IR bot"
+        for removed in REMOVED_BOT_NAMES:
+            assert removed not in text, f"{relative} still mentions {removed}"
+        assert "configs/sim" not in text, f"{relative} still references configs/sim"
+        for stale in ("6 bot demo", "5 bot demo", "16 EA", "17 "):
+            assert stale not in text, f"{relative} still claims {stale!r}"

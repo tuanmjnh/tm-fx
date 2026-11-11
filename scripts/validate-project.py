@@ -1,13 +1,13 @@
 """Static validation for the whole MT5 EA & AI Lab project.
 
-Scans every MQL5 source under ``mt5/`` for order-sending, trade-class, socket,
+The repository ships a single demo bot, ``InfiniteRunnerXAUV2DemoEA``. This script
+scans every MQL5 source under ``mt5/`` for order-sending, trade-class, socket,
 web-request, account and credential APIs, checks for placeholder markers and
-verifies the Track C layout and presets with the same fail-closed rules used by
-``scripts/validate_sim_configs.py``.
+verifies the layout and the InfiniteRunner demo preset with the same fail-closed
+rules used by ``mt5_ea_ai_lab.sim_configs``.
 
 ADR 0004 allows trading APIs in the demo-execution sources only: the shared
-``mt5/Include/Exec`` modules plus one demo EA per strategy
-(``PATrendRiderXAUv1DemoEA``, ``GridDemoEA``, ``DCADemoEA``). Those files are
+``mt5/Include/Exec`` modules plus the InfiniteRunner demo EA. Those files are
 still scanned for network, socket and credential APIs, and the demo guardrails
 are asserted separately by ``scripts/validate_demo_execution.py``.
 
@@ -53,26 +53,16 @@ EXEC_SOURCES = {
     "mt5/Include/Exec/ExecGuard.mqh",
     "mt5/Include/Exec/ExecBroker.mqh",
     "mt5/Include/Exec/ExecDemoCommon.mqh",
-    "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5",
-    "mt5/Experts/GridDemoEA.mq5",
-    "mt5/Experts/DCADemoEA.mq5",
     "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5",
-    "mt5/Experts/WonderwhalesDemoEA.mq5",
     "mt5/Scripts/ExecGuardTests.mq5",
     "mt5/Scripts/ExecDemoProbe.mq5",
     "mt5/Scripts/CloseDemoPosition.mq5",
-    "mt5/Experts/WonderwhalesXAU2ModeEA.mq5",
 }
 
-#--- ADR 0004 + 0005: one demo EA per strategy. Each is checked for the guard
-#--- tokens that must survive a refactor.
+#--- ADR 0005: the InfiniteRunner demo EA is checked for the guard tokens that
+#--- must survive a refactor.
 DEMO_EAS = {
-    "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5": "single_position",
-    "mt5/Experts/GridDemoEA.mq5": "bounded_grid",
-    "mt5/Experts/DCADemoEA.mq5": "bounded_dca",
     "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5": "runner_trailing",
-    "mt5/Experts/WonderwhalesDemoEA.mq5": "psar_single",
-    "mt5/Experts/WonderwhalesXAU2ModeEA.mq5": "ww_2mode",
 }
 
 EXEC_FORBIDDEN_API = re.compile(
@@ -88,32 +78,54 @@ PLACEHOLDER = re.compile(r"\b(TODO|FIXME|TBD|PLACEHOLDER|NOT_IMPLEMENTED)\b")
 REQUIRED_FILES = (
     "README.md",
     "pyproject.toml",
+    "AGENTS.md",
     "docs/README.md",
     "docs/PROGRESS.md",
+    "docs/00-start/README.md",
     "docs/00-start/roadmap.md",
+    "docs/00-start/ai-upgrade-plan.md",
+    "docs/10-bots/README.md",
+    "docs/10-bots/ea-anatomy.md",
+    "docs/10-bots/infinite-runner.md",
+    "docs/10-bots/input-convention.md",
+    "docs/20-operations/README.md",
     "docs/20-operations/install.md",
+    "docs/20-operations/presets.md",
     "docs/20-operations/strategy-tester.md",
     "docs/20-operations/toolchain.md",
-    "docs/30-research/indicators/README.md",
-    "docs/30-research/indicators/parity.md",
+    "docs/20-operations/troubleshooting.md",
+    "docs/20-operations/demo-execution.md",
+    "docs/20-operations/evidence.md",
+    "docs/30-research/README.md",
     "docs/30-research/architecture.md",
     "docs/30-research/simulation.md",
     "docs/30-research/testing.md",
     "docs/30-research/risk.md",
     "docs/30-research/release.md",
-    "docs/30-research/wonderwhales-scalp-study.md",
     "docs/30-research/infinite-runner-study.md",
     "docs/30-research/infinite-runner-regime-entry-spec.md",
+    "docs/30-research/infinite-runner-long-run-study.md",
     "docs/30-research/evidence/infinite-runner/README.md",
     "docs/30-research/evidence/infinite-runner/summary.csv",
-    "docs/30-research/evidence/infinite-runner/e1_infinite_runner_long_base_nolock.json",
-    "docs/30-research/evidence/infinite-runner/e1_infinite_runner_long_exit_run.json",
+    "docs/90-decisions/README.md",
+    "docs/90-decisions/0001-project-baseline.md",
+    "docs/90-decisions/0002-execution-boundary.md",
+    "docs/90-decisions/0003-demo-execution-scope.md",
+    "docs/90-decisions/0004-all-bots-demo-execution.md",
+    "docs/90-decisions/0005-infiniterunner-xau-demo-bot.md",
+    "docs/90-decisions/0006-demo-default-execution-enabled.md",
+    "docs/90-decisions/0008-docs-information-architecture.md",
+    "docs/99-archive/README.md",
+    "docs/99-archive/LINK_MAP.md",
     "configs/project.example.json",
-    "configs/sim/runner_trailing.json",
-    "configs/sim/grid_lab.json",
-    "configs/sim/dca_lab.json",
-    "configs/sim/pine_plan_lab.json",
-    "configs/sim/pa_trendrider_xau.json",
+    "configs/demo/infinite_runner_demo.json",
+    "mt5/Include/Exec/ExecGuard.mqh",
+    "mt5/Include/Exec/ExecBroker.mqh",
+    "mt5/Include/Exec/ExecDemoCommon.mqh",
+    "mt5/Include/InfiniteRunner/IRTypes.mqh",
+    "mt5/Include/InfiniteRunner/IRDirection.mqh",
+    "mt5/Include/InfiniteRunner/IRRisk.mqh",
+    "mt5/Include/InfiniteRunner/IRTrailing.mqh",
     "mt5/Include/Sim/SimTypes.mqh",
     "mt5/Include/Sim/SimValidate.mqh",
     "mt5/Include/Sim/SimPortfolio.mqh",
@@ -124,115 +136,32 @@ REQUIRED_FILES = (
     "mt5/Include/Sim/SimDca.mqh",
     "mt5/Include/Sim/SimPlan.mqh",
     "mt5/Include/Sim/SimLogger.mqh",
-    "mt5/Experts/RunnerTrailingLabEA.mq5",
-    "mt5/Experts/GridLabEA.mq5",
-    "mt5/Experts/DCALabEA.mq5",
-    "mt5/Experts/PinePlanSimEA.mq5",
+    "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5",
+    "mt5/Scripts/CloseDemoPosition.mq5",
+    "mt5/Scripts/ExecDemoProbe.mq5",
+    "mt5/Scripts/ExecGuardTests.mq5",
+    "mt5/Scripts/IRCoreTests.mq5",
     "mt5/Scripts/SimCoreTests.mq5",
     "mt5/Scripts/SimPlanTests.mq5",
-    "mt5/Include/TrendRider/TRTypes.mqh",
-    "mt5/Include/TrendRider/TRConfig.mqh",
-    "mt5/Include/TrendRider/TRSwing.mqh",
-    "mt5/Include/TrendRider/TRStructure.mqh",
-    "mt5/Include/TrendRider/TRTrend.mqh",
-    "mt5/Include/TrendRider/TRPullback.mqh",
-    "mt5/Include/TrendRider/TRSignal.mqh",
-    "mt5/Include/TrendRider/TRAtr.mqh",
-    "mt5/Include/TrendRider/TRRisk.mqh",
-    "mt5/Include/TrendRider/TRTrailing.mqh",
-    "mt5/Include/TrendRider/TRState.mqh",
-    "mt5/Include/TrendRider/TRMarketData.mqh",
-    "mt5/Experts/PATrendRiderXAUv1SimEA.mq5",
-    "mt5/Scripts/TrendRiderContractTests.mq5",
-    "mt5/Include/Exec/ExecGuard.mqh",
-    "mt5/Include/Exec/ExecBroker.mqh",
-    "mt5/Include/Exec/ExecDemoCommon.mqh",
-    "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5",
-    "mt5/Experts/GridDemoEA.mq5",
-    "mt5/Experts/DCADemoEA.mq5",
-    "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5",
-    "mt5/Experts/WonderwhalesDemoEA.mq5",
-    "mt5/Experts/WonderwhalesXAU2ModeEA.mq5",
-    "mt5/Scripts/WW2CoreTests.mq5",
-    "mt5/Scripts/IRCoreTests.mq5",
-    "mt5/Include/Wonderwhales/WW2Types.mqh",
-    "mt5/Include/Wonderwhales/WW2SignalReader.mqh",
-    "mt5/Include/Wonderwhales/WW2RiskSizer.mqh",
-    "mt5/Include/Wonderwhales/WW2Swing.mqh",
-    "mt5/Include/Wonderwhales/WW2InitialStop.mqh",
-    "mt5/Include/Wonderwhales/WW2RiskGuard.mqh",
-    "mt5/Include/Wonderwhales/WW2TrailingCoordinator.mqh",
-    "mt5/Include/Wonderwhales/WW2Telemetry.mqh",
-    "mt5/Include/Wonderwhales/WW2ScalpStrategy.mqh",
-    "mt5/Include/Wonderwhales/WW2SwingStrategy.mqh",
-    "mt5/Scripts/ExecGuardTests.mq5",
-    "mt5/Scripts/ExecDemoProbe.mq5",
-    "configs/demo/pa_trendrider_xau_demo.json",
-    "configs/demo/grid_demo.json",
-    "configs/demo/dca_demo.json",
-    "configs/demo/infinite_runner_demo.json",
-    "configs/demo/wonderwhales_demo.json",
-    "configs/demo/wonderwhales_xau_2mode_demo.json",
-    "docs/90-decisions/0003-demo-execution-scope.md",
-    "docs/90-decisions/0004-all-bots-demo-execution.md",
-    "docs/90-decisions/0007-wonderwhales-demo-bot.md",
-    "docs/90-decisions/0009-wonderwhales-xau-2mode-demo-bot.md",
-    "docs/10-bots/wonderwhales-2mode.md",
-    "docs/20-operations/demo-execution.md",
     "scripts/validate_demo_execution.py",
+    "scripts/validate-project.py",
     "scripts/run_gates.py",
+    "scripts/check_docs_links.py",
+    "scripts/deploy_pineport.ps1",
+    "scripts/watch_demo_journal.py",
+    "scripts/run_backtest.py",
+    "scripts/run_pipeline.py",
+    "scripts/train_ml_baseline.py",
+    "scripts/generate_synthetic_ml_dataset.py",
+    "scripts/export_onnx_model.py",
+    "scripts/compare_experiments.py",
+    "scripts/validate_dataset.py",
     "scripts/tester/run_tester.ps1",
-    "scripts/tester/gen_ww2_sets.py",
-    "scripts/tester/gen_portref_sets.py",
-    "scripts/build_wonderwhales_reference.py",
-    "scripts/compare_wonderwhales_bars.py",
-    "scripts/ww2_parity_check.py",
-    "scripts/tester/analyse_census.py",
-    "scripts/tester/analyse_measure.py",
     "scripts/tester/gen_ir_sets.py",
     "scripts/tester/analyse_ir.py",
     "scripts/tester/ir_breakdown.py",
     "scripts/tester/build_ir_evidence.py",
     "scripts/tester/README.md",
-    "docs/00-start/README.md",
-    "docs/10-bots/README.md",
-    "docs/10-bots/input-convention.md",
-    "docs/20-operations/README.md",
-    "docs/20-operations/presets.md",
-    "docs/20-operations/troubleshooting.md",
-    "docs/20-operations/evidence.md",
-    "docs/30-research/README.md",
-    "docs/90-decisions/README.md",
-    "docs/90-decisions/0008-docs-information-architecture.md",
-    "docs/99-archive/README.md",
-    "docs/99-archive/LINK_MAP.md",
-)
-
-SIM_EAS = {
-    "RunnerTrailingLabEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh"),
-    "GridLabEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh"),
-    "DCALabEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh", "SimDca.mqh"),
-    "PinePlanSimEA.mq5": ("SimPortfolio.mqh", "SimLogger.mqh", "SimPlan.mqh"),
-    "PATrendRiderXAUv1SimEA.mq5": (
-        "SimPortfolio.mqh",
-        "SimLogger.mqh",
-        "TRConfig.mqh",
-        "TRSignal.mqh",
-        "TRRisk.mqh",
-        "TRTrailing.mqh",
-        "TRState.mqh",
-        "TRMarketData.mqh",
-    ),
-}
-
-SIM_CORE_TESTS_INCLUDES = (
-    "SimPortfolio.mqh",
-    "SimLogger.mqh",
-    "SimCostModel.mqh",
-    "SimRiskGuard.mqh",
-    "SimTrailing.mqh",
-    "SimGrid.mqh",
-    "SimDca.mqh",
 )
 
 
@@ -288,36 +217,9 @@ def check_layout(root: Path) -> list[str]:
     ]
 
 
-def check_sim_structure(root: Path) -> list[str]:
-    issues: list[str] = []
-    for name, includes in SIM_EAS.items():
-        path = root / "mt5" / "Experts" / name
-        if not path.is_file():
-            continue
-        text = path.read_text(encoding="utf-8")
-        for include in includes:
-            if include not in text:
-                issues.append(f"{path.name}: missing include {include}")
-
-    tests = root / "mt5" / "Scripts" / "SimCoreTests.mq5"
-    if tests.is_file():
-        text = tests.read_text(encoding="utf-8")
-        for include in SIM_CORE_TESTS_INCLUDES:
-            if include not in text:
-                issues.append(f"SimCoreTests.mq5: missing include {include}")
-
-    plan_tests = root / "mt5" / "Scripts" / "SimPlanTests.mq5"
-    if plan_tests.is_file():
-        text = plan_tests.read_text(encoding="utf-8")
-        if "SimPlan.mqh" not in text:
-            issues.append("SimPlanTests.mq5: missing include SimPlan.mqh")
-    return issues
-
-
 def check_exec_structure(root: Path) -> list[str]:
     issues: list[str] = []
 
-    demo_ea = root / "mt5" / "Experts" / "PATrendRiderXAUv1DemoEA.mq5"
     broker = root / "mt5" / "Include" / "Exec" / "ExecBroker.mqh"
     guard = root / "mt5" / "Include" / "Exec" / "ExecGuard.mqh"
     common = root / "mt5" / "Include" / "Exec" / "ExecDemoCommon.mqh"
@@ -325,13 +227,13 @@ def check_exec_structure(root: Path) -> list[str]:
     probe = root / "mt5" / "Scripts" / "ExecDemoProbe.mq5"
 
     demo_eas = {relative: root / relative for relative in DEMO_EAS}
-    for path in (demo_ea, broker, guard, common, tests, probe, *demo_eas.values()):
+    for path in (broker, guard, common, tests, probe, *demo_eas.values()):
         if not path.is_file():
             issues.append(f"missing {path.relative_to(root).as_posix()}")
     if issues:
         return issues
 
-    #--- Guard tokens every demo EA must keep: demo-only context gate, the
+    #--- Guard tokens the demo EA must keep: demo-only context gate, the
     #--- execution switch (ADR 0006: default true), kill switch, symbol
     #--- allow-list and ExecBroker routing.
     required_all = (
@@ -346,39 +248,9 @@ def check_exec_structure(root: Path) -> list[str]:
         "InpAllowedSymbols",
         "AccountInfoDouble(ACCOUNT_EQUITY)",
     )
-    #--- Strategy-specific bounded-basket guard tokens.
+    #--- ADR 0005: one runner position with a mandatory far safety TP and a
+    #--- monotonic trail anchored to the stored initial R.
     required_by_kind = {
-        "single_position": (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "InpTakeProfitR",
-            "InpRiskPercent",
-            "InpMaxPositions",
-        ),
-        "bounded_grid": (
-            "ExecDemoBasketClose",
-            "ExecDemoBasketSetStops",
-            "ExecDemoBasketLossMoney",
-            "InpMaxGridLevels",
-            "InpMaxLevelVolume",
-            "InpMaxExposure",
-            "InpBasketStopPoints",
-            "InpMaxBasketLossPct",
-            "InpMaxConsecutiveLosses",
-        ),
-        "bounded_dca": (
-            "ExecDemoBasketClose",
-            "ExecDemoBasketSetStops",
-            "ExecDemoBasketLossMoney",
-            "InpMaxDcaAdds",
-            "InpMaxAddVolume",
-            "InpMaxExposure",
-            "InpBasketStopPoints",
-            "InpMaxBasketLossPct",
-            "InpMaxConsecutiveLosses",
-        ),
-        #--- ADR 0005: one runner position with a mandatory far safety TP and a
-        #--- monotonic trail anchored to the stored initial R.
         "runner_trailing": (
             "ExecFindOwnPosition",
             "ExecModifyStops",
@@ -388,31 +260,6 @@ def check_exec_structure(root: Path) -> list[str]:
             "InpMaxDrawdownPct",
             "InpMaxConsecutiveLosses",
             "InpLossStreakCooldownMinutes",
-        ),
-        #--- ADR 0007: one Wonderwhales position with a mandatory TP at
-        #--- InpTakeProfitR and risk sizing at the initial stop.
-        "psar_single": (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "ExecCalcProfit",
-            "InpTakeProfitR",
-            "InpRiskPercent",
-            "InpMaxLots",
-            "InpMaxDrawdownPct",
-            "InpMaxConsecutiveLosses",
-        ),
-        #--- ADR 0009: one 2-mode Wonderwhales position, one magic, a mandatory
-        #--- TP, risk-percent sizing at the initial stop and an exposure cap.
-        "ww_2mode": (
-            "ExecFindOwnPosition",
-            "ExecModifyStops",
-            "ExecCalcProfit",
-            "InpTakeProfitR",
-            "InpRiskPercent",
-            "InpMaxPositions",
-            "InpMaxExposure",
-            "InpRequireParity",
-            "parity_blocked",
         ),
     }
     for relative, kind in DEMO_EAS.items():
@@ -433,13 +280,6 @@ def check_exec_structure(root: Path) -> list[str]:
             issues.append(f"{relative}: must route orders through ExecBroker, not OrderSend")
         if "WebRequest" in code or "SocketCreate" in code:
             issues.append(f"{relative}: must not open connections")
-
-    #--- The TrendRider EA keeps its single-position shape: no grid/DCA inputs.
-    tr_text = demo_ea.read_text(encoding="utf-8")
-    for token in ("InpMaxGridLevels", "InpMaxDcaAdds", "InpVolumeMultiplier",
-                  "InpAddVolumeMultiplier"):
-        if token in tr_text:
-            issues.append(f"PATrendRiderXAUv1DemoEA must not expose {token} (single position)")
 
     #--- The basket helpers must stay a thin layer over ExecBroker.
     common_code = _code_only(common.read_text(encoding="utf-8"))
@@ -539,11 +379,8 @@ def check_demo_presets(root: Path) -> list[str]:
         if not isinstance(inputs, dict):
             continue
         ea = config.get("ea")
-        #--- ADR 0004: one demo EA per strategy; a simulation EA is never a
-        #--- demo preset target.
-        demo_eas = ("PATrendRiderXAUv1DemoEA", "GridDemoEA", "DCADemoEA",
-                    "InfiniteRunnerXAUV2DemoEA", "WonderwhalesDemoEA",
-                    "WonderwhalesXAU2ModeEA")
+        #--- ADR 0005: the only demo preset targets InfiniteRunner.
+        demo_eas = ("InfiniteRunnerXAUV2DemoEA",)
         if ea not in demo_eas:
             issues.append(
                 f"{path.name}: demo presets must target one of {list(demo_eas)}"
@@ -557,32 +394,6 @@ def check_demo_presets(root: Path) -> list[str]:
         if float(inputs.get("InpMaxSpreadPoints", 0.0)) <= 0.0:
             issues.append(f"{path.name}: InpMaxSpreadPoints must be positive")
 
-        if ea == "PATrendRiderXAUv1DemoEA":
-            if float(inputs.get("InpTakeProfitR", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpTakeProfitR must be positive")
-            if inputs.get("InpMaxPositions") != 1:
-                issues.append(f"{path.name}: InpMaxPositions must be 1")
-
-        if ea in ("GridDemoEA", "DCADemoEA"):
-            if float(inputs.get("InpBasketStopPoints", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpBasketStopPoints must be positive")
-            if float(inputs.get("InpMaxExposure", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpMaxExposure must be positive")
-            if float(inputs.get("InpMaxBasketLossPct", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpMaxBasketLossPct must be positive")
-            if inputs.get("InpHaltOnBreach") is not True:
-                issues.append(f"{path.name}: InpHaltOnBreach must be true")
-
-        if ea == "GridDemoEA":
-            levels = inputs.get("InpMaxGridLevels")
-            if not isinstance(levels, int) or not 1 <= levels <= 50:
-                issues.append(f"{path.name}: InpMaxGridLevels must be 1..50")
-
-        if ea == "DCADemoEA":
-            adds = inputs.get("InpMaxDcaAdds")
-            if not isinstance(adds, int) or not 0 <= adds <= 50:
-                issues.append(f"{path.name}: InpMaxDcaAdds must be 0..50")
-
         #--- ADR 0005: the runner keeps a mandatory far safety TP and exactly
         #--- one position.
         if ea == "InfiniteRunnerXAUV2DemoEA":
@@ -592,28 +403,6 @@ def check_demo_presets(root: Path) -> list[str]:
                 issues.append(f"{path.name}: InpMaxPositions must be 1")
             if float(inputs.get("InpMinStopPoints", 0.0)) <= 0.0:
                 issues.append(f"{path.name}: InpMinStopPoints must be positive")
-
-        #--- ADR 0007: the Wonderwhales demo keeps a mandatory TP and a sized
-        #--- exposure cap on top of the shared demo guards.
-        if ea == "WonderwhalesDemoEA":
-            if float(inputs.get("InpTakeProfitR", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpTakeProfitR must be positive")
-            if float(inputs.get("InpMaxLots", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpMaxLots must be positive")
-            if float(inputs.get("InpMinStopPoints", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpMinStopPoints must be positive")
-
-        #--- ADR 0009: the 2-mode Wonderwhales demo keeps one position, a
-        #--- mandatory TP, a sized exposure cap and a mandatory parity gate.
-        if ea == "WonderwhalesXAU2ModeEA":
-            if float(inputs.get("InpTakeProfitR", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpTakeProfitR must be positive")
-            if float(inputs.get("InpMaxExposure", 0.0)) <= 0.0:
-                issues.append(f"{path.name}: InpMaxExposure must be positive")
-            if inputs.get("InpMaxPositions") != 1:
-                issues.append(f"{path.name}: InpMaxPositions must be 1")
-            if inputs.get("InpRequireParity") is not True:
-                issues.append(f"{path.name}: InpRequireParity must be true")
     return issues
 
 
@@ -626,43 +415,21 @@ def _load_sim_configs():
     return sim_configs
 
 
-def check_presets(root: Path) -> tuple[list[str], list[str]]:
-    """Return (issues, passed_labels)."""
-    issues: list[str] = []
-    passed: list[str] = []
+def check_project_example(root: Path) -> list[str]:
     try:
         sim_configs = _load_sim_configs()
     except Exception as exc:  # noqa: BLE001 - report any import failure
-        return [f"cannot import mt5_ea_ai_lab.sim_configs: {exc}"], passed
-
-    presets_dir = root / "configs" / "sim"
-    if not presets_dir.is_dir():
-        return [f"missing {presets_dir}"], passed
-
-    for path in sim_configs.preset_files(presets_dir):
-        try:
-            config = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            issues.append(f"{path.name}: cannot read: {exc}")
-            continue
-        problems = sim_configs.validate_preset(config)
-        if problems:
-            issues.extend(f"{path.name}: {message}" for message in problems)
-        else:
-            passed.append(path.name)
+        return [f"cannot import mt5_ea_ai_lab.sim_configs: {exc}"]
 
     project_path = root / "configs" / "project.example.json"
     try:
         project = json.loads(project_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        issues.append(f"project.example.json: cannot read: {exc}")
-    else:
-        problems = sim_configs.validate_project(project, root)
-        if problems:
-            issues.extend(f"project.example.json: {message}" for message in problems)
-        else:
-            passed.append("project.example.json")
-    return issues, passed
+        return [f"project.example.json: cannot read: {exc}"]
+    return [
+        f"project.example.json: {message}"
+        for message in sim_configs.validate_project(project, root)
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -718,16 +485,9 @@ def main(argv: list[str] | None = None) -> int:
                 issues.append(f"{path}: cannot read: {exc}")
         report(f"placeholder scan ({len(sources)} sources)", issues)
 
-    report("simulation EA structure", check_sim_structure(root))
-
     report("demo execution structure", check_exec_structure(root))
     report("demo presets", check_demo_presets(root))
-
-    preset_issues, passed = check_presets(root)
-    for label in passed:
-        checks += 1
-        print(f"PASS: preset {label}")
-    report("preset validation", preset_issues)
+    report("project example", check_project_example(root))
 
     print(f"SUMMARY: checks={checks} fail={failures}")
     print("Static checks only: nothing was compiled, no MT5 terminal was started and no broker was contacted.")

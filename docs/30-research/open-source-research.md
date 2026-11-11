@@ -1,5 +1,7 @@
 # Nghiên cứu mã nguồn mở — quy trình, tiêu chí, bài học
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 Nguồn chưng cất: `99-archive/MT5_EA_Lab_V3/research/GITHUB_RESEARCH_PROCESS.md` (quy trình) và
 `99-archive/MT5_EA_Lab_V2/GITHUB_AUDIT.md` (audit đã chạy thật, 2026-10-29). Bằng chứng gốc nằm
 trong archive; trang này giữ phần còn hiệu lực để làm theo. Nguyên tắc gốc: nghiên cứu code để **giảm
@@ -70,7 +72,7 @@ Mặc định của mọi repo là `REFERENCE_ONLY`. Chỉ chủ dự án đư�
 |---|---|---|
 | 1 | **License rõ ràng** | File license tồn tại, SPDX xác định, tương thích với kế hoạch license của repo này. Thiếu license là `REJECT` — không ngoại lệ. |
 | 2 | **Còn maintain** | Có commit gần đây trên default branch. Repo xác chỉ dùng làm tham chiếu khái niệm; API MQL5 và quy tắc broker đổi nhanh nên code chết không được tin. |
-| 3 | **Không look-ahead/repaint** | Điểm quyết định tính trên nến đóng, không đọc giá tương lai. Với indicator, làm audit buffer như các trang trong `indicators/` (ví dụ [indicators/longkaco-vsa.md](indicators/longkaco-vsa.md)). |
+| 3 | **Không look-ahead/repaint** | Điểm quyết định tính trên nến đóng, không đọc giá tương lai. Với indicator, làm audit buffer như các trang indicator trước đây (đã gỡ cùng PinePort). |
 | 4 | **Có test** | Build/test workflow chạy được trong môi trường tách biệt, dataset tái lập được. Không test = claim không xác minh được = không `USE`. |
 | 5 | **Kích thước đọc được** | Ưu tiên utility pattern nhỏ đọc hết trong một phiên; mượn pattern thay vì import cả EA. File càng lớn, càng khó audit hết đường gửi lệnh. |
 

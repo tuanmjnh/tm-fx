@@ -3,8 +3,8 @@
     Copy the project MQL5 sources into an MT5 data folder and compile them.
 
 .DESCRIPTION
-    Dry run by default. With -Apply the script copies the PinePort sources plus
-    the Track C simulation, TrendRider and demo-execution sources into
+    Dry run by default. With -Apply the script copies the demo-execution,
+    simulation and InfiniteRunner sources of the single demo bot into
     <data folder>\MQL5 and compiles them with MetaEditor. Compile logs are
     read as UTF-16 and must report "0 errors, 0 warnings". Include trees are
     copied wholesale so a fresh MT5 install gets the same source set.
@@ -57,39 +57,18 @@ if (-not $LogDir) {
 }
 
 $files = @(
-    [pscustomobject]@{ Source = "mt5\Include\LabLogger.mqh"; Target = "MQL5\Include\LabLogger.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\Indicators.mqh"; Target = "MQL5\Include\Indicators.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\SignalEngine.mqh"; Target = "MQL5\Include\SignalEngine.mqh" },
-    [pscustomobject]@{ Source = "mt5\Scripts\LabSignalEngineTests.mq5"; Target = "MQL5\Scripts\LabSignalEngineTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\LabSignalExport.mq5"; Target = "MQL5\Scripts\LabSignalExport.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\LabSignalEA.mq5"; Target = "MQL5\Experts\LabSignalEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\LabOnnxInference.mq5"; Target = "MQL5\Experts\LabOnnxInference.mq5" },
-    [pscustomobject]@{ Source = "mt5\Include\PinePort\WonderwhalesContract.mqh"; Target = "MQL5\Include\PinePort\WonderwhalesContract.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\PinePort\LongKacoVSAContract.mqh"; Target = "MQL5\Include\PinePort\LongKacoVSAContract.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\PinePort\TMFusionZonesContract.mqh"; Target = "MQL5\Include\PinePort\TMFusionZonesContract.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\PinePort\PriceActionMTFContract.mqh"; Target = "MQL5\Include\PinePort\PriceActionMTFContract.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\PinePort\TMXAUSignals2Contract.mqh"; Target = "MQL5\Include\PinePort\TMXAUSignals2Contract.mqh" },
-    [pscustomobject]@{ Source = "mt5\Include\PinePort\TMIndicator2Contract.mqh"; Target = "MQL5\Include\PinePort\TMIndicator2Contract.mqh" },
-    [pscustomobject]@{ Source = "mt5\Indicators\PinePort\Wonderwhales.mq5"; Target = "MQL5\Indicators\PinePort\Wonderwhales.mq5" },
-    [pscustomobject]@{ Source = "mt5\Indicators\PinePort\LongKacoVSA.mq5"; Target = "MQL5\Indicators\PinePort\LongKacoVSA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Indicators\PinePort\TMFusionZones.mq5"; Target = "MQL5\Indicators\PinePort\TMFusionZones.mq5" },
-    [pscustomobject]@{ Source = "mt5\Indicators\PinePort\PriceActionMTF.mq5"; Target = "MQL5\Indicators\PinePort\PriceActionMTF.mq5" },
-    [pscustomobject]@{ Source = "mt5\Indicators\PinePort\TMXAUSignals2.mq5"; Target = "MQL5\Indicators\PinePort\TMXAUSignals2.mq5" },
-    [pscustomobject]@{ Source = "mt5\Indicators\PinePort\TMIndicator2.mq5"; Target = "MQL5\Indicators\PinePort\TMIndicator2.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\WonderwhalesContractTests.mq5"; Target = "MQL5\Scripts\WonderwhalesContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\LongKacoVSAContractTests.mq5"; Target = "MQL5\Scripts\LongKacoVSAContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\TMFusionZonesContractTests.mq5"; Target = "MQL5\Scripts\TMFusionZonesContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\PriceActionMTFContractTests.mq5"; Target = "MQL5\Scripts\PriceActionMTFContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\TMXAUSignals2ContractTests.mq5"; Target = "MQL5\Scripts\TMXAUSignals2ContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\TMIndicator2ContractTests.mq5"; Target = "MQL5\Scripts\TMIndicator2ContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\PineSignalLabEA.mq5"; Target = "MQL5\Experts\PineSignalLabEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\PineMultiSignalLabEA.mq5"; Target = "MQL5\Experts\PineMultiSignalLabEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesDumpTesterEA.mq5"; Target = "MQL5\Experts\WonderwhalesDumpTesterEA.mq5" }
+    [pscustomobject]@{ Source = "mt5\Experts\InfiniteRunnerXAUV2DemoEA.mq5"; Target = "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\IRCoreTests.mq5"; Target = "MQL5\Scripts\IRCoreTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\ExecGuardTests.mq5"; Target = "MQL5\Scripts\ExecGuardTests.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\ExecDemoProbe.mq5"; Target = "MQL5\Scripts\ExecDemoProbe.mq5" },
+    [pscustomobject]@{ Source = "mt5\Scripts\CloseDemoPosition.mq5"; Target = "MQL5\Scripts\CloseDemoPosition.mq5" }
 )
 
-# Track C simulation, TrendRider and demo-execution sources. The .mqh trees are
+# Demo-execution, simulation and InfiniteRunner sources. The .mqh trees are
 # enumerated instead of listed so a new module cannot be left out of a redeploy.
-foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Exec", "mt5\Include\InfiniteRunner", "mt5\Include\Wonderwhales")) {
+foreach ($tree in @("mt5\Include\Exec", "mt5\Include\Sim", "mt5\Include\InfiniteRunner")) {
     $treeRoot = Join-Path $ProjectRoot $tree
     if (-not (Test-Path -LiteralPath $treeRoot -PathType Container)) {
         Write-Host "FAIL: include tree missing: $treeRoot" -ForegroundColor Red
@@ -104,66 +83,13 @@ foreach ($tree in @("mt5\Include\Sim", "mt5\Include\TrendRider", "mt5\Include\Ex
     }
 }
 
-$files += @(
-    [pscustomobject]@{ Source = "mt5\Experts\RunnerTrailingLabEA.mq5"; Target = "MQL5\Experts\RunnerTrailingLabEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\GridLabEA.mq5"; Target = "MQL5\Experts\GridLabEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\DCALabEA.mq5"; Target = "MQL5\Experts\DCALabEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\PinePlanSimEA.mq5"; Target = "MQL5\Experts\PinePlanSimEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesSimEA.mq5"; Target = "MQL5\Experts\WonderwhalesSimEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\PATrendRiderXAUv1SimEA.mq5"; Target = "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\PATrendRiderXAUv1DemoEA.mq5"; Target = "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\GridDemoEA.mq5"; Target = "MQL5\Experts\GridDemoEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\DCADemoEA.mq5"; Target = "MQL5\Experts\DCADemoEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\InfiniteRunnerXAUV2DemoEA.mq5"; Target = "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesDemoEA.mq5"; Target = "MQL5\Experts\WonderwhalesDemoEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Experts\WonderwhalesXAU2ModeEA.mq5"; Target = "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\WW2CoreTests.mq5"; Target = "MQL5\Scripts\WW2CoreTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\IRCoreTests.mq5"; Target = "MQL5\Scripts\IRCoreTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\SimCoreTests.mq5"; Target = "MQL5\Scripts\SimCoreTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\SimPlanTests.mq5"; Target = "MQL5\Scripts\SimPlanTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\TrendRiderContractTests.mq5"; Target = "MQL5\Scripts\TrendRiderContractTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\ExecGuardTests.mq5"; Target = "MQL5\Scripts\ExecGuardTests.mq5" },
-    [pscustomobject]@{ Source = "mt5\Scripts\ExecDemoProbe.mq5"; Target = "MQL5\Scripts\ExecDemoProbe.mq5" }
-)
-
 $compileTargets = @(
-    "MQL5\Indicators\PinePort\Wonderwhales.mq5",
-    "MQL5\Scripts\WonderwhalesContractTests.mq5",
-    "MQL5\Indicators\PinePort\LongKacoVSA.mq5",
-    "MQL5\Scripts\LongKacoVSAContractTests.mq5",
-    "MQL5\Indicators\PinePort\TMFusionZones.mq5",
-    "MQL5\Scripts\TMFusionZonesContractTests.mq5",
-    "MQL5\Indicators\PinePort\PriceActionMTF.mq5",
-    "MQL5\Scripts\PriceActionMTFContractTests.mq5",
-    "MQL5\Indicators\PinePort\TMXAUSignals2.mq5",
-    "MQL5\Scripts\TMXAUSignals2ContractTests.mq5",
-    "MQL5\Indicators\PinePort\TMIndicator2.mq5",
-    "MQL5\Scripts\TMIndicator2ContractTests.mq5",
-    "MQL5\Experts\PineSignalLabEA.mq5",
-    "MQL5\Experts\PineMultiSignalLabEA.mq5",
-    "MQL5\Scripts\LabSignalEngineTests.mq5",
-    "MQL5\Scripts\LabSignalExport.mq5",
-    "MQL5\Experts\LabSignalEA.mq5",
-    "MQL5\Experts\LabOnnxInference.mq5",
     "MQL5\Scripts\SimCoreTests.mq5",
     "MQL5\Scripts\SimPlanTests.mq5",
-    "MQL5\Experts\RunnerTrailingLabEA.mq5",
-    "MQL5\Experts\GridLabEA.mq5",
-    "MQL5\Experts\DCALabEA.mq5",
-    "MQL5\Experts\PinePlanSimEA.mq5",
-    "MQL5\Experts\WonderwhalesSimEA.mq5",
-    "MQL5\Scripts\TrendRiderContractTests.mq5",
-    "MQL5\Experts\PATrendRiderXAUv1SimEA.mq5",
     "MQL5\Scripts\ExecGuardTests.mq5",
     "MQL5\Scripts\ExecDemoProbe.mq5",
-    "MQL5\Experts\PATrendRiderXAUv1DemoEA.mq5",
-    "MQL5\Experts\GridDemoEA.mq5",
-    "MQL5\Experts\DCADemoEA.mq5",
+    "MQL5\Scripts\CloseDemoPosition.mq5",
     "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.mq5",
-    "MQL5\Experts\WonderwhalesDemoEA.mq5",
-    "MQL5\Experts\WonderwhalesXAU2ModeEA.mq5",
-    "MQL5\Experts\WonderwhalesDumpTesterEA.mq5",
-    "MQL5\Scripts\WW2CoreTests.mq5",
     "MQL5\Scripts\IRCoreTests.mq5"
 )
 
@@ -336,21 +262,13 @@ if ($failures -gt 0) {
 Write-Host "DEPLOY_OK: files copied and compiled with 0 errors and 0 warnings."
 Write-Host ""
 Write-Host "Manual runtime checks (this script does not start the terminal):"
-Write-Host "  1. Open MT5, drag Scripts > WonderwhalesContractTests onto a chart."
-Write-Host "     Experts tab must show: TEST|RESULT|ALL_PASS|pass=36 fail=0|contract=1.0.0"
-Write-Host "  2. Drag Scripts > LongKacoVSAContractTests and Scripts > TMFusionZonesContractTests."
-Write-Host "     Each must print TEST|RESULT|ALL_PASS (TM FZ: pass=82 fail=0)."
-Write-Host "  3. Drag Scripts > PriceActionMTFContractTests, TMXAUSignals2ContractTests and TMIndicator2ContractTests."
-Write-Host "     Each must print TEST|RESULT|ALL_PASS (TM XAU2: pass=107 fail=0; TM Indicator 2: 155 vectors)."
-Write-Host "  4. Attach Indicators > PinePort > Wonderwhales, LongKacoVSA, TMFusionZones, PriceActionMTF, TMXAUSignals2 or TMIndicator2."
-Write-Host "  5. Attach Experts > PineSignalLabEA; CSV is written to MQL5\Files\pine_signal_log.csv."
-Write-Host "     Attach Experts > PineMultiSignalLabEA; CSV is written to MQL5\Files\pine_multi_signal_log.csv."
-Write-Host "  6. Audit the CSV: python scripts\audit_signal_csv.py --csv <csv> --offset-minutes 180"
-Write-Host "     or: python scripts\audit_multi_signal_csv.py --csv <csv>"
-Write-Host "  7. Parity (needs a real Pine reference export): python scripts\compare_multi_signal_exports.py --reference <pine.csv> --mql5 <csv> --mql5-offset-minutes 180"
-Write-Host "  8. Scripts > ExecGuardTests must print ALL_PASS (pass=51 fail=0) before PATrendRiderXAUv1DemoEA"
-Write-Host "     is attached to a chart. See docs\20-operations\demo-execution.md: dry-run first, demo account only."
-Write-Host "  9. Scripts > ExecDemoProbe with InpConfirm=false must print PROBE|DRY|all_guards_pass."
+Write-Host "  1. Scripts > ExecGuardTests must print TEST|RESULT|ALL_PASS|suite=execguard before"
+Write-Host "     InfiniteRunnerXAUV2DemoEA is attached to a chart."
+Write-Host "  2. Scripts > IRCoreTests must print TEST|RESULT|ALL_PASS|pass=N fail=0|ir=1."
+Write-Host "  3. Scripts > SimCoreTests and SimPlanTests must print TEST|RESULT|ALL_PASS."
+Write-Host "  4. Scripts > ExecDemoProbe with InpConfirm=false must print PROBE|DRY|all_guards_pass."
 Write-Host "     Set InpConfirm=true only to prove the demo broker accepts one guarded order; the probe"
 Write-Host "     closes its own position immediately and never runs in the Strategy Tester."
+Write-Host "  5. Attach Experts > InfiniteRunnerXAUV2DemoEA on an XAUUSDm demo chart or in the Strategy Tester."
+Write-Host "     See docs\20-operations\demo-execution.md: dry-run first, demo account only."
 exit 0

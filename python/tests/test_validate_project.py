@@ -49,7 +49,7 @@ def test_scan_allows_market_data_api(tmp_path: Path) -> None:
 
 
 def _write_exec_source(tmp_path: Path, module, body: str) -> Path:
-    relative = "mt5/Experts/PATrendRiderXAUv1DemoEA.mq5"
+    relative = "mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5"
     assert relative in module.EXEC_SOURCES
     source = tmp_path / Path(relative)
     source.parent.mkdir(parents=True, exist_ok=True)

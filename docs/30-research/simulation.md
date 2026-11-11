@@ -1,5 +1,7 @@
 # Simulation MQL5 — core, runner, grid, DCA, plan, wonderwhales, preset
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 > Tài liệu tổng hợp, giữ nguyên nội dung gốc; tiêu đề đã hạ một cấp để thống nhất một cây tài liệu. Nguồn: `sim-core.md`, `sim-runner.md`, `sim-grid.md`, `sim-dca.md`, `sim-presets.md` + mục PinePlanSimEA (W10) + mục WonderwhalesSimEA (2026-10-28).
 
 Nội dung:
@@ -354,7 +356,7 @@ Nếu thiếu dòng `TEST|RESULT|ALL_PASS` → coi như `NOT_RUN`, không suy lu
 | RiskGuard | `InpMaxDailyLossPct`, `InpMaxDrawdownPct`, `InpHaltOnBreach` | hard cap theo equity ảo |
 | Costs | `InpCommissionPerVolume`, `InpSlippagePoints` | giả định chi phí, áp dụng mọi fill |
 
-Preset mẫu: [`configs/sim/runner_trailing.json`](../../configs/sim/runner_trailing.json).
+Preset mẫu (EA mô phỏng Runner đã gỡ khỏi repo): `configs/sim/runner_trailing.json`.
 
 ### 3. Luật chạy
 
@@ -453,7 +455,7 @@ Schema 18 cột dùng chung mục **Simulation core** ở đầu tài liệu nà
 | RiskGuard | spread, exposure, daily loss, drawdown, halt policy | hard cap dùng chung |
 | Costs | `InpCommissionPerVolume`, `InpSlippagePoints` | chi phí mô phỏng |
 
-Preset mẫu: [`configs/sim/grid_lab.json`](../../configs/sim/grid_lab.json).
+Preset mẫu (EA mô phỏng Grid đã gỡ khỏi repo): `configs/sim/grid_lab.json`.
 
 ### 3. Luật chạy
 
@@ -565,7 +567,7 @@ Dòng cuối log phải là `Result: 0 errors, 0 warnings`. Chạy Strategy Test
 | RiskGuard | spread, exposure, daily loss, drawdown, halt policy | hard cap dùng chung |
 | Costs | `InpCommissionPerVolume`, `InpSlippagePoints` | chi phí mô phỏng |
 
-Preset mẫu: [`configs/sim/dca_lab.json`](../../configs/sim/dca_lab.json).
+Preset mẫu (EA mô phỏng DCA đã gỡ khỏi repo): `configs/sim/dca_lab.json`.
 
 ### 3. Luật chạy
 
@@ -809,7 +811,7 @@ EA đọc nến `shift=1` (nến đã đóng). Cách gọi `iCustom`:
 
 - `InpSource = PLAN_SOURCE_PA` → `iCustom(_Symbol,_Period,"PinePort\\PriceActionMTF",
   InpPaRr1, InpPaRrMin)`. Hai tham số này là **bridge** của indicator (`InpRr1Ea`/`InpRrMinEa`,
-  §3.0 của [`price-action-mtf.md`](indicators/price-action-mtf.md)) và **phải** nằm đầu
+  §3.0 của tài liệu indicator PriceActionMTF, đã gỡ) và **phải** nằm đầu
   danh sách input; default `1.0`/`1.5` trùng default indicator nên hành vi không đổi.
 - `TM XAU Signals 2` / `TM Indicator 2` → `iCustom` **0 tham số**, dùng default của indicator.
 
@@ -909,9 +911,8 @@ compile không bắt được:
 - **Trạng thái:** compile `0 errors, 0 warnings` (cả trong repo và trong Data Folder MT5); 3 scenario
   Strategy Tester headless đã chạy thật trên `XAUUSDm` M15 ngày 2026-10-28 (baseline, conservative stress,
   edge ATR stop) — kết quả ở mục 8; preset + 3 scenario kiểm tra fail-closed PASS.
-- **Nguồn:** yêu cầu người dùng 2026-10-28 (chỉ `XAUUSDm`), hợp đồng buffer ở
-  [`docs/30-research/indicators/wonderwhales.md`](indicators/wonderwhales.md) và
-  `mt5/Include/PinePort/WonderwhalesContract.mqh`.
+- **Nguồn:** yêu cầu người dùng 2026-10-28 (chỉ `XAUUSDm`), hợp đồng buffer ở tài liệu indicator
+  Wonderwhales (đã gỡ cùng PinePort) và `mt5/Include/PinePort/WonderwhalesContract.mqh`.
 
 ### 1. An toàn
 
@@ -943,7 +944,7 @@ compile không bắt được:
 | RiskGuard | `InpMaxDailyLossPct`, `InpMaxDrawdownPct`, `InpHaltOnBreach` | hard cap theo equity ảo |
 | Costs | `InpCommissionPerVolume`, `InpSlippagePoints` | giả định chi phí, áp dụng mọi fill |
 
-Preset mẫu: [`configs/sim/wonderwhales_xauusdm.json`](../../configs/sim/wonderwhales_xauusdm.json).
+Preset mẫu (EA mô phỏng Wonderwhales đã gỡ khỏi repo): `configs/sim/wonderwhales_xauusdm.json`.
 
 ### 3. Tín hiệu
 

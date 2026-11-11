@@ -30,8 +30,8 @@ def _row(event: str, reason: str, side: str = "SELL", price: str = "0.00000000")
     fields = [
         "2026.10.29 06:00:00",
         "2026.10.29 05:55:00",
-        "PATrendRiderXAUv1DemoEA",
-        "1.00",
+        "InfiniteRunnerXAUV2DemoEA",
+        "2.00",
         "6B439450",
         "XAUUSDm",
         "PERIOD_H1/PERIOD_M15/PERIOD_M5",

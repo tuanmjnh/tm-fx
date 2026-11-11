@@ -41,17 +41,17 @@ Ngôn ngữ: tài liệu tiếng Việt có dấu, token kỹ thuật/tên input
 | Hạng mục | Kết quả | Ghi chú |
 |---|---|---|
 | `python -m pytest -q` | **496 passed** | môi trường `requirements.txt` ghim; Python 3.12.3 (baseline ghi 3.11) |
-| `validate-project.py` | `checks=15 fail=0` | |
-| `validate_demo_execution.py` | `checks=14 fail=0` | `docs/README.md` còn ghi 13 |
-| `check_docs_links.py` | `broken=0` | `docs/README.md` còn ghi `checked=397`; số hiện tại xem lệnh chạy |
+| `validate-project.py` | `checks=7 fail=0` | |
+| `validate_demo_execution.py` | `checks=8 fail=0` | |
+| `check_docs_links.py` | `broken=0` | số `checked` xem lệnh chạy |
 | `ruff check python scripts` | 165 lỗi (121 tự sửa được) | chưa có cấu hình ruff |
 | Compile MQL5 | **chưa đo được** ngoài Windows/MetaEditor | `scripts/deploy_pineport.ps1` |
 | Bằng chứng chiến lược | mọi bot `NOT_RUN`/`UNPROVEN`/`PARTIAL` | InfiniteRunner: không có edge chứng minh được |
 
 Phát hiện cần sửa (đã kiểm chứng bằng code/lệnh):
 
-- Số EA không thống nhất: `README.md` và `docs/README.md` nói **15 EA / 5 demo**; `docs/10-bots/README.md` nói
-  **16 EA / 6 demo**; thư mục `mt5/Experts/` có **17** file `.mq5` (`WonderwhalesDumpTesterEA.mq5` không có trong danh mục).
+- Kho hiện chỉ còn **một bot demo** (`InfiniteRunnerXAUV2DemoEA`); `mt5/Experts/` có đúng một file `.mq5` và
+  `configs/demo/` có đúng một preset. Các EA/indicator khác đã bị gỡ khỏi repo.
 - `mt5/Scripts/CloseDemoPosition.mq5` gọi `OrderSend` **trực tiếp** (include `ExecBroker.mqh` nhưng không dùng
   `ExecClosePosition`) và không tự kiểm demo/tester. File này nằm **tường minh** trong allowlist `EXEC_SOURCES` của
   `scripts/validate-project.py` nên validator xanh — là ngoại lệ có chủ đích, nhưng câu "mọi lệnh đi qua `ExecBroker`" ở
@@ -85,7 +85,7 @@ và có tiêu chí chấp nhận kiểm được bằng lệnh. ID `T*` để kh
 
 | ID | Ưu tiên | Việc | Tiêu chí chấp nhận |
 |---|---|---|---|
-| T1.1 | P0 | Đồng bộ số EA và bảng cổng trong `README.md`, `docs/README.md`, `docs/10-bots/README.md`, `docs/00-start/roadmap.md`; thêm `WonderwhalesDumpTesterEA` vào danh mục (hoặc ghi lý do loại) | một con số EA/demo duy nhất ở mọi nơi; bảng cổng khớp lệnh §4; `check_docs_links.py` xanh |
+| T1.1 | P0 | Đồng bộ danh mục và bảng cổng trong `README.md`, `docs/README.md`, `docs/10-bots/README.md`, `docs/00-start/roadmap.md` với thực tế IR-only (một bot demo) | một con số bot duy nhất ở mọi nơi; bảng cổng khớp lệnh §4; `check_docs_links.py` xanh |
 | T1.2 | P1 | `CloseDemoPosition.mq5`: đóng vị thế qua `ExecClosePosition` và kiểm demo/tester; **hoặc** giữ nguyên và ghi ngoại lệ vào README/`docs/20-operations/demo-execution.md` | một trong hai: không còn `OrderSend` ngoài `ExecBroker.mqh`, hoặc ngoại lệ được tài liệu hoá; `validate-project.py` xanh; nếu sửa code thì **compile thủ công** (`NOT_RUN` tới khi compile) |
 | T1.3 | P1 | Thêm `[tool.ruff]` vào `pyproject.toml`; chạy `ruff check --fix`; xử lý phần còn lại bằng tay | `ruff check python scripts` = 0; `pytest` vẫn 496 passed |
 | T1.4 | P1 | Sửa test dtype: kiểm `dtype.kind == "M"` và tz UTC thay vì chuỗi `ns` | test xanh với pandas 2.3.3 **và** bản mới hơn |
