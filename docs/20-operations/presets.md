@@ -16,6 +16,7 @@ Hai file `.set` tracked trong thư mục này là **viết tay** kèm chú thíc
 |---|---|
 | [`infinite_runner_v2.set`](presets/infinite_runner_v2.set) | preset operator (Strategy Tester / chart demo) |
 | [`infinite_runner_v2_demo_run.set`](presets/infinite_runner_v2_demo_run.set) | chạy **demo** (forward test): log/state riêng, lot cố định 0.01 |
+| [`infinite_runner_v2_micro50.set`](presets/infinite_runner_v2_micro50.set) | ⚠ tài khoản **~$50** (nới trần daily/DD, tắt khoá chuỗi thua) — **aggressive, chưa kiểm định** |
 
 `.set` nạp vào tester được resolve từ `MQL5\Profiles\Tester\` của Data Folder — `scripts/deploy_pineport.ps1`
 (hoặc `scripts/tester/gen_ir_sets.py`) copy giúp. Hiện **chưa** có validator tự động cho `.set`; khi sửa input
