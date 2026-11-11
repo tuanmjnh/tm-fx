@@ -1,5 +1,7 @@
 # ADR 0003 — Phạm vi execution chỉ tài khoản demo
 
+> Cập nhật 2026-11-11: repo nay chỉ còn bot InfiniteRunner; phần còn lại là lịch sử.
+
 - **Ngày:** 2026-10-29
 - **Trạng thái:** Accepted; mục 1 và câu "không grid/DCA" ở mục 3 đã được thay bởi
   [ADR 0004](0004-all-bots-demo-execution.md) (2026-10-30): mọi bot được execution đầy đủ trên demo.

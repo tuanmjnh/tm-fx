@@ -1,10 +1,10 @@
-"""Fail-closed validation for Track C simulation presets and the demo preset.
+"""Fail-closed validation for the InfiniteRunner demo preset.
 
-Simulation presets are validated for virtual positions only. The demo preset is
-validated separately for ``DEMO_ONLY`` execution (ADR 0003): it may describe a
-guarded demo account EA but must never allow live trading. This module reads
-local JSON presets and never connects to a broker, opens an account or sends an
-order. The MQL5 EA remains authoritative.
+The repository now ships a single demo bot: ``InfiniteRunnerXAUV2DemoEA``. Its
+preset is validated for ``DEMO_ONLY`` execution (ADR 0003/ADR 0005): it may
+describe a guarded demo-account EA but must never allow live trading. This module
+reads local JSON presets and never connects to a broker, opens an account or sends
+an order. The MQL5 EA remains authoritative.
 """
 
 from __future__ import annotations
@@ -59,25 +59,10 @@ class Enum:
 
 BOOL = "bool"
 STR = "str"
-STR_OPTIONAL = "str_optional"
 STR_LIST = "str_list"
 
-
-_COMMON: dict[str, Any] = {
-    "InpInitialBalance": Num(minimum=0.0, min_exclusive=True),
-    "InpEnableLog": BOOL,
-    "InpLogFile": STR,
-    "InpDebug": BOOL,
-    "InpMaxSpreadPoints": Num(minimum=0.0),
-    "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
-    "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-    "InpHaltOnBreach": BOOL,
-    "InpCommissionPerVolume": Num(minimum=0.0),
-    "InpSlippagePoints": Num(minimum=0.0),
-}
-
-#--- MT5 period constants and their length in seconds. TrendRider accepts any
-#--- ordered triple, so the check compares durations rather than enum names.
+#--- MT5 period constants and their length in seconds. The InfiniteRunner demo
+#--- cross-check compares durations rather than enum names.
 _TF_SECONDS: dict[int, int] = {
     1: 60,
     2: 120,
@@ -101,10 +86,9 @@ _TF_SECONDS: dict[int, int] = {
     32769: 604800,
     49153: 2419200,
 }
-_TIMEFRAMES = tuple(_TF_SECONDS)
 
-#--- Inputs shared by the demo-execution EAs (ADR 0004). Execution defaults to
-#--- dry-run; the strategy-specific caps stay per EA.
+#--- Inputs shared by the demo-execution EA (ADR 0004). Execution defaults to
+#--- enabled; the strategy-specific caps stay per EA.
 _DEMO_EXECUTION_COMMON: dict[str, Any] = {
     "InpEnableExecution": BOOL,
     "InpAllowedSymbols": STR_LIST,
@@ -118,248 +102,7 @@ _DEMO_EXECUTION_COMMON: dict[str, Any] = {
 }
 
 EA_INPUTS: dict[str, dict[str, Any]] = {
-    "RunnerTrailingLabEA": {
-        **_COMMON,
-        "InpVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-        "InpSideFilter": Enum((0, 1, 2)),
-        "InpFastEma": Num(minimum=1.0, integer=True),
-        "InpSlowEma": Num(minimum=1.0, integer=True),
-        "InpAtrPeriod": Num(minimum=1.0, integer=True),
-        "InpAtrSlMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpBreakEvenEnabled": BOOL,
-        "InpBreakEvenTriggerPoints": Num(minimum=0.0),
-        "InpBreakEvenOffsetPoints": Num(minimum=0.0),
-        "InpTrailMode": Enum((0, 1)),
-        "InpTrailFixedPoints": Num(minimum=0.0),
-        "InpTrailAtrMultiplier": Num(minimum=0.0),
-        "InpMinStopPoints": Num(minimum=0.0),
-        "InpUpdateOnClosedBarOnly": BOOL,
-        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
-        "InpCooldownBars": Num(minimum=0.0, integer=True),
-        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-    },
-    "GridLabEA": {
-        **_COMMON,
-        "InpGridSide": Enum((1, -1)),
-        "InpSpacingMode": Enum((0, 1)),
-        "InpSpacingPoints": Num(minimum=0.0),
-        "InpAtrPeriod": Num(minimum=1.0, integer=True),
-        "InpAtrMultiplier": Num(minimum=0.0),
-        "InpMaxGridLevels": Num(minimum=1.0, maximum=1000.0, integer=True),
-        "InpBaseVirtualVolume": Num(minimum=0.0, min_exclusive=True),
-        "InpVolumeMultiplier": Num(minimum=1.0),
-        "InpMaxLevelVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-        "InpExitMode": Enum((0, 1)),
-        "InpLevelTargetPoints": Num(minimum=0.0),
-        "InpBasketTargetPoints": Num(minimum=0.0),
-        "InpBasketStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-    },
-    "DCALabEA": {
-        **_COMMON,
-        "InpDcaSide": Enum((1, -1)),
-        "InpBaseVirtualVolume": Num(minimum=0.0, min_exclusive=True),
-        "InpTriggerMode": Enum((0, 1)),
-        "InpDcaDistancePoints": Num(minimum=0.0),
-        "InpBarsBetweenAdds": Num(minimum=0.0, integer=True),
-        "InpMaxDcaAdds": Num(minimum=0.0, maximum=1000.0, integer=True),
-        "InpAddVolumeMultiplier": Num(minimum=1.0),
-        "InpMaxAddVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-        "InpBasketTargetPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpBasketStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-    },
-    "PinePlanSimEA": {
-        **_COMMON,
-        "InpSource": Enum((0, 1, 2)),
-        "InpSideFilter": Enum((-1, 0, 1)),
-        "InpTargetMode": Enum((0, 1, 2)),
-        "InpMinStopPoints": Num(minimum=0.0),
-        "InpMinTargetPoints": Num(minimum=0.0),
-        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
-        "InpPaRr1": Num(minimum=0.0, min_exclusive=True),
-        "InpPaRrMin": Num(minimum=0.0),
-        "InpBreakEvenEnabled": BOOL,
-        "InpBreakEvenTriggerPoints": Num(minimum=0.0),
-        "InpBreakEvenOffsetPoints": Num(minimum=0.0),
-        "InpTrailEnabled": BOOL,
-        "InpTrailFixedPoints": Num(minimum=0.0),
-        "InpMinStopPointsTrail": Num(minimum=0.0),
-        "InpCooldownBars": Num(minimum=0.0, integer=True),
-        "InpVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-    },
-    "WonderwhalesSimEA": {
-        **_COMMON,
-        "InpVolume": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-        "InpRequireSymbol": STR_OPTIONAL,
-        "InpMode": Enum((0, 1, 2, 3)),
-        "InpPsarStart": Num(minimum=0.0, min_exclusive=True),
-        "InpPsarInc": Num(minimum=0.0, min_exclusive=True),
-        "InpPsarMax": Num(minimum=0.0, min_exclusive=True),
-        "InpFastEma": Num(minimum=1.0, integer=True),
-        "InpSlowEma": Num(minimum=1.0, integer=True),
-        "InpEma200": Num(minimum=1.0, integer=True),
-        "InpAtrLen": Num(minimum=1.0, integer=True),
-        "InpMinAtrPct": Num(minimum=0.0),
-        "InpVolMaLen": Num(minimum=1.0, integer=True),
-        "InpRsiLen": Num(minimum=1.0, integer=True),
-        "InpBbLen": Num(minimum=1.0, integer=True),
-        "InpBbMult": Num(minimum=0.0, min_exclusive=True),
-        "InpWarmupBars": Num(minimum=0.0, integer=True),
-        "InpSideFilter": Enum((0, 1, 2)),
-        "InpStopMode": Enum((0, 1, 2)),
-        "InpAtrPctMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpFixedStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpMinStopPoints": Num(minimum=0.0),
-        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
-        "InpExitOnFlip": BOOL,
-        "InpCooldownBars": Num(minimum=0.0, integer=True),
-        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-    },
-    "PATrendRiderXAUv1SimEA": {
-        "InpInitialBalance": Num(minimum=0.0, min_exclusive=True),
-        "InpEnableLog": BOOL,
-        "InpLogFile": STR,
-        "InpPersistState": BOOL,
-        "InpStateFile": STR,
-        "InpResetStateOnInit": BOOL,
-        "InpDebug": BOOL,
-        "InpEnableTrading": BOOL,
-        "InpMagicNumber": Num(minimum=0.0, integer=True),
-        "InpTrendTF": Enum(_TIMEFRAMES),
-        "InpStructureTF": Enum(_TIMEFRAMES),
-        "InpEntryTF": Enum(_TIMEFRAMES),
-        "InpTrendBars": Num(minimum=1.0, integer=True),
-        "InpStructureBars": Num(minimum=1.0, integer=True),
-        "InpEntryBars": Num(minimum=1.0, integer=True),
-        "InpSwingLeft": Num(minimum=1.0, maximum=10.0, integer=True),
-        "InpSwingRight": Num(minimum=1.0, maximum=10.0, integer=True),
-        "InpSpreadBufferMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpAtrBreakBufferMultiplier": Num(minimum=0.0),
-        "InpTrendMinDeltaAtr": Num(minimum=0.0),
-        "InpRetestZoneAtr": Num(minimum=0.0, min_exclusive=True),
-        "InpConfirmationBodyAtr": Num(minimum=0.0, maximum=3.0),
-        "InpConfirmationCloseZone": Num(minimum=0.0, maximum=0.5, min_exclusive=True),
-        "InpMaxSignalAgeBars": Num(minimum=1.0, maximum=500.0, integer=True),
-        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
-        "InpDailyLossLimitPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxConsecutiveLosses": Num(minimum=1.0, integer=True),
-        "InpCooldownMinutes": Num(minimum=0.0, integer=True),
-        "InpManualResetDrawdown": BOOL,
-        "InpMaxVirtualExposure": Num(minimum=0.0, maximum=1000.0, min_exclusive=True),
-        "InpBreakEvenAtR": Num(minimum=0.0, maximum=20.0, min_exclusive=True),
-        "InpTrailingStartR": Num(minimum=0.0, min_exclusive=True),
-        "InpAtrStopBuffer": Num(minimum=0.0),
-        "InpAtrTrailingMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpMinSlAtr": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxSlAtr": Num(minimum=0.0, min_exclusive=True),
-        "InpUpdateOnClosedBarOnly": BOOL,
-        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
-        "InpAtrBaselineBars": Num(minimum=10.0, maximum=5000.0, integer=True),
-        "InpAbnormalAtrRatio": Num(minimum=1.0, min_exclusive=True),
-        "InpMaxSpreadPoints": Num(minimum=0.0),
-        "InpMaxSpreadAtrRatio": Num(minimum=0.0, maximum=1.0),
-        "InpCommissionPerVolume": Num(minimum=0.0),
-        "InpSlippagePoints": Num(minimum=0.0),
-    },
-    "PATrendRiderXAUv1DemoEA": {
-        "InpEnableExecution": BOOL,
-        "InpAllowedSymbols": STR_LIST,
-        "InpMagicNumber": Num(minimum=1.0, integer=True),
-        "InpMaxSlippagePoints": Num(minimum=0.0, maximum=1000.0, integer=True),
-        "InpTakeProfitR": Num(minimum=0.0, maximum=50.0, min_exclusive=True),
-        "InpKillSwitchFile": STR,
-        "InpEnableLog": BOOL,
-        "InpLogFile": STR,
-        "InpPersistState": BOOL,
-        "InpStateFile": STR,
-        "InpResetStateOnInit": BOOL,
-        "InpDebug": BOOL,
-        "InpTrendTF": Enum(_TIMEFRAMES),
-        "InpStructureTF": Enum(_TIMEFRAMES),
-        "InpEntryTF": Enum(_TIMEFRAMES),
-        "InpTrendBars": Num(minimum=1.0, integer=True),
-        "InpStructureBars": Num(minimum=1.0, integer=True),
-        "InpEntryBars": Num(minimum=1.0, integer=True),
-        "InpSwingLeft": Num(minimum=1.0, maximum=10.0, integer=True),
-        "InpSwingRight": Num(minimum=1.0, maximum=10.0, integer=True),
-        "InpSpreadBufferMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpAtrBreakBufferMultiplier": Num(minimum=0.0),
-        "InpTrendMinDeltaAtr": Num(minimum=0.0),
-        "InpRetestZoneAtr": Num(minimum=0.0, min_exclusive=True),
-        "InpConfirmationBodyAtr": Num(minimum=0.0, maximum=3.0),
-        "InpConfirmationCloseZone": Num(minimum=0.0, maximum=0.5, min_exclusive=True),
-        "InpMaxSignalAgeBars": Num(minimum=1.0, maximum=500.0, integer=True),
-        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
-        "InpDailyLossLimitPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxConsecutiveLosses": Num(minimum=1.0, integer=True),
-        "InpCooldownMinutes": Num(minimum=0.0, integer=True),
-        "InpManualResetDrawdown": BOOL,
-        "InpBreakEvenAtR": Num(minimum=0.0, maximum=20.0, min_exclusive=True),
-        "InpTrailingStartR": Num(minimum=0.0, min_exclusive=True),
-        "InpAtrStopBuffer": Num(minimum=0.0),
-        "InpAtrTrailingMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpMinSlAtr": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxSlAtr": Num(minimum=0.0, min_exclusive=True),
-        "InpUpdateOnClosedBarOnly": BOOL,
-        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
-        "InpAtrBaselineBars": Num(minimum=10.0, maximum=5000.0, integer=True),
-        "InpAbnormalAtrRatio": Num(minimum=1.0, min_exclusive=True),
-        "InpMaxSpreadPoints": Num(minimum=0.0),
-        "InpMaxSpreadAtrRatio": Num(minimum=0.0, maximum=1.0),
-        "InpCommissionPerVolume": Num(minimum=0.0),
-    },
-    #--- ADR 0004: every bot has its own demo-execution EA. Grid/DCA reuse the
-    #--- bounded grid/DCA rules of their simulation EAs but send real demo orders.
-    "GridDemoEA": {
-        **_DEMO_EXECUTION_COMMON,
-        "InpCloseOnKillSwitch": BOOL,
-        "InpGridSide": Enum((1, -1)),
-        "InpSpacingMode": Enum((0, 1)),
-        "InpSpacingPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpAtrPeriod": Num(minimum=2.0, maximum=500.0, integer=True),
-        "InpAtrMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxGridLevels": Num(minimum=1.0, maximum=50.0, integer=True),
-        "InpBaseVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpVolumeMultiplier": Num(minimum=1.0),
-        "InpMaxLevelVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpExitMode": Enum((0, 1)),
-        "InpLevelTargetPoints": Num(minimum=0.0),
-        "InpBasketTargetPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpBasketStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxExposure": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpMaxBasketLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
-        "InpHaltOnBreach": BOOL,
-    },
-    "DCADemoEA": {
-        **_DEMO_EXECUTION_COMMON,
-        "InpCloseOnKillSwitch": BOOL,
-        "InpDcaSide": Enum((1, -1)),
-        "InpBaseVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpTriggerMode": Enum((0, 1)),
-        "InpDcaDistancePoints": Num(minimum=0.0),
-        "InpBarsBetweenAdds": Num(minimum=0.0, integer=True),
-        "InpMaxDcaAdds": Num(minimum=0.0, maximum=50.0, integer=True),
-        "InpAddVolumeMultiplier": Num(minimum=1.0),
-        "InpMaxAddVolume": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpBasketTargetPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpBasketStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpMaxExposure": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpMaxBasketLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
-        "InpHaltOnBreach": BOOL,
-    },
-    #--- ADR 0005: fourth demo bot — InfiniteRunner_XAU V2. One runner position
+    #--- ADR 0005: the InfiniteRunner_XAU V2 demo bot. One runner position
     #--- toward a far mandatory safety TP with a monotonic trail; decisions on
     #--- closed bars; BE/trailing anchored to the stored initial R.
     "InfiniteRunnerXAUV2DemoEA": {
@@ -417,130 +160,11 @@ EA_INPUTS: dict[str, dict[str, Any]] = {
         "InpStep3_TriggerPoints": Num(minimum=0.0),
         "InpStep3_LockPoints": Num(minimum=0.0),
     },
-    #--- ADR 0007: fifth demo bot — Wonderwhales. One guarded position driven
-    #--- by the PinePort\\Wonderwhales buffers on closed bars, mandatory TP.
-    "WonderwhalesDemoEA": {
-        **_DEMO_EXECUTION_COMMON,
-        "InpCloseOnKillSwitch": BOOL,
-        "InpPersistState": BOOL,
-        "InpStateFile": STR,
-        "InpResetStateOnInit": BOOL,
-        "InpMode": Enum((0, 1, 2, 3)),
-        "InpPsarStart": Num(minimum=0.0, min_exclusive=True),
-        "InpPsarInc": Num(minimum=0.0, min_exclusive=True),
-        "InpPsarMax": Num(minimum=0.0, min_exclusive=True),
-        "InpFastEma": Num(minimum=1.0, integer=True),
-        "InpSlowEma": Num(minimum=1.0, integer=True),
-        "InpEma200": Num(minimum=1.0, integer=True),
-        "InpAtrLen": Num(minimum=1.0, integer=True),
-        "InpMinAtrPct": Num(minimum=0.0),
-        "InpVolMaLen": Num(minimum=1.0, integer=True),
-        "InpRsiLen": Num(minimum=1.0, integer=True),
-        "InpBbLen": Num(minimum=1.0, integer=True),
-        "InpBbMult": Num(minimum=0.0, min_exclusive=True),
-        "InpWarmupBars": Num(minimum=0.0, integer=True),
-        "InpSideFilter": Enum((0, 1, 2)),
-        "InpStopMode": Enum((0, 1, 2)),
-        "InpAtrPctMultiplier": Num(minimum=0.0, min_exclusive=True),
-        "InpFixedStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpMinStopPoints": Num(minimum=0.0),
-        "InpTakeProfitR": Num(minimum=0.0, maximum=50.0, min_exclusive=True),
-        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
-        "InpExitOnFlip": BOOL,
-        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpMaxLots": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpCooldownBars": Num(minimum=0.0, integer=True),
-        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
-        "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
-        "InpHaltOnBreach": BOOL,
-    },
-    #--- ADR 0009: sixth demo bot - Wonderwhales XAU 2-mode (Scalp + Swing).
-    #--- One magic, a parity gate, mandatory SL/TP and a persistent weekly guard.
-    "WonderwhalesXAU2ModeEA": {
-        **_DEMO_EXECUTION_COMMON,
-        "InpDemoOnly": BOOL,
-        "InpTradingMode": Enum((0, 1, 2)),
-        "InpSignalMode": Enum((0, 1, 2, 3)),
-        "InpPsarEngine": Enum((0, 1)),
-        "InpRiskPercent": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpMaxPositions": Num(minimum=1.0, maximum=1.0, integer=True),
-        "InpCooldownMinutes": Num(minimum=0.0, maximum=1440.0, integer=True),
-        "InpMaxConsecutiveLosses": Num(minimum=0.0, integer=True),
-        "InpMaxDailyLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxWeeklyLossPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxDrawdownPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxSpreadRatioToSlPct": Num(minimum=0.0, maximum=100.0),
-        "InpMaxExposure": Num(minimum=0.0, maximum=100.0, min_exclusive=True),
-        "InpHaltOnBreach": BOOL,
-        "InpTakeProfitR": Num(minimum=0.0, maximum=50.0, min_exclusive=True),
-        "InpMinStopPoints": Num(minimum=0.0),
-        "InpMaxStopPoints": Num(minimum=0.0, min_exclusive=True),
-        "InpScalpBufferAtr": Num(minimum=0.0),
-        "InpScalpSlAtrFallback": Num(minimum=0.0, min_exclusive=True),
-        "InpSwingBufferAtr": Num(minimum=0.0),
-        "InpSwingSlAtrFallback": Num(minimum=0.0, min_exclusive=True),
-        "InpBreakEvenCostBuffer": BOOL,
-        "InpBreakEvenBufferPoints": Num(minimum=0.0),
-        "InpEnableTelemetry": BOOL,
-        "InpTelemetryFile": STR,
-        "InpPersistState": BOOL,
-        "InpStateFile": STR,
-        "InpResetStateOnInit": BOOL,
-        "InpCloseOnKillSwitch": BOOL,
-        "InpRequireParity": BOOL,
-        "InpPsarStart": Num(minimum=0.0, min_exclusive=True),
-        "InpPsarInc": Num(minimum=0.0, min_exclusive=True),
-        "InpPsarMax": Num(minimum=0.0, min_exclusive=True),
-        "InpFastEma": Num(minimum=1.0, integer=True),
-        "InpSlowEma": Num(minimum=1.0, integer=True),
-        "InpEma200": Num(minimum=1.0, integer=True),
-        "InpAtrLen": Num(minimum=1.0, integer=True),
-        "InpMinAtrPct": Num(minimum=0.0),
-        "InpVolMaLen": Num(minimum=1.0, integer=True),
-        "InpRsiLen": Num(minimum=1.0, integer=True),
-        "InpBbLen": Num(minimum=1.0, integer=True),
-        "InpBbMult": Num(minimum=0.0, min_exclusive=True),
-        "InpWarmupBars": Num(minimum=0.0, integer=True),
-        "InpScalpBiasTF": Enum(_TIMEFRAMES),
-        "InpScalpSetupTF": Enum(_TIMEFRAMES),
-        "InpScalpTriggerTF": Enum(_TIMEFRAMES),
-        "InpSwingBiasTF": Enum(_TIMEFRAMES),
-        "InpSwingSetupTF": Enum(_TIMEFRAMES),
-        "InpSwingTriggerTF": Enum(_TIMEFRAMES),
-        "InpTriggerWindowBars": Num(minimum=1.0, maximum=100.0, integer=True),
-        "InpSetupWindowBars": Num(minimum=1.0, maximum=100.0, integer=True),
-        "InpScalpRequireSarAgree": BOOL,
-        "InpScalpRequireTrigger": BOOL,
-        "InpBreakEvenTriggerR": Num(minimum=0.0),
-        "InpTrailTriggerR": Num(minimum=0.0),
-        "InpMinTrailStepPoints": Num(minimum=0.0),
-        "InpSwingRrMin": Num(minimum=0.0),
-        "InpSwingConfirmBars": Num(minimum=1.0, integer=True),
-        "InpStructureLookbackBars": Num(minimum=1.0, integer=True),
-        "InpEnableStructureTrail": BOOL,
-        "InpEnablePsarTrail": BOOL,
-        "InpEnableAtrTrail": BOOL,
-        "InpEnableStepTrail": BOOL,
-        "InpStepTrailPoints": Num(minimum=0.0),
-        "InpTrailBufferAtr": Num(minimum=0.0),
-        "InpExitOnFlip": BOOL,
-        "InpMaxHoldingBars": Num(minimum=0.0, integer=True),
-    },
 }
 
-#--- ADR 0004 + 0005 + 0007: the five demo EAs are the presets allowed to
-#--- request execution, and only with DEMO_ONLY. Every simulation EA stays
-#--- SIMULATION_ONLY.
-DEMO_EA_NAMES = (
-    "PATrendRiderXAUv1DemoEA",
-    "GridDemoEA",
-    "DCADemoEA",
-    "InfiniteRunnerXAUV2DemoEA",
-    "WonderwhalesDemoEA",
-    "WonderwhalesXAU2ModeEA",
-)
+#--- ADR 0005: the InfiniteRunner demo EA is the only preset allowed to request
+#--- execution, and only with DEMO_ONLY.
+DEMO_EA_NAMES = ("InfiniteRunnerXAUV2DemoEA",)
 
 EA_EXECUTION_MODE: dict[str, str] = {
     name: (DEMO_MODE if name in DEMO_EA_NAMES else EXECUTION_MODE)
@@ -550,9 +174,6 @@ EA_EXECUTION_MODE: dict[str, str] = {
 EA_NAMES = tuple(EA_INPUTS)
 SIM_EA_NAMES = tuple(
     name for name in EA_INPUTS if EA_EXECUTION_MODE[name] == EXECUTION_MODE
-)
-DEMO_EA_NAMES = tuple(
-    name for name in EA_INPUTS if EA_EXECUTION_MODE[name] == DEMO_MODE
 )
 
 
@@ -568,12 +189,6 @@ def _validate_value(name: str, spec: Any, value: Any) -> list[str]:
     if spec is STR:
         if not isinstance(value, str) or not value.strip():
             return [f"{name}: must be a non-empty string"]
-        if "," in value:
-            return [f"{name}: must not contain a comma (CSV reason column)"]
-        return []
-    if spec is STR_OPTIONAL:
-        if not isinstance(value, str):
-            return [f"{name}: must be a string"]
         if "," in value:
             return [f"{name}: must not contain a comma (CSV reason column)"]
         return []
@@ -606,86 +221,6 @@ def _validate_value(name: str, spec: Any, value: Any) -> list[str]:
 
 def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
     issues: list[str] = []
-    if ea == "RunnerTrailingLabEA":
-        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
-            issues.append("InpSlowEma: must be greater than InpFastEma")
-        if inputs["InpBreakEvenEnabled"] and inputs["InpBreakEvenTriggerPoints"] <= 0:
-            issues.append("InpBreakEvenTriggerPoints: must be positive when enabled")
-        if inputs["InpTrailMode"] == 0 and inputs["InpTrailFixedPoints"] <= 0:
-            issues.append("InpTrailFixedPoints: must be positive in fixed mode")
-        if inputs["InpTrailMode"] == 1 and inputs["InpTrailAtrMultiplier"] <= 0:
-            issues.append("InpTrailAtrMultiplier: must be positive in ATR mode")
-        if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
-            issues.append("InpMaxVirtualExposure: must cover InpVolume")
-
-    if ea == "GridLabEA":
-        if inputs["InpMaxLevelVolume"] < inputs["InpBaseVirtualVolume"]:
-            issues.append("InpMaxLevelVolume: must cover InpBaseVirtualVolume")
-        if inputs["InpMaxVirtualExposure"] < inputs["InpBaseVirtualVolume"]:
-            issues.append("InpMaxVirtualExposure: must cover InpBaseVirtualVolume")
-        if inputs["InpSpacingMode"] == 0 and inputs["InpSpacingPoints"] <= 0:
-            issues.append("InpSpacingPoints: must be positive in fixed mode")
-        if inputs["InpSpacingMode"] == 1:
-            if inputs["InpAtrPeriod"] < 2:
-                issues.append("InpAtrPeriod: must be at least 2 in ATR mode")
-            if inputs["InpAtrMultiplier"] <= 0:
-                issues.append("InpAtrMultiplier: must be positive in ATR mode")
-        if inputs["InpExitMode"] == 0 and inputs["InpLevelTargetPoints"] <= 0:
-            issues.append("InpLevelTargetPoints: must be positive in LEVEL mode")
-        if inputs["InpExitMode"] == 1 and inputs["InpBasketTargetPoints"] <= 0:
-            issues.append("InpBasketTargetPoints: must be positive in BASKET mode")
-
-    if ea == "DCALabEA":
-        if inputs["InpMaxAddVolume"] < inputs["InpBaseVirtualVolume"]:
-            issues.append("InpMaxAddVolume: must cover InpBaseVirtualVolume")
-        if inputs["InpMaxVirtualExposure"] < inputs["InpBaseVirtualVolume"]:
-            issues.append("InpMaxVirtualExposure: must cover InpBaseVirtualVolume")
-        if inputs["InpTriggerMode"] == 0 and inputs["InpDcaDistancePoints"] <= 0:
-            issues.append("InpDcaDistancePoints: must be positive in price mode")
-        if inputs["InpTriggerMode"] == 1 and inputs["InpBarsBetweenAdds"] < 1:
-            issues.append("InpBarsBetweenAdds: must be at least 1 in bar mode")
-
-    if ea == "GridDemoEA":
-        if inputs["InpMaxLevelVolume"] < inputs["InpBaseVolume"]:
-            issues.append("InpMaxLevelVolume: must cover InpBaseVolume")
-        if inputs["InpMaxExposure"] < inputs["InpMaxLevelVolume"]:
-            issues.append("InpMaxExposure: must cover InpMaxLevelVolume")
-        if inputs["InpVolumeMultiplier"] < 1:
-            issues.append("InpVolumeMultiplier: must be at least 1")
-        if inputs["InpSpacingMode"] == 0 and inputs["InpSpacingPoints"] <= 0:
-            issues.append("InpSpacingPoints: must be positive in fixed mode")
-        if inputs["InpSpacingMode"] == 1:
-            if inputs["InpAtrPeriod"] < 2:
-                issues.append("InpAtrPeriod: must be at least 2 in ATR mode")
-            if inputs["InpAtrMultiplier"] <= 0:
-                issues.append("InpAtrMultiplier: must be positive in ATR mode")
-        if inputs["InpExitMode"] == 0 and inputs["InpLevelTargetPoints"] <= 0:
-            issues.append("InpLevelTargetPoints: must be positive in LEVEL mode")
-        if inputs["InpExitMode"] == 1 and inputs["InpBasketTargetPoints"] <= 0:
-            issues.append("InpBasketTargetPoints: must be positive in BASKET mode")
-        if inputs["InpBasketStopPoints"] <= 0:
-            issues.append("InpBasketStopPoints: must be positive (mandatory basket stop)")
-        if inputs["InpMaxGridLevels"] < 1:
-            issues.append("InpMaxGridLevels: must be at least 1")
-        if inputs["InpMaxGridLevels"] > 50:
-            issues.append("InpMaxGridLevels: must be at most 50 (bounded grid)")
-
-    if ea == "DCADemoEA":
-        if inputs["InpMaxAddVolume"] < inputs["InpBaseVolume"]:
-            issues.append("InpMaxAddVolume: must cover InpBaseVolume")
-        if inputs["InpMaxExposure"] < inputs["InpMaxAddVolume"]:
-            issues.append("InpMaxExposure: must cover InpMaxAddVolume")
-        if inputs["InpAddVolumeMultiplier"] < 1:
-            issues.append("InpAddVolumeMultiplier: must be at least 1")
-        if inputs["InpTriggerMode"] == 0 and inputs["InpDcaDistancePoints"] <= 0:
-            issues.append("InpDcaDistancePoints: must be positive in price mode")
-        if inputs["InpTriggerMode"] == 1 and inputs["InpBarsBetweenAdds"] < 1:
-            issues.append("InpBarsBetweenAdds: must be at least 1 in bar mode")
-        if inputs["InpBasketStopPoints"] <= 0:
-            issues.append("InpBasketStopPoints: must be positive (mandatory basket stop)")
-        if inputs["InpMaxDcaAdds"] > 50:
-            issues.append("InpMaxDcaAdds: must be at most 50 (bounded DCA)")
-
     #--- ADR 0005: InfiniteRunner demo stop band, mandatory safety TP, trail
     #--- and lot-mode consistency.
     if ea == "InfiniteRunnerXAUV2DemoEA":
@@ -739,148 +274,6 @@ def _cross_checks(ea: str, inputs: dict[str, Any]) -> list[str]:
                 and steps[0][1] < steps[1][1] < steps[2][1]
             ):
                 issues.append("step trailing: triggers and locks must increase")
-
-    if ea == "PinePlanSimEA":
-        if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
-            issues.append("InpMaxVirtualExposure: must cover InpVolume")
-        if inputs["InpBreakEvenEnabled"] and inputs["InpBreakEvenTriggerPoints"] <= 0:
-            issues.append("InpBreakEvenTriggerPoints: must be positive when enabled")
-        if inputs["InpTrailEnabled"] and inputs["InpTrailFixedPoints"] <= 0:
-            issues.append("InpTrailFixedPoints: must be positive when enabled")
-
-    if ea == "WonderwhalesSimEA":
-        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
-            issues.append("InpSlowEma: must be greater than InpFastEma")
-        if inputs["InpEma200"] <= inputs["InpSlowEma"]:
-            issues.append("InpEma200: must be greater than InpSlowEma")
-        if inputs["InpWarmupBars"] < inputs["InpEma200"]:
-            issues.append("InpWarmupBars: must cover InpEma200")
-        if inputs["InpPsarStart"] > inputs["InpPsarMax"]:
-            issues.append("InpPsarStart: must not exceed InpPsarMax")
-        if inputs["InpPsarInc"] > inputs["InpPsarMax"]:
-            issues.append("InpPsarInc: must not exceed InpPsarMax")
-        if inputs["InpMaxVirtualExposure"] < inputs["InpVolume"]:
-            issues.append("InpMaxVirtualExposure: must cover InpVolume")
-
-    if ea in ("PATrendRiderXAUv1SimEA", "PATrendRiderXAUv1DemoEA"):
-        issues.extend(_trendrider_cross_checks(inputs))
-        if ea == "PATrendRiderXAUv1DemoEA":
-            if float(inputs["InpTakeProfitR"]) <= 0.0:
-                issues.append("InpTakeProfitR: demo orders need a mandatory TP")
-            if float(inputs["InpMagicNumber"]) <= 0:
-                issues.append("InpMagicNumber: must be positive to isolate the EA")
-            if not inputs["InpAllowedSymbols"].strip():
-                issues.append("InpAllowedSymbols: must allow at least one symbol")
-            if not inputs["InpKillSwitchFile"].strip():
-                issues.append("InpKillSwitchFile: must name the kill-switch file")
-
-    #--- ADR 0007: Wonderwhales demo keeps the simulation signal/stop rules and
-    #--- adds the demo-order guards (mandatory TP, sized exposure).
-    if ea == "WonderwhalesDemoEA":
-        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
-            issues.append("InpSlowEma: must be greater than InpFastEma")
-        if inputs["InpEma200"] <= inputs["InpSlowEma"]:
-            issues.append("InpEma200: must be greater than InpSlowEma")
-        if inputs["InpWarmupBars"] < inputs["InpEma200"]:
-            issues.append("InpWarmupBars: must cover InpEma200")
-        if inputs["InpPsarStart"] > inputs["InpPsarMax"]:
-            issues.append("InpPsarStart: must not exceed InpPsarMax")
-        if inputs["InpPsarInc"] > inputs["InpPsarMax"]:
-            issues.append("InpPsarInc: must not exceed InpPsarMax")
-        if float(inputs["InpTakeProfitR"]) <= 0.0:
-            issues.append("InpTakeProfitR: demo orders need a mandatory TP")
-        if float(inputs["InpMagicNumber"]) <= 0:
-            issues.append("InpMagicNumber: must be positive to isolate the EA")
-        if float(inputs["InpMaxLots"]) <= 0.0:
-            issues.append("InpMaxLots: exposure cap must be positive")
-        if float(inputs["InpRiskPercent"]) <= 0.0:
-            issues.append("InpRiskPercent: must be positive for risk sizing")
-        if inputs["InpMaxConsecutiveLosses"] > 0 and inputs["InpCooldownMinutes"] <= 0:
-            issues.append("InpCooldownMinutes: a loss streak needs a cooldown")
-
-    #--- ADR 0009: the 2-mode Wonderwhales demo. One magic, Scalp/Swing modes,
-    #--- a mandatory TP, a bounded stop band and a parity gate.
-    if ea == "WonderwhalesXAU2ModeEA":
-        if inputs["InpSlowEma"] <= inputs["InpFastEma"]:
-            issues.append("InpSlowEma: must be greater than InpFastEma")
-        if inputs["InpEma200"] <= inputs["InpSlowEma"]:
-            issues.append("InpEma200: must be greater than InpSlowEma")
-        if inputs["InpWarmupBars"] < inputs["InpEma200"]:
-            issues.append("InpWarmupBars: must cover InpEma200")
-        if float(inputs["InpTakeProfitR"]) <= 0.0:
-            issues.append("InpTakeProfitR: demo orders need a mandatory TP")
-        if inputs["InpMaxPositions"] != 1:
-            issues.append("InpMaxPositions: must be 1")
-        if float(inputs["InpMaxExposure"]) <= 0.0:
-            issues.append("InpMaxExposure: exposure cap must be positive")
-        for name in ("InpMaxDailyLossPct", "InpMaxWeeklyLossPct",
-                     "InpMaxDrawdownPct"):
-            if float(inputs[name]) <= 0.0:
-                issues.append(f"{name}: a loss halt must be positive")
-        if float(inputs["InpMaxStopPoints"]) < float(inputs["InpMinStopPoints"]):
-            issues.append("InpMaxStopPoints: must cover InpMinStopPoints")
-        scalp = (
-            _TF_SECONDS.get(int(inputs["InpScalpBiasTF"])),
-            _TF_SECONDS.get(int(inputs["InpScalpSetupTF"])),
-            _TF_SECONDS.get(int(inputs["InpScalpTriggerTF"])),
-        )
-        swing = (
-            _TF_SECONDS.get(int(inputs["InpSwingBiasTF"])),
-            _TF_SECONDS.get(int(inputs["InpSwingSetupTF"])),
-            _TF_SECONDS.get(int(inputs["InpSwingTriggerTF"])),
-        )
-        if None in scalp or not (scalp[0] > scalp[1] > scalp[2]):
-            issues.append("scalp timeframes: must be ordered bias > setup > trigger")
-        if None in swing or not (swing[0] > swing[1] > swing[2]):
-            issues.append("swing timeframes: must be ordered bias > setup > trigger")
-        #--- The trigger window is scanned inside one setup bar, so it cannot be
-        #--- wider than that bar. A wider value would reach into older setups.
-        window = int(inputs["InpTriggerWindowBars"])
-        for label, secs in (("scalp", scalp), ("swing", swing)):
-            if None not in secs and window > secs[1] // secs[2]:
-                issues.append(
-                    f"InpTriggerWindowBars: {label} window must not exceed the "
-                    f"{secs[1] // secs[2]} trigger bars of one setup bar"
-                )
-        if int(inputs["InpTradingMode"]) == 2 and \
-           float(inputs["InpTakeProfitR"]) < float(inputs["InpSwingRrMin"]):
-            issues.append("InpTakeProfitR: SWING mode requires at least InpSwingRrMin")
-
-    return issues
-
-
-def _trendrider_cross_checks(inputs: dict[str, Any]) -> list[str]:
-    issues: list[str] = []
-    trend = _TF_SECONDS.get(int(inputs["InpTrendTF"]))
-    structure = _TF_SECONDS.get(int(inputs["InpStructureTF"]))
-    entry = _TF_SECONDS.get(int(inputs["InpEntryTF"]))
-    if trend is None or structure is None or entry is None:
-        issues.append("timeframes: must use known MT5 period constants")
-    elif not (trend > structure > entry):
-        issues.append(
-            "timeframes: must be ordered trend > structure > entry"
-        )
-    if inputs["InpMaxPositions"] != 1:
-        issues.append("InpMaxPositions: must be 1 in v1")
-    minimum_bars = (
-        inputs["InpAtrPeriod"]
-        + inputs["InpAtrBaselineBars"]
-        + inputs["InpSwingLeft"]
-        + inputs["InpSwingRight"]
-        + 10
-    )
-    if inputs["InpEntryBars"] < minimum_bars:
-        issues.append(
-            "InpEntryBars: must leave room for ATR baseline and swings"
-        )
-    if inputs["InpTrailingStartR"] < inputs["InpBreakEvenAtR"]:
-        issues.append(
-            "InpTrailingStartR: must be at least InpBreakEvenAtR"
-        )
-    if inputs["InpMaxSlAtr"] <= inputs["InpMinSlAtr"]:
-        issues.append("InpMaxSlAtr: must exceed InpMinSlAtr")
-    if inputs["InpConfirmationCloseZone"] >= 0.5:
-        issues.append("InpConfirmationCloseZone: must be below 0.5")
     return issues
 
 

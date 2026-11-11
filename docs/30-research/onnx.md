@@ -1,5 +1,7 @@
 # ONNX inference — Phase 8
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 - **Trạng thái:** `PASS` cho build 6292 (chart 2026-10-29, Strategy Tester cùng ngày).
 - **Đã chạy thật:** export ONNX, kiểm tra graph, parity Python–ONNX trên 24 hàng fixture, compile EA,
   EA chạy trên chart trong terminal, EA chạy headless trong Strategy Tester.

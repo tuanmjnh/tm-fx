@@ -3,8 +3,7 @@
 Gates (docs/README.md "Trạng thái cổng"):
   pytest                  - the Python test suite
   validate-project        - layout, banned APIs outside Exec/*, presets
-  validate_demo_execution - per-demo-EA guardrails
-  validate_pineport       - PinePort contract tests
+  validate_demo_execution - demo-EA guardrails (InfiniteRunner)
   check_docs_links        - relative doc links resolve
 
 The MQL5 compile needs MetaEditor and is NOT run here (reported as a note).
@@ -27,7 +26,6 @@ GATES = (
     ("pytest", [sys.executable, "-m", "pytest", "-q"]),
     ("validate-project", [sys.executable, "scripts/validate-project.py"]),
     ("validate_demo_execution", [sys.executable, "scripts/validate_demo_execution.py"]),
-    ("validate_pineport", [sys.executable, "scripts/validate_pineport.py"]),
     ("check_docs_links", [sys.executable, "scripts/check_docs_links.py"]),
 )
 

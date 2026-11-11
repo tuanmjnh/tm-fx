@@ -1,5 +1,7 @@
 # Kiến trúc — MT5 EA & AI Lab
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 - **Phiên bản:** 2.0 (Phase 9 + trailing stop + bounded DCA/grid + demo execution boundary)
 - **Ngày:** 2026-10-29
 - **Trạng thái:** EA signal-only, signal engine MQL5, data pipeline/validation, Python backtester,
@@ -157,5 +159,5 @@ Chi tiết: [`environment.md`](../20-operations/install.md), quyết định: [`
 - Bounded DCA/grid extension (sau Phase 9): simulator riêng `run_bounded_basket` cho một basket nhiều
   layer với hard cap `max_layers`, `max_total_units`, `max_basket_loss` (lỗ ròng) và tối đa một add mỗi
   bar; CLI `scripts/run_basket_backtest.py`, hai config synthetic, 28 test riêng; toàn bộ suite 198
-  Python test pass. Không execution, không store, chưa có MQL5/EA. Xem
-  [`bounded-basket.md`](bounded-basket.md).
+  Python test pass. Không execution, không store, chưa có MQL5/EA. Bộ mô phỏng bounded basket đã gỡ
+  khỏi repo.

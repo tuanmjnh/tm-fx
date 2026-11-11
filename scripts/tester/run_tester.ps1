@@ -89,7 +89,7 @@ if (-not $TerminalDataDir) {
     if ($dirs.Count -eq 0) { throw "no MT5 data folder found; pass -TerminalDataDir <path containing MQL5>" }
     if ($dirs.Count -gt 1) {
         #--- Prefer the folder whose MQL5\Experts already holds the compiled EA.
-        $match = $dirs | Where-Object { Test-Path -LiteralPath (Join-Path $_ "MQL5\Experts\WonderwhalesXAU2ModeEA.ex5") }
+        $match = $dirs | Where-Object { Test-Path -LiteralPath (Join-Path $_ "MQL5\Experts\InfiniteRunnerXAUV2DemoEA.ex5") }
         $TerminalDataDir = if ($match) { @($match)[0] } else { $dirs[0] }
     } else {
         $TerminalDataDir = $dirs[0]

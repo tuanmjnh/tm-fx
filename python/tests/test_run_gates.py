@@ -28,7 +28,6 @@ def test_gate_list_covers_the_documented_checks() -> None:
         "pytest",
         "validate-project",
         "validate_demo_execution",
-        "validate_pineport",
         "check_docs_links",
     }
 

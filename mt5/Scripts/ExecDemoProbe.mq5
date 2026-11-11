@@ -32,7 +32,7 @@ input long   InpMagicNumber        = 25002002; // probe magic, never the EA's
 input string InpComment            = "ExecDemoProbe";
 input group "Scope"
 input string InpAllowedSymbols     = "XAUUSD"; // prefix allow-list
-input string InpKillSwitchFile     = "PA_TREND_RIDER_DEMO_STOP.txt";
+input string InpKillSwitchFile     = "INFINITE_RUNNER_DEMO_STOP.txt";
 
 void Fail(const string stage,const string detail)
   {

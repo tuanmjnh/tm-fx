@@ -6,14 +6,12 @@
 **Người đọc mục tiêu:** bạn đã chạy xong [`../00-start/first-run.md`](../00-start/first-run.md) và giờ muốn hiểu
 *từng khối của một con bot*.
 **Phần AI đã tách sang** [`../30-research/ai-integration.md`](../30-research/ai-integration.md);
-**bảng tham số theo bot đã bỏ** — nguồn sự thật là bảng input trong 5 trang bot
-([`pa-trendrider.md`](pa-trendrider.md) · [`grid.md`](grid.md) · [`dca.md`](dca.md) ·
-[`infinite-runner.md`](infinite-runner.md) · [`wonderwhales.md`](wonderwhales.md)) và
-[`input-convention.md`](input-convention.md).
+**bảng tham số theo bot đã bỏ** — nguồn sự thật là bảng input trong trang bot
+[`infinite-runner.md`](infinite-runner.md) và [`input-convention.md`](input-convention.md).
 
 > **Ranh giới an toàn (ADR 0003, [`../90-decisions/0003-demo-execution-scope.md`](../90-decisions/0003-demo-execution-scope.md)):**
-> repository phục vụ nghiên cứu offline, mô phỏng và **demo execution có guardrail**. EA mô phỏng không
-> chứa `OrderSend`/`CTrade`; đường gửi lệnh duy nhất là 5 EA demo + `mt5\Include\Exec\*`,
+> repository phục vụ nghiên cứu offline, mô phỏng và **demo execution có guardrail**. Đường gửi lệnh duy
+> nhất là EA demo duy nhất `InfiniteRunnerXAUV2DemoEA` + `mt5\Include\Exec\*`,
 > chỉ nhận tài khoản **demo** hoặc Strategy Tester. Tài khoản real/live bị cấm.
 > Không credential. **Lợi nhuận của mọi chiến lược: `UNPROVEN`.**
 
@@ -72,7 +70,7 @@ Ba dòng bất biến của kiến trúc này:
 
 ## 2. Giải phẫu một file EA
 
-Nguồn tham chiếu: [`mt5/Experts/PinePlanSimEA.mq5`](../../mt5/Experts/PinePlanSimEA.mq5) — 27 input, 829 dòng.
+Nguồn tham chiếu: [`mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5`](../../mt5/Experts/InfiniteRunnerXAUV2DemoEA.mq5).
 
 ### 2.1 Sáu khối theo thứ tự trong file
 
@@ -142,15 +140,14 @@ Tool kiểm tra tự động: `scripts\audit_plan_csv.py` (trạng thái `ok`/`i
 | [`Include/Sim/SimPortfolio.mqh`](../../mt5/Include/Sim/SimPortfolio.mqh) | sổ cái vị thế ảo: balance/equity/peak/max_drawdown, `Init(…, contract_size)` | mọi EA mô phỏng |
 | `Sim/SimCostModel.mqh` | cộng spread + slippage + commission vào giá khớp | mọi EA mô phỏng |
 | `Sim/SimRiskGuard.mqh` | cổng vào lệnh + halting (bảng §7) | mọi EA mô phỏng |
-| `Sim/SimTrailing.mqh` | breakeven + trailing (fixed points / ATR) | Runner, Plan, WW |
-| `Sim/SimPlan.mqh` | cấu trúc `SimPlan` (entry/sl/tp/ref) + validate RR | `PinePlanSimEA` |
-| `Sim/SimLogger.mqh` | ghi CSV 18 cột, `FILE_SHARE_READ` để Python đọc lúc đang chạy | mọi EA |
-| `Sim/SimGrid.mqh`, `Sim/SimDca.mqh` | lưới nhiều tầng / giỏ DCA có trần | `GridLabEA`, `DCALabEA` |
-| `Sim/SimValidate.mqh` | hàm kiểm input fail-closed | mọi EA |
-| `PinePort/*Contract.mqh` | chỉ số buffer + engine tính điểm (không I/O) | EA + indicator + contract test |
-| `TrendRider/TR*.mqh` (12 file) | swing → structure → trend → pullback → signal → risk → trailing → state machine → market data → config | `PATrendRiderXAUv1SimEA`, `…DemoEA` |
-| [`Include/Exec/ExecGuard.mqh`](../../mt5/Include/Exec/ExecGuard.mqh) | **cổng an ninh**: `ExecContextAllowed`, `ExecSymbolAllowed`, `ExecSymbolTradable`, `ExecTakeProfitValid`, `ExecStopsRespectBroker`, `ExecNormalizeVolume`, `ExecRiskBudgetOk` | chỉ `DemoEA` |
-| `Include/Exec/ExecBroker.mqh` | chỗ duy nhất gọi API lệnh, đã kiểm môi trường | chỉ `DemoEA` |
+| `Sim/SimTrailing.mqh` | breakeven + trailing (fixed points / ATR) | infra dùng chung |
+| `Sim/SimPlan.mqh` | cấu trúc `SimPlan` (entry/sl/tp/ref) + validate RR | infra dùng chung |
+| `Sim/SimLogger.mqh` | ghi CSV 18 cột, `FILE_SHARE_READ` để Python đọc lúc đang chạy | InfiniteRunner |
+| `Sim/SimGrid.mqh`, `Sim/SimDca.mqh` | lưới nhiều tầng / giỏ DCA có trần | infra dùng chung |
+| `Sim/SimValidate.mqh` | hàm kiểm input fail-closed | InfiniteRunner |
+| `Include/InfiniteRunner/IR*.mqh` | types / direction (legacy, MTF, regime) / trailing / risk của runner | InfiniteRunner |
+| [`Include/Exec/ExecGuard.mqh`](../../mt5/Include/Exec/ExecGuard.mqh) | **cổng an ninh**: `ExecContextAllowed`, `ExecSymbolAllowed`, `ExecSymbolTradable`, `ExecTakeProfitValid`, `ExecStopsRespectBroker`, `ExecNormalizeVolume`, `ExecRiskBudgetOk` | chỉ EA demo |
+| `Include/Exec/ExecBroker.mqh` | chỗ duy nhất gọi API lệnh, đã kiểm môi trường | chỉ EA demo |
 
 Vì sao tách: `ExecGuard.mqh` là **hàm thuần**, nên kiểm bằng `ExecGuardTests.mq5` (51 test ma trận guard,
 không gửi lệnh) mà không cần tài khoản thật. Đây là lý do "đổi chiến lược" không được phép trở thành "sửa nhanh trong EA".
@@ -159,11 +156,10 @@ không gửi lệnh) mà không cần tài khoản thật. Đây là lý do "đ�
 
 ## 4. Danh mục bot trong repo
 
-Danh mục đầy đủ **15 EA** (5 demo + 6 sim + 3 signal + 1 inference) với magic, preset và nhãn bằng chứng:
+Danh mục bot (một EA demo) với magic, preset và nhãn bằng chứng:
 [`README.md`](README.md) — mục lục cục bộ của thư mục `10-bots/`.
-Trang chi tiết từng bot demo: [`pa-trendrider.md`](pa-trendrider.md) · [`grid.md`](grid.md) ·
-[`dca.md`](dca.md) · [`infinite-runner.md`](infinite-runner.md) · [`wonderwhales.md`](wonderwhales.md).
-Chuẩn input dùng chung cho 5 EA demo (hợp đồng phase C): [`input-convention.md`](input-convention.md).
+Trang chi tiết bot demo: [`infinite-runner.md`](infinite-runner.md).
+Chuẩn input dùng chung (hợp đồng phase C): [`input-convention.md`](input-convention.md).
 
 ---
 
@@ -210,8 +206,8 @@ và đọc `reason=` → chạy `audit_plan_csv.py`.
 | Mục đích | Đường dẫn thao tác | Ghi chú đã kiểm |
 |---|---|---|
 | Mở Strategy Tester | `Ctrl+R` | tab trái Toolbox |
-| Chọn bot | Expert → `PinePlanSimEA` | rỗng ⇒ chưa compile/F5 (§5) |
-| Cấu hình | tab **Inputs → Load** → `.set` → **Save** | bắt buộc với `plan_rr2.set` |
+| Chọn bot | Expert → `InfiniteRunnerXAUV2DemoEA` | rỗng ⇒ chưa compile/F5 (§5) |
+| Cấu hình | tab **Inputs → Load** → `.set` → **Save** | dùng preset trong `docs/20-operations/presets/` |
 | Xem nến chạy | tích **Visualize** (chỉ hiện khi Optimization = Disabled) | kéo thanh trượt tốc độ, nhấn **Pause** |
 | Chạy thật trên chart | `Ctrl+N` → kéo EA vào chart → tab **Common** tick **Allow Algo Trading** → **OK** | hai công tắc: global `Tools → Options → Expert Advisors → Allow Algorithmic Trading` + nút **Algo Trading** trên toolbar, và tick per-EA ở Common |
 | Biết bot đang sống | icon trạng thái **góc trên bên phải** chart (xanh chạy / xám bị tắt) + log tab **Experts** | log đáng tin hơn icon |
@@ -220,7 +216,7 @@ và đọc `reason=` → chạy `audit_plan_csv.py`.
 | Mở file log/CSV | **File → Open Data Folder** → `MQL5\Files` | Tester ghi vào Data Folder **tạm** của agent |
 | Gỡ bot | chuột phải chart → **Expert Advisors → Remove** | `OnDeinit` ghi `SUMMARY` trước khi rời |
 | Tạm dừng | tắt nút **Algo Trading** | bot giữ state trong bộ nhớ |
-| Kill switch (DemoEA) | tạo file `PA_TREND_RIDER_DEMO_STOP.txt` trong `MQL5\Files` | chặn vào lệnh ngay, không cần gỡ bot |
+| Kill switch (EA demo) | tạo file `INFINITE_RUNNER_DEMO_STOP.txt` trong `MQL5\Files` | chặn vào lệnh ngay, không cần gỡ bot |
 
 ---
 
@@ -250,29 +246,23 @@ và đọc `reason=` → chạy `audit_plan_csv.py`.
 | DemoEA thì sao? | Có, khi `InpEnableExecution=true` *và* ExecGuard cho phép; đối soát bằng `InpMagicNumber` ở tab **History** |
 | Hai EA cùng một tài khoản? | tách bằng magic + allow-list symbol; mặc định `InpMaxPositions=1` |
 | Bạn tự tay đóng lệnh của DemoEA? | phiên sau bot học từ file state + ledger; **đừng** tắt `InpPersistState` |
-| Restart MT5 giữa chừng? | DemoEA nạp lại `pa_trendrider_demo_state.csv`; EA mô phỏng chạy lại từ đầu nên phải có `.set` + log |
+| Restart MT5 giữa chừng? | EA demo nạp lại `infinite_runner_demo_state.csv` (`InpStateFile`); **đừng** tắt `InpPersistState` |
 
 ---
 
 ## 10. Trạng thái bằng chứng và việc chưa kiểm
 
 Nhãn trạng thái là hợp đồng dự án (`DONE / PASS / PARTIAL / NOT_RUN / BLOCKED / UNPROVEN`) — không được
-nâng cấp khi chưa có bằng chứng. Danh mục 15 EA với nhãn hiện tại của **từng EA**:
+nâng cấp khi chưa có bằng chứng. Danh mục bot với nhãn hiện tại:
 [`README.md`](README.md). Bảng dưới chỉ giữ các nhận định tổng quát đã kiểm:
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Compile toàn bộ source | PASS `0 errors, 0 warnings` (build 6292) |
-| `PinePlanSimEA` trong Tester | PASS; audit CSV `status=ok`, 93 ENTRY/93 EXIT, 0 issue |
-| `DemoEA` dry-run trên demo | PASS |
-| `DemoEA` đường gửi lệnh trong Tester | PASS 31 ENTRY/31 EXIT |
+| Compile source | PASS (`scripts/deploy_pineport.ps1` — 0 errors / 0 warnings) |
+| `InfiniteRunnerXAUV2DemoEA` đường gửi lệnh trong Tester | PASS (ExecBroker; `PROGRESS` §90) |
 | Broker demo nhận lệnh thật | PASS qua `ExecDemoProbe` |
-| `DemoEA` tạo `ENTRY` do chiến lược trên tài khoản demo | **`NOT_RUN`** — đang `WAITING_FOR_SETUP` |
-| Grid/DCA trên demo | `ALLOWED` (ADR 0004); phiên demo thật `NOT_RUN` |
-| ONNX inference (`LabOnnxInference`) | **`PARTIAL`** — tester + chart chạy được (PROGRESS §50), parity Track B vẫn `BLOCKED` |
-| `LabSignalEA` | **`PASS`** (PROGRESS §48.5 — tester PASS, 0 trade đúng thiết kế signal-only) |
-| Các EA lab còn lại | **`NOT_RUN`** — chưa có mục bằng chứng riêng trong PROGRESS |
-| Lợi nhuận mọi chiến lược | **`UNPROVEN`** |
+| `InfiniteRunnerXAUV2DemoEA` tạo `ENTRY` do chiến lược trên chart demo | **`NOT_RUN`** — chưa có phiên demo thật được ghi nhận |
+| Lợi nhuận chiến lược | **`UNPROVEN`** — mọi hướng đo được không có edge bền |
 
 Nhãn từng EA demo: PA `PARTIAL` (đường lệnh có bằng chứng, chưa có ENTRY trên chart demo); Grid/DCA
 `NOT_RUN`; WW `UNPROVEN` (tester đã chạy, net −625.72). Số liệu chạy thật nằm ở `99-archive/MT5_EA_Lab_V2/`
@@ -289,10 +279,9 @@ Nhãn từng EA demo: PA `PARTIAL` (đường lệnh có bằng chứng, chưa c
 | Chạy bot demo có giám sát, kill switch | [`../20-operations/demo-execution.md`](../20-operations/demo-execution.md) |
 | Ma trận scenario + preset Tester | [`../20-operations/strategy-tester.md`](../20-operations/strategy-tester.md) |
 | Script check/build/test/validate/package | [`../20-operations/toolchain.md`](../20-operations/toolchain.md) |
-| Danh mục 15 EA + nhãn bằng chứng | [`README.md`](README.md) |
+| Danh mục bot + nhãn bằng chứng | [`README.md`](README.md) |
 | Chuẩn input dùng chung (phase C) | [`input-convention.md`](input-convention.md) |
-| Chi tiết từng bot demo | [`pa-trendrider.md`](pa-trendrider.md) · [`grid.md`](grid.md) · [`dca.md`](dca.md) · [`infinite-runner.md`](infinite-runner.md) · [`wonderwhales.md`](wonderwhales.md) |
+| Chi tiết bot demo | [`infinite-runner.md`](infinite-runner.md) |
 | Ghép bot EA với AI (3 mức, pipeline ONNX) | [`../30-research/ai-integration.md`](../30-research/ai-integration.md) |
-| Chi tiết cổng điểm số và quirk | [`../30-research/indicators/price-action-mtf.md`](../30-research/indicators/price-action-mtf.md) §10.5 |
 | Chi tiết pipeline ONNX | [`../30-research/onnx.md`](../30-research/onnx.md) |
 | Mô hình rủi ro và sizing | [`../30-research/risk.md`](../30-research/risk.md) |

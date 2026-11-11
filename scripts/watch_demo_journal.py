@@ -1,7 +1,7 @@
-"""Watch the live demo journal of ``PATrendRiderXAUv1DemoEA`` and report real orders.
+"""Watch the live demo journal of ``InfiniteRunnerXAUV2DemoEA`` and report real orders.
 
 The EA appends the 18-column ``SimLogger`` CSV to ``<Data Folder>\\MQL5\\Files\\
-pa_trendrider_demo.csv``. This tool reads that file, remembers how far it has already
+infinite_runner_demo.csv``. This tool reads that file, remembers how far it has already
 seen, and prints every event that appeared since the last checkpoint. Events that mean
 a real order left the terminal (``ENTRY``, ``EXIT``, ``CLOSE_REQUEST``, ``TRAIL``,
 ``ADOPT``, ``SYNC``) and events that mean something went wrong (``KILL``, ``ERROR``,
@@ -29,8 +29,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-JOURNAL_NAME = "pa_trendrider_demo.csv"
-KILL_SWITCH_NAME = "PA_TREND_RIDER_DEMO_STOP.txt"
+JOURNAL_NAME = "infinite_runner_demo.csv"
+KILL_SWITCH_NAME = "INFINITE_RUNNER_DEMO_STOP.txt"
 DEFAULT_STATE_PATH = REPO_ROOT / "reports" / "demo-watch" / "journal_checkpoint.json"
 
 EXPECTED_HEADER = (
@@ -235,9 +235,9 @@ def report(journal: Path, records: list[dict[str, str]], *, quiet: bool) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Report new events in the live demo journal of the TrendRider DemoEA."
+        description="Report new events in the live demo journal of the InfiniteRunner DemoEA."
     )
-    parser.add_argument("--csv", help="absolute path to pa_trendrider_demo.csv")
+    parser.add_argument("--csv", help="absolute path to infinite_runner_demo.csv")
     parser.add_argument(
         "--state",
         help=f"checkpoint file (default {DEFAULT_STATE_PATH.relative_to(REPO_ROOT)})",

@@ -1,5 +1,7 @@
 # Ghép bot EA với AI — mức tích hợp, pipeline ONNX, ràng buộc parity
 
+> Ghi chú 2026-11-11: repo nay chỉ còn bot InfiniteRunner; các EA/indicator được nhắc trong tài liệu này là lịch sử.
+
 **Tách từ:** mục 11 của guide cũ `ea-anatomy-and-ai.md` (file cũ đã bị tách thành `docs/10-bots/ea-anatomy.md` + tài liệu này; nguyên văn còn trong git
 history — ánh xạ cũ → mới xem `99-archive/LINK_MAP.md`).
 **Phạm vi:** mọi nhận định lấy từ source và artifact thật của repo (MQL5 build 6292).
@@ -115,7 +117,7 @@ mức B lẫn mức C sẽ chèn vào, nên ghi lại tại đây:
   phỏng đổi sang thang 100 (`score100 = 50 + rawScore*50`) và so với `InpScrNoTrade`.
 - Hành vi thật đã kiểm: với default `InpScrNoTrade=49`, điều kiện `score100 > 49` ⇔ `rawScore > -0.01`,
   trong khi nhánh SHORT đòi `rawScore < 0` — giao tử gần rỗng nên **cửa short gần như luôn bị chặn**
-  (quirk `Q11` trong [`indicators/price-action-mtf.md`](indicators/price-action-mtf.md) §16).
+  (quirk `Q11` của indicator PriceActionMTF, đã gỡ cùng indicator PinePort).
 - Hệ quả cho mức B/C: khi xác suất model thay cổng điểm, vẫn phải giữ nguyên các cổng còn lại
   (plan RR, RiskGuard, HALT) — nếu không, quirk Q11 chỉ chuyển từ "cổng điểm chặn" thành "cổng model chặn".
 

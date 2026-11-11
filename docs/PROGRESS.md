@@ -5180,3 +5180,34 @@ trung theo năm** (h1 âm 2018–2022, dương 2023–2026; h4 dồn vào 2026) 
 ### 99.3 Trạng thái
 - Study: §5.4 (kết quả) + §8 H-B ✅ + §13 (khuyến nghị). Evidence pack: thêm `htf_h1`/`htf_h4` (14 scenario).
 - Không đổi preset ship. Gates: xem commit.
+
+## 100. Tinh gọn repo về IR-only + preset chạy demo — 2026-11-11
+
+Theo yêu cầu chủ dự án ("chỉ để lại bot EA đang chạy và nâng cấp"): xoá mọi bot/indicator/asset khác, chỉ giữ
+**InfiniteRunner** + hạ tầng dùng chung; giữ gates xanh. Làm trên nhánh `cleanup-ir-only` rồi merge.
+
+### 100.1 Đã xoá
+
+- 16 EA khác (PA/Grid/DCA/Wonderwhales/RunnerTrailingLab/PinePlan/LabSignal/LabOnnx/PineSignal...) — chỉ còn
+  `InfiniteRunnerXAUV2DemoEA.mq5`.
+- Toàn bộ `mt5/Indicators`, `Include/{PinePort,TrendRider,Wonderwhales}`, `Include/{LabLogger,Indicators,SignalEngine}.mqh`.
+- `configs/sim/*`, 5 `configs/demo` khác, ~20 script validator/tool của bot khác, module Python bot-specific
+  (parity/pine_parity/signal_audit/plan_audit/...), ~25 test bot/indicator, trang docs/ADR của bot khác.
+
+### 100.2 Còn lại
+
+- Một EA demo `InfiniteRunnerXAUV2DemoEA` (magic 25006001, XAUUSDm M5); `Include/{Exec,Sim,InfiniteRunner}`;
+  script mq5 {IRCoreTests, ExecGuardTests, ExecDemoProbe, CloseDemoPosition, SimCoreTests, SimPlanTests};
+  `configs/demo/infinite_runner_demo.json`; 3 validator Python + `run_gates.py`; docs IR + evidence pack.
+
+### 100.3 Preset chạy demo + tối thiểu vốn
+
+- Thêm `docs/20-operations/presets/infinite_runner_v2_demo_run.set` (log/state riêng tránh lẫn V3; lot cố định 0.01).
+- Cả hai preset operator giờ đủ **61 input** (thêm 7 input step-trailing còn thiếu).
+- Tối thiểu: lot cố định 0.01 ⇒ ~$5/1R, thực tế **≥ $1.000**; lot theo rủi ro 0,25% ⇒ **≥ $2.000**; dưới ~$1.000 thì
+  trần daily-loss 1% halt ngay.
+
+### 100.4 Gates
+
+- `run_gates.py` **4/4 PASS**: pytest **255**; validate-project checks=7; validate_demo_execution checks=8;
+  check_docs_links broken=0. `deploy_pineport.ps1` → DEPLOY_OK 0/0.
