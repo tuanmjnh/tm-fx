@@ -1,14 +1,14 @@
 ; ==============================================================================
-; CẤU HÌNH MICRO (~$50) — INFINITE RUNNER XAU V2   ⚠ AGGRESSIVE / CHƯA KIỂM ĐỊNH
+; CẤU HÌNH MICRO ($50, leverage 1:1000) — INFINITE RUNNER XAU V2  ⚠ AGGRESSIVE/CHƯA KIỂM ĐỊNH
 ; Tên file: infinite_runner_v2_micro50.set
 ; Áp dụng cho Expert: InfiniteRunnerXAUV2DemoEA.mq5
 ; Cặp giao dịch: XAUUSD / XAUUSDm | Khung thời gian: M5
 ; Quy ước: 1.0 USD biến động giá Vàng = 1000 points (Exness 3 số thập phân)
 ; ------------------------------------------------------------------------------
-; ⚠ CHỈ dùng cho DEMO ~$50, KHÔNG khuyến nghị cho vốn thật:
-;   - Lot nhỏ nhất sàn = 0.01 ⇒ mỗi lệnh rủi ro ~$5 (SL 5000 points) = 10% của $50.
-;   - Trần daily 30% / DD 70% đã NỚI mạnh để bot không halt ở lệnh đầu; khoá chuỗi thua TẮT.
-;   - Cần đòn bẩy cao (≥1:500): margin 0.01 lot ≈ $41 ở 1:100 (gần hết $50).
+; Tài khoản đích: equity $50, leverage 1:1000.
+;   - Margin 0.01 lot ≈ $4 (dư ~$46) ⇒ không lo margin.
+;   - Lot nhỏ nhất sàn = 0.01 ⇒ mỗi lệnh rủi ro ~$5 (SL 5000 points) = 10%/lệnh.
+;   - Trần daily 30% (~$15 ≈ 3 lệnh lỗ/ngày) / DD 70% (~$35 ≈ 7 lệnh lỗ tổng); khoá chuỗi thua TẮT.
 ;   - Chiến lược KHÔNG có edge chứng minh (mọi đo lường âm/beta) ⇒ chỉ là thử VẬN HÀNH.
 ;   - Log/state riêng (infinite_runner_v2*.csv); KHÔNG gắn V2 và V3 cùng lúc (cùng magic 25006001).
 ; ==============================================================================

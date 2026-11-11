@@ -91,9 +91,9 @@ cùng lúc).
   (dành cho `InfiniteRunnerXAUV2DemoEA`, M5).
 - Preset **chạy demo** (forward test): [`docs/20-operations/presets/infinite_runner_v2_demo_run.set`](../20-operations/presets/infinite_runner_v2_demo_run.set)
   — giống preset trên nhưng **log/state riêng** (`infinite_runner_v2*.csv`) và lot cố định 0.01 (~$5 rủi ro/lệnh).
-- Preset **micro ~$50**: [`docs/20-operations/presets/infinite_runner_v2_micro50.set`](../20-operations/presets/infinite_runner_v2_micro50.set)
-  — ⚠ **aggressive/chưa kiểm định**: nới trần daily 30% / DD 70%, tắt khoá chuỗi thua, cần đòn bẩy ≥1:500. Chỉ để bot
-  *chạy được* trên demo $50 (rủi ro 10%/lệnh); **không** khuyến nghị cho vốn thật.
+- Preset **micro $50 @ leverage 1:1000**: [`docs/20-operations/presets/infinite_runner_v2_micro50.set`](../20-operations/presets/infinite_runner_v2_micro50.set)
+  — ⚠ **aggressive/chưa kiểm định**: lot cố định 0.01 (rủi ro ~$5 = 10%/lệnh; margin ≈ $4), nới trần daily 30% (~3 lỗ/ngày)
+  / DD 70% (~7 lỗ tổng), tắt khoá chuỗi thua. Chỉ để bot *chạy được* trên demo $50; **không** khuyến nghị cho vốn thật.
 - Kill switch: `INFINITE_RUNNER_DEMO_STOP.txt`; state file `infinite_runner_demo_state.csv`
   (preset chạy demo dùng `infinite_runner_v2_state.csv`).
 - Không có EA sim riêng (không bắt buộc theo ADR 0005).
