@@ -1,0 +1,87 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_opt_ema1030\\sim_ir_long_opt_ema1030.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 72876,
+    "ENTRY": 26592,
+    "EXIT": 26592,
+    "SL_UPDATE": 29547,
+    "BLOCKED": 45757,
+    "ERROR": 8632,
+    "SUMMARY": 1
+  },
+  "trades": 26592,
+  "wins": 19351,
+  "losses": 7241,
+  "flats": 0,
+  "winrate": 72.77000601684718,
+  "net": -1573.6400000005845,
+  "expectancy_usd": -0.05917719614923979,
+  "expectancy_usd_ci95": [
+    -0.13906815019554755,
+    0.021640502782791764
+  ],
+  "expectancy_r": -0.011835439229847958,
+  "expectancy_r_ci95": [
+    -0.027018300616726845,
+    0.004861185694945834
+  ],
+  "avg_win": 1.7702744044236993,
+  "avg_loss": -4.948241955531008,
+  "profit_factor": 0.9560806492397472,
+  "break_even_winrate": 73.6508135192569,
+  "winrate_gap_pp": -0.8808075024097235,
+  "spread_price": 0.19,
+  "spread_cost_total": 5052.479999999009,
+  "gross": 3478.839999998425,
+  "net_spread_x2": -6626.119999999593,
+  "max_drawdown_pct": 29.350457806187553,
+  "peak_equity": 10007.51,
+  "trough_equity": 7070.26,
+  "risk_per_trade": 5.0,
+  "tp_hits": 75,
+  "tp_contrib": 7482.85,
+  "net_without_tp": -9056.490000000585,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.04,
+    "p90": 0.7,
+    "max": 20.0
+  },
+  "entries_by_year": {
+    "2018": 526,
+    "2019": 659,
+    "2020": 2593,
+    "2021": 1854,
+    "2022": 1948,
+    "2023": 1661,
+    "2024": 2229,
+    "2025": 6772,
+    "2026": 8350
+  },
+  "exits_by_year": {
+    "2018": 525,
+    "2019": 660,
+    "2020": 2593,
+    "2021": 1853,
+    "2022": 1948,
+    "2023": 1661,
+    "2024": 2229,
+    "2025": 6773,
+    "2026": 8350
+  },
+  "blocks": {
+    "max_trades_day": 20299,
+    "loss_streak_cooldown": 18617,
+    "spread_wide": 4559,
+    "atr_spiked": 1873,
+    "loss_streak_armed": 409
+  },
+  "source": {
+    "journal": "sim_ir_long_opt_ema1030.csv",
+    "journal_sha256": "d63f7069bbee3f5405682f14f4fe403e3652563760ef1e3c161f9513433fca45",
+    "report_sha256": "c365879468e32d5fc169affc34ed0565a3fc68781c330099b48090428b42a914",
+    "png_sha256": "50a54e267248199a0e85aeb1e05a06647b3ffa0baefe5345f1ffa43a00b34d7f"
+  },
+  "description": "2018-2026 sensitivity: EMA 10/30 (vs 21/50)"
+}

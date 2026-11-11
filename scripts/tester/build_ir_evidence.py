@@ -45,6 +45,11 @@ SCENARIOS = (
     "infinite_runner_long_regime",
     "infinite_runner_long_htf_h1",
     "infinite_runner_long_htf_h4",
+    "infinite_runner_long_opt_sl2500",
+    "infinite_runner_long_opt_sl3000",
+    "infinite_runner_long_opt_sl8000",
+    "infinite_runner_long_opt_ema1030",
+    "infinite_runner_long_opt_traillooser",
 )
 
 DESCRIPTIONS = {
@@ -62,6 +67,11 @@ DESCRIPTIONS = {
     "infinite_runner_long_regime": "2018-2026, H-D regime entry (IR_DIR_REGIME: H1 context + M5 breakout K=12)",
     "infinite_runner_long_htf_h1": "2018-2026, H-B higher-timeframe trend: H1 entry + ATR SL/trail",
     "infinite_runner_long_htf_h4": "2018-2026, H-B higher-timeframe trend: H4 entry + ATR SL/trail",
+    "infinite_runner_long_opt_sl2500": "2018-2026 sensitivity: SL 2500 (vs 5000)",
+    "infinite_runner_long_opt_sl3000": "2018-2026 sensitivity: SL 3000 (vs 5000)",
+    "infinite_runner_long_opt_sl8000": "2018-2026 sensitivity: SL 8000 (vs 5000) - break-even but still tail-driven",
+    "infinite_runner_long_opt_ema1030": "2018-2026 sensitivity: EMA 10/30 (vs 21/50)",
+    "infinite_runner_long_opt_traillooser": "2018-2026 sensitivity: looser step trailing (3000/500,6000/3000,10000/6000)",
 }
 
 #--- Experiment E1: decompose the faint positive gross of the two "let winners

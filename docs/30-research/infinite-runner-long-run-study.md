@@ -219,6 +219,25 @@ dương ở spread×2**. Nhưng **E1 phá vỡ nó**:
 Theo tiêu chí bác bỏ đã ghi trước của E1 ("gộp > 0 chỉ ở BUY, hoặc chỉ 1–2 năm ⇒ beta/may mắn"), H-B là **beta
 của uptrend vàng 2018–2026**, không phải edge — OOS 2018–2022 đã âm ngay trong bảng theo năm. CI của R vẫn bao 0.
 
+### 5.5 Sensitivity sweep (theo yêu cầu "tối ưu", 2026-11-11) — không đòn bẩy nào tạo edge
+
+Quét **một biến mỗi lần** so với `long_base_nolock` (SL 5000, EMA 21/50, step trailing ship), cửa sổ đầy đủ
+2018-2026, khoá daily/DD tắt. Bằng chứng: `evidence/infinite-runner/infinite_runner_long_opt_*.json`.
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | net_without_tp | tp_hits |
+|---|---:|---:|---:|---|---:|---:|
+| baseline | 26.130 | 72,97% | −685 | −0,0052 [−0,020..+0,011] | −8.157 | 75 |
+| SL 2500 | 28.288 | 56,89% | −691 | −0,0098 | −9.643 | 92 |
+| SL 3000 | 27.897 | 61,17% | −1.038 | −0,0124 | −10.411 | 96 |
+| **SL 8000** | 23.827 | 80,82% | **+26** | **+0,0001** [−0,011..+0,013] | **+26** | 0 |
+| EMA 10/30 | 26.592 | 72,77% | −1.574 | −0,0118 | −9.056 | 75 |
+| step trailing rộng | 15.768 | 59,23% | +871 | +0,0110 | **−9.193** | 101 |
+
+**Đọc:** cấu hình "tốt nhất" (SL 8000) chỉ **hoà vốn** (+0,0001R, CI bao 0) — và E1 vẫn cho thấy nó **do đuôi**
+(bỏ 0,5% lệnh tốt nhất ⇒ net −10.313; BUY +0,004R vs SELL −0,003R; âm 2018–2022). Cấu hình step-trail-rộng dương
+nhưng **rõ ràng do đuôi** (`net_without_tp` −9.193). SL nhỏ hơn / EMA nhanh hơn **tệ hơn**. ⇒ **Không đòn bẩy đơn
+lẻ nào tạo edge**; "tối ưu tham số" trên tín hiệu này đúng là **curve-fitting**. Kết luận §13 giữ nguyên.
+
 ## 6. Khoảng cách backtest ↔ chạy thật
 
 | Rủi ro | Hiện trạng trong repo | Việc cần |
@@ -343,8 +362,8 @@ hai hướng** và **nhiều năm**. Hạ tầng miễn phí, chạy lại đư�
 
 **Cách tốt nhất để NÂNG CẤP (khuyến nghị, theo thứ tự):**
 
-1. **Dừng tinh chỉnh tín hiệu hiện tại.** Bảy hướng, 0 edge: dữ liệu không ủng hộ thêm tham số/exit nào. Giữ
-   **U1** (sửa deadlock) làm lợi ích vận hành thực — robot không còn tự chết.
+1. **Dừng tinh chỉnh tín hiệu hiện tại** (đã xác nhận bằng sensitivity sweep §5.5: đòn bẩy tốt nhất chỉ hoà vốn
+   và vẫn do đuôi). Giữ **U1** (sửa deadlock) làm lợi ích vận hành thực — robot không còn tự chết.
 2. **Nếu muốn tiếp: đổi DỮ LIỆU/Ý TƯỞNG, không đổi tham số.**
    - **Đa tài sản / đa khung**: chạy cùng logic trên nhiều symbol (EURUSD, XAGUSD, chỉ số…) để tăng **mẫu độc
      lập** — cách thực tế nhất để kết luận nhanh.

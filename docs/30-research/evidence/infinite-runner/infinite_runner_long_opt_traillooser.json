@@ -1,0 +1,87 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_opt_traillooser\\sim_ir_long_opt_traillooser.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 55997,
+    "ENTRY": 15769,
+    "EXIT": 15768,
+    "SL_UPDATE": 14932,
+    "BLOCKED": 39808,
+    "ERROR": 11239,
+    "SUMMARY": 1
+  },
+  "trades": 15768,
+  "wins": 9339,
+  "losses": 6429,
+  "flats": 0,
+  "winrate": 59.227549467275495,
+  "net": 870.649999999993,
+  "expectancy_usd": 0.05521626078132883,
+  "expectancy_usd_ci95": [
+    -0.0952732749873161,
+    0.21212232052257735
+  ],
+  "expectancy_r": 0.011043252156265766,
+  "expectancy_r_ci95": [
+    -0.017755939244038517,
+    0.04081795091324205
+  ],
+  "avg_win": 3.5322079451761415,
+  "avg_loss": -4.995588738528541,
+  "profit_factor": 1.0271090001942915,
+  "break_even_winrate": 58.58006380562928,
+  "winrate_gap_pp": 0.6474856616462148,
+  "spread_price": 0.19,
+  "spread_cost_total": 2995.9200000007077,
+  "gross": 3866.570000000701,
+  "net_spread_x2": -2125.2700000007144,
+  "max_drawdown_pct": 11.227543570173257,
+  "peak_equity": 11420.52,
+  "trough_equity": 8925.6,
+  "risk_per_trade": 5.0,
+  "tp_hits": 101,
+  "tp_contrib": 10063.740000000005,
+  "net_without_tp": -9193.090000000013,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.1,
+    "p90": 1.2,
+    "max": 20.0
+  },
+  "entries_by_year": {
+    "2018": 329,
+    "2019": 292,
+    "2020": 1392,
+    "2021": 809,
+    "2022": 866,
+    "2023": 660,
+    "2024": 1338,
+    "2025": 4246,
+    "2026": 5837
+  },
+  "exits_by_year": {
+    "2018": 328,
+    "2019": 292,
+    "2020": 1393,
+    "2021": 808,
+    "2022": 866,
+    "2023": 660,
+    "2024": 1338,
+    "2025": 4247,
+    "2026": 5836
+  },
+  "blocks": {
+    "loss_streak_cooldown": 30494,
+    "spread_wide": 4080,
+    "max_trades_day": 2822,
+    "atr_spiked": 1737,
+    "loss_streak_armed": 675
+  },
+  "source": {
+    "journal": "sim_ir_long_opt_traillooser.csv",
+    "journal_sha256": "7d923c0823c222828bae2c5a15b2ebb5c6c1169de5e616840ce5a32409085249",
+    "report_sha256": "2fe5a6de1fca51fafb82d93342e4cfe0c8791574830eaf20a0c084150787d467",
+    "png_sha256": "8560f3bfe31da9b777c476701932cb17f7b02c25817b71c62b95a749cf7f9e6a"
+  },
+  "description": "2018-2026 sensitivity: looser step trailing (3000/500,6000/3000,10000/6000)"
+}

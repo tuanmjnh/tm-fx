@@ -1,0 +1,87 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_opt_sl2500\\sim_ir_long_opt_sl2500.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 111581,
+    "ENTRY": 28288,
+    "EXIT": 28288,
+    "SL_UPDATE": 25032,
+    "BLOCKED": 82115,
+    "ERROR": 11446,
+    "SUMMARY": 1
+  },
+  "trades": 28288,
+  "wins": 16092,
+  "losses": 12196,
+  "flats": 0,
+  "winrate": 56.88631221719457,
+  "net": -690.6399999997034,
+  "expectancy_usd": -0.02441459276017051,
+  "expectancy_usd_ci95": [
+    -0.09035399285916287,
+    0.048853188631221726
+  ],
+  "expectancy_r": -0.009765837104068203,
+  "expectancy_r_ci95": [
+    -0.035999908088235076,
+    0.018876682692307658
+  ],
+  "avg_win": 1.8492493164307462,
+  "avg_loss": -2.496618563463433,
+  "profit_factor": 0.9773179597462603,
+  "break_even_winrate": 57.44810087333407,
+  "winrate_gap_pp": -0.5617886561394982,
+  "spread_price": 0.19,
+  "spread_cost_total": 5374.71999999833,
+  "gross": 4684.079999998627,
+  "net_spread_x2": -6065.359999998034,
+  "max_drawdown_pct": 19.52164270949561,
+  "peak_equity": 10091.62,
+  "trough_equity": 8121.57,
+  "risk_per_trade": 2.5,
+  "tp_hits": 92,
+  "tp_contrib": 8952.060000000005,
+  "net_without_tp": -9642.699999999708,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.08,
+    "p90": 1.4,
+    "max": 40.00000000000364
+  },
+  "entries_by_year": {
+    "2018": 619,
+    "2019": 740,
+    "2020": 3261,
+    "2021": 1550,
+    "2022": 2503,
+    "2023": 1623,
+    "2024": 2767,
+    "2025": 6916,
+    "2026": 8309
+  },
+  "exits_by_year": {
+    "2018": 618,
+    "2019": 740,
+    "2020": 3261,
+    "2021": 1550,
+    "2022": 2503,
+    "2023": 1623,
+    "2024": 2767,
+    "2025": 6917,
+    "2026": 8309
+  },
+  "blocks": {
+    "loss_streak_cooldown": 62339,
+    "max_trades_day": 13172,
+    "spread_wide": 3275,
+    "atr_spiked": 1959,
+    "loss_streak_armed": 1370
+  },
+  "source": {
+    "journal": "sim_ir_long_opt_sl2500.csv",
+    "journal_sha256": "041b99659c931ba07dda517909513ed060be32696c365e67465fdfc9ae19e6f8",
+    "report_sha256": "4b8b35f7f3e9fb4aa50b0e296c8b0a1ea3fcc70ead24034a77203f2532a5838a",
+    "png_sha256": "201745fe07d73ba678b5170362807a2e4bcf587425ffd23eae4674b303dd4ecf"
+  },
+  "description": "2018-2026 sensitivity: SL 2500 (vs 5000)"
+}

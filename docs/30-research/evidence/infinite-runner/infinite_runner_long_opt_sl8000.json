@@ -1,0 +1,87 @@
+{
+  "path": "D:\\Applications\\tm-fx\\reports\\build\\tester-reports\\infinite_runner_long_opt_sl8000\\sim_ir_long_opt_sl8000.csv",
+  "events": {
+    "INIT": 1,
+    "DECISION": 55606,
+    "ENTRY": 23827,
+    "EXIT": 23827,
+    "SL_UPDATE": 29216,
+    "BLOCKED": 31325,
+    "ERROR": 10330,
+    "SUMMARY": 1
+  },
+  "trades": 23827,
+  "wins": 19257,
+  "losses": 4570,
+  "flats": 0,
+  "winrate": 80.82007806270198,
+  "net": 26.360000000242774,
+  "expectancy_usd": 0.0011063079699602458,
+  "expectancy_usd_ci95": [
+    -0.08649545683468336,
+    0.102315241113023
+  ],
+  "expectancy_r": 0.00013828849624503072,
+  "expectancy_r_ci95": [
+    -0.011326945272170305,
+    0.012456954033239587
+  ],
+  "avg_win": 1.8527371864777606,
+  "avg_loss": -7.801269146608325,
+  "profit_factor": 1.000739373608126,
+  "break_even_winrate": 80.80861848900923,
+  "winrate_gap_pp": 0.011459573692746972,
+  "spread_price": 0.19,
+  "spread_cost_total": 4527.130000000116,
+  "gross": 4553.490000000358,
+  "net_spread_x2": -4500.769999999873,
+  "max_drawdown_pct": 20.32178712970316,
+  "peak_equity": 10232.92,
+  "trough_equity": 8045.89,
+  "risk_per_trade": 8.0,
+  "tp_hits": 0,
+  "tp_contrib": 0.0,
+  "net_without_tp": 26.360000000242774,
+  "r_quantiles": {
+    "p10": -1.0,
+    "p50": 0.025,
+    "p90": 0.4375,
+    "max": 12.500000000000355
+  },
+  "entries_by_year": {
+    "2018": 304,
+    "2019": 548,
+    "2020": 2160,
+    "2021": 1260,
+    "2022": 1633,
+    "2023": 1061,
+    "2024": 2331,
+    "2025": 6263,
+    "2026": 8267
+  },
+  "exits_by_year": {
+    "2018": 303,
+    "2019": 548,
+    "2020": 2160,
+    "2021": 1260,
+    "2022": 1633,
+    "2023": 1061,
+    "2024": 2331,
+    "2025": 6264,
+    "2026": 8267
+  },
+  "blocks": {
+    "max_trades_day": 19081,
+    "loss_streak_cooldown": 6145,
+    "spread_wide": 4085,
+    "atr_spiked": 1879,
+    "loss_streak_armed": 135
+  },
+  "source": {
+    "journal": "sim_ir_long_opt_sl8000.csv",
+    "journal_sha256": "d00ac7e1a5b7ec1f10dc81f09e5c58037c9a1a4976948d1b3b5d58b05a799705",
+    "report_sha256": "39df9481099fdfddcd257c8b72db01140d2d3e6478b8e3083d3ef6096203eb20",
+    "png_sha256": "4cbeee236109ba389799c3ea84437196e4511ad894f2355a140e7be5a5620610"
+  },
+  "description": "2018-2026 sensitivity: SL 8000 (vs 5000) - break-even but still tail-driven"
+}

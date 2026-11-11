@@ -32,6 +32,11 @@ Every number is `NOT_STRATEGY_RESULT` (operational/measurement); evidence
 | `infinite_runner_long_regime` | 2018-2026, H-D regime entry (IR_DIR_REGIME: H1 context + M5 breakout K=12) | 3260 | 71.60% | -434.10 | -0.0266 | 0.900 | 5.09% | 8 |
 | `infinite_runner_long_htf_h1` | 2018-2026, H-B higher-timeframe trend: H1 entry + ATR SL/trail | 1828 | 49.56% | 1381.10 | 0.0184 | 1.069 | 11.77% | 0 |
 | `infinite_runner_long_htf_h4` | 2018-2026, H-B higher-timeframe trend: H4 entry + ATR SL/trail | 538 | 53.53% | 1350.77 | 0.0243 | 1.123 | 12.76% | 0 |
+| `infinite_runner_long_opt_sl2500` | 2018-2026 sensitivity: SL 2500 (vs 5000) | 28288 | 56.89% | -690.64 | -0.0098 | 0.977 | 19.52% | 92 |
+| `infinite_runner_long_opt_sl3000` | 2018-2026 sensitivity: SL 3000 (vs 5000) | 27897 | 61.17% | -1038.28 | -0.0124 | 0.968 | 24.66% | 96 |
+| `infinite_runner_long_opt_sl8000` | 2018-2026 sensitivity: SL 8000 (vs 5000) - break-even but still tail-driven | 23827 | 80.82% | 26.36 | 0.0001 | 1.001 | 20.32% | 0 |
+| `infinite_runner_long_opt_ema1030` | 2018-2026 sensitivity: EMA 10/30 (vs 21/50) | 26592 | 72.77% | -1573.64 | -0.0118 | 0.956 | 29.35% | 75 |
+| `infinite_runner_long_opt_traillooser` | 2018-2026 sensitivity: looser step trailing (3000/500,6000/3000,10000/6000) | 15768 | 59.23% | 870.65 | 0.0110 | 1.027 | 11.23% | 101 |
 
 ## Experiment E1 — gross decomposition (side x year x tail)
 

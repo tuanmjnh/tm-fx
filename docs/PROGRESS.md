@@ -5211,3 +5211,41 @@ Theo yêu cầu chủ dự án ("chỉ để lại bot EA đang chạy và nâng
 
 - `run_gates.py` **4/4 PASS**: pytest **255**; validate-project checks=7; validate_demo_execution checks=8;
   check_docs_links broken=0. `deploy_pineport.ps1` → DEPLOY_OK 0/0.
+
+## 101. InfiniteRunner — sensitivity sweep ("tối ưu"): không đòn bẩy nào tạo edge — 2026-11-11
+
+Theo yêu cầu chủ dự án ("chạy backtest và tối ưu"). Nói thẳng: tối ưu tham số trên tín hiệu **không có edge** là
+curve-fitting, nên tôi làm **sensitivity sweep** (một biến mỗi lần) trên cửa sổ dài thay vì chọn tay một config đẹp.
+
+### 101.1 MT5 optimizer
+
+- Thử `terminal64 /config:` với `Optimization=1` (probe 2 tham số) — chạy 14s, XML rỗng, **không có journal** ⇒
+  optimizer headless **không chạy** trong môi trường này. Bỏ hướng này.
+
+### 101.2 Sweep (2018-2026, khoá daily/DD tắt, so với `long_base_nolock` net −685 / −0,0052R)
+
+| Cấu hình | Lệnh | Winrate | Net | Exp R (CI95) | net_without_tp | tp_hits |
+|---|---:|---:|---:|---|---:|---:|
+| baseline (SL5000/EMA21-50) | 26.130 | 72,97% | −685 | −0,0052 | −8.157 | 75 |
+| SL 2500 | 28.288 | 56,89% | −691 | −0,0098 | −9.643 | 92 |
+| SL 3000 | 27.897 | 61,17% | −1.038 | −0,0124 | −10.411 | 96 |
+| **SL 8000** | 23.827 | 80,82% | **+26** | **+0,0001** | +26 | 0 |
+| EMA 10/30 | 26.592 | 72,77% | −1.574 | −0,0118 | −9.056 | 75 |
+| step trailing rộng | 15.768 | 59,23% | +871 | +0,0110 | −9.193 | 101 |
+
+### 101.3 Kết luận
+
+- Cấu hình "tốt nhất" (SL 8000) chỉ **hoà vốn** (+0,0001R, CI bao 0); E1 vẫn cho thấy nó **do đuôi** (bỏ 0,5% lệnh
+  tốt nhất ⇒ net −10.313; BUY +0,004R vs SELL −0,003R; âm 2018–2022).
+- step-trail-rộng dương nhưng **do đuôi** rõ rệt (`net_without_tp` −9.193). SL nhỏ/EMA nhanh **tệ hơn**.
+- ⇒ **Không đòn bẩy đơn lẻ nào tạo edge**; tối ưu tham số = curve-fitting. Kết luận nghiên cứu §13 giữ nguyên.
+
+### 101.4 Tài khoản $50
+
+- Preset `docs/20-operations/presets/infinite_runner_v2_micro50.set` (đã có): lot cố định 0.01 (rủi ro ~$5 = 10%/lệnh),
+  nới daily 30% / DD 70%, tắt khoá chuỗi thua. **Cần đòn bẩy cao (≥1:500; 1:100 chỉ dư ~$9).**
+- Sweep xác nhận **giữ SL 5000** (SL nhỏ hơn tệ hơn), nên preset micro giữ nguyên SL ship.
+
+### 101.5 Trạng thái
+
+- Study §5.5 + §13; evidence pack: thêm 5 scenario `opt_*` (19 tổng). Chỉ thêm measurement; không đổi preset ship.
